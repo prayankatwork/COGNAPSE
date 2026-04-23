@@ -1,0 +1,6 @@
+{
+  "name": "ARIA Research Agent",
+  "description": "An advanced research intelligence agent that grounds queries with real sources and outputs a structured JSON report.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
