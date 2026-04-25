@@ -66,10 +66,16 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
       onClose();
     } catch (err: any) {
-      if (!err.response) {
-        setError("Intelligence Vault connection failure. Ensure 'npm run vault' is active.");
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        setError("Authorization discrepancy detected. Invalid security key.");
+      } else if (err.code === 'auth/user-not-found') {
+        setError("Operative not found in registry. Please create a profile.");
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError("Operative name already registered. Switch to Authentication.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("Security key too weak. Minimum 6 characters required.");
       } else {
-        setError(err.response.data.error || "Authorization discrepancy detected. Check credentials.");
+        setError(err.message || "Intelligence Vault connection failure. Verify Firebase config.");
       }
     } finally {
       setLoading(false);
