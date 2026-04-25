@@ -239,12 +239,13 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
         </AnimatePresence>
         {dimensions.width > 0 && dimensions.height > 0 && (
           <ForceGraph2D
+            key={theme}
             ref={fgRef}
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
             nodeRelSize={4}
-            linkColor={() => theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
+            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
             linkWidth={(link: any) => (link.strength || 1) * 1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleSpeed={0.012}

@@ -2,9 +2,25 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
+import electron from 'vite-plugin-electron/simple';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(), 
+    tailwindcss(),
+    electron({
+      main: {
+        // Shortcut of `build.lib.entry`.
+        entry: 'electron/main.ts',
+      },
+      preload: {
+        // Shortcut of `build.rollupOptions.input`.
+        input: path.join(__dirname, 'electron/preload.ts'),
+      },
+      // Optional: Use Node.js API in the Renderer process
+      renderer: {},
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),

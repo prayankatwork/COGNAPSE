@@ -2,7 +2,7 @@ import { useStore } from '../store';
 import { callCloudAI } from './aiService';
 import type { DeepResearchThesis, ResearchScore } from '../types';
 
-const RESEARCH_MODEL = "gemini-1.5-flash";      
+const RESEARCH_MODEL = "ollama";      
 
 const THESIS_PROMPT = (query: string) => `
 You are the COGNAPSE Deep Research Engine. 

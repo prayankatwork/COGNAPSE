@@ -100,14 +100,16 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-my-border border border-my-border">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-px bg-my-border border border-my-border">
             <FeatureBox icon={<Search />} title="Autonomous Discovery" desc="Parallel crawling of global knowledge indexes with semantic clustering." />
             <FeatureBox icon={<Sparkles />} title="Academic Thesis Protocol" desc="Autonomous generation of 5,000+ word professional forensic dossiers." />
             <FeatureBox icon={<History />} title="Thought Replay" desc="Deconstruct and replay the step-by-step logic used to reach conclusions." />
             <FeatureBox icon={<Layers />} title="Research Umbrella" desc="Hierarchical investigation stacks and cross-reference layers." />
+            <FeatureBox icon={<HardDrive />} title="Native Desktop Client" desc="Zero-configuration local AI acceleration via Ollama. 100% private and offline." />
             <FeatureBox icon={<BarChart3 />} title="Tactical Intelligence Map" desc="Interactive semantic node-branching logic and evidence mapping." />
             <FeatureBox icon={<FileText />} title="Cognitive Notebook" desc="Instantly capture snippets and insights into a persistent research journal." />
             <FeatureBox icon={<Database />} title="Intelligence Vault" desc="Persistent SQLite-backed research dossiers with operative isolation." />
+            <FeatureBox icon={<Waves />} title="Adaptive Sonification" desc="Syncs with Spotify to visually react to your music in both dark and light modes." />
             <FeatureBox icon={<Trophy />} title="Operator Status" desc="Earn XP, unlock tactical ranks, and expand system clearance." />
           </div>
         </div>

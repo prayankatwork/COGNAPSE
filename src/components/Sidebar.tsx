@@ -223,28 +223,6 @@ export default function Sidebar() {
                 </motion.div>
              </div>
 
-             {/* Neural Status Telemetry - Production Ready */}
-             <div className="mb-4 p-3 bg-black/20 border border-my-border rounded-[2px] flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-2">
-                      <Activity size={10} className="text-my-accent animate-pulse" />
-                      <span className="text-[8px] font-black uppercase tracking-[0.3em]">Neural Status</span>
-                   </div>
-                   <div className="flex gap-1">
-                      <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-                      <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-                      <div className="w-1 h-1 rounded-full bg-my-accent animate-pulse" />
-                   </div>
-                </div>
-                <div className="flex items-center justify-between opacity-60">
-                   <span className="text-[7px] font-bold uppercase tracking-widest">Cloud Swarm</span>
-                   <span className="text-[7px] font-mono text-emerald-500">ACTIVE</span>
-                </div>
-                <div className="flex items-center justify-between opacity-60">
-                   <span className="text-[7px] font-bold uppercase tracking-widest">Local Link</span>
-                   <span className="text-[7px] font-mono text-my-accent">STANDBY</span>
-                </div>
-             </div>
 
              {/* Student Developer Disclaimer - Compact & Visible */}
              <div className="mb-4 p-3 bg-my-bg/50 border border-my-border rounded-[2px] relative overflow-hidden">

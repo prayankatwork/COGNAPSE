@@ -10,7 +10,7 @@ import {
   MessageSquare, History, Trophy, Gauge,
   Box, Eye, HardDrive, Share, Compass, 
   Workflow, ArrowLeft, BookOpen, Key,
-  FileText, Settings, HelpCircle, AlertCircle, Waves
+  FileText, Settings, HelpCircle, AlertCircle, Waves, Headphones
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -28,12 +28,12 @@ const DOC_SECTIONS = [
         </p>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Core Philosophy</h4>
-             <p className="text-sm opacity-80 leading-relaxed">COGNAPSE operates on the principle of "Total Awareness" through semantic clustering, eliminating the bias of centralized search algorithms.</p>
+             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Native Desktop Architecture</h4>
+             <p className="text-sm opacity-80 leading-relaxed">Now deployed as a native Electron application. COGNAPSE features zero-configuration background integration with Ollama, enabling 100% private, uncensored, and offline hardware acceleration.</p>
           </div>
           <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Zero-Friction Execution</h4>
-             <p className="text-sm opacity-80 leading-relaxed">Intelligence is served via ultra-fast Groq LPU™ nodes. By utilizing Cloud-Hybrid synthesis, the system delivers 70B-parameter reasoning with zero local setup.</p>
+             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Cloud-Hybrid Synergy</h4>
+             <p className="text-sm opacity-80 leading-relaxed">Intelligence is seamlessly routed between ultra-fast Groq LPU™ nodes for rapid synthesis and your local Ollama hardware for unconstrained Deep Research dossiers.</p>
           </div>
         </div>
       </div>
@@ -232,16 +232,16 @@ const DOC_SECTIONS = [
       <div className="space-y-8">
         <p className="text-lg font-light italic">Intelligence you can feel.</p>
         <p className="text-sm opacity-80 leading-relaxed">
-          The COGNAPSE background canvas is not merely aesthetic; it is a **Visual Sonification** of the current research vibe.
+          The COGNAPSE background canvas is not merely aesthetic; it is a **Visual Sonification** of your environment. Integrated natively with **Spotify**, the dashboard syncs to your auditory vibe. The particle engine and color matrix automatically adapt to maintain perfect cinematic fidelity and readability, whether you are operating in **Dark (Night) Mode** or **Light (Normal) Mode**.
         </p>
         <div className="grid md:grid-cols-2 gap-4">
-           <div className="p-4 bg-my-callout text-my-ink">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-my-accent">Focus Mode</h5>
-              <p className="text-[11px] opacity-60">High-frequency, geometric patterns indicating deep academic synthesis.</p>
+           <div className="p-4 bg-my-callout text-my-ink border border-my-border hover:border-my-accent transition-all">
+              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-my-accent flex items-center gap-2"><Headphones size={12}/> Focus / Ambient</h5>
+              <p className="text-[11px] opacity-60">High-frequency, geometric patterns that subtly pulse to the bassline, engineered for deep academic synthesis and prolonged focus.</p>
            </div>
-           <div className="p-4 bg-my-callout text-my-ink">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-blue-400">Energy Mode</h5>
-              <p className="text-[11px] opacity-60">Fluid, organic data streams representing broad-spectrum discovery.</p>
+           <div className="p-4 bg-my-callout text-my-ink border border-my-border hover:border-blue-400 transition-all">
+              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-blue-400 flex items-center gap-2"><Radio size={12}/> Energy / Upbeat</h5>
+              <p className="text-[11px] opacity-60">Fluid, aggressive data streams representing broad-spectrum discovery. The canvas reacts dynamically to the tempo and rhythm of your music.</p>
            </div>
         </div>
       </div>

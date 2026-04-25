@@ -43,6 +43,15 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
     } catch(e) {}
   }
 
+  // Aggressive normalization to handle AI hallucinating objects instead of strings
+  normalizedSuggestions = normalizedSuggestions.map((s: any) => {
+    if (typeof s === 'string') return s;
+    if (typeof s === 'object' && s !== null) {
+      return s.question || s.text || s.suggestion || s.query || Object.values(s)[0] || JSON.stringify(s);
+    }
+    return String(s);
+  }).filter(Boolean);
+
   return (
     <div className="w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       

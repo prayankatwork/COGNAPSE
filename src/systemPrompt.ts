@@ -135,7 +135,7 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
   "timeline_triggered": true | false,
   "summary": {
     "bottom_line": "1–2 sentence plain-English conclusion. Lead with the answer.",
-    "full_synthesis": "A rigorous 400-600 word narrative. Connect the dots across sources. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. Ensure deep academic density.",
+    "full_synthesis": "A massive, rigorous 800-1200+ word narrative. Do not be brief. Connect the dots across sources. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. Ensure deep academic density and extensive detail.",
     "eli5_version": "Same conclusion explained as if to a curious 12-year-old. Pure analogies, zero data.",
     "confidence_narrative": "One sentence explaining WHY confidence is at this level."
   },
