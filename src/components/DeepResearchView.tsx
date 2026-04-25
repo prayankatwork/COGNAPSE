@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useStore, DeepResearchThesis } from '../store';
 import { ChevronDown, ChevronRight, FileText, Download, CheckCircle2, Shield, Info, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
+import ResearchScoreCard from './ResearchScoreCard';
+import ThoughtReplayEngine from './ThoughtReplayEngine';
 
 export default function DeepResearchView() {
   const { deepResearch, resetDeepResearch } = useStore();
@@ -18,17 +20,23 @@ export default function DeepResearchView() {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const safeText = (val: any) => {
+    if (typeof val === 'string') return val;
+    if (val === null || val === undefined) return "";
+    return JSON.stringify(val);
+  };
+
   const sections = [
-    { id: 'abstract', title: 'Abstract', content: thesis.abstract },
-    { id: 'introduction', title: 'Introduction', content: thesis.introduction },
-    { id: 'problemStatement', title: 'Problem Statement', content: thesis.problemStatement },
-    { id: 'literatureReview', title: 'Literature Review', content: thesis.literatureReview },
-    { id: 'methodology', title: 'Methodology / Approach', content: thesis.methodology },
-    { id: 'findings', title: 'Key Findings & Analysis', content: thesis.findings },
-    { id: 'comparativeInsights', title: 'Comparative Insights', content: thesis.comparativeInsights },
-    { id: 'limitations', title: 'Limitations', content: thesis.limitations },
-    { id: 'futureScope', title: 'Future Scope', content: thesis.futureScope },
-    { id: 'conclusion', title: 'Conclusion', content: thesis.conclusion },
+    { id: 'abstract', title: 'Abstract', content: safeText(thesis.abstract) },
+    { id: 'introduction', title: 'Introduction', content: safeText(thesis.introduction) },
+    { id: 'problemStatement', title: 'Problem Statement', content: safeText(thesis.problemStatement) },
+    { id: 'literatureReview', title: 'Literature Review', content: safeText(thesis.literatureReview) },
+    { id: 'methodology', title: 'Methodology / Approach', content: safeText(thesis.methodology) },
+    { id: 'findings', title: 'Key Findings & Analysis', content: safeText(thesis.findings) },
+    { id: 'comparativeInsights', title: 'Comparative Insights', content: safeText(thesis.comparativeInsights) },
+    { id: 'limitations', title: 'Limitations', content: safeText(thesis.limitations) },
+    { id: 'futureScope', title: 'Future Scope', content: safeText(thesis.futureScope) },
+    { id: 'conclusion', title: 'Conclusion', content: safeText(thesis.conclusion) },
   ];
 
   return (
@@ -40,20 +48,15 @@ export default function DeepResearchView() {
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-my-muted">Autonomous Research Thesis</span>
           </div>
           <h1 className="font-serif text-4xl leading-tight text-my-ink max-w-2xl">
-            {thesis.title}
+            {safeText(thesis.title)}
           </h1>
         </div>
-        <button 
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-my-ink text-white text-xs font-bold uppercase tracking-widest hover:bg-my-accent transition-colors"
-        >
-          <Download size={14} /> Export Thesis
-        </button>
+        {/* Export removed per request */}
       </div>
 
       <div className="space-y-4">
         {sections.map((section) => (
-          <div key={section.id} className="border border-my-border bg-white shadow-sm overflow-hidden">
+          <div key={section.id} className="border border-my-border bg-my-callout shadow-sm overflow-hidden">
             <button 
               onClick={() => toggleSection(section.id)}
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors text-left"
@@ -79,13 +82,18 @@ export default function DeepResearchView() {
           </div>
         ))}
 
+        {/* Research Quality Score Card */}
+        {deepResearch.scores && (
+          <ResearchScoreCard scores={deepResearch.scores} />
+        )}
+
         {/* References Section */}
-        <div className="border border-my-border bg-white shadow-sm mt-8">
+        <div className="border border-my-border bg-my-callout shadow-sm mt-8">
           <div className="px-6 py-4 border-b border-my-border">
             <h3 className="text-sm font-bold uppercase tracking-widest text-my-ink">References & Citations</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {thesis.references.map((ref, i) => (
+            {thesis.references?.map((ref, i) => (
               <div key={i} className="flex flex-col p-3 border border-my-border bg-black/5 rounded-[4px]">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[10px] font-bold text-my-accent px-1.5 py-0.5 bg-my-accent/10 rounded">

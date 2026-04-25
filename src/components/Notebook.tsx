@@ -61,7 +61,7 @@ export default function Notebook({ onClose }: { onClose: () => void }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="p-6 border border-my-border bg-white dark:bg-white/5 group relative hover:border-my-accent transition-all"
+                  className="p-6 border border-my-border bg-white dark:bg-my-accent/5 group relative hover:border-my-accent transition-all"
                 >
                   <button 
                     onClick={() => removeNote(note.id)}

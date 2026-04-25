@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { dbService } from '../services/dbService';
 import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X } from 'lucide-react';
 import clsx from 'clsx';
+import BrandLogo from './BrandLogo';
 
 export default function AuthPortal({ onClose }: { onClose: () => void }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -65,7 +66,11 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.error || "Authentication failure. Check credentials.");
+      if (!err.response) {
+        setError("Intelligence Vault connection failure. Ensure 'npm run vault' is active.");
+      } else {
+        setError(err.response.data.error || "Authorization discrepancy detected. Check credentials.");
+      }
     } finally {
       setLoading(false);
     }
@@ -92,8 +97,11 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         </button>
 
         <div className="p-10">
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-8">
-            <div className="w-8 h-px bg-my-accent" /> Operative Protocol
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px]">
+              <div className="w-8 h-px bg-my-accent" /> Operative Protocol
+            </div>
+            <BrandLogo size={32} />
           </div>
 
           <h2 className="text-5xl font-serif font-bold italic mb-2 text-white">
@@ -141,7 +149,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
              <button 
                disabled={loading}
                type="submit"
-               className="w-full bg-my-ink dark:bg-white text-white dark:text-my-ink p-5 text-[11px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-my-accent hover:text-white transition-all group"
+               className="w-full bg-my-ink text-my-bg dark:bg-my-accent dark:text-black p-5 text-[11px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-my-accent hover:text-white transition-all group"
              >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : (
                    <>

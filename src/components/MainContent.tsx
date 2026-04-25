@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { useStore } from '../store';
-import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap } from 'lucide-react';
+import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
 import LoadingGame from './LoadingGame';
@@ -12,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { executeDeepResearch } from '../services/deepResearchService';
 import { dbService } from '../services/dbService';
 import DeepResearchView from './DeepResearchView';
+import BrandLogo from './BrandLogo';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -37,7 +39,7 @@ export default function MainContent() {
   const {
     toggleSidebar, initialQuery, setInitialQuery, currentReport,
     setCurrentReport, xp, searchCount, rank, updateGamification,
-    addToArchive, currentChat, addChatMessage, deepResearch, setDeepResearch,
+    addToArchive, currentChat, addChatMessage, deepResearch, setDeepResearch, resetDeepResearch,
     investigationStack, pushToStack, popFromStack, clearStack
   } = useStore();
 
@@ -49,6 +51,37 @@ export default function MainContent() {
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const user = useStore(state => state.user);
+  const archive = useStore(state => state.archive);
+  const setArchive = useStore(state => state.setArchive);
+
+  // Archive Synchronization Logic
+  useEffect(() => {
+    // Only sync if user is logged in and archive is truly empty
+    if (user && archive.length === 0) {
+      const syncArchive = async () => {
+        try {
+          const reports = await dbService.getAllReports(user.id);
+          if (reports && reports.length > 0) {
+            const syncedArchive = reports.map(r => ({
+              id: r.id,
+              query: r.query,
+              timestamp: r.timestamp,
+              topic_cluster: r.data.archive_entry?.topic_cluster || "Cloud Intelligence",
+              tags: r.data.archive_entry?.tags || [],
+              summary_snippet: r.data.archive_entry?.summary_snippet || r.data.summary?.bottom_line || "",
+              report: r.data
+            }));
+            setArchive(syncedArchive);
+          }
+        } catch (e) {
+          console.error("Archive sync error:", e);
+        }
+      };
+      syncArchive();
+    }
+  }, [user?.id, archive.length, setArchive]);
 
   useEffect(() => {
     if (initialQuery) {
@@ -83,6 +116,9 @@ export default function MainContent() {
         throw new Error("Intelligence synthesis yielded incomplete data. Retrying may resolve this.");
       }
 
+      const reportId = uuidv4();
+      report.id = reportId; 
+
       setLoadingPhase("Finalizing report...");
       setCurrentReport(report);
 
@@ -104,25 +140,22 @@ export default function MainContent() {
           colors: ['#2A4365', '#E2E8F0', '#1A1A1A', '#F27D26']
         });
       }
+      
+      // Add to archive (Always archive, force current system time for sorting)
+      addToArchive({
+        id: reportId,
+        query: report.archive_entry?.query || targetQuery,
+        timestamp: new Date().toISOString(), // FORCE SYSTEM TIME
+        topic_cluster: report.archive_entry?.topic_cluster || "General Intelligence",
+        tags: report.archive_entry?.tags || [],
+        summary_snippet: report.archive_entry?.summary_snippet || report.summary.bottom_line || "",
+        report
+      });
 
-      // Add to archive
-      if (report.archive_entry) {
-        const reportId = Date.now().toString();
-        addToArchive({
-          id: reportId,
-          query: report.archive_entry.query || targetQuery,
-          timestamp: report.archive_entry.timestamp || new Date().toISOString(),
-          topic_cluster: report.archive_entry.topic_cluster || "General",
-          tags: report.archive_entry.tags || [],
-          summary_snippet: report.archive_entry.summary_snippet || "",
-          report
-        });
-
-        // Save to SQLite Vault if logged in
-        const user = useStore.getState().user;
-        if (user) {
-          dbService.saveReport(reportId, user.id, targetQuery, report);
-        }
+      // Save to SQLite Vault if logged in
+      const user = useStore.getState().user;
+      if (user) {
+        dbService.saveReport(reportId, user.id, targetQuery, report);
       }
 
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -231,7 +264,38 @@ export default function MainContent() {
     setQuery("");
 
     try {
-      await executeDeepResearch(targetQuery);
+      const result = await executeDeepResearch(targetQuery);
+      
+      // Update history/archive with the new thesis
+      const state = useStore.getState();
+      if (result?.thesis && state.currentReport) {
+        const updatedReport = {
+          ...state.currentReport,
+          deep_research: result.thesis,
+          deep_scores: result.scores
+        };
+        
+        // Update current report in store
+        setCurrentReport(updatedReport as any);
+        
+        // Update archive entry, move to top, and refresh timestamp
+        const otherEntries = state.archive.filter(entry => entry.id !== state.currentReport?.id);
+        const targetEntry = state.archive.find(entry => entry.id === state.currentReport?.id);
+        
+        if (targetEntry) {
+          const updatedEntry = { 
+            ...targetEntry, 
+            report: updatedReport as any,
+            timestamp: new Date().toISOString() // Refresh time to jump to top
+          };
+          state.setArchive([updatedEntry, ...otherEntries]);
+        }
+        
+        // Sync with SQLite Vault
+        if (state.user && state.currentReport?.id) {
+          await dbService.saveReport(state.currentReport.id, state.user.id, targetQuery, updatedReport as any);
+        }
+      }
     } catch (err: any) {
       console.error("Deep Research Trigger Failed:", err);
     }
@@ -240,9 +304,9 @@ export default function MainContent() {
   return (
     <ErrorBoundary>
       <MusicVisualizer />
-      <div className="flex-1 flex flex-col h-full bg-white/20 backdrop-blur-xl relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full bg-my-callout/20 backdrop-blur-xl relative overflow-hidden">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-my-border z-10 shrink-0 bg-white/40 backdrop-blur-md">
+        <header className="h-16 flex items-center justify-between px-8 border-b border-my-border z-10 shrink-0 bg-my-bg/40 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
@@ -250,26 +314,18 @@ export default function MainContent() {
             >
               <Menu size={20} />
             </button>
-            <div className="hidden md:block text-[11px] text-my-muted uppercase tracking-wider">
-              SYSTEM: {currentReport?.mode || 'IDLE'} // NEURAL LINK: ACTIVE
-            </div>
+            <div className="md:flex items-center gap-6" />
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                setCurrentReport(null);
-                setError(null);
-                useStore.setState({ currentChat: [] });
-              }}
-              className="px-3 py-1 border border-my-border bg-transparent text-[11px] text-my-muted uppercase cursor-pointer hover:bg-black/5 transition-colors font-bold"
-            >
-              NEW SEARCH
-            </button>
-            <button
+             {/* New Search is now handled via the Logo or just clearing the input */}
+          </div>
+          
+          <div className="flex items-center gap-4">
+             <button
               onClick={startDeepResearch}
               disabled={deepResearch.status === 'running' || (!query.trim() && !currentReport)}
-              className="px-3 py-1 bg-my-accent text-white text-[11px] uppercase cursor-pointer hover:bg-my-ink transition-colors font-bold disabled:opacity-50 flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-1.5 border border-my-accent/30 text-my-accent text-[10px] font-black uppercase tracking-[0.2em] hover:bg-my-accent hover:text-white transition-all disabled:opacity-30"
             >
               <Cpu size={14} /> DEEP RESEARCH
             </button>
@@ -304,18 +360,35 @@ export default function MainContent() {
         <div ref={contentAreaRef} className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
           {/* Deep Research Progress Banner */}
           {deepResearch.status === 'running' && (
-            <div className="sticky top-0 left-0 right-0 z-20 bg-my-accent text-white py-2 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
+            <div className="sticky top-0 left-0 right-0 z-20 bg-my-accent text-my-bg py-2 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
                 <Loader2 size={14} className="animate-spin" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Stage {deepResearch.stage}/5: {deepResearch.progress}
+                  Stage {deepResearch.stage}/4: {deepResearch.progress}
                 </span>
               </div>
               <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map(s => (
-                  <div key={s} className={clsx("h-1 w-8 rounded-full", s <= deepResearch.stage ? "bg-white" : "bg-white/20")} />
+                {[1, 2, 3, 4].map(s => (
+                  <div key={s} className={clsx("h-1 w-8 rounded-full", s <= deepResearch.stage ? "bg-my-bg" : "bg-my-bg/30")} />
                 ))}
               </div>
+            </div>
+          )}
+
+          {deepResearch.status === 'error' && (
+            <div className="sticky top-0 left-0 right-0 z-20 bg-red-900 text-white py-3 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
+              <div className="flex items-center gap-4">
+                <AlertCircle size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Deep Research Error: {deepResearch.error || 'System Failure'}
+                </span>
+              </div>
+              <button 
+                onClick={resetDeepResearch}
+                className="text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4"
+              >
+                Dismiss
+              </button>
             </div>
           )}
 
@@ -332,40 +405,102 @@ export default function MainContent() {
                 <div className="absolute top-[20%] left-[20%] w-64 h-64 bg-my-accent/5 rounded-full blur-3xl animate-[pulse_6s_ease-in-out_infinite]"></div>
                 <div className="absolute bottom-[20%] right-[20%] w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite_reverse]"></div>
 
-                <div className="relative z-10 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-1000 mt-[-100px]">
-                  <div className="w-24 h-24 mb-10 relative flex items-center justify-center">
-                    <div className="absolute inset-0 border border-my-accent/30 rounded-full animate-[spin_4s_linear_infinite]" />
-                    <div className="absolute inset-2 border border-my-ink/10 rounded-full animate-[spin_3s_linear_infinite_reverse]" />
-                    <Compass size={36} className="text-my-accent opacity-80" strokeWidth={1} />
-                  </div>
-
-                  <h1 className="text-3xl font-serif font-light text-my-ink mb-3 tracking-wide">
-                    COGNAPSE SYSTEM <span className="text-my-accent font-bold">ONLINE</span>
-                  </h1>
-
-                  <p className="text-[11px] font-mono tracking-widest uppercase text-my-muted mb-12 opacity-80">
-                    Awaiting user directives & operational constraints
-                  </p>
-
-                  <button
-                    onClick={() => {
-                      const rabbitHoles = [
-                        "Synthesize the history of the Voyager Golden Record and its cultural impact.",
-                        "What are the leading theories on what happened to the Bronze Age collapse?",
-                        "How does the mycelial network in forests compare to neural networks?",
-                        "Analyze the strategic brilliance of the Mongol Empire's postal system (Yam).",
-                        "Explain the concept of 'Time Crystals' in quantum physics."
-                      ];
-                      const randomQuery = rabbitHoles[Math.floor(Math.random() * rabbitHoles.length)];
-                      handleSearch(randomQuery);
-                    }}
-                    className="group relative px-8 py-3.5 border border-my-border hover:border-my-accent bg-white/50 backdrop-blur-sm shadow-sm flex items-center justify-center gap-2 overflow-hidden cursor-pointer"
+                <div className="relative z-10 flex flex-col items-center text-center mt-[-60px]">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-48 h-48 mb-12 relative flex items-center justify-center"
                   >
-                    <div className="absolute inset-0 bg-my-accent -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-                    <span className="relative z-10 text-[11px] font-bold uppercase tracking-widest text-my-ink group-hover:text-white transition-colors duration-300">
-                      Take Me Down a Rabbit Hole
-                    </span>
-                  </button>
+                    {/* Multi-Layered Rotating Diagnostic Rings */}
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                      className="absolute inset-0 border border-my-accent/10 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+                      className="absolute inset-4 border border-dashed border-my-accent/20 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.1, 0.2] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                      className="absolute inset-0 bg-my-accent/5 rounded-full blur-3xl"
+                    />
+
+                    <div className="relative z-10 p-8 bg-my-bg/40 backdrop-blur-2xl rounded-full border border-my-border/20 shadow-[0_32px_64px_rgba(0,0,0,0.1)]">
+                      <BrandLogo size={64} />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, type: 'spring', damping: 20 }}
+                  >
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-my-ink mb-6 tracking-tighter leading-none italic">
+                      COGNAPSE <span className="text-transparent bg-clip-text bg-gradient-to-tr from-my-accent via-my-ink dark:via-white to-my-accent animate-gradient-x">CORE.</span>
+                    </h1>
+
+                    <div className="mb-20" />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="flex flex-col items-center gap-8"
+                  >
+                      <motion.button
+                        whileHover={{ scale: 1.05, translateY: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (query.trim()) {
+                            handleSearch(query);
+                          } else {
+                            const rabbitHoles = [
+                              "Synthesize the history of the Voyager Golden Record and its cultural impact.",
+                              "What are the leading theories on what happened to the Bronze Age collapse?",
+                              "How does the mycelial network in forests compare to neural networks?",
+                              "Analyze the strategic brilliance of the Mongol Empire's postal system (Yam).",
+                              "Explain the concept of 'Time Crystals' in quantum physics."
+                            ];
+                            const randomQuery = rabbitHoles[Math.floor(Math.random() * rabbitHoles.length)];
+                            handleSearch(randomQuery);
+                          }
+                        }}
+                        className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
+                      >
+                      {/* Corner Brackets */}
+                      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      {/* Scanning Line */}
+                      <motion.div 
+                        className="absolute inset-0 bg-my-accent/10 z-0"
+                        initial={{ y: "-100%" }}
+                        animate={{ y: "100%" }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      />
+
+                      <div className="relative z-10 flex flex-col items-center gap-1.5">
+                        <div className="flex items-center gap-3">
+                           <motion.div 
+                             animate={{ opacity: [1, 0.4, 1] }}
+                             transition={{ duration: 1.5, repeat: Infinity }}
+                             className="w-2 h-2 bg-my-accent rounded-full" 
+                           />
+                           <span className="text-[10px] font-black uppercase tracking-[0.5em]">
+                             Enter The Rabbit Hole
+                           </span>
+                           <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                        </div>
+                      </div>
+                      </motion.button>
+                    </motion.div>
                 </div>
               </div>
             )}
@@ -410,8 +545,8 @@ export default function MainContent() {
                           <div className={clsx(
                             "max-w-[85%] px-4 py-3 rounded-[4px] text-[13px] leading-relaxed relative",
                             msg.role === 'user'
-                              ? "bg-my-ink text-white"
-                              : "bg-white border border-my-border text-my-ink shadow-sm"
+                              ? "bg-my-accent text-my-bg font-bold shadow-lg"
+                              : "bg-my-callout border border-my-border text-my-ink shadow-sm"
                           )}>
                             {msg.content}
                           </div>
@@ -428,7 +563,7 @@ export default function MainContent() {
                   )}
                   {loading && loadingPhase === "Analyzing context..." && (
                     <div className="flex justify-start">
-                      <div className="max-w-[85%] px-5 py-4 rounded-[4px] bg-white border border-my-border shadow-sm flex items-center gap-4">
+                      <div className="max-w-[85%] px-5 py-4 rounded-[4px] bg-my-callout border border-my-border shadow-sm flex items-center gap-4">
                         <div className="flex gap-1.5">
                           <div className="w-1.5 h-1.5 rounded-full bg-my-accent animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-1.5 h-1.5 rounded-full bg-my-accent animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -467,19 +602,19 @@ export default function MainContent() {
                 </div>
 
                 <div className="mt-12 flex flex-col items-center max-w-sm text-center">
-                   <div className="flex items-center gap-2 mb-3 text-my-accent">
-                      <Zap size={14} className="animate-pulse" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Neural Diversion Active</span>
-                   </div>
-                   <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
-                      High-fidelity synthesis in progress. Because we prioritize academic-grade accuracy and professional verification, local processing may take a moment. We recommend a neural diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
-                   </p>
-                   <button 
-                     onClick={() => useStore.getState().setView('games')}
-                     className="px-8 py-3 bg-my-ink text-white dark:bg-white dark:text-my-ink text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
-                   >
-                      Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                   </button>
+                  <div className="flex items-center gap-2 mb-3 text-my-accent">
+                    <Zap size={14} className="animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Neural Diversion Active</span>
+                  </div>
+                  <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
+                    High-fidelity synthesis in progress. Because we prioritize academic-grade accuracy and professional verification, our cloud-hybrid engine is currently cross-referencing global sources. We recommend a neural diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
+                  </p>
+                  <button
+                    onClick={() => useStore.getState().setView('games')}
+                    className="px-8 py-3 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
+                  >
+                    Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
 
               </div>
@@ -492,24 +627,25 @@ export default function MainContent() {
         {/* Input Area */}
         <div className="absolute bottom-0 left-0 right-0 p-4 lg:px-8 lg:pb-8 lg:pt-16 bg-gradient-to-t from-my-bg via-my-bg to-transparent pointer-events-none">
           <div className="max-w-4xl mx-auto w-full pointer-events-auto">
-            <form onSubmit={onSubmit} className="relative shadow-[0_4px_24px_rgba(42,67,101,0.06)]">
+            <form onSubmit={onSubmit} className="relative group">
+              {/* Soft Outer Glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-my-accent/20 via-my-accent/5 to-my-accent/20 rounded-none blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200" />
+
               <div className="relative">
-
-
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={currentReport ? "Ask a follow up question..." : "What do you need to know?"}
+                  placeholder={currentReport ? "Drill deeper into this synthesis..." : "What do you need to research?"}
                   disabled={loading}
-                  className="w-full bg-white border border-my-border rounded-none py-4 pl-6 pr-14 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-sm"
+                  className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-2xl border border-my-border rounded-none py-6 pl-8 pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-lg font-light tracking-tight placeholder:text-my-muted/40"
                 />
                 <button
                   type="submit"
                   disabled={!query.trim() || loading}
-                  className="absolute right-2 top-2 bottom-2 aspect-square text-my-accent hover:text-my-ink hover:bg-my-callout flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute right-3 top-3 bottom-3 aspect-square bg-my-ink text-my-bg dark:bg-my-accent dark:text-black hover:bg-my-accent hover:text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-90"
                 >
-                  <Send size={18} className="translate-x-[1px]" />
+                  <Send size={20} />
                 </button>
               </div>
             </form>

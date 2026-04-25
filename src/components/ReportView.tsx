@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { ARIA_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download } from 'lucide-react';
+import { COGNAPSE_Output } from '../types';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search } from 'lucide-react';
 import clsx from 'clsx';
-// Map rendering imports
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+// Map rendering removed per request
 import PhysicsMap from './PhysicsMap';
 import { useStore } from '../store';
 import confetti from 'canvas-confetti';
+import ThoughtReplayEngine from './ThoughtReplayEngine';
+import BrandLogo from './BrandLogo';
 
-export default function ReportView({ report, onSubSearch, onChatFollowUp }: { report: ARIA_Output, onSubSearch: (q: string) => void, onChatFollowUp?: (q: string) => void }) {
+export default function ReportView({ report, onSubSearch, onChatFollowUp }: { report: COGNAPSE_Output, onSubSearch: (q: string) => void, onChatFollowUp?: (q: string) => void }) {
   
-  const safeText = (val: any) => typeof val === 'object' && val !== null ? JSON.stringify(val) : val;
+  const safeText = (val: any) => {
+    if (typeof val === 'string') return val;
+    if (val === null || val === undefined) return "";
+    return JSON.stringify(val);
+  };
   const hasConflicts = report.conflicts && report.conflicts.length > 0;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
@@ -52,21 +57,24 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
       )}
 
       {/* Query Title & Bottom Line */}
-      <div className="mb-8 relative">
-        <h1 className="font-serif text-[32px] leading-[1.1] mb-4 text-my-ink pr-12">
-          {safeText(report.query_understood)}
-        </h1>
-        <div className="absolute top-2 right-0 flex gap-2">
-          <button 
-            className="p-1.5 text-my-muted hover:text-my-ink hover:bg-black/5 transition-colors rounded group relative"
-            onClick={() => {
-              window.print();
-            }}
-          >
-            <Download size={18} />
-          </button>
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-6">
+          <h1 className="font-serif text-[32px] leading-[1.1] text-my-ink flex-1">
+            {safeText(report.query_understood)}
+          </h1>
+          
+          <div className="flex items-center gap-4 shrink-0 pt-1">
+            <div className="hidden md:flex flex-col items-end text-right">
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">Verified Intelligence</span>
+            </div>
+            <BrandLogo size={44} />
+            <div className="flex gap-1 border-l border-my-border pl-4 ml-2">
+               {/* Export removed per request */}
+            </div>
+          </div>
         </div>
-        <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-4 mb-6 italic font-serif text-base text-my-ink">
+
+        <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-4 italic font-serif text-base text-my-ink">
           {safeText(report.summary?.bottom_line) || "No summary provided."}
         </div>
       </div>
@@ -78,7 +86,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
           <SectionTitle>Intelligence Synthesis</SectionTitle>
           
           {(report.summary?.full_synthesis || report.summary?.eli5_version) && (
-            <div className="bg-white/70 backdrop-blur-md p-6 border border-my-border rounded-[4px] text-[13px] leading-[1.6] text-my-syn flex flex-col gap-4 shadow-sm">
+            <div className="bg-my-bg/70 backdrop-blur-md p-6 border border-my-border rounded-[4px] text-[13px] leading-[1.6] text-my-syn flex flex-col gap-4 shadow-sm">
               {report.summary?.eli5_version && (
                 <div className="p-4 bg-my-accent/5 border border-my-accent/10 rounded">
                   <span className="font-bold text-[10px] uppercase tracking-widest block mb-1 text-my-accent">ELI5 Version</span>
@@ -147,7 +155,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             <div className="grid grid-cols-2 gap-[1px] bg-my-border border border-my-border">
                <ScoreCard label="Credibility" value={safeText(report.scores.overall_credibility)} />
                <ScoreCard label="Relevance" value={safeText(report.scores.overall_relevance)} />
-               <div className="bg-white p-3 flex flex-col justify-center col-span-2">
+               <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">
                  <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
                  <span className="text-my-ink font-semibold capitalize text-[13px]">{safeText(report.scores.evidence_consensus)}</span>
                </div>
@@ -164,6 +172,9 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             </div>
           )}
 
+          {/* Forensic Reasoning Replay */}
+          <ThoughtReplayEngine />
+
 
 
           {/* Sources */}
@@ -172,7 +183,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
               <SectionTitle>References (Click to Verify)</SectionTitle>
               <div className="flex flex-col mt-3">
                 {report.sources.map((s) => (
-                  <div key={s.id} className="mb-3 p-2.5 bg-white border border-my-border rounded-[4px]">
+                  <div key={s.id} className="mb-3 p-2.5 bg-my-callout border border-my-border rounded-[4px]">
                     <div className="flex items-start gap-2 mb-2">
                       <span className="font-bold text-my-accent bg-my-score px-1.5 py-0.5 rounded-[4px] text-[10px] shrink-0 mt-0.5">
                         {safeText(s.credibility_score)}
@@ -184,13 +195,23 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
                         {s.domain && <span className="text-[9px] text-my-muted uppercase tracking-wider">{safeText(s.domain)}</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 pl-9">
-                       <a href={`https://www.google.com/search?q=${encodeURIComponent((typeof s.title === 'string' ? s.title : '') + ' ' + (typeof s.domain === 'string' ? s.domain : ''))}`} target="_blank" rel="noreferrer" className="text-[10px] font-bold flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors uppercase tracking-wide">
-                          Google Verify
+                    <div className="flex flex-wrap items-center gap-3 pl-9">
+                       <a 
+                         href={`https://www.google.com/search?q=${encodeURIComponent((typeof s.title === 'string' ? s.title : '') + ' ' + (typeof s.domain === 'string' ? s.domain : ''))}`} 
+                         target="_blank" 
+                         rel="noreferrer" 
+                         className="px-3 py-1 bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all rounded-[2px] flex items-center gap-1.5 shadow-sm"
+                       >
+                          <Search size={10} /> Verify on Google
                        </a>
-                       {s.url && (
-                         <a href={typeof s.url === 'string' ? s.url : '#'} target="_blank" rel="noreferrer" className="text-[10px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wide">
-                            <Link2 size={10} /> Original Link
+                       {s.url && s.url !== "URL unavailable" && !s.url.includes("unavailable") && (
+                         <a 
+                           href={typeof s.url === 'string' ? s.url : '#'} 
+                           target="_blank" 
+                           rel="noreferrer" 
+                           className="text-[9px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wider border border-my-border px-3 py-1 rounded-[2px]"
+                         >
+                            <Link2 size={10} /> Direct Access
                          </a>
                        )}
                     </div>
@@ -200,50 +221,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             </div>
           )}
 
-          {/* Map */}
-          {report.geo_triggered && report.geo_points && Array.isArray(report.geo_points) && report.geo_points.length > 0 && (
-            <div>
-              <SectionTitle>Geographical Insights</SectionTitle>
-              <div className="bg-white/60 backdrop-blur-md border border-my-border rounded-[4px] mt-3">
-                <div className="w-full relative aspect-[2/1] border-b border-my-border">
-                  <ComposableMap projectionConfig={{ scale: 140 }} style={{ width: "100%", height: "100%" }}>
-                    <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
-                      {({ geographies }) =>
-                        geographies.map((geo) => (
-                          <Geography
-                            key={geo.rsmKey}
-                            geography={geo}
-                            fill="#F1F5F9"
-                            stroke="#E2E8F0"
-                            strokeWidth={0.5}
-                            style={{
-                              default: { outline: "none" },
-                              hover: { outline: "none", fill: "#E2E8F0" },
-                              pressed: { outline: "none" },
-                            }}
-                          />
-                        ))
-                      }
-                    </Geographies>
-                    {report.geo_points.map((pt, i) => (
-                       <Marker key={i} coordinates={[pt.lng || 0, pt.lat || 0]}>
-                         <circle r={pt.zoom_level * 1.5 || 4} fill="#2A4365" opacity={0.6} />
-                         <circle r={2} fill="#fff" />
-                       </Marker>
-                    ))}
-                  </ComposableMap>
-                </div>
-                <div className="p-3 bg-my-sidebar max-h-32 overflow-y-auto">
-                  {report.geo_points.map((pt, i) => (
-                    <div key={i} className="text-[11px] mb-1 leading-tight">
-                      <span className="font-bold text-my-accent mr-1 tracking-tight">{safeText(pt.label)}:</span>
-                      <span className="text-my-syn">{safeText(pt.relevance_note)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Warnings & Conflicts */}
           {hasConflicts && Array.isArray(report.conflicts) && (
@@ -251,13 +229,13 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
               <SectionTitle>Conflicts Detected</SectionTitle>
               <div className="space-y-2 mt-3">
                 {report.conflicts.map((c, i) => (
-                   <div key={i} className="p-3 bg-[#FFF5F5] border border-[#FEB2B2] text-my-ink text-[11px] leading-relaxed">
-                      <div className="font-bold text-[#C53030] mb-2 uppercase tracking-wide flex items-center gap-1.5">
+                   <div key={i} className="p-3 bg-my-conflict-bg border border-my-conflict-border text-my-ink text-[11px] leading-relaxed">
+                      <div className="font-bold text-my-conflict-text mb-2 uppercase tracking-wide flex items-center gap-1.5">
                         <ShieldAlert size={12} /> Conflict Note
                       </div>
                       <div className="mb-1"><span className="font-bold">Source A:</span> {safeText(c.claim_a)} <span className="opacity-60">({safeText(c.source_a)})</span></div>
                       <div className="mb-2"><span className="font-bold">Source B:</span> {safeText(c.claim_b)} <span className="opacity-60">({safeText(c.source_b)})</span></div>
-                      <div className="pt-2 border-t border-[#FEB2B2]/50 text-[#C53030]">
+                      <div className="pt-2 border-t border-my-conflict-border text-my-conflict-text">
                         {safeText(c.explanation)}
                       </div>
                    </div>
@@ -267,10 +245,10 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
           )}
 
           {hasBias && (
-            <div className="p-3 bg-[#FFF5F5] border border-[#FEB2B2] text-my-ink text-[11px] mt-4">
-              <span className="font-bold text-[#C53030] mb-1 uppercase tracking-wide flex items-center gap-1.5"><AlertTriangle size={12}/> Bias Alert</span>
+            <div className="p-3 bg-my-conflict-bg border border-my-conflict-border text-my-ink text-[11px] mt-4">
+              <span className="font-bold text-my-conflict-text mb-1 uppercase tracking-wide flex items-center gap-1.5"><AlertTriangle size={12}/> Bias Alert</span>
               <p className="mb-1">{safeText(report.bias_alert!.direction)}</p>
-              <p className="text-[#C53030] font-medium">Rec: {safeText(report.bias_alert!.recommendation)}</p>
+              <p className="text-my-conflict-text font-medium">Rec: {safeText(report.bias_alert!.recommendation)}</p>
             </div>
           )}
         </div>
@@ -285,7 +263,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
               <button 
                 key={i} 
                 onClick={() => onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f)}
-                className="bg-white border border-my-border hover:border-my-accent text-[12px] text-my-ink py-1.5 px-3 transition-colors flex items-center gap-2"
+                className="bg-my-bg border border-my-border hover:border-my-accent text-[12px] text-my-ink py-1.5 px-3 transition-colors flex items-center gap-2"
               >
                 {safeText(f)} <ArrowRight size={12} className="opacity-50" />
               </button>
@@ -329,7 +307,7 @@ function ScoreCard({ label, value }: { label: string, value: any }) {
   const num = typeof value === 'string' ? parseFloat(value) : value;
   const displayValue = typeof num === 'number' && !isNaN(num) ? num.toFixed(1) + '%' : value;
   return (
-    <div className="bg-white p-3 flex flex-col justify-center">
+    <div className="bg-my-callout p-3 flex flex-col justify-center">
       <span className="text-[9px] font-bold text-my-muted uppercase mb-1">{label}</span>
       <span className="text-my-accent font-bold text-lg leading-none">{displayValue}</span>
     </div>
@@ -338,7 +316,7 @@ function ScoreCard({ label, value }: { label: string, value: any }) {
 
 function TakeawayCard({ title, content }: { title: string, content: string }) {
   return (
-    <div className="bg-white p-3">
+    <div className="bg-my-callout p-3">
       <h4 className="font-bold text-[9px] uppercase tracking-wide mb-1 text-my-muted">
         {title}
       </h4>
@@ -349,13 +327,13 @@ function TakeawayCard({ title, content }: { title: string, content: string }) {
 
 function SwotQuadrant({ title, items }: { title: string, items: string[] }) {
   if (!items || !Array.isArray(items) || items.length === 0) return (
-    <div className="bg-white p-3">
+    <div className="bg-my-callout p-3">
       <h4 className="font-bold text-[9px] uppercase tracking-wide text-my-muted">{title}</h4>
       <div className="text-[10px] text-my-border mt-2">N/A</div>
     </div>
   );
   return (
-    <div className="bg-white p-3 flex flex-col">
+    <div className="bg-my-callout p-3 flex flex-col">
       <h4 className="font-bold text-[9px] uppercase tracking-wide mb-1 text-my-muted">{title}</h4>
       <div className="flex flex-col gap-1 mt-1">
         {items.map((item, i) => (

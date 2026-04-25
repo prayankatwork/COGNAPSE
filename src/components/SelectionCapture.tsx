@@ -75,7 +75,7 @@ export default function SelectionCapture() {
           onClick={handleCapture}
           className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-2xl border transition-all ${isSaved
               ? 'bg-emerald-500 border-emerald-400 text-white'
-              : 'bg-my-ink border-white/20 text-white hover:bg-my-accent'
+              : 'bg-my-accent border-white/20 text-my-bg hover:bg-my-ink hover:text-white'
             }`}
         >
           {isSaved ? (
@@ -91,7 +91,7 @@ export default function SelectionCapture() {
           )}
         </button>
         {/* Triangle Pointer */}
-        <div className={`w-3 h-3 rotate-45 mx-auto -mt-1.5 border-r border-b ${isSaved ? 'bg-emerald-500 border-emerald-400' : 'bg-my-ink border-white/20'
+        <div className={`w-3 h-3 rotate-45 mx-auto -mt-1.5 border-r border-b ${isSaved ? 'bg-emerald-500 border-emerald-400' : 'bg-my-accent border-white/20'
           }`} />
       </motion.div>
     </AnimatePresence>

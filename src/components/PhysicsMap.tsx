@@ -30,6 +30,12 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>();
   const theme = useStore((state) => state.theme);
+
+  const safeText = (val: any) => {
+    if (typeof val === 'string') return val;
+    if (val === null || val === undefined) return "";
+    return JSON.stringify(val);
+  };
   
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoverNode, setHoverNode] = useState<any>(null);
@@ -42,6 +48,8 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
   const [isExpanded, setIsExpanded] = useState(false);
   const [filterMode, setFilterMode] = useState<'all' | 'high'>('all');
   const [layoutMode, setLayoutMode] = useState<'radial' | 'force'>('force');
+  const [showScrollMessage, setShowScrollMessage] = useState(false);
+  const [isFirstView, setIsFirstView] = useState(true);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -76,7 +84,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       nodes.push({
         id: mapData.central_node.id || 'root',
         name: mapData.central_node.label,
-        val: 28,
+        val: 10,
         importance: 1,
         color: '#F27D26', // Always Brand Orange for Root
         type: 'discovery'
@@ -91,7 +99,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
         nodes.push({
           id: n.id,
           name: n.label,
-          val: importance * 12 + 6,
+          val: importance * 4 + 2,
           importance: importance,
           color: typeColors[n.type?.toLowerCase()] || typeColors.default,
           type: n.type,
@@ -146,6 +154,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       
       // Open modal for single-click forensic inspection
       setSelectedNode(node);
+      setIsFirstView(false);
       setMiniInfo(null);
       setLoadingInfo(true);
       const info = await executeQuickInfo(node.name);
@@ -194,6 +203,40 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       </div>
 
       <div className="flex-1 relative">
+        {/* Instructional Overlays */}
+        <AnimatePresence>
+          {isFirstView && !selectedNode && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-my-sidebar/80 backdrop-blur-md border border-my-border px-4 py-2 pointer-events-none shadow-2xl"
+            >
+              <div className="flex items-center gap-2">
+                <Target size={12} className="text-my-accent animate-pulse" />
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-my-muted">
+                  Click a node to understand its significance
+                </span>
+              </div>
+            </motion.div>
+          )}
+
+          {showScrollMessage && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-my-accent text-white px-6 py-3 shadow-2xl border border-white/20"
+            >
+              <div className="flex items-center gap-3">
+                <Loader2 size={14} className="animate-spin" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                  Synthesizing Node Intelligence... Stand By
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {dimensions.width > 0 && dimensions.height > 0 && (
           <ForceGraph2D
             ref={fgRef}
@@ -215,9 +258,9 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.name;
               const fontSize = 12 / globalScale;
-              const nodeRadius = Math.sqrt(node.val) * 1.8;
+              const nodeRadius = Math.sqrt(node.val) * 1.2;
               const isHovered = hoverNode === node;
-              const isRoot = node.id === 'root' || node.val > 25;
+              const isRoot = node.id === 'root' || node.val > 15;
 
               // Smart Glow
               if (isHovered || isRoot) {
@@ -300,9 +343,9 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
                       <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse text-my-muted">Neural Mapping in Progress...</span>
                     </div>
                   ) : (
-                    <div className="p-5 bg-my-bg border border-my-border italic shadow-inner">
-                      <p className="text-[14px] text-my-ink leading-relaxed">
-                        "{miniInfo}"
+                    <div className="p-5 bg-my-bg border border-my-border italic shadow-inner max-h-[200px] overflow-y-auto scrollbar-hide">
+                      <p className="text-[12px] text-my-ink leading-relaxed">
+                        "{safeText(miniInfo)}"
                       </p>
                     </div>
                   )}
@@ -313,20 +356,14 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
                     onClick={() => {
                       onSubSearch(selectedNode.sub_query || selectedNode.name);
                       setSelectedNode(null);
+                      setShowScrollMessage(true);
+                      setTimeout(() => setShowScrollMessage(false), 5000);
                     }}
                     className="col-span-2 bg-my-accent text-white py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl"
                   >
                     <Target size={16} /> Execute Research
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-2.5 border border-my-border text-my-muted hover:text-my-ink text-[9px] font-bold uppercase transition-colors">
-                    <Share2 size={14} /> Map Source
-                  </button>
-                  <button 
-                    onClick={() => setSelectedNode(null)}
-                    className="flex items-center justify-center gap-2 py-2.5 border border-my-border text-my-muted hover:text-my-ink text-[9px] font-bold uppercase transition-colors"
-                  >
-                    Dismiss
-                  </button>
+
                 </div>
               </div>
             </motion.div>

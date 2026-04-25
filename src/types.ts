@@ -64,4 +64,7 @@ export interface COGNAPSE_Output {
     summary_snippet: string;
   };
   feedback_prompt?: string;
+  deep_research?: any;
+  deep_scores?: any;
+  id?: string;
 }

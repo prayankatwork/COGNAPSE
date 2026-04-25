@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -10,9 +11,13 @@
   --color-my-callout: var(--callout);
   --color-my-syn: var(--syn);
   --color-my-score: var(--score);
-  
-  --font-serif: 'Georgia', serif;
-  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --color-my-conflict-bg: var(--conflict-bg);
+  --color-my-conflict-border: var(--conflict-border);
+  --color-my-conflict-text: var(--conflict-text);
+
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 :root {
@@ -25,18 +30,24 @@
   --callout: #F1F5F9;
   --syn: #334155;
   --score: #EBF8FF;
+  --conflict-bg: #FFF5F5;
+  --conflict-border: #FEB2B2;
+  --conflict-text: #C53030;
 }
 
 .dark {
-  --bg: #0F172A;
-  --sidebar: #1E293B;
-  --ink: #F1F5F9;
-  --accent: #38BDF8;
-  --border: #334155;
-  --muted: #94A3B8;
-  --callout: #1E293B;
-  --syn: #CBD5E1;
-  --score: #0C4A6E;
+  --bg: #000000;
+  --sidebar: #0A0A0A;
+  --ink: #FFFFFF;
+  --accent: #FACC15; /* Cyber Yellow */
+  --border: #222222;
+  --muted: #888888;
+  --callout: #111111;
+  --syn: #CCCCCC;
+  --score: #332B00;
+  --conflict-bg: #1A0505;
+  --conflict-border: #4A1212;
+  --conflict-text: #FC8181;
 }
 
 @layer base {
@@ -45,6 +56,40 @@
     color: var(--color-my-ink);
     font-family: var(--font-sans);
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Intelligence Terminal Scanlines & Grain */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.01) 50%);
+    background-size: 100% 3px;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+    filter: contrast(120%) brightness(100%);
+  }
+
+  /* Cinematic Vignette */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.02) 100%);
+    pointer-events: none;
+    z-index: 99;
   }
 }
 
@@ -52,14 +97,31 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: var(--color-my-border);
     border-radius: 10px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--color-my-muted);
+  }
+
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }

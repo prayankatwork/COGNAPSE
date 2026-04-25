@@ -38,7 +38,7 @@ export default function Onboarding() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What would you like to research?"
             autoFocus
-            className="w-full bg-white border border-my-border rounded-none py-4 pl-6 pr-14 text-my-ink focus:outline-none focus:border-my-accent transition-all text-lg"
+            className="w-full bg-transparent border border-my-border rounded-none py-4 pl-6 pr-14 text-my-ink focus:outline-none focus:border-my-accent transition-all text-lg"
           />
           <button
             type="submit"

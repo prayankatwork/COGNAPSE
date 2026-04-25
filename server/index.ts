@@ -7,7 +7,7 @@ const app = express();
 const port = 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // --- AUTH ROUTES ---
 
@@ -19,7 +19,7 @@ app.post('/api/auth/register', (req, res) => {
   try {
     const trimmedName = username.trim();
     const stmt = db.prepare('INSERT INTO users (id, username, password) VALUES (?, ?, ?)');
-    stmt.run(id, trimmedName, password);
+    stmt.run(id, trimmedName.toLowerCase(), password);
     
     // Initialize stats for new user
     const statsStmt = db.prepare('INSERT INTO user_stats (user_id) VALUES (?)');
@@ -36,7 +36,8 @@ app.post('/api/auth/login', (req, res) => {
   const { password } = req.body;
   
   try {
-    const userExists = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    const lowerUser = username.toLowerCase();
+    const userExists = db.prepare('SELECT id FROM users WHERE LOWER(username) = ?').get(lowerUser);
     if (!userExists) {
       console.warn(`[VAULT] Identification Failure: Operative '${username}' not found in registry.`);
       const allUsers = db.prepare('SELECT username FROM users').all();
@@ -44,7 +45,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ error: "Operative not found in registry." });
     }
 
-    const user = db.prepare('SELECT id, username FROM users WHERE username = ? AND password = ?').get(username, password);
+    const user = db.prepare('SELECT id, username FROM users WHERE LOWER(username) = ? AND password = ?').get(lowerUser, password);
     if (user) {
       console.log(`[VAULT] Identification Successful: Operative '${username}' authorized.`);
       res.json({ success: true, user });
@@ -62,7 +63,7 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/reports', (req, res) => {
   const { id, userId, query, data } = req.body;
   try {
-    const stmt = db.prepare('INSERT INTO intelligence_reports (id, user_id, query, data) VALUES (?, ?, ?, ?)');
+    const stmt = db.prepare('INSERT OR REPLACE INTO intelligence_reports (id, user_id, query, data) VALUES (?, ?, ?, ?)');
     stmt.run(id, userId, query, JSON.stringify(data));
     res.json({ success: true });
   } catch (error) {

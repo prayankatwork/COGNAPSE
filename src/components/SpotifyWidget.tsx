@@ -74,10 +74,10 @@ export default function SpotifyWidget() {
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 w-12 h-12 bg-my-ink text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform z-50 group"
+        className="fixed bottom-6 left-6 w-12 h-12 bg-my-callout text-my-ink border border-my-border rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform z-50 group"
       >
         <Music size={20} />
-        <div className="absolute left-14 bg-my-ink text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+        <div className="absolute left-14 bg-my-callout text-my-ink text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-my-border">
           Open Focus Player
         </div>
       </button>
@@ -88,7 +88,7 @@ export default function SpotifyWidget() {
     <div 
       style={{ left: pos.x, top: pos.y }}
       className={clsx(
-        "fixed bg-my-ink shadow-2xl z-50 transition-shadow overflow-hidden flex flex-col border border-white/10",
+        "fixed bg-my-callout shadow-2xl z-50 transition-shadow overflow-hidden flex flex-col border border-my-border",
         isMinimized ? "w-12 h-12 rounded-full cursor-pointer items-center justify-center" : "w-80 h-[380px] rounded-[12px]",
         isDragging ? "shadow-blue-500/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] scale-[1.02] cursor-grabbing" : "cursor-default"
       )}
@@ -97,11 +97,11 @@ export default function SpotifyWidget() {
        {/* Minimized Hitbox overlay */}
        {isMinimized && (
           <div 
-            className="absolute inset-0 z-20 flex items-center justify-center bg-my-ink hover:bg-white/10 transition-colors group"
+            className="absolute inset-0 z-20 flex items-center justify-center bg-my-callout hover:bg-my-border transition-colors group"
             onClick={() => setIsMinimized(false)}
           >
             <Music size={20} className="animate-pulse text-[#1DB954]" />
-            <div className="absolute left-14 bg-my-ink text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+            <div className="absolute left-14 bg-my-callout text-my-ink text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-my-border">
               Show Player
             </div>
           </div>
@@ -109,11 +109,11 @@ export default function SpotifyWidget() {
 
        {/* Maximize Container (Always Mounted to keep iframe alive) */}
        <div className={clsx("w-full h-full flex flex-col absolute inset-0 z-10 transition-opacity duration-300", isMinimized ? "opacity-0 pointer-events-none" : "opacity-100")}>
-           <div className="flex items-center justify-between p-3 bg-black/20 border-b border-white/5 cursor-grab group">
-              <div className="flex items-center gap-2 text-white">
-                <Move size={12} className="text-white/30 group-hover:text-white transition-colors" />
+           <div className="flex items-center justify-between p-3 bg-my-bg/50 border-b border-my-border cursor-grab group">
+              <div className="flex items-center gap-2 text-my-ink">
+                <Move size={12} className="text-my-muted group-hover:text-my-ink transition-colors" />
                 <span className="text-[11px] font-bold tracking-wider uppercase">Focus Playlist</span>
-                <div className="absolute top-10 left-0 bg-my-ink text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+                <div className="absolute top-10 left-0 bg-my-callout text-my-ink text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-my-border">
                    Drag header to move
                 </div>
               </div>
@@ -129,27 +129,27 @@ export default function SpotifyWidget() {
                   {vibe === 'focus' ? <Coffee size={10} /> : <Zap size={10} />}
                   {vibe}
                 </button>
-                <button onClick={() => setIsMinimized(true)} className="text-white/50 hover:text-white transition-colors">
+                <button onClick={() => setIsMinimized(true)} className="text-my-muted hover:text-my-ink transition-colors">
                   <Minus size={14} />
                 </button>
-                <button onClick={() => { setIsOpen(false); setActiveEmbed(''); }} className="text-white/50 hover:text-white transition-colors">
+                <button onClick={() => { setIsOpen(false); setActiveEmbed(''); }} className="text-my-muted hover:text-my-ink transition-colors">
                   <X size={14} />
                 </button>
               </div>
            </div>
            
-           <div className="flex-1 flex flex-col relative bg-my-ink">
+           <div className="flex-1 flex flex-col relative bg-my-callout">
              {!activeEmbed ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-4">
                   <PlayCircle size={32} className="text-[#1DB954] mb-3 opacity-80" />
-                  <p className="text-white/80 text-xs mb-4">Paste a Spotify Playlist, Album, or Track link to focus.</p>
+                  <p className="text-my-muted text-xs mb-4">Paste a Spotify Playlist, Album, or Track link to focus.</p>
                   <form onSubmit={handleEmbed} className="w-full">
                     <input 
                       type="text" 
                       value={playlistUri}
                       onChange={e => setPlaylistUri(e.target.value)}
                       placeholder="https://open.spotify.com/playlist/..."
-                      className="w-full bg-white/10 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#1DB954]"
+                      className="w-full bg-my-bg border border-my-border rounded p-2 text-xs text-my-ink placeholder:text-my-muted/50 focus:outline-none focus:border-[#1DB954]"
                     />
                     <button type="submit" className="w-full mt-2 bg-[#1DB954] text-black font-bold text-[11px] py-2 rounded uppercase tracking-wider hover:bg-[#1ed760] transition-colors">
                       Load Player

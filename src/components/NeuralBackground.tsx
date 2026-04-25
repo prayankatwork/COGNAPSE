@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useStore } from '../store';
 
 export default function NeuralBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const theme = useStore((state) => state.theme);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,74 +17,93 @@ export default function NeuralBackground() {
     let height: number;
     
     const particles: Particle[] = [];
-    const gridSize = 40;
-    const mouse = { x: -1000, y: -1000 };
+    const particleCount = 60;
+    const gridSize = 50;
+    const mouse = { x: -1000, y: -1000, active: false };
 
     class Particle {
       x: number;
       y: number;
       vx: number;
       vy: number;
-      life: number;
-      maxLife: number;
+      size: number;
       color: string;
+      baseX: number;
+      baseY: number;
 
-      constructor(x: number, y: number, vx: number, vy: number) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.maxLife = Math.random() * 100 + 50;
-        this.life = this.maxLife;
-        this.color = Math.random() > 0.5 ? '#F27D26' : '#2A4365';
+      constructor() {
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
+        this.baseX = this.x;
+        this.baseY = this.y;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 1.5 + 0.5;
+        this.color = Math.random() > 0.7 ? '#F27D26' : (theme === 'dark' ? '#4A5568' : '#A0AEC0');
       }
 
       update() {
+        // Floating movement
         this.x += this.vx;
         this.y += this.vy;
-        this.life--;
+
+        // Bounce off walls
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+
+        // Mouse interaction (subtle push)
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 150) {
+          const force = (150 - distance) / 150;
+          this.x -= dx * force * 0.02;
+          this.y -= dy * force * 0.02;
+        }
       }
 
-      draw(ctx: CanvasRenderingContext2D) {
-        const opacity = this.life / this.maxLife;
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = opacity * 0.5;
+      draw() {
+        if (!ctx) return;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
         ctx.fill();
-        ctx.globalAlpha = 1;
+        
+        // Add subtle glow
+        if (this.color === '#F27D26') {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#F27D26';
+        } else {
+          ctx.shadowBlur = 0;
+        }
       }
     }
+
+    const init = () => {
+      particles.length = 0;
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    };
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
+      init();
     };
 
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
-    };
-
-    const createPulse = () => {
-      if (Math.random() > 0.9) {
-        const x = Math.floor(Math.random() * (width / gridSize)) * gridSize;
-        const y = Math.floor(Math.random() * (height / gridSize)) * gridSize;
-        const dir = Math.floor(Math.random() * 4);
-        let vx = 0, vy = 0;
-        if (dir === 0) vx = 2;
-        else if (dir === 1) vx = -2;
-        else if (dir === 2) vy = 2;
-        else vy = -2;
-        particles.push(new Particle(x, y, vx, vy));
-      }
+      mouse.active = true;
     };
 
     const drawGrid = () => {
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
-      ctx.lineWidth = 1;
+      const opacity = theme === 'dark' ? 0.05 : 0.03;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
+      ctx.lineWidth = 0.5;
       
       for (let x = 0; x <= width; x += gridSize) {
         ctx.beginPath();
@@ -98,26 +119,49 @@ export default function NeuralBackground() {
       }
     };
 
-    const drawMouseWake = () => {
-      const gradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 150);
-      gradient.addColorStop(0, 'rgba(242, 125, 38, 0.08)');
-      gradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+    const drawConnections = () => {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = theme === 'dark' 
+              ? `rgba(255, 255, 255, ${0.1 * (1 - distance / 120)})`
+              : `rgba(42, 67, 101, ${0.05 * (1 - distance / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
     };
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
       
+      ctx.shadowBlur = 0; // Reset shadow for grid
       drawGrid();
-      drawMouseWake();
       
-      createPulse();
+      // Draw Connections first
+      drawConnections();
+
+      // Draw and update particles
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
       
-      for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].draw(ctx);
-        if (particles[i].life <= 0) particles.splice(i, 1);
+      // Mouse Ambient Light
+      if (mouse.active) {
+        const gradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 250);
+        gradient.addColorStop(0, theme === 'dark' ? 'rgba(242, 125, 38, 0.03)' : 'rgba(242, 125, 38, 0.05)');
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
       }
       
       animationFrameId = requestAnimationFrame(render);
@@ -133,13 +177,13 @@ export default function NeuralBackground() {
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [theme]);
 
   return (
     <canvas 
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ mixBlendMode: 'multiply' }}
+      style={{ mixBlendMode: theme === 'dark' ? 'screen' : 'multiply' }}
     />
   );
 }

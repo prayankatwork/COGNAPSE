@@ -144,7 +144,7 @@ function MemoryGame() {
                onClick={() => handleFlip(idx)}
                className={clsx(
                  "w-20 h-20 border border-my-border flex items-center justify-center transition-all duration-500 transform",
-                 flipped.includes(idx) || solved.includes(idx) ? "bg-my-accent text-white rotate-y-180 scale-105 shadow-xl" : "bg-white hover:bg-black/5"
+                 flipped.includes(idx) || solved.includes(idx) ? "bg-my-accent text-black rotate-y-180 scale-105 shadow-xl" : "bg-my-callout hover:bg-my-border"
                )}
              >
                 {(flipped.includes(idx) || solved.includes(idx)) ? iconMap[key] : <div className="w-2 h-2 bg-my-muted/20 rounded-full" />}
@@ -350,7 +350,7 @@ function BrickGame() {
           <span>Brick Decryptor</span>
           <span className="text-my-accent">Layers Decrypted: {score}</span>
        </div>
-       <canvas ref={canvasRef} width={400} height={300} className="border border-my-border bg-white shadow-xl" />
+       <canvas ref={canvasRef} width={400} height={300} className="border border-my-border bg-my-callout shadow-xl" />
     </div>
   );
 }
@@ -406,7 +406,7 @@ function PathGame() {
                   className={clsx(
                     "w-12 h-12 border transition-all duration-300",
                     isTarget ? "bg-my-accent border-my-accent animate-pulse shadow-[0_0_20px_rgba(242,125,38,0.5)]" : 
-                    isPath ? "bg-my-ink border-my-ink text-white" : "bg-white border-my-border hover:bg-black/5"
+                    isPath ? "bg-my-ink border-my-ink text-my-bg" : "bg-my-callout border-my-border hover:bg-my-border"
                   )}
                 >
                    {isTarget && <Zap size={14} className="text-white mx-auto" />}
