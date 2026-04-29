@@ -247,6 +247,16 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {/* Floating Toggle for closed state */}
+      {!isSidebarOpen && (
+        <button 
+          onClick={toggleSidebar}
+          className="fixed top-1/2 left-4 -translate-y-1/2 w-10 h-10 bg-my-sidebar border border-my-border flex items-center justify-center text-my-muted hover:text-my-accent transition-all z-[60] shadow-2xl rounded-full"
+        >
+          <ChevronRight size={20} />
+        </button>
+      )}
     </>
   );
 }

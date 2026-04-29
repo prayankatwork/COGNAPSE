@@ -10,238 +10,196 @@ import {
   MessageSquare, History, Trophy, Gauge,
   Box, Eye, HardDrive, Share, Compass, 
   Workflow, ArrowLeft, BookOpen, Key,
-  FileText, Settings, HelpCircle, AlertCircle, Waves, Headphones
+  FileText, Settings, HelpCircle, AlertCircle, Waves, Headphones,
+  Users, Info, List
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const DOC_SECTIONS = [
   {
     id: 'overview',
-    title: 'System Overview',
-    icon: <TerminalIcon size={20} />,
+    title: 'Overview',
+    icon: <TerminalIcon size={18} />,
     content: (
       <div className="space-y-8">
         <p className="text-xl font-light leading-relaxed">
-          COGNAPSE (Cognitive Network Analysis & Processing Synthesis Engine) is a 
-          sovereign intelligence terminal designed to extract high-fidelity truth from 
-          global knowledge indexes using Cloud-Hybrid Synthetic Intelligence.
+          COGNAPSE is a sovereign intelligence terminal designed to extract high-fidelity truth from 
+          global knowledge indexes and simulate parallel decision realities.
         </p>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Native Desktop Architecture</h4>
-             <p className="text-sm opacity-80 leading-relaxed">Now deployed as a native Electron application. COGNAPSE features zero-configuration background integration with Ollama, enabling 100% private, uncensored, and offline hardware acceleration.</p>
+             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Research Core</h4>
+             <p className="text-sm opacity-80 leading-relaxed">Deep intelligence synthesis and evidence-based investigation of any complex topic.</p>
           </div>
           <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Cloud-Hybrid Synergy</h4>
-             <p className="text-sm opacity-80 leading-relaxed">Intelligence is seamlessly routed between ultra-fast Groq LPU™ nodes for rapid synthesis and your local Ollama hardware for unconstrained Deep Research dossiers.</p>
+             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Decision Matrix</h4>
+             <p className="text-sm opacity-80 leading-relaxed">Multiverse simulation engine for exploring second-order consequences of life choices.</p>
           </div>
         </div>
       </div>
     )
   },
   {
-    id: 'neural-flow',
-    title: 'The Neural Flow',
-    icon: <Workflow size={20} />,
+    id: 'core-concepts',
+    title: 'Core Concepts',
+    icon: <Brain size={18} />,
     content: (
       <div className="space-y-8">
-        <p className="text-lg font-light italic">The three-stage intelligence lifecycle of COGNAPSE.</p>
+        <p className="text-lg font-light">The foundational pillars of the COGNAPSE architecture.</p>
         <div className="space-y-6">
-           <div className="flex gap-6 items-start">
-              <div className="w-10 h-10 rounded-full bg-my-accent text-white flex items-center justify-center shrink-0 font-bold">01</div>
-              <div>
-                 <h5 className="font-bold uppercase tracking-widest mb-1">Capture Phase</h5>
-                 <p className="text-sm opacity-70">User input is deconstructed into a multi-dimensional search vector. This involves identifying entities, temporal markers, and geographic relevance.</p>
-              </div>
+           <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
+              <h5 className="font-bold uppercase tracking-widest mb-2">Synthetic Intelligence</h5>
+              <p className="text-sm opacity-70 italic">Beyond search engines. We use multi-agent swarm logic to cross-reference conflicting data points and synthesize a singular truth.</p>
            </div>
-           <div className="flex gap-6 items-start">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 font-bold">02</div>
-              <div>
-                 <h5 className="font-bold uppercase tracking-widest mb-1">Synthesis Phase</h5>
-                 <p className="text-sm opacity-70">The system executes parallel crawls of global indexes. High-performance cloud models then cross-reference findings to eliminate noise and detect contradictions.</p>
-              </div>
-           </div>
-           <div className="flex gap-6 items-start">
-              <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 font-bold">03</div>
-              <div>
-                 <h5 className="font-bold uppercase tracking-widest mb-1">Awareness Phase</h5>
-                 <p className="text-sm opacity-70">Results are mapped into a semantic node-graph. This allows for non-linear exploration of the topic, revealing hidden connections between entities.</p>
-              </div>
+           <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
+              <h5 className="font-bold uppercase tracking-widest mb-2">Forensic Investigation</h5>
+              <p className="text-sm opacity-70 italic">Every claim is backed by a source. The Intelligence Vault allows you to audit the "why" behind every system output.</p>
            </div>
         </div>
       </div>
     )
   },
   {
-    id: 'deep-research',
-    title: 'Deep Research Protocol',
-    icon: <Cpu size={20} />,
+    id: 'getting-started',
+    title: 'Getting Started',
+    icon: <Zap size={18} />,
     content: (
       <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">When standard research isn't enough, the Deep Research Protocol generates academic-grade intelligence theses.</p>
+        <p className="text-lg font-light leading-relaxed">Initialize your operative profile and begin your first protocol.</p>
+        <div className="space-y-4">
+           <div className="flex gap-4 items-start">
+              <div className="w-8 h-8 rounded-full bg-my-accent text-white flex items-center justify-center shrink-0 text-xs font-bold">1</div>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Register your codename and security key to enable the **Intelligence Vault**.</p>
+           </div>
+           <div className="flex gap-4 items-start">
+              <div className="w-8 h-8 rounded-full bg-my-ink text-white flex items-center justify-center shrink-0 text-xs font-bold">2</div>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Select your **Workspace** (Research or Decision) from the main Apps hub.</p>
+           </div>
+           <div className="flex gap-4 items-start">
+              <div className="w-8 h-8 rounded-full bg-my-muted text-white flex items-center justify-center shrink-0 text-xs font-bold">3</div>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Submit your first query. The neural grid will calibrate to your investigative style.</p>
+           </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'research-guide',
+    title: 'Research Guide',
+    icon: <Search size={18} />,
+    content: (
+      <div className="space-y-8">
+        <p className="text-lg font-light leading-relaxed">Optimizing the Research Core for deep synthesis.</p>
         <div className="p-8 bg-my-callout text-my-ink space-y-6">
-           <h4 className="text-2xl font-serif italic border-b border-my-border pb-4">Protocol Requirements</h4>
+           <h4 className="text-2xl font-serif italic border-b border-my-border pb-4">Query Optimization</h4>
+           <p className="text-sm opacity-80 italic mb-4">Be specific. Instead of "Artificial Intelligence," try "The impact of LMMs on academic research integrity 2024-2025."</p>
            <ul className="grid md:grid-cols-2 gap-4 text-sm opacity-80">
-              <li className="flex items-center gap-2"><Zap size={14} className="text-my-accent" /> 5-Stage Synthesis Engine</li>
-              <li className="flex items-center gap-2"><Zap size={14} className="text-my-accent" /> Comparative Entity Insights</li>
-              <li className="flex items-center gap-2"><Zap size={14} className="text-my-accent" /> Full Literature Review</li>
-              <li className="flex items-center gap-2"><Zap size={14} className="text-my-accent" /> Problem Statement Isolation</li>
+              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Semantic Node Graphing</li>
+              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Deep Research Thesis (5-Stage)</li>
+              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Source Credibility Scoring</li>
+              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Logical Conflict Detection</li>
            </ul>
         </div>
-        <div className="p-6 border border-dashed border-my-accent/30 text-center">
-           <p className="text-sm italic opacity-60">Deep Research is powered by Llama 3.3 70B, providing academic-grade coherence through high-performance cloud compute.</p>
+      </div>
+    )
+  },
+  {
+    id: 'decision-guide',
+    title: 'Decision Guide',
+    icon: <Network size={18} />,
+    content: (
+      <div className="space-y-8">
+        <p className="text-lg font-light leading-relaxed">Navigating the Multiverse with the Decision Matrix.</p>
+        <div className="p-8 bg-my-callout text-my-ink space-y-6">
+           <h4 className="text-2xl font-serif italic border-b border-my-border pb-4">Personal Context Engine</h4>
+           <p className="text-sm opacity-80 leading-relaxed mb-4">Use the **Identity Profile** to ground simulations in your personality (Big Five traits) and specific life constraints for 100% personalized pathways.</p>
+           <div className="grid md:grid-cols-2 gap-4 text-sm opacity-80">
+              <div className="p-4 border border-my-border">
+                 <h5 className="font-bold mb-2">Timeline Fracturing</h5>
+                 <p className="text-xs opacity-70">Splits choices into Optimistic, Realistic, and Pessimistic outcomes.</p>
+              </div>
+              <div className="p-4 border border-my-border">
+                 <h5 className="font-bold mb-2">Second-Order Logic</h5>
+                 <p className="text-xs opacity-70">Simulate further into the future to see long-term compounding effects.</p>
+              </div>
+           </div>
         </div>
       </div>
     )
   },
   {
-    id: 'gamification',
-    title: 'Operator Status',
-    icon: <Trophy size={20} />,
+    id: 'ai-system',
+    title: 'AI System',
+    icon: <Cpu size={18} />,
     content: (
       <div className="space-y-8">
-        <p className="text-lg font-light">As you expand your awareness, you unlock higher tiers of investigative clearance.</p>
-        <table className="w-full text-left border-collapse">
-           <thead>
-              <tr className="border-b border-my-border">
-                 <th className="py-4 font-bold uppercase tracking-widest text-[10px]">Rank</th>
-                 <th className="py-4 font-bold uppercase tracking-widest text-[10px]">Requirement</th>
-                 <th className="py-4 font-bold uppercase tracking-widest text-[10px]">Clearance</th>
-              </tr>
-           </thead>
-           <tbody className="text-sm opacity-80">
-              <tr className="border-b border-my-border/50">
-                 <td className="py-4">Novice</td>
-                 <td className="py-4">0 XP</td>
-                 <td className="py-4">Standard Search</td>
-              </tr>
-              <tr className="border-b border-my-border/50">
-                 <td className="py-4 text-my-accent">Analyst</td>
-                 <td className="py-4">350 XP</td>
-                 <td className="py-4">Full Semantic Mapping</td>
-              </tr>
-              <tr className="border-b border-my-border/50">
-                 <td className="py-4">Researcher</td>
-                 <td className="py-4">700 XP</td>
-                 <td className="py-4">Deep Thesis Protocol</td>
-              </tr>
-              <tr>
-                 <td className="py-4 font-bold">Mastermind</td>
-                 <td className="py-4">1200+ XP</td>
-                 <td className="py-4">Total System Access</td>
-              </tr>
-           </tbody>
-        </table>
+        <p className="text-lg font-light leading-relaxed">The architecture behind the intelligence.</p>
+        <div className="space-y-6">
+           <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/20">
+              <Zap className="text-my-accent shrink-0" size={24} />
+              <div>
+                 <h5 className="font-bold uppercase tracking-widest text-xs mb-2">Cloud-Hybrid Engine</h5>
+                 <p className="text-sm opacity-70">Utilizes Groq LPU™ for millisecond-latency synthesis and Gemini 1.5 Pro for deep multi-modal reasoning and massive context handling.</p>
+              </div>
+           </div>
+           <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/20">
+              <Activity className="text-blue-500 shrink-0" size={24} />
+              <div>
+                 <h5 className="font-bold uppercase tracking-widest text-xs mb-2">Swarm Calibration</h5>
+                 <p className="text-sm opacity-70">Parallel processing of multiple LLM nodes to ensure no single bias dominates the final intelligence output.</p>
+              </div>
+           </div>
+        </div>
       </div>
     )
   },
   {
-    id: 'privacy',
-    title: 'Sovereign Intel',
-    icon: <Shield size={20} />,
+    id: 'use-cases',
+    title: 'Use Cases',
+    icon: <Globe2 size={18} />,
+    content: (
+      <div className="space-y-8">
+        <p className="text-lg font-light">Practical applications for high-stakes intelligence.</p>
+        <div className="grid md:grid-cols-2 gap-4 text-sm">
+           <div className="p-6 border border-my-border">
+              <h5 className="font-bold mb-2">Competitive Intelligence</h5>
+              <p className="opacity-70">Mapping market movements and competitor pivots before they go public.</p>
+           </div>
+           <div className="p-6 border border-my-border">
+              <h5 className="font-bold mb-2">Career Pivot Simulation</h5>
+              <p className="opacity-70">Testing the second-order financial and emotional impact of changing industries.</p>
+           </div>
+           <div className="p-6 border border-my-border">
+              <h5 className="font-bold mb-2">Crisis Response</h5>
+              <p className="opacity-70">Rapid synthesis of evolving events during information blackouts.</p>
+           </div>
+           <div className="p-6 border border-my-border">
+              <h5 className="font-bold mb-2">Academic Synthesis</h5>
+              <p className="opacity-70">Generating comprehensive literature reviews and problem statements for research papers.</p>
+           </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'data-privacy',
+    title: 'Data & Privacy',
+    icon: <Shield size={18} />,
     content: (
       <div className="space-y-8">
         <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
            <Lock size={20} />
-           <span className="font-bold uppercase tracking-widest text-xs">Security Status: Encrypted Cloud-Hybrid</span>
+           <span className="font-bold uppercase tracking-widest text-xs">Security Protocol: Active</span>
         </div>
-        <p className="text-lg leading-relaxed">COGNAPSE is built for operators who cannot afford data leaks.</p>
+        <p className="text-lg leading-relaxed">Your intelligence history belongs only to you.</p>
         <div className="space-y-4">
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2 flex items-center gap-2"><Fingerprint size={16} /> Operative Registry</h5>
-              <p className="text-sm opacity-70">COGNAPSE uses an Operative Registry for data isolation. By registering a codename and security key, your research dossiers, training scores, and telemetry are uniquely mapped to your identity in the Intelligence Vault.</p>
-           </div>
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2 flex items-center gap-2"><Database size={16} /> The Cloud Intelligence Vault</h5>
-              <p className="text-sm opacity-70">Your data is stored in a secure, encrypted Firebase vault. This ensures that your investigative history is persistent, globally accessible, and logically partitioned from other operatives.</p>
-           </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'playground',
-    title: 'Neural Calibration',
-    icon: <Box size={20} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">The Playground is a high-fidelity environment designed to refine the cognitive reflexes required for advanced intelligence processing.</p>
-        <div className="grid md:grid-cols-2 gap-6">
            <div className="p-6 border border-my-border bg-my-callout">
-              <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Neural Link</h4>
-              <p className="text-sm opacity-80 leading-relaxed">Establish sequential connections between distant data nodes to stabilize the neural grid.</p>
+              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Fingerprint size={16} className="text-my-accent" /> Operative Isolation</h5>
+              <p className="text-sm opacity-70 leading-relaxed">Data is partitioned using Firebase security rules. Your codename-to-email mapping ensures that your vault cannot be accessed by other system users.</p>
            </div>
            <div className="p-6 border border-my-border bg-my-callout">
-              <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Logic Matrix</h4>
-              <p className="text-sm opacity-80 leading-relaxed">Match forensic icon pairs to decrypt memory clusters and enhance pattern recognition.</p>
-           </div>
-        </div>
-        <p className="text-sm italic opacity-60">Training scores are synced to your Operative Profile and contribute to your overall system clearance.</p>
-      </div>
-    )
-  },
-  {
-    id: 'thought-replay',
-    title: 'Thought Replay Engine',
-    icon: <History size={20} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">The Thought Replay Engine provides a forensic breakdown of the COGNAPSE logic flow, allowing operators to audit the synthesis process.</p>
-        <div className="p-6 border-l-4 border-my-accent bg-my-accent/5">
-           <h4 className="font-bold mb-2">Audit-Trail Logic</h4>
-           <p className="text-sm opacity-80">Every research report includes a hidden logic trace. By activating Thought Replay, you can see exactly which pieces of evidence led to specific claims, and where the system identified potential contradictions.</p>
-        </div>
-        <div className="flex gap-4 items-center p-4 bg-my-callout border border-my-border">
-           <Layers size={24} className="text-my-accent" />
-           <p className="text-xs font-mono uppercase tracking-tighter">REPLAY_MODE: ACTIVE // TRACE_INDEX: SEED_DELTA</p>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'notebook',
-    title: 'Cognitive Notebook',
-    icon: <FileText size={20} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">The Cognitive Notebook is a persistent scratchpad for capturing investigative sparks.</p>
-        <ul className="space-y-4">
-           <li className="flex gap-4 items-start">
-              <MousePointer2 size={16} className="text-my-accent mt-1" />
-              <div>
-                 <span className="font-bold block">Selection Capture</span>
-                 <p className="text-sm opacity-70">Highlight any text in a research report to instantly save it to your notebook with its source attribution.</p>
-              </div>
-           </li>
-           <li className="flex gap-4 items-start">
-              <Database size={16} className="text-my-accent mt-1" />
-              <div>
-                 <span className="font-bold block">Vault Integration</span>
-                 <p className="text-sm opacity-70">Your notes are stored in the Intelligence Vault, meaning they are private, persistent, and logically linked to your profile.</p>
-              </div>
-           </li>
-        </ul>
-      </div>
-    )
-  },
-  {
-    id: 'sonification',
-    title: 'Visual Sonification',
-    icon: <Waves size={20} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light italic">Intelligence you can feel.</p>
-        <p className="text-sm opacity-80 leading-relaxed">
-          The COGNAPSE background canvas is not merely aesthetic; it is a **Visual Sonification** of your environment. Integrated natively with **Spotify**, the dashboard syncs to your auditory vibe. The particle engine and color matrix automatically adapt to maintain perfect cinematic fidelity and readability, whether you are operating in **Dark (Night) Mode** or **Light (Normal) Mode**.
-        </p>
-        <div className="grid md:grid-cols-2 gap-4">
-           <div className="p-4 bg-my-callout text-my-ink border border-my-border hover:border-my-accent transition-all">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-my-accent flex items-center gap-2"><Headphones size={12}/> Focus / Ambient</h5>
-              <p className="text-[11px] opacity-60">High-frequency, geometric patterns that subtly pulse to the bassline, engineered for deep academic synthesis and prolonged focus.</p>
-           </div>
-           <div className="p-4 bg-my-callout text-my-ink border border-my-border hover:border-blue-400 transition-all">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-blue-400 flex items-center gap-2"><Radio size={12}/> Energy / Upbeat</h5>
-              <p className="text-[11px] opacity-60">Fluid, aggressive data streams representing broad-spectrum discovery. The canvas reacts dynamically to the tempo and rhythm of your music.</p>
+              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Database size={16} className="text-my-accent" /> Encrypted Vault</h5>
+              <p className="text-sm opacity-70 leading-relaxed">All research reports and simulations are encrypted at rest. We do not use your personal research data to train global AI models.</p>
            </div>
         </div>
       </div>
@@ -250,7 +208,6 @@ const DOC_SECTIONS = [
 ];
 
 export default function Documentation() {
-  const setView = useStore((state) => state.setView);
   const [activeSection, setActiveSection] = useState('overview');
 
   return (
@@ -258,7 +215,7 @@ export default function Documentation() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Navigation */}
-        <aside className="w-80 border-r border-my-border overflow-y-auto no-scrollbar p-8 hidden md:block">
+        <aside className="w-80 border-r border-my-border overflow-y-auto no-scrollbar p-8 hidden md:block bg-my-sidebar/20">
            <div className="space-y-2">
               {DOC_SECTIONS.map((section) => (
                 <button
@@ -279,6 +236,15 @@ export default function Documentation() {
               ))}
            </div>
 
+           <div className="mt-12 p-6 border border-dashed border-my-border bg-my-callout/30">
+              <div className="flex items-center gap-2 mb-2 text-my-accent">
+                 <AlertCircle size={14} />
+                 <span className="text-[10px] font-black uppercase tracking-widest">Operator Note</span>
+              </div>
+              <p className="text-[10px] text-my-ink italic font-semibold leading-relaxed">
+                 Use the search function in the Vault to query your archived dossiers once indexes are enabled.
+              </p>
+           </div>
         </aside>
 
         {/* Content Area */}
@@ -300,18 +266,18 @@ export default function Documentation() {
                    <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
                       <div className="w-10 h-px bg-my-accent" /> Section_{activeSection.toUpperCase()}
                    </div>
-                   <h2 className="text-6xl font-serif font-bold italic">{DOC_SECTIONS.find(s => s.id === activeSection)?.title}</h2>
+                   <h2 className="text-6xl font-serif font-bold italic text-my-ink">{DOC_SECTIONS.find(s => s.id === activeSection)?.title}</h2>
                 </div>
 
-                <div className="prose dark:prose-invert max-w-none">
+                <div className="prose dark:prose-invert max-w-none text-my-ink">
                    {DOC_SECTIONS.find(s => s.id === activeSection)?.content}
                 </div>
 
                 <div className="mt-40 pt-10 border-t border-my-border flex items-center justify-between text-[10px] font-bold text-my-muted uppercase tracking-widest">
-                   <span>COGNAPSE v2.5 // INTERNAL_USE_ONLY</span>
+                   <span>COGNAPSE v2.5 // ARCHITECT_LEVEL_CLEARANCE</span>
                    <div className="flex gap-4">
-                      <button className="hover:text-my-accent transition-colors">Privacy Policy</button>
-                      <button className="hover:text-my-accent transition-colors">Terms of Awareness</button>
+                      <button className="hover:text-my-accent transition-colors">Privacy Protocol</button>
+                      <button className="hover:text-my-accent transition-colors">Neural Policy</button>
                    </div>
                 </div>
              </motion.div>

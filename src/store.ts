@@ -118,8 +118,11 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games') => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'apps' | 'dev' | 'creator' | 'login' | 'register';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'apps' | 'dev' | 'creator' | 'login' | 'register') => void;
+
+  activeApp: 'research' | 'decide' | null;
+  setActiveApp: (app: 'research' | 'decide' | null) => void;
 
   xp: number;
   searchCount: number;
@@ -159,6 +162,10 @@ interface AppState {
   initialQuery: string | null;
   setInitialQuery: (q: string | null) => void;
 
+  decisionArchive: any[];
+  setDecisionArchive: (archive: any[]) => void;
+  addToDecisionArchive: (entry: any) => void;
+
   vibe: 'focus' | 'energy';
   setVibe: (vibe: 'focus' | 'energy') => void;
 
@@ -186,6 +193,12 @@ interface AppState {
   missions: { id: string; title: string; xp: number; completed: boolean }[];
   completeMission: (id: string) => void;
   refreshMissions: () => void;
+
+  isBlinking: boolean;
+  setBlinking: (val: boolean) => void;
+
+  isDevOpen: boolean;
+  setDevOpen: (val: boolean) => void;
 }
 
 const getRank = (xp: number) => {
@@ -204,7 +217,7 @@ export const useStore = create<AppState>()(
       hasOnboarded: false,
       setHasOnboarded: (val) => set({ hasOnboarded: val, currentView: val ? 'landing' : 'onboarding' }),
       
-      // Cleanup stale emojis from persisted state
+      // Cleanup stale emojis from old sessions
       _hydrateCleanup: () => {
         const currentRank = get().rank;
         if (currentRank && /[^\x00-\x7F]/.test(currentRank)) {
@@ -229,6 +242,8 @@ export const useStore = create<AppState>()(
           gameScores: {}, 
           rank: 'OPERATIVE',
           archive: [],
+          decisionArchive: [],
+          activeApp: null,
           currentReport: null,
           notes: []
         });
@@ -245,6 +260,9 @@ export const useStore = create<AppState>()(
 
       currentView: 'landing',
       setView: (view) => set({ currentView: view }),
+
+      activeApp: null,
+      setActiveApp: (app) => set({ activeApp: app, currentView: 'apps' }),
 
       xp: 0,
       searchCount: 0,
@@ -342,6 +360,12 @@ export const useStore = create<AppState>()(
 
       initialQuery: null,
       setInitialQuery: (q) => set({ initialQuery: q }),
+
+      decisionArchive: [],
+      setDecisionArchive: (archive) => set({ decisionArchive: archive }),
+      addToDecisionArchive: (entry) => set((state) => ({ 
+        decisionArchive: [entry, ...state.decisionArchive].slice(0, 50) 
+      })),
 
       setStats: (stats) => set({ 
         xp: stats.xp, 
@@ -531,6 +555,12 @@ export const useStore = create<AppState>()(
           { id: Math.random().toString(), title: 'Initialize a Deep Research Protocol', xp: 60, completed: false },
         ]
       }),
+
+      isBlinking: false,
+      setBlinking: (val) => set({ isBlinking: val }),
+
+      isDevOpen: false,
+      setDevOpen: (val) => set({ isDevOpen: val }),
     }),
     {
       name: 'cognapse-storage',
@@ -549,6 +579,7 @@ export const useStore = create<AppState>()(
         notes: state.notes,
         currentReport: state.currentReport,
         deepResearch: state.deepResearch,
+        decisionArchive: state.decisionArchive,
       }),
     }
   )
