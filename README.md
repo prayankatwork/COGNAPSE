@@ -81,5 +81,5 @@ COGNAPSE escapes the limitations of the browser sandbox by running entirely on y
 
 <div align="center">
   <p><i>"Extract objective truth from the noise of the digital age."</i></p>
-  <p><b>Built by Antigravity AI & A Dedicated Student Developer.</b></p>
+  <p><b>Built by - A Dedicated Student Developer.</b></p>
 </div>
