@@ -52,7 +52,7 @@ export default function DevDashboard() {
                      setHealth(getSwarmHealth());
                    }
                  }}
-                 className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                 className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all rounded-full"
                >
                  <RefreshCw size={12} /> Force Reset Swarm
                </button>

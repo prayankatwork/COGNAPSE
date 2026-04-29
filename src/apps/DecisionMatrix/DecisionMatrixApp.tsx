@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, Activity, User, LogOut, Settings2, X, Network as NetworkIcon } from 'lucide-react';
+import { Sparkles, ArrowRight, Activity, User, LogOut, Settings2, X } from 'lucide-react';
 import { MultiverseCanvas } from './components/MultiverseCanvas';
 import { generateRealities, generateExpansion, ParallelRealities } from './services/ai';
 import { useStore } from '../../store';
 import { dbService } from '../../services/dbService';
-import DecisionVault from './components/DecisionVault';
 
 export default function App() {
   const [query, setQuery] = useState('');
@@ -16,7 +15,6 @@ export default function App() {
   const [error, setError] = useState('');
   
   const user = useStore(state => state.user);
-  const { decisionArchive, setDecisionArchive, addToDecisionArchive } = useStore();
   const [profile, setProfile] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [inventoryText, setInventoryText] = useState('');
@@ -29,7 +27,21 @@ export default function App() {
     neuroticism: 50
   });
 
-  // Sync profile & archive on mount/user change
+  // Restore from Archive
+  const currentDecision = useStore(state => state.currentDecision);
+  React.useEffect(() => {
+    if (currentDecision) {
+      setData(currentDecision.data);
+      setSubmittedQuery(currentDecision.query);
+      setQuery(currentDecision.query);
+    } else {
+      setData(null);
+      setSubmittedQuery('');
+      setQuery('');
+    }
+  }, [currentDecision]);
+
+  // Sync profile on mount/user change
   React.useEffect(() => {
     if (user) {
       dbService.getDecisionProfile(user.id).then(p => {
@@ -46,25 +58,8 @@ export default function App() {
           });
         }
       });
-
-      dbService.getDecisionHistory(user.id).then(history => {
-        setDecisionArchive(history);
-      });
     }
   }, [user]);
-
-  // Listen for archived loads
-  React.useEffect(() => {
-    const handleLoad = (e: any) => {
-      const item = e.detail;
-      setQuery(item.query);
-      setSubmittedQuery(item.query);
-      setData(item.data);
-      setIsLoading(false);
-    };
-    window.addEventListener('load-decision', handleLoad);
-    return () => window.removeEventListener('load-decision', handleLoad);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +78,13 @@ export default function App() {
       setData(result);
       
       if (user) {
-        const id = crypto.randomUUID();
-        await dbService.saveDecision(id, user.id, query, result);
-        addToDecisionArchive({ id, query, data: result, timestamp: new Date().toISOString() });
+        const id = await dbService.saveDecision(user.id, query, result);
+        useStore.getState().addToDecisionArchive({
+          id,
+          query,
+          timestamp: new Date().toISOString(),
+          data: result
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate realities');
@@ -176,11 +175,8 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-full flex font-sans bg-transparent text-my-ink overflow-hidden relative">
-      <DecisionVault />
-      
-      <div className="flex-1 flex flex-col relative overflow-hidden">
-        <div className="mesh-gradient opacity-30 pointer-events-none"></div>
+    <div className="h-screen w-full flex flex-col font-sans bg-transparent text-my-ink overflow-hidden relative">
+      <div className="mesh-gradient opacity-30 pointer-events-none"></div>
 
       {/* Input Bar */}
       <div className="relative z-10 p-4 md:px-10 md:py-6 flex flex-col md:flex-row md:items-center justify-center gap-4">
@@ -195,13 +191,13 @@ export default function App() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Enter a decision, challenge, or scenario you're facing..."
-                className="w-full pl-11 pr-32 py-4 rounded-none border border-my-border glass-card bg-my-callout/40 backdrop-blur-xl focus:bg-my-callout focus:outline-none focus:ring-1 focus:ring-my-accent focus:border-my-accent transition-all text-my-ink font-medium placeholder:text-my-muted/40 placeholder:font-normal shadow-2xl"
+                className="w-full pl-11 pr-32 py-4 rounded-full border border-my-border glass-card bg-my-callout/40 backdrop-blur-xl focus:bg-my-callout focus:outline-none focus:ring-1 focus:ring-my-accent focus:border-my-accent transition-all text-my-ink font-medium placeholder:text-my-muted/40 placeholder:font-normal shadow-2xl"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={!query.trim() || isLoading}
-                className="absolute right-2 top-2 bottom-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black px-6 rounded-none font-bold uppercase tracking-widest text-[10px] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-lg"
+                className="absolute right-2 top-2 bottom-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black px-6 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-lg"
               >
                 {isLoading ? 'Processing' : 'Explore Paths'}
                 {!isLoading && <ArrowRight size={14} />}
@@ -212,7 +208,7 @@ export default function App() {
           {user && (
             <button 
               onClick={openProfileModal} 
-              className="p-4 rounded-none bg-my-callout/40 border border-my-border hover:bg-my-callout text-my-accent transition-all shadow-xl active:scale-95" 
+              className="p-4 rounded-full bg-my-callout/40 border border-my-border hover:bg-my-callout text-my-accent transition-all shadow-xl active:scale-95" 
               title="Psychological Profile"
             >
               <Settings2 size={20} />
@@ -347,7 +343,7 @@ export default function App() {
 
               <button 
                 onClick={saveProfile}
-                className="bg-my-ink text-my-bg dark:bg-my-accent dark:text-black px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-my-accent hover:text-white transition-all shadow-xl"
+                className="bg-my-ink text-my-bg dark:bg-my-accent dark:text-black px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-my-accent hover:text-white transition-all shadow-xl rounded-full"
               >
                 Sync Profile
               </button>
@@ -355,9 +351,30 @@ export default function App() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
 
-
+// Simple fallback icon
+function NetworkIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="16" y="16" width="6" height="6" rx="1" />
+      <rect x="2" y="16" width="6" height="6" rx="1" />
+      <rect x="9" y="2" width="6" height="6" rx="1" />
+      <path d="M5 16v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3" />
+      <path d="M12 8v3" />
+    </svg>
+  );
+}

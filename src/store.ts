@@ -40,7 +40,6 @@ export interface DeepResearchThesis {
   limitations: string;
   futureScope: string;
   conclusion: string;
-  references: { title: string; url: string; credibility: number }[];
 }
 
 export interface ResearchScore {
@@ -165,6 +164,8 @@ interface AppState {
   decisionArchive: any[];
   setDecisionArchive: (archive: any[]) => void;
   addToDecisionArchive: (entry: any) => void;
+  removeFromDecisionArchive: (id: string) => void;
+  clearDecisionArchive: () => void;
 
   vibe: 'focus' | 'energy';
   setVibe: (vibe: 'focus' | 'energy') => void;
@@ -322,7 +323,7 @@ export const useStore = create<AppState>()(
       removeFromArchive: (id) =>
         set((state) => {
           if (state.user) {
-            dbService.deleteReport(id);
+            dbService.deleteReport(state.user.id, id);
           }
           return { archive: state.archive.filter(item => item.id !== id) };
         }),
@@ -366,6 +367,20 @@ export const useStore = create<AppState>()(
       addToDecisionArchive: (entry) => set((state) => ({ 
         decisionArchive: [entry, ...state.decisionArchive].slice(0, 50) 
       })),
+      removeFromDecisionArchive: (id) =>
+        set((state) => {
+          if (state.user) {
+            dbService.deleteDecision(state.user.id, id);
+          }
+          return { decisionArchive: state.decisionArchive.filter(item => item.id !== id) };
+        }),
+      clearDecisionArchive: () =>
+        set((state) => {
+          if (state.user) {
+            dbService.clearDecisionHistory(state.user.id);
+          }
+          return { decisionArchive: [] };
+        }),
 
       setStats: (stats) => set({ 
         xp: stats.xp, 

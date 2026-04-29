@@ -130,9 +130,9 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
         ];
 
         const orderedRealities = [
-          data.realities.find(r => r.type === 'pessimistic' && !r.id.startsWith('second-order-')),
-          data.realities.find(r => r.type === 'realistic' && !r.id.startsWith('second-order-')),
-          data.realities.find(r => r.type === 'optimistic' && !r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'pessimistic' && !r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'realistic' && !r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'optimistic' && !r.id.startsWith('second-order-')),
         ].filter(Boolean) as ParallelRealities['realities'];
 
         // Base realities - inner circle
@@ -163,9 +163,9 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
 
         // Second-order realities - outer spiral
         const secondOrderRealities = [
-          data.realities.find(r => r.type === 'pessimistic' && r.id.startsWith('second-order-')),
-          data.realities.find(r => r.type === 'realistic' && r.id.startsWith('second-order-')),
-          data.realities.find(r => r.type === 'optimistic' && r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'pessimistic' && r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'realistic' && r.id.startsWith('second-order-')),
+          data.realities?.find(r => r.type === 'optimistic' && r.id.startsWith('second-order-')),
         ].filter(Boolean) as ParallelRealities['realities'];
 
         secondOrderRealities.forEach((reality, index) => {
@@ -211,7 +211,7 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
 
     setEdges(prev => {
       const newEdges: Edge[] = [];
-      const orderedRealities = data.realities;
+      const orderedRealities = data.realities || [];
       
       orderedRealities.forEach((reality) => {
         const nodeId = `reality-${reality.id}`;
@@ -363,7 +363,7 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
         className="absolute inset-0 pointer-events-none transition-all duration-1000 z-10"
         style={{
           opacity: focusedNodeId ? 1 : 0,
-          background: 'radial-gradient(circle at center, transparent 0%, rgba(5,5,8, 0.98) 100%)',
+          background: 'radial-gradient(circle at center, transparent 0%, var(--my-bg) 100%)',
           backdropFilter: focusedNodeId ? 'blur(4px)' : 'none'
         }}
       />
@@ -389,14 +389,14 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
         <Panel position="top-right" className="m-4 z-50 flex gap-3">
            <button 
              onClick={handleTimeLoop} 
-             className="p-2.5 glass-card bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 transition-all rounded-xl flex items-center justify-center backdrop-blur-md hover:scale-105 hover:shadow-lg hover:shadow-amber-500/20" 
+             className="p-2.5 glass-card bg-my-callout/50 hover:bg-my-callout text-amber-500 hover:text-amber-400 transition-all rounded-xl flex items-center justify-center backdrop-blur-md hover:scale-105 hover:shadow-lg hover:shadow-amber-500/20" 
              title="Time Loop Rewind"
            >
               <RotateCcw size={18} />
            </button>
            <button 
              onClick={onPaneClick} 
-             className="p-2.5 glass-card bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all rounded-xl flex items-center justify-center backdrop-blur-md hover:scale-105 hover:shadow-lg" 
+             className="p-2.5 glass-card bg-my-callout/50 hover:bg-my-callout text-my-muted hover:text-my-ink transition-all rounded-xl flex items-center justify-center backdrop-blur-md hover:scale-105 hover:shadow-lg" 
              title="Reset Perspective"
            >
               <Maximize size={18} />
@@ -407,9 +407,9 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
           <>
             <Panel position="top-left" className="m-4 z-50 flex flex-col gap-4 max-w-[300px]">
               {/* Thought Trail */}
-              <div className="glass-card px-4 py-2 flex items-center gap-2 border-indigo-500/20 backdrop-blur-xl bg-[#050508]/60 shadow-lg">
-                 <Brain size={14} className="text-indigo-400 shrink-0" />
-                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70 overflow-hidden text-ellipsis whitespace-nowrap">
+              <div className="glass-card px-4 py-2 flex items-center gap-2 border-my-border backdrop-blur-xl bg-my-callout/60 shadow-lg">
+                 <Brain size={14} className="text-my-accent shrink-0" />
+                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-my-ink/70 overflow-hidden text-ellipsis whitespace-nowrap">
                    <AnimatePresence mode="popLayout">
                      {thoughtTrail.map((crumb, idx) => (
                        <motion.div 
@@ -418,8 +418,8 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
                          animate={{ opacity: 1, x: 0 }}
                          className="flex items-center gap-1.5 shrink-0"
                        >
-                         {idx > 0 && <ChevronRight size={12} className="text-white/30" />}
-                         <span className={idx === thoughtTrail.length - 1 ? 'text-indigo-300' : ''}>
+                         {idx > 0 && <ChevronRight size={12} className="text-my-muted/50" />}
+                         <span className={idx === thoughtTrail.length - 1 ? 'text-my-accent' : ''}>
                            {crumb}
                          </span>
                        </motion.div>
@@ -431,16 +431,16 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
 
             <Panel position="bottom-left" className="m-4 z-50 flex flex-col gap-4">
               {/* Controls and Actions */}
-              <div className="glass-card flex flex-col w-[260px] border-indigo-500/20 backdrop-blur-xl bg-[#050508]/80 shadow-2xl pointer-events-auto overflow-hidden transition-all duration-300">
+              <div className="glass-card flex flex-col w-[260px] border-my-border backdrop-blur-xl bg-my-callout/80 shadow-2xl pointer-events-auto overflow-hidden transition-all duration-300">
                 <button 
                   onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-                  className="flex items-center justify-between p-3 px-4 bg-white/5 hover:bg-white/10 transition-colors w-full text-left"
+                  className="flex items-center justify-between p-3 px-4 bg-my-callout/50 hover:bg-my-callout transition-colors w-full text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <SlidersHorizontal size={14} className="text-indigo-400" />
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-indigo-300">Control Panel</div>
+                    <SlidersHorizontal size={14} className="text-my-accent" />
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-my-accent/80">Control Panel</div>
                   </div>
-                  <div className="text-white/50">
+                  <div className="text-my-muted">
                     {isControlsExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                   </div>
                 </button>
@@ -456,10 +456,10 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
                       <div className="p-4 pt-2 flex flex-col gap-4">
                         {/* Simulation Actions */}
                         <div className="flex flex-col gap-2">
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-indigo-300">Scenario Evolution</div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-my-accent/80">Scenario Evolution</div>
                       
                           <button 
-                            className="w-full py-2 bg-indigo-600/90 hover:bg-indigo-500 text-xs font-bold rounded-lg transition-all text-white flex items-center justify-center shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-400/20"
+                            className="w-full py-2 bg-my-accent/90 hover:bg-my-accent text-xs font-bold rounded-full transition-all text-white flex items-center justify-center shadow-lg hover:shadow-my-accent/25 disabled:opacity-50 disabled:cursor-not-allowed border border-my-accent/20"
                             onClick={onExpand}
                             disabled={isExpanding}
                           >
@@ -473,7 +473,7 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
                               "Unfold Deeper Implications"
                             )}
                           </button>
-                          <p className="text-[9px] text-white/40 leading-relaxed italic">
+                          <p className="text-[9px] text-my-muted leading-relaxed italic">
                             Hint: Drag two scenarios together to explore their messy, real-world intersection.
                           </p>
                         </div>
@@ -486,20 +486,20 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
           </>
         )}
 
-        {data && data.divergence_insights.length > 0 && (
+        {data && data.divergence_insights?.length > 0 && (
           <Panel position="bottom-right" className="m-4 z-50 max-w-[340px] pointer-events-auto">
-            <div className="glass-card flex flex-col border-indigo-500/20 backdrop-blur-xl bg-[#050508]/80 shadow-2xl overflow-hidden transition-all duration-300">
+            <div className="glass-card flex flex-col border-my-border backdrop-blur-xl bg-my-callout/80 shadow-2xl overflow-hidden transition-all duration-300">
               <button 
                 onClick={() => setIsTakeawaysExpanded(!isTakeawaysExpanded)}
-                className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors w-full text-left"
+                className="flex items-center justify-between p-4 bg-my-callout/50 hover:bg-my-callout transition-colors w-full text-left"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded bg-indigo-500/20 flex items-center justify-center shrink-0">
-                    <GitMerge className="w-3.5 h-3.5 text-indigo-400" />
+                  <div className="w-7 h-7 rounded bg-my-accent/20 flex items-center justify-center shrink-0">
+                    <GitMerge className="w-3.5 h-3.5 text-my-accent" />
                   </div>
-                  <div className="text-[11px] text-indigo-300 font-bold uppercase tracking-widest">Strategic Takeaways</div>
+                  <div className="text-[11px] text-my-accent/80 font-bold uppercase tracking-widest">Strategic Takeaways</div>
                 </div>
-                <div className="text-white/50">
+                <div className="text-my-muted">
                   {isTakeawaysExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                 </div>
               </button>
@@ -513,10 +513,10 @@ function Flow({ query, data, onExpand, isExpanding, onCombine }: MultiverseCanva
                     transition={{ duration: 0.2 }}
                   >
                     <div className="p-4 pt-0 space-y-3 max-h-[250px] overflow-y-auto custom-scrollbar">
-                      <div className="h-px w-full bg-white/10 mb-3" />
-                      {data.divergence_insights.map((insight, i) => (
-                        <div key={i} className="text-xs text-white/80 leading-relaxed border-l-2 border-indigo-500/30 pl-3">
-                          {insight}
+                      <div className="h-px w-full bg-my-border/50 mb-3" />
+                      {data.divergence_insights?.map((insight, i) => (
+                        <div key={i} className="text-xs text-my-ink/80 leading-relaxed border-l-2 border-my-accent/30 pl-3">
+                          {typeof insight === 'string' ? insight : (insight as any)?.insight || (insight as any)?.type || JSON.stringify(insight)}
                         </div>
                       ))}
                     </div>
