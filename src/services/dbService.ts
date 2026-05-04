@@ -101,7 +101,7 @@ export const dbService = {
       const docRef = doc(db, "user_stats", userId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        return d;
+        return docSnap.data();
       }
       return null;
     } catch (error) {
