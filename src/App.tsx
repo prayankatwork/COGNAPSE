@@ -142,7 +142,12 @@ export default function App() {
             });
           }
 
-          if (notes) setNotes(notes);
+          if (notes) {
+            const sortedNotes = notes.sort((a: any, b: any) => 
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            );
+            setNotes(sortedNotes);
+          }
 
           // Restore Intel Archive
           const dbArchiveEntries = (reports || [])
@@ -155,7 +160,7 @@ export default function App() {
                 timestamp: r.timestamp || new Date().toISOString(),
                 topic_cluster: reportData?.archive_entry?.topic_cluster || "General",
                 tags: reportData?.archive_entry?.tags || [],
-                summary_snippet: reportData?.archive_entry?.summary_snippet || "",
+                summary_snippet: reportData?.archive_entry?.summary_snippet || reportData?.summary?.bottom_line || "",
                 report: reportData
               };
             });

@@ -67,8 +67,7 @@ export const dbService = {
     try {
       const q = query(
         collection(db, "intelligence_reports"), 
-        where("user_id", "==", userId),
-        orderBy("timestamp", "desc")
+        where("user_id", "==", userId)
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => {
@@ -114,8 +113,7 @@ export const dbService = {
     try {
       const q = query(
         collection(db, "notebook"), 
-        where("user_id", "==", userId),
-        orderBy("timestamp", "desc")
+        where("user_id", "==", userId)
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => doc.data());
