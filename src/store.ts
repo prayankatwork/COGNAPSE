@@ -532,14 +532,9 @@ export const useStore = create<AppState>()(
         searchCount: state.searchCount,
         rank: state.rank,
         badges: state.badges,
-        archive: state.archive,
         streak: state.streak,
         lastSearchDate: state.lastSearchDate,
-        theme: state.theme,
-        user: state.user,
-        notes: state.notes,
-        currentReport: state.currentReport,
-        deepResearch: state.deepResearch,
+        theme: state.theme
       }),
     }
   )
