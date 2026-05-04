@@ -86,29 +86,6 @@ export default function DeepResearchView() {
         {deepResearch.scores && (
           <ResearchScoreCard scores={deepResearch.scores} />
         )}
-
-        {/* References Section */}
-        <div className="border border-my-border bg-my-callout shadow-sm mt-8">
-          <div className="px-6 py-4 border-b border-my-border">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-my-ink">References & Citations</h3>
-          </div>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {thesis.references?.map((ref, i) => (
-              <div key={i} className="flex flex-col p-3 border border-my-border bg-black/5 rounded-[4px]">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] font-bold text-my-accent px-1.5 py-0.5 bg-my-accent/10 rounded">
-                    Credibility: {ref.credibility}/10
-                  </span>
-                  <a href={ref.url} target="_blank" rel="noreferrer" className="text-my-muted hover:text-my-accent transition-colors">
-                    <FileText size={14} />
-                  </a>
-                </div>
-                <p className="text-xs font-medium text-my-ink leading-snug">{ref.title}</p>
-                <p className="text-[10px] text-my-muted truncate mt-1">{ref.url}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="mt-12 flex justify-center">

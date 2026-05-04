@@ -40,7 +40,6 @@ export interface DeepResearchThesis {
   limitations: string;
   futureScope: string;
   conclusion: string;
-  references: { title: string; url: string; credibility: number }[];
 }
 
 export interface ResearchScore {
@@ -312,7 +311,7 @@ export const useStore = create<AppState>()(
       removeFromArchive: (id) =>
         set((state) => {
           if (state.user) {
-            dbService.deleteReport(id);
+            dbService.deleteReport(state.user.id, id);
           }
           return { archive: state.archive.filter(item => item.id !== id) };
         }),

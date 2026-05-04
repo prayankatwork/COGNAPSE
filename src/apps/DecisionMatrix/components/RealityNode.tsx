@@ -116,15 +116,15 @@ export function RealityNode({ data }: { data: RealityData }) {
       whileHover={{ scale: isDimmed ? 0.8 : targetScale * 1.02, y: -4 }}
       className={cn(
         "relative flex flex-col w-[280px] max-w-full glass-card overflow-hidden pointer-events-auto cursor-pointer transition-colors ai-breathing",
-        isExpanded ? "border-indigo-500/50" : "hover:border-white/20",
+        isExpanded ? "border-my-accent/50" : "hover:border-my-border",
         isOptimistic && "glow-optimistic",
         isRealistic && "glow-realistic",
         isPessimistic && "glow-pessimistic",
-        !isExpanded && "backdrop-blur-sm bg-white/5",
-        isExpanded && "backdrop-blur-md bg-white/10",
+        !isExpanded && "backdrop-blur-sm bg-my-callout/50",
+        isExpanded && "backdrop-blur-md bg-my-callout",
         isUncertain && "uncertain-jitter",
         isHot && "temperature-hot",
-        data.isFocused && "ring-2 ring-indigo-500/50 shadow-2xl focus-tunnel-active",
+        data.isFocused && "ring-2 ring-my-accent/50 shadow-2xl focus-tunnel-active",
         data.isComparing && "ring-2 ring-fuchsia-500/70 shadow-[0_0_30px_rgba(217,70,239,0.3)] border-fuchsia-500",
         ((data as any).decisionPressure) && "cognitive-heat-zone"
       )}
@@ -135,7 +135,7 @@ export function RealityNode({ data }: { data: RealityData }) {
       <Handle type="target" position={Position.Top} className="!opacity-0" />
       
       {/* Header */}
-      <div className="p-3 flex flex-col gap-2 relative border-b border-white/10">
+      <div className="p-3 flex flex-col gap-2 relative border-b border-my-border/50">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2">
             <div className={cn(
@@ -159,20 +159,20 @@ export function RealityNode({ data }: { data: RealityData }) {
                   Conf: {data.confidence}%
                 </div>
               </div>
-              <h3 className="text-xs font-semibold text-white mt-1 leading-snug line-clamp-2" title={data.outcome}>{data.outcome}</h3>
+              <h3 className="text-xs font-semibold text-my-ink mt-1 leading-snug line-clamp-2" title={data.outcome}>{data.outcome}</h3>
             </div>
           </div>
-          <button className="text-white/40 hover:text-white/80 mt-1 shrink-0 transition-colors">
+          <button className="text-my-muted hover:text-my-ink mt-1 shrink-0 transition-colors">
             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
       </div>
 
       <div className="px-3 pb-3 pt-2">
-        <div className="text-[9px] font-bold text-white/50 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+        <div className="text-[9px] font-bold text-my-muted uppercase tracking-wider mb-1 flex items-center gap-1.5">
           <Info size={10} /> Core Assumption
         </div>
-        <p className="text-[11px] text-slate-300 leading-snug line-clamp-3" title={data.assumption}>{data.assumption}</p>
+        <p className="text-[11px] text-my-ink/80 leading-snug line-clamp-3" title={data.assumption}>{data.assumption}</p>
       </div>
 
       <AnimatePresence>
@@ -181,7 +181,7 @@ export function RealityNode({ data }: { data: RealityData }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-white/10 bg-black/20"
+            className="overflow-hidden border-t border-my-border/50 bg-my-bg/50"
           >
             {/* Body */}
             <div className="p-3 space-y-3">
@@ -190,13 +190,13 @@ export function RealityNode({ data }: { data: RealityData }) {
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.1 }}
               >
-                <div className="text-[9px] font-bold text-white/50 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <div className="text-[9px] font-bold text-my-muted uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <Zap size={10} /> Key Factors
                 </div>
                 {showDetailLevel2 ? (
                   <ul className="space-y-1">
                     {data.key_factors.map((factor, i) => (
-                      <li key={i} className="text-[10px] text-slate-300 flex items-start gap-2 bg-white/5 rounded p-1.5 line-clamp-2" title={factor}>
+                      <li key={i} className="text-[10px] text-my-ink/80 flex items-start gap-2 bg-my-callout/50 rounded p-1.5 line-clamp-2" title={factor}>
                         <span className={cn(
                           "w-1 h-1 rounded-full mt-1 shrink-0",
                           isOptimistic ? "bg-emerald-400" : isRealistic ? "bg-blue-400" : "bg-red-400"
@@ -206,7 +206,7 @@ export function RealityNode({ data }: { data: RealityData }) {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-[10px] text-white/50">
+                  <div className="text-[10px] text-my-muted">
                     Zoom in to reveal {data.key_factors.length} key factors.
                   </div>
                 )}
@@ -217,22 +217,22 @@ export function RealityNode({ data }: { data: RealityData }) {
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.2 }}
               >
-                <div className="text-[9px] font-bold text-white/50 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <div className="text-[9px] font-bold text-my-muted uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <ShieldAlert size={10} /> Potential Risks
                 </div>
                 {showDetailLevel2 ? (
                   <ul className="space-y-1">
                     {data.risks.map((risk, i) => (
-                      <li key={i} className="text-[10px] text-slate-300 flex items-start gap-2 bg-white/5 rounded p-1.5 line-clamp-2" title={risk}>
+                      <li key={i} className="text-[10px] text-my-ink/80 flex items-start gap-2 bg-my-callout/50 rounded p-1.5 line-clamp-2" title={risk}>
                         <span className={cn(
-                          "w-1 h-1 rounded-full mt-1 shrink-0 text-white/50",
+                          "w-1 h-1 rounded-full mt-1 shrink-0 text-my-muted",
                         )} />
                         <span className="leading-snug">{risk}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-[10px] text-white/50">
+                  <div className="text-[10px] text-my-muted">
                     Zoom in to reveal {data.risks.length} potential risks.
                   </div>
                 )}

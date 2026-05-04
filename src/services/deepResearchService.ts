@@ -13,7 +13,7 @@ Structure your response as a valid JSON object with the following fields:
 2. abstract: High-level summary (150 words)
 3. introduction: Context and background (300 words)
 4. problemStatement: What critical gap are we investigating?
-5. literatureReview: Synthesize current knowledge/sources (400 words)
+5. literatureReview: Synthesize current knowledge (400 words) - DO NOT include citations or source references.
 6. methodology: How this intelligence was structured.
 7. findings: Detailed analysis and data points (600 words)
 8. comparativeInsights: How this compares to existing paradigms.
@@ -21,7 +21,11 @@ Structure your response as a valid JSON object with the following fields:
 10. futureOutlook: Where this topic is headed.
 11. conclusion: Final synthesis (200 words)
 
-CRITICAL: Total word count should exceed 1500 words. Be scholarly, deep, and brilliant.
+CRITICAL REQUIREMENTS:
+- Total word count should exceed 1500 words.
+- ABSOLUTELY NO CITATIONS, URLs, OR SOURCE REFERENCES. 
+- REMOVE all bibliographies or reference sections.
+- Focus purely on the synthesis and analysis of the intelligence.
 `;
 
 export async function executeDeepResearch(query: string) {

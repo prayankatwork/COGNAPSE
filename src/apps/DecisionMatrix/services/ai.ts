@@ -1,37 +1,22 @@
 import { callCloudAI } from '../../../services/aiService';
 
-const RealitySchema = {
-  type: "object",
-  properties: {
-    realities: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          type: { type: "string", description: "Must be one of: optimistic, realistic, pessimistic" },
-          assumption: { type: "string" },
-          outcome: { type: "string" },
-          key_factors: {
-            type: "array",
-            items: { type: "string" }
-          },
-          risks: {
-            type: "array",
-            items: { type: "string" }
-          },
-          confidence: { type: "integer", description: "0-100" }
-        },
-        required: ["id", "type", "assumption", "outcome", "key_factors", "risks", "confidence"]
-      }
-    },
-    divergence_insights: {
-      type: "array",
-      items: { type: "string" }
+const DECISION_MODEL = "llama-3.3-70b-versatile"; // Mirroring RESEARCH_MODEL
+const UTILITY_MODEL = "llama-3.3-70b-versatile";  // Mirroring UTILITY_MODEL
+
+const SchemaTemplate = `{
+  "realities": [
+    {
+      "id": "string (generate a unique id)",
+      "type": "optimistic | realistic | pessimistic",
+      "assumption": "string",
+      "outcome": "string",
+      "key_factors": ["string", "string"],
+      "risks": ["string", "string"],
+      "confidence": 85
     }
-  },
-  required: ["realities", "divergence_insights"]
-};
+  ],
+  "divergence_insights": ["string"]
+}`;
 
 export interface Reality {
   id: string;
@@ -62,11 +47,22 @@ Avoid clinical AI-speak. Write clearly, practically, and empathetically. Ensure 
 After generating them, compare them and identify 1-2 strategic takeaways that highlight the core tension driving success vs failure.
 Keep outputs lightweight, concise, and structured.
 
-Return as JSON matching this schema: ${JSON.stringify(RealitySchema)}`;
+CRITICAL: You must output a valid JSON object. Do not include any markdown, explanations, or preamble. Output ONLY the raw JSON exactly matching this structure: 
+${SchemaTemplate}`;
 
   try {
-    const response = await callCloudAI(prompt, true, 'gemini-1.5-flash');
+    const response = await callCloudAI(prompt, true, DECISION_MODEL);
     const data = typeof response === 'string' ? JSON.parse(response) : response;
+    
+    if (!data || !Array.isArray(data.realities) || data.realities.length === 0) {
+      console.error("AI returned malformed payload:", data);
+      throw new Error("Neural generation failed to structure realities. The intelligence node may be overwhelmed. Please retry.");
+    }
+    
+    if (!Array.isArray(data.divergence_insights)) {
+      data.divergence_insights = [];
+    }
+
     return data as ParallelRealities;
   } catch (error) {
     console.error("Error generating realities:", error);
@@ -86,10 +82,11 @@ Create a SINGULAR HYBRID pathway that represents the messy, realistic middle gro
 Return a structured JSON with:
 "reality": A single realistic object (id, type="realistic", assumption, outcome, key_factors, risks, confidence)
 "divergence_insight": A sentence explaining the human truths exposed when these two paths intertwine.
-Write in a non-robotic, incredibly empathetic, practical, and clear way.`;
+
+CRITICAL: You must output a valid JSON object. Do not include any markdown, explanations, or preamble. Output ONLY the raw JSON object.`;
 
   try {
-    const response = await callCloudAI(prompt, true, 'gemini-1.5-flash');
+    const response = await callCloudAI(prompt, true, UTILITY_MODEL);
     const data = typeof response === 'string' ? JSON.parse(response) : response;
     data.reality.id = `hybrid-${Date.now()}`;
     return data as { reality: Reality, divergence_insight: string };
@@ -114,13 +111,23 @@ Generate 3 SECOND-ORDER distinct pathways (simulating further out in time, repre
 For each pathway, identify the ultimate outcome, key emotional/practical factors, ongoing risks, and a confidence score.
 Ensure these sound like long-term, natural human consequences—not clinical AI generations. Use empathetic, relatable language.
 After generating them, compare them and identify 1-2 strategic takeaways about the enduring nature of this decision.
-Keep outputs lightweight, concise, and structured.
 
-Return as JSON matching this schema: ${JSON.stringify(RealitySchema)}`;
+CRITICAL: You must output a valid JSON object. Do not include any markdown, explanations, or preamble. Output ONLY the raw JSON exactly matching this structure: 
+${SchemaTemplate}`;
 
   try {
-    const response = await callCloudAI(prompt, true, 'gemini-1.5-flash');
+    const response = await callCloudAI(prompt, true, DECISION_MODEL);
     const data = typeof response === 'string' ? JSON.parse(response) : response;
+    
+    if (!data || !Array.isArray(data.realities) || data.realities.length === 0) {
+      console.error("AI returned malformed expansion payload:", data);
+      throw new Error("Neural generation failed to structure expansion timelines. Please retry.");
+    }
+
+    if (!Array.isArray(data.divergence_insights)) {
+      data.divergence_insights = [];
+    }
+
     // suffix their IDs so they are identifiable and unique
     data.realities = data.realities.map((r: any) => ({ ...r, id: `second-order-${r.id}` }));
     return data as ParallelRealities;

@@ -22,7 +22,6 @@ import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
 import CreatorProfile from './components/CreatorProfile';
-import CustomCursor from './components/CustomCursor';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
@@ -123,16 +122,19 @@ export default function App() {
   const setArchive = useStore(state => state.setArchive);
   const setNotes = useStore(state => state.setNotes);
 
-  // Auto-sync with Vault on mount if user is logged in
+  // Auto-sync with Vault on mount if user is logged in (handles hard refresh)
   useEffect(() => {
     if (user) {
       const syncUser = async () => {
         try {
-          const [reports, stats, notes] = await Promise.all([
+          console.log('[Vault] Syncing for user:', user.id);
+          const [reports, stats, notes, decisions] = await Promise.all([
             dbService.getAllReports(user.id),
             dbService.loadStats(user.id),
-            dbService.getNotes(user.id)
+            dbService.getNotes(user.id),
+            dbService.getDecisionHistory(user.id)
           ]);
+          console.log('[Vault] Reports fetched:', reports.length, '| Decisions:', decisions.length);
 
           if (stats) {
             setStats({
@@ -145,44 +147,38 @@ export default function App() {
 
           if (notes) setNotes(notes);
 
-          if (reports && reports.length > 0) {
-            const dbArchiveEntries = reports.map((r: any) => {
-              if (r.data) r.data.id = r.id;
+          // Restore Intel Archive
+          const dbArchiveEntries = (reports || [])
+            .filter((r: any) => r && r.id && r.query)
+            .map((r: any) => {
+              const reportData = r.data || {};
               return {
                 id: r.id,
                 query: r.query,
-                timestamp: r.timestamp,
-                topic_cluster: r.data?.archive_entry?.topic_cluster || "General",
-                tags: r.data?.archive_entry?.tags || [],
-                summary_snippet: r.data?.archive_entry?.summary_snippet || "",
-                report: r.data
+                timestamp: r.timestamp || new Date().toISOString(),
+                topic_cluster: reportData?.archive_entry?.topic_cluster || "General",
+                tags: reportData?.archive_entry?.tags || [],
+                summary_snippet: reportData?.archive_entry?.summary_snippet || "",
+                report: reportData
               };
             });
+          const sorted = dbArchiveEntries.sort((a: any, b: any) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+          setArchive(sorted);
+          console.log('[Vault] Archive restored with', sorted.length, 'entries');
 
-            // Use functional update to MERGE rather than overwrite
-            setArchive((localArchive: any[]) => {
-              const merged = [...localArchive];
-              dbArchiveEntries.forEach((dbEntry: any) => {
-                const existingIndex = merged.findIndex(e => e.id === dbEntry.id);
-                if (existingIndex === -1) {
-                  merged.push(dbEntry);
-                } else {
-                  // If DB has more data (deep research), use DB.
-                  // If local has more data, keep local.
-                  const localHasDeep = !!merged[existingIndex].report?.deep_research;
-                  const dbHasDeep = !!dbEntry.report?.deep_research;
-                  
-                  if (dbHasDeep || !localHasDeep) {
-                    merged[existingIndex] = dbEntry;
-                  }
-                }
-              });
-              // Sort by timestamp
-              return merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            });
-          }
+          // Restore Decision Archive
+          const decisionEntries = (decisions || []).map((d: any) => ({
+            id: d.id,
+            query: d.query,
+            timestamp: d.timestamp || new Date().toISOString(),
+            data: d.data || {}
+          }));
+          useStore.getState().setDecisionArchive(decisionEntries);
+          console.log('[Vault] Decision archive restored with', decisionEntries.length, 'entries');
         } catch (err) {
-          console.warn("Vault sync failed on mount. Using local state.", err);
+          console.error("[Vault] Sync failed:", err);
         }
       };
       syncUser();
@@ -196,15 +192,16 @@ export default function App() {
   if (currentView === 'landing') {
     return (
       <div className="relative pt-16">
-        <CustomCursor />
         <Navbar />
         <NeuralBackground />
         <LandingPage />
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
            {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
         </AnimatePresence>
+        <SelectionCapture />
       </div>
     );
   }
@@ -212,14 +209,15 @@ export default function App() {
   if (currentView === 'documentation') {
     return (
       <div className="pt-16 min-h-screen">
-        <CustomCursor />
         <Navbar />
         <Documentation />
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
            {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
         </AnimatePresence>
+        <SelectionCapture />
       </div>
     );
   }
@@ -227,15 +225,16 @@ export default function App() {
   if (currentView === 'games') {
     return (
       <div className="pt-16 min-h-screen">
-        <CustomCursor />
         <Navbar />
         <NeuralBackground />
         <GamesPage />
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
            {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
         </AnimatePresence>
+        <SelectionCapture />
       </div>
     );
   }
@@ -243,7 +242,6 @@ export default function App() {
   if (currentView === 'creator') {
     return (
       <div className="pt-16 min-h-screen relative overflow-hidden">
-        <CustomCursor />
         <Navbar />
         <NeuralBackground />
         <motion.div 
@@ -256,8 +254,10 @@ export default function App() {
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
            {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
         </AnimatePresence>
+        <SelectionCapture />
       </div>
     );
   }
@@ -268,7 +268,6 @@ export default function App() {
       "flex h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-hidden relative pt-16",
       theme === 'dark' ? 'dark' : ''
     )}>
-      <CustomCursor />
       <Navbar />
       <NeuralBackground />
       
