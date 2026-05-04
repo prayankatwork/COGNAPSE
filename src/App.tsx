@@ -7,7 +7,6 @@ import clsx from 'clsx';
 import { useStore } from './store';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
-import Onboarding from './components/Onboarding';
 import NeuralBackground from './components/NeuralBackground';
 import LandingPage from './components/LandingPage';
 import Documentation from './components/Documentation';
@@ -26,7 +25,6 @@ import { lazy, Suspense } from 'react';
 import { audioService } from './services/audioService';
 
 export default function App() {
-  const hasOnboarded = useStore((state) => state.hasOnboarded);
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const toggleSidebar = useStore((state) => state.toggleSidebar);
   const currentView = useStore((state) => state.currentView);
@@ -176,10 +174,6 @@ export default function App() {
       syncUser();
     }
   }, [user]);
-
-  if (!hasOnboarded) {
-    return <Onboarding />;
-  }
 
   if (currentView === 'landing') {
     return (

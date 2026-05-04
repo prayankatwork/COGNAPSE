@@ -95,9 +95,6 @@ export interface Note {
 }
 
 interface AppState {
-  hasOnboarded: boolean;
-  setHasOnboarded: (val: boolean) => void;
-  
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
 
@@ -205,9 +202,6 @@ const getRank = (xp: number) => {
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      hasOnboarded: false,
-      setHasOnboarded: (val) => set({ hasOnboarded: val, currentView: val ? 'landing' : 'onboarding' }),
-      
       // Cleanup stale emojis from old sessions
       _hydrateCleanup: () => {
         const currentRank = get().rank;
@@ -527,7 +521,6 @@ export const useStore = create<AppState>()(
     {
       name: 'cognapse-storage',
       partialize: (state) => ({
-        hasOnboarded: state.hasOnboarded,
         xp: state.xp,
         searchCount: state.searchCount,
         rank: state.rank,
