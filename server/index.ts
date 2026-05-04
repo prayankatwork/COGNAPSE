@@ -6,6 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 const app = express();
 const port = 3001;
 
+// --- HARDENED SECURITY MIDDLEWARE ---
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff'); // Prevent MIME-sniffing
+  res.setHeader('X-Frame-Options', 'DENY'); // Prevent clickjacking
+  res.setHeader('X-XSS-Protection', '1; mode=block'); // Cross-site scripting filter
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains'); // HSTS
+  res.removeHeader('X-Powered-By'); // Obscure server tech
+  next();
+});
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
@@ -149,6 +159,6 @@ app.delete('/api/notebook/user/:userId', (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`COGNAPSE Intelligence Vault active at http://localhost:${port}`);
+app.listen(port, '127.0.0.1', () => {
+  console.log(`[SECURE] COGNAPSE Intelligence Vault bound to local loopback at http://127.0.0.1:${port}`);
 });

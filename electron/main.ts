@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, exec } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,28 +9,47 @@ const __dirname = path.dirname(__filename);
 let mainWindow: BrowserWindow | null = null;
 let ollamaProcess: ChildProcess | null = null;
 
-// The magical "System-Level" function
+// --- SMART AUTO-INSTALLER & BOOT ENGINE ---
 function bootOllamaSilently() {
-  console.log('[System] Booting local Ollama accelerator silently...');
+  console.log('[System] Verifying intelligence core (Ollama)...');
   
-  // Start Ollama with the CORS environment variable applied
-  ollamaProcess = spawn('ollama', ['serve'], {
-    env: { ...process.env, OLLAMA_ORIGINS: "*" },
-    detached: false, // We want it attached to our main process so it dies when we die
-    shell: true,
-  });
+  // Check if ollama is installed by attempting to get its version
+  exec('ollama --version', (error) => {
+    if (error) {
+      console.warn('[System] Ollama core not found. Redirecting to official setup...');
+      
+      // On Windows, we trigger the official installer download/launch
+      const setupCommand = `powershell -Command "Start-Process https://ollama.com/download/OllamaSetup.exe"`;
+      exec(setupCommand, (setupErr) => {
+        if (setupErr) {
+          console.error('[System] Automated setup initiation failed:', setupErr);
+        } else {
+          console.log('[System] Setup initiated. Please follow the on-screen instructions.');
+        }
+      });
+      return;
+    }
 
-  ollamaProcess.stdout?.on('data', (data) => {
-    console.log(`[Ollama Node] ${data.toString()}`);
-  });
+    console.log('[System] Ollama detected. Booting local accelerator...');
+    
+    // Start Ollama with the CORS environment variable applied
+    ollamaProcess = spawn('ollama', ['serve'], {
+      env: { ...process.env, OLLAMA_ORIGINS: "*" },
+      detached: false, // Attached to main process
+      shell: true,
+    });
 
-  ollamaProcess.stderr?.on('data', (data) => {
-    // Ollama writes normal logs to stderr sometimes
-    console.log(`[Ollama Status] ${data.toString()}`);
-  });
+    ollamaProcess.stdout?.on('data', (data) => {
+      console.log(`[Ollama Node] ${data.toString()}`);
+    });
 
-  ollamaProcess.on('close', (code) => {
-    console.log(`[Ollama Node] Terminated with code ${code}`);
+    ollamaProcess.stderr?.on('data', (data) => {
+      console.log(`[Ollama Status] ${data.toString()}`);
+    });
+
+    ollamaProcess.on('close', (code) => {
+      console.log(`[Ollama Node] Terminated with code ${code}`);
+    });
   });
 }
 
@@ -42,8 +61,10 @@ function createWindow() {
     backgroundColor: '#0A0F1A',
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
-      nodeIntegration: false,
-      contextIsolation: true,
+      nodeIntegration: false, // Critical: Disable node integration in renderer
+      contextIsolation: true, // Critical: Isolate preload context
+      sandbox: true, // Security: Enable Chromium sandbox
+      webSecurity: true, // Security: Enforce Same-Origin Policy
     },
   });
 
@@ -56,6 +77,24 @@ function createWindow() {
 
   // Remove the standard Windows menu bar to make it look like a sleek game/tool
   mainWindow.setMenuBarVisibility(false);
+
+  // --- HARDENED ELECTRON SECURITY CONTROLS ---
+  
+  // 1. Prevent creation of new windows (blocks target="_blank" exploits)
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    console.warn('[Security] Blocked attempt to open new window.');
+    return { action: 'deny' };
+  });
+
+  // 2. Prevent arbitrary navigation (keeps app contained)
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    // Only allow local dev server or file:// protocol
+    if (!parsedUrl.protocol.startsWith('file:') && !parsedUrl.hostname.includes('localhost') && !parsedUrl.hostname.includes('127.0.0.1')) {
+      event.preventDefault();
+      console.warn(`[Security] Blocked external navigation to: ${navigationUrl}`);
+    }
+  });
 }
 
 app.whenReady().then(() => {

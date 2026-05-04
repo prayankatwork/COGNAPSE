@@ -93,56 +93,29 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
     try {
       // GEMINI Node
-      if (node.startsWith("gemini")) {
-        if (import.meta.env.PROD) {
-          const proxyRes = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: node, prompt, isJson })
-          });
-          if (!proxyRes.ok) throw new Error("Vercel Proxy Error");
-          const data = await proxyRes.json();
-          const text = data.response;
-          if (text) return isJson ? JSON.stringify(extractJson(text)) : text;
-        } else {
-          if (!genAI) throw new Error("No local Gemini key");
-          const genModel = genAI.getGenerativeModel({ model: node });
-          const result = await genModel.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: isJson ? { responseMimeType: "application/json" } : {}
-          });
-          const text = (await result.response).text();
-          if (text) return isJson ? JSON.stringify(extractJson(text)) : text;
-        }
+      if (node.startsWith("gemini") && genAI) {
+        const genModel = genAI.getGenerativeModel({ model: node });
+        const result = await genModel.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: isJson ? { responseMimeType: "application/json" } : {}
+        });
+        const text = (await result.response).text();
+        if (text) return isJson ? JSON.stringify(extractJson(text)) : text;
       }
 
       // GROQ Node
-      if (node.startsWith("llama") && node !== "llama3") {
+      if (node.startsWith("llama") && groq) {
         let finalPrompt = prompt;
         if (node.includes("8b") && estTokens > 5500) {
            finalPrompt = prompt.substring(0, 20000) + "\n[System: Content Pruned for Stability]";
         }
-
-        if (import.meta.env.PROD) {
-          const proxyRes = await fetch('/api/groq', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: node, prompt: finalPrompt })
-          });
-          if (!proxyRes.ok) throw new Error("Vercel Proxy Error");
-          const data = await proxyRes.json();
-          const content = data.response;
-          return isJson ? JSON.stringify(extractJson(content)) : content;
-        } else {
-          if (!groq) throw new Error("No local Groq key");
-          const response = await groq.chat.completions.create({
-            messages: [{ role: "user", content: finalPrompt }],
-            model: node,
-            temperature: 0.1, 
-          });
-          const content = response.choices[0]?.message?.content || "";
-          return isJson ? JSON.stringify(extractJson(content)) : content;
-        }
+        const response = await groq.chat.completions.create({
+          messages: [{ role: "user", content: finalPrompt }],
+          model: node,
+          temperature: 0.1, 
+        });
+        const content = response.choices[0]?.message?.content || "";
+        return isJson ? JSON.stringify(extractJson(content)) : content;
       }
 
       // OLLAMA Node

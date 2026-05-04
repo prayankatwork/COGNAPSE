@@ -51,26 +51,42 @@ A complete paradigm shift away from traditional web interfaces, designed for spe
 
 ---
 
-## 💻 Requirements & Installation
+## 📦 Installation & Deployment
 
-### Prerequisites
-1. **Node.js** (v18 or higher)
-2. **Ollama** (Installed locally for the Deep Research Protocol)
-3. **Firebase Account** (For vault persistence)
+### 🚀 For End-Users (One-Click Launch)
+If you just want to use COGNAPSE without touching any code:
+1. Go to the [Releases](https://github.com/your-username/COGNAPSE/releases) page.
+2. Download the latest `COGNAPSE-Setup.exe`.
+3. Run the installer and launch the app.
+4. **Smart Setup:** On first launch, COGNAPSE will automatically verify your intelligence core. If [Ollama](https://ollama.com/) is missing, the app will initiate the setup process for you.
 
-### Setup Instructions
+### 🛠 For Developers (Building from Source)
 1. **Clone & Install**
    ```bash
    git clone https://github.com/your-username/COGNAPSE.git
    npm install
    ```
-2. **Environment Configuration**
-   Create a `.env` file with your Firebase and AI provider keys (Groq, Gemini, Grok).
-
-3. **Launch Terminal**
+2. **Setup Environment**
+   Create a `.env` file with your API keys (see `.env.example`).
+3. **Launch Dev Terminal**
    ```bash
    npm run dev
    ```
+4. **Compile Desktop Binary**
+   ```bash
+   npm run build:desktop
+   ```
+   The production `.exe` will be generated in the `release/` directory.
+
+---
+
+## 🛡️ Hardened Security & Automation
+COGNAPSE is engineered with a **"Zero-Trust"** local security model to ensure your research remains sovereign and private:
+- **Smart Core Detection:** Automated dependency verification and installation flow for zero-config deployment.
+- **Local Loopback Binding:** The internal intelligence vault is strictly bound to `127.0.0.1`, preventing unauthorized external network access.
+- **Process Sandboxing:** The Electron renderer is fully sandboxed with `contextIsolation` enabled, preventing unauthorized OS-level access.
+- **Navigation Lock:** Hardened protocols block arbitrary external navigations and window hijacking attempts.
+- **Content Security Policy (CSP):** Strict CSP is enforced to mitigate Cross-Site Scripting (XSS) and data exfiltration.
 
 ---
 
