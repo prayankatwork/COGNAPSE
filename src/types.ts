@@ -1,6 +1,6 @@
 export interface COGNAPSE_Output {
   query_understood: string;
-  mode: "standard" | "decision" | "eli5" | "deep" | "quick";
+  mode: "standard" | "eli5" | "deep" | "quick";
   geo_triggered: boolean;
   timeline_triggered: boolean;
   summary: {

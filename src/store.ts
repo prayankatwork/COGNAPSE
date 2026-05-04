@@ -118,11 +118,8 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'apps' | 'dev' | 'creator' | 'login' | 'register';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'apps' | 'dev' | 'creator' | 'login' | 'register') => void;
-
-  activeApp: 'research' | 'decide' | null;
-  setActiveApp: (app: 'research' | 'decide' | null) => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'dev';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'dev') => void;
 
   xp: number;
   searchCount: number;
@@ -162,9 +159,6 @@ interface AppState {
   initialQuery: string | null;
   setInitialQuery: (q: string | null) => void;
 
-  decisionArchive: any[];
-  setDecisionArchive: (archive: any[]) => void;
-  addToDecisionArchive: (entry: any) => void;
 
   vibe: 'focus' | 'energy';
   setVibe: (vibe: 'focus' | 'energy') => void;
@@ -242,8 +236,6 @@ export const useStore = create<AppState>()(
           gameScores: {}, 
           rank: 'OPERATIVE',
           archive: [],
-          decisionArchive: [],
-          activeApp: null,
           currentReport: null,
           notes: []
         });
@@ -261,8 +253,6 @@ export const useStore = create<AppState>()(
       currentView: 'landing',
       setView: (view) => set({ currentView: view }),
 
-      activeApp: null,
-      setActiveApp: (app) => set({ activeApp: app, currentView: 'apps' }),
 
       xp: 0,
       searchCount: 0,
@@ -361,11 +351,6 @@ export const useStore = create<AppState>()(
       initialQuery: null,
       setInitialQuery: (q) => set({ initialQuery: q }),
 
-      decisionArchive: [],
-      setDecisionArchive: (archive) => set({ decisionArchive: archive }),
-      addToDecisionArchive: (entry) => set((state) => ({ 
-        decisionArchive: [entry, ...state.decisionArchive].slice(0, 50) 
-      })),
 
       setStats: (stats) => set({ 
         xp: stats.xp, 
@@ -579,7 +564,6 @@ export const useStore = create<AppState>()(
         notes: state.notes,
         currentReport: state.currentReport,
         deepResearch: state.deepResearch,
-        decisionArchive: state.decisionArchive,
       }),
     }
   )

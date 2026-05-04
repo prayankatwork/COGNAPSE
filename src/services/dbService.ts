@@ -186,55 +186,5 @@ export const dbService = {
     } catch (error) {
       console.warn("Firebase history purge failed.");
     }
-  },
-
-  // Decision Matrix Persistence
-  async saveDecision(id: string, userId: string, queryText: string, data: any) {
-    try {
-      await setDoc(doc(db, `users/${userId}/decision_history`, id), {
-        id,
-        query: queryText,
-        data: JSON.stringify(data),
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.warn("Decision save failed:", error);
-    }
-  },
-
-  async getDecisionHistory(userId: string) {
-    try {
-      const q = query(
-        collection(db, `users/${userId}/decision_history`),
-        orderBy("timestamp", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => {
-        const d = doc.data();
-        return { ...d, data: JSON.parse(d.data) };
-      });
-    } catch (error) {
-      return [];
-    }
-  },
-
-  async saveDecisionProfile(userId: string, profile: any) {
-    try {
-      await setDoc(doc(db, `users/${userId}/profiles`, "decision_context"), {
-        ...profile,
-        updated_at: new Date().toISOString()
-      });
-    } catch (error) {
-      console.warn("Profile save failed:", error);
-    }
-  },
-
-  async getDecisionProfile(userId: string) {
-    try {
-      const docSnap = await getDoc(doc(db, `users/${userId}/profiles`, "decision_context"));
-      return docSnap.exists() ? docSnap.data() : null;
-    } catch (error) {
-      return null;
-    }
   }
 };

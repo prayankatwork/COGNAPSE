@@ -26,7 +26,6 @@ import CustomCursor from './components/CustomCursor';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
-const DecisionMatrixApp = lazy(() => import('./apps/DecisionMatrix/DecisionMatrixApp'));
 
 export default function App() {
   const hasOnboarded = useStore((state) => state.hasOnboarded);
@@ -35,8 +34,6 @@ export default function App() {
   const currentView = useStore((state) => state.currentView);
   const theme = useStore((state) => state.theme);
   const isAuthOpen = useStore((state) => state.isAuthOpen);
-  const activeApp = useStore((state) => state.activeApp);
-  const setActiveApp = useStore((state) => state.setActiveApp);
   
   const isLoading = useStore((state) => state.isLoading);
   const currentReport = useStore((state) => state.currentReport);
@@ -265,100 +262,6 @@ export default function App() {
     );
   }
 
-  if (currentView === 'apps') {
-    return (
-      <div className={clsx(
-        "flex h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-hidden relative pt-16",
-        theme === 'dark' ? 'dark' : ''
-      )}>
-        <CustomCursor />
-        <Navbar />
-        <NeuralBackground />
-        
-        <div className="flex-1 flex flex-col h-full relative">
-          {activeApp === null ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-16 z-10"
-              >
-                <h2 className="text-4xl md:text-6xl font-serif font-bold italic text-my-ink mb-4">Select Workspace.</h2>
-                <p className="text-[11px] text-my-muted uppercase tracking-[0.4em]">Choose your investigative trajectory.</p>
-              </motion.div>
-
-              <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl z-10">
-                {/* Research App Card */}
-                <motion.button
-                  whileHover={{ scale: 1.02, translateY: -10 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveApp('research')}
-                  className="flex-1 group relative overflow-hidden bg-my-callout/40 border border-my-border backdrop-blur-2xl p-12 text-left transition-all hover:border-my-accent/50"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Activity size={120} />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="w-12 h-12 bg-my-accent/10 rounded-full flex items-center justify-center mb-8 group-hover:bg-my-accent group-hover:text-white transition-colors">
-                      <Compass size={24} />
-                    </div>
-                    <h3 className="text-3xl font-serif font-bold text-my-ink mb-4 italic">Research Core.</h3>
-                    <p className="text-sm text-my-muted leading-relaxed mb-8">Deep intelligence synthesis, academic-grade verification, and evidence-based investigation of any complex topic.</p>
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">
-                      Initialize Protocol <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
-                    </div>
-                  </div>
-                </motion.button>
-
-                {/* Decision App Card */}
-                <motion.button
-                  whileHover={{ scale: 1.02, translateY: -10 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveApp('decide')}
-                  className="flex-1 group relative overflow-hidden bg-my-callout/40 border border-my-border backdrop-blur-2xl p-12 text-left transition-all hover:border-my-accent/50"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Zap size={120} />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="w-12 h-12 bg-my-accent/10 rounded-full flex items-center justify-center mb-8 group-hover:bg-my-accent group-hover:text-white transition-colors">
-                      <Zap size={24} />
-                    </div>
-                    <h3 className="text-3xl font-serif font-bold text-my-ink mb-4 italic">Decision Matrix.</h3>
-                    <p className="text-sm text-my-muted leading-relaxed mb-8">Simulate parallel realities, explore second-order consequences, and optimize strategic outcomes for complex personal or professional choices.</p>
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">
-                      Access Simulator <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
-                    </div>
-                  </div>
-                </motion.button>
-              </div>
-            </div>
-          ) : activeApp === 'research' ? (
-            <div className="flex-1 flex h-full overflow-hidden">
-               <Sidebar />
-               <main className="flex-1 flex flex-col h-full relative">
-                 <MainContent />
-               </main>
-            </div>
-          ) : (
-            <Suspense fallback={
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full border-2 border-t-my-accent border-my-border animate-spin" />
-              </div>
-            }>
-              <DecisionMatrixApp />
-            </Suspense>
-          )}
-        </div>
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
 
   return (
     <div className={clsx(

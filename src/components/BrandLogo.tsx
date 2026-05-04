@@ -5,7 +5,7 @@ import NeuralCompanion from './NeuralCompanion';
 
 export default function BrandLogo({ size = 32, className = "", forceOriginal = false }: { size?: number, className?: string, forceOriginal?: boolean }) {
   const currentView = useStore(state => state.currentView);
-  const showEye = (currentView === 'research' || currentView === 'apps') && !forceOriginal;
+  const showEye = !forceOriginal;
   
   return (
     <div className={`relative flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
