@@ -29,8 +29,7 @@ export const dbService = {
     await setDoc(doc(db, "user_stats", user.id), {
       xp: 0,
       search_count: 0,
-      rank: "OPERATIVE",
-      game_scores: {}
+      rank: "OPERATIVE"
     });
 
     return { success: true, user };
@@ -86,11 +85,10 @@ export const dbService = {
   },
 
   // Persistence for user telemetry
-  async syncStats(userId: string, stats: { xp: number; search_count: number; rank: string; game_scores: Record<string, number> }) {
+  async syncStats(userId: string, stats: { xp: number; search_count: number; rank: string }) {
     try {
       await setDoc(doc(db, "user_stats", userId), {
         ...stats,
-        game_scores: JSON.stringify(stats.game_scores),
         user_id: userId
       }, { merge: true });
     } catch (error) {
@@ -103,11 +101,7 @@ export const dbService = {
       const docRef = doc(db, "user_stats", userId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        const d = docSnap.data();
-        return {
-          ...d,
-          game_scores: JSON.parse(d.game_scores || "{}")
-        };
+        return d;
       }
       return null;
     } catch (error) {

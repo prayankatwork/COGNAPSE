@@ -117,12 +117,12 @@ export default function MainContent() {
       }
 
       const reportId = uuidv4();
-      report.id = reportId; 
+      report.id = reportId;
 
       // === COGNITION REPLAY ENGINE FIX: SYNTHETIC REASONING TIMELINE ===
       const syntheticSteps: any[] = [];
       let timeOffset = 6000;
-      
+
       syntheticSteps.push({
         id: uuidv4(),
         stage: 'Initial Vector',
@@ -132,7 +132,7 @@ export default function MainContent() {
         timestamp: new Date(Date.now() - timeOffset).toISOString()
       });
       timeOffset -= 1500;
-      
+
       if (report.sources && report.sources.length > 0) {
         const topScore = Math.max(...report.sources.map((s: any) => s.credibility_score || 0));
         syntheticSteps.push({
@@ -159,7 +159,7 @@ export default function MainContent() {
       }
 
       if (report.bias_alert) {
-         syntheticSteps.push({
+        syntheticSteps.push({
           id: uuidv4(),
           stage: 'Bias Mitigation',
           action: 'Adjusting synthesis weights',
@@ -208,7 +208,7 @@ export default function MainContent() {
           colors: ['#2A4365', '#E2E8F0', '#1A1A1A', '#F27D26']
         });
       }
-      
+
       // Add to archive (Always archive, force current system time for sorting)
       addToArchive({
         id: reportId,
@@ -333,7 +333,7 @@ export default function MainContent() {
 
     try {
       const result = await executeDeepResearch(targetQuery);
-      
+
       // Update history/archive with the new thesis
       const state = useStore.getState();
       if (result?.thesis && state.currentReport) {
@@ -342,23 +342,23 @@ export default function MainContent() {
           deep_research: result.thesis,
           deep_scores: result.scores
         };
-        
+
         // Update current report in store
         setCurrentReport(updatedReport as any);
-        
+
         // Update archive entry, move to top, and refresh timestamp
         const otherEntries = state.archive.filter(entry => entry.id !== state.currentReport?.id);
         const targetEntry = state.archive.find(entry => entry.id === state.currentReport?.id);
-        
+
         if (targetEntry) {
-          const updatedEntry = { 
-            ...targetEntry, 
+          const updatedEntry = {
+            ...targetEntry,
             report: updatedReport as any,
             timestamp: new Date().toISOString() // Refresh time to jump to top
           };
           state.setArchive([updatedEntry, ...otherEntries]);
         }
-        
+
         // Sync with SQLite Vault
         if (state.user && state.currentReport?.id) {
           await dbService.saveReport(state.currentReport.id, state.user.id, targetQuery, updatedReport as any);
@@ -386,11 +386,11 @@ export default function MainContent() {
           </div>
 
           <div className="flex items-center gap-4">
-             {/* New Search is now handled via the Logo or just clearing the input */}
+            {/* New Search is now handled via the Logo or just clearing the input */}
           </div>
-          
+
           <div className="flex items-center gap-4">
-             <button
+            <button
               onClick={startDeepResearch}
               disabled={deepResearch.status === 'running' || (!query.trim() && !currentReport)}
               className="flex items-center gap-2 px-4 py-1.5 border border-my-accent/30 text-my-accent text-[10px] font-black uppercase tracking-[0.2em] hover:bg-my-accent hover:text-white transition-all disabled:opacity-30"
@@ -451,7 +451,7 @@ export default function MainContent() {
                   Deep Research Error: {deepResearch.error || 'System Failure'}
                 </span>
               </div>
-              <button 
+              <button
                 onClick={resetDeepResearch}
                 className="text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4"
               >
@@ -520,26 +520,26 @@ export default function MainContent() {
                     transition={{ delay: 0.7 }}
                     className="flex flex-col items-center gap-8"
                   >
-                      <motion.button
-                        whileHover={{ scale: 1.05, translateY: -3 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          if (query.trim()) {
-                            handleSearch(query);
-                          } else {
-                            const rabbitHoles = [
-                              "Synthesize the history of the Voyager Golden Record and its cultural impact.",
-                              "What are the leading theories on what happened to the Bronze Age collapse?",
-                              "How does the mycelial network in forests compare to neural networks?",
-                              "Analyze the strategic brilliance of the Mongol Empire's postal system (Yam).",
-                              "Explain the concept of 'Time Crystals' in quantum physics."
-                            ];
-                            const randomQuery = rabbitHoles[Math.floor(Math.random() * rabbitHoles.length)];
-                            handleSearch(randomQuery);
-                          }
-                        }}
-                        className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
-                      >
+                    <motion.button
+                      whileHover={{ scale: 1.05, translateY: -3 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        if (query.trim()) {
+                          handleSearch(query);
+                        } else {
+                          const rabbitHoles = [
+                            "Synthesize the history of the Voyager Golden Record and its cultural impact.",
+                            "What are the leading theories on what happened to the Bronze Age collapse?",
+                            "How does the mycelial network in forests compare to neural networks?",
+                            "Analyze the strategic brilliance of the Mongol Empire's postal system (Yam).",
+                            "Explain the concept of 'Time Crystals' in quantum physics."
+                          ];
+                          const randomQuery = rabbitHoles[Math.floor(Math.random() * rabbitHoles.length)];
+                          handleSearch(randomQuery);
+                        }
+                      }}
+                      className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
+                    >
                       {/* Corner Brackets */}
                       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -547,7 +547,7 @@ export default function MainContent() {
                       <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                       {/* Scanning Line */}
-                      <motion.div 
+                      <motion.div
                         className="absolute inset-0 bg-my-accent/10 z-0"
                         initial={{ y: "-100%" }}
                         animate={{ y: "100%" }}
@@ -556,19 +556,19 @@ export default function MainContent() {
 
                       <div className="relative z-10 flex flex-col items-center gap-1.5">
                         <div className="flex items-center gap-3">
-                           <motion.div 
-                             animate={{ opacity: [1, 0.4, 1] }}
-                             transition={{ duration: 1.5, repeat: Infinity }}
-                             className="w-2 h-2 bg-my-accent rounded-full" 
-                           />
-                           <span className="text-[10px] font-black uppercase tracking-[0.5em]">
-                             Enter The Rabbit Hole
-                           </span>
-                           <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                          <motion.div
+                            animate={{ opacity: [1, 0.4, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="w-2 h-2 bg-my-accent rounded-full"
+                          />
+                          <span className="text-[10px] font-black uppercase tracking-[0.5em]">
+                            Random Rabbit Hole
+                          </span>
+                          <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
                         </div>
                       </div>
-                      </motion.button>
-                    </motion.div>
+                    </motion.button>
+                  </motion.div>
                 </div>
               </div>
             )}

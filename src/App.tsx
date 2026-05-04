@@ -11,7 +11,6 @@ import Onboarding from './components/Onboarding';
 import NeuralBackground from './components/NeuralBackground';
 import LandingPage from './components/LandingPage';
 import Documentation from './components/Documentation';
-import GamesPage from './components/GamesPage';
 import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
@@ -22,6 +21,7 @@ import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
 import CreatorProfile from './components/CreatorProfile';
+import CustomCursor from './components/CustomCursor';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
@@ -128,20 +128,18 @@ export default function App() {
       const syncUser = async () => {
         try {
           console.log('[Vault] Syncing for user:', user.id);
-          const [reports, stats, notes, decisions] = await Promise.all([
+          const [reports, stats, notes] = await Promise.all([
             dbService.getAllReports(user.id),
             dbService.loadStats(user.id),
-            dbService.getNotes(user.id),
-            dbService.getDecisionHistory(user.id)
+            dbService.getNotes(user.id)
           ]);
-          console.log('[Vault] Reports fetched:', reports.length, '| Decisions:', decisions.length);
+          console.log('[Vault] Reports fetched:', reports.length);
 
           if (stats) {
             setStats({
               xp: stats.xp,
               searchCount: stats.search_count,
-              rank: stats.rank,
-              gameScores: stats.game_scores
+              rank: stats.rank
             });
           }
 
@@ -167,16 +165,6 @@ export default function App() {
           );
           setArchive(sorted);
           console.log('[Vault] Archive restored with', sorted.length, 'entries');
-
-          // Restore Decision Archive
-          const decisionEntries = (decisions || []).map((d: any) => ({
-            id: d.id,
-            query: d.query,
-            timestamp: d.timestamp || new Date().toISOString(),
-            data: d.data || {}
-          }));
-          useStore.getState().setDecisionArchive(decisionEntries);
-          console.log('[Vault] Decision archive restored with', decisionEntries.length, 'entries');
         } catch (err) {
           console.error("[Vault] Sync failed:", err);
         }
@@ -209,25 +197,9 @@ export default function App() {
   if (currentView === 'documentation') {
     return (
       <div className="pt-16 min-h-screen">
+        <CustomCursor />
         <Navbar />
         <Documentation />
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
-
-  if (currentView === 'games') {
-    return (
-      <div className="pt-16 min-h-screen">
-        <Navbar />
-        <NeuralBackground />
-        <GamesPage />
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}

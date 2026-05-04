@@ -117,14 +117,12 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'dev';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'games' | 'dev') => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev') => void;
 
   xp: number;
   searchCount: number;
   rank: string;
-  gameScores: Record<string, number>;
-  updateGameScore: (gameId: string, score: number) => void;
   updateGamification: (data: { xpAcquired?: number; searchCountIncrease?: number }) => void;
   badges: UserBadge[];
   lastSearchDate: string | null;
@@ -153,7 +151,7 @@ interface AppState {
   updateArchiveNotes: (id: string, notes: string) => void;
   toggleArchiveStar: (id: string) => void;
 
-  setStats: (stats: { xp: number, searchCount: number, rank: string, gameScores: Record<string, number> }) => void;
+  setStats: (stats: { xp: number, searchCount: number, rank: string }) => void;
 
   initialQuery: string | null;
   setInitialQuery: (q: string | null) => void;
@@ -232,7 +230,6 @@ export const useStore = create<AppState>()(
           user: null, 
           xp: 0, 
           searchCount: 0, 
-          gameScores: {}, 
           rank: 'OPERATIVE',
           archive: [],
           currentReport: null,
@@ -256,23 +253,6 @@ export const useStore = create<AppState>()(
       xp: 0,
       searchCount: 0,
       rank: "Novice",
-      gameScores: {},
-      updateGameScore: (gameId, score) => set((state) => {
-        const currentHigh = state.gameScores[gameId] || 0;
-        if (score > currentHigh) {
-          const newScores = { ...state.gameScores, [gameId]: score };
-          if (state.user) {
-            dbService.syncStats(state.user.id, {
-               xp: state.xp,
-               search_count: state.searchCount,
-               rank: state.rank,
-               game_scores: newScores
-            });
-          }
-          return { gameScores: newScores };
-        }
-        return state;
-      }),
       badges: [],
       lastSearchDate: null,
       streak: 0,
@@ -354,8 +334,7 @@ export const useStore = create<AppState>()(
       setStats: (stats) => set({ 
         xp: stats.xp, 
         searchCount: stats.searchCount, 
-        rank: stats.rank, 
-        gameScores: stats.gameScores 
+        rank: stats.rank
       }),
 
       updateGamification: ({ xpAcquired = 0, searchCountIncrease = 0 }) =>
@@ -386,8 +365,7 @@ export const useStore = create<AppState>()(
             dbService.syncStats(state.user.id, {
                xp: newXp,
                search_count: newSearches,
-               rank: newRank,
-               game_scores: state.gameScores
+               rank: newRank
             });
           }
 
@@ -552,7 +530,6 @@ export const useStore = create<AppState>()(
         hasOnboarded: state.hasOnboarded,
         xp: state.xp,
         searchCount: state.searchCount,
-        gameScores: state.gameScores,
         rank: state.rank,
         badges: state.badges,
         archive: state.archive,
