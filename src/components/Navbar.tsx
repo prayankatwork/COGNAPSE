@@ -1,170 +1,183 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { 
-  Compass, BookOpen, Activity, 
-  Box, User, X, Moon, Sun, Terminal, ShieldCheck, Zap
+  User, X, Moon, Sun, Search,
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
+import CommandPalette from './CommandPalette';
 
 export default function Navbar() {
   const { 
     currentView, setView, user, logout, setAuthOpen,
     isNotebookOpen, setNotebookOpen,
-    theme, toggleTheme
+    theme, toggleTheme, setStatusOpen
   } = useStore();
 
-  const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const [pulseMessage, setPulseMessage] = useState("NEURAL SYNC: 98%");
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [isHoveringLogo, setIsHoveringLogo] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const primaryLinks = [
-    { id: 'landing', label: 'Home', icon: <Compass size={14} /> },
+  const modules = [
+    { id: 'landing', label: 'Home', icon: <Search size={14} /> },
     { id: 'research', label: 'Research', icon: <Activity size={14} /> },
     { id: 'documentation', label: 'Manual', icon: <BookOpen size={14} /> },
-    { id: 'games', label: 'Playground', icon: <Box size={14} /> },
     { id: 'creator', label: 'Architect', icon: <User size={14} /> },
-    { id: 'decide', label: 'Matrix', icon: <Zap size={14} /> }, // 6th link as mentioned in description
   ];
 
   useEffect(() => {
-    const messages = [
-      "NEURAL LINK ESTABLISHED",
-      "AWAITING DIRECTIVE...",
-      "SYSTEM STABLE",
-      "INTELLIGENCE PROTOCOL ACTIVE"
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      i = (i + 1) % messages.length;
-      setPulseMessage(messages[i]);
-    }, 4000);
-    return () => clearInterval(interval);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   if (currentView === 'onboarding') return null;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-12 z-[100] px-6 flex items-center justify-between pointer-events-none transition-all bg-transparent backdrop-blur-[2px]">
-      
-      {/* Neural Scanline Top Edge */}
-      <motion.div 
-        className="absolute top-0 h-[1px] bg-my-accent w-1/4 shadow-[0_0_8px_var(--my-accent)] z-[-1]" 
-        animate={{ left: ['-25%', '100%'] }} 
-        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} 
-      />
-
-      {/* Brand & Nav - Left */}
-      <div 
-        className="flex items-center gap-4 pointer-events-auto h-full"
-        onMouseEnter={() => setIsNavExpanded(true)}
-        onMouseLeave={() => setIsNavExpanded(false)}
-      >
-        <button 
-          onClick={() => setView('landing')}
-          className="flex items-center gap-3 group active:scale-95 transition-transform"
+    <>
+      <nav className={clsx(
+        "fixed top-0 left-0 right-0 h-14 z-[100] px-6 flex items-center justify-between transition-all duration-300",
+        scrolled ? "bg-my-bg/80 backdrop-blur-2xl border-b border-my-border/50 shadow-sm" : "bg-transparent"
+      )}>
+        {/* Left: Brand & Rollup Modules */}
+        <div 
+          className="flex items-center w-1/3 relative"
+          onMouseEnter={() => setIsHoveringLogo(true)}
+          onMouseLeave={() => setIsHoveringLogo(false)}
         >
-          <BrandLogo size={24} />
-          <div className="flex flex-col items-start leading-none">
-            <span className="text-[11px] font-black uppercase tracking-[0.5em] text-my-ink dark:text-white group-hover:text-my-accent transition-colors">Cognapse</span>
-          </div>
-        </button>
+          <button 
+            onClick={() => setView('landing')}
+            className="flex items-center gap-3 group active:scale-95 transition-transform"
+          >
+            <BrandLogo size={32} />
+            <div className="flex flex-col items-start leading-none">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-my-ink group-hover:text-my-accent transition-colors">Cognapse</span>
+                <span className={clsx("text-[6px] font-bold uppercase tracking-widest px-1 py-0.5 rounded transition-all duration-300", isHoveringLogo ? "opacity-0" : "text-my-accent/70 border border-my-accent/30 animate-pulse")}>Hover</span>
+              </div>
+            </div>
+          </button>
 
-        <AnimatePresence>
-          {isNavExpanded && (
-            <motion.div
-              initial={{ opacity: 0, x: -20, width: 0 }}
-              animate={{ opacity: 1, x: 0, width: 'auto' }}
-              exit={{ opacity: 0, x: -20, width: 0 }}
-              className="flex items-center gap-1.5 overflow-hidden ml-2 bg-white/5 dark:bg-black/20 backdrop-blur-xl rounded-full px-3 py-1.5 border border-my-border/50"
-            >
-              {primaryLinks.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setView(item.id as any)}
-                  className={clsx(
-                    "px-4 py-1.5 flex items-center gap-2 transition-all rounded-full text-[9px] font-black uppercase tracking-[0.1em] whitespace-nowrap",
-                    currentView === item.id 
-                      ? "bg-my-ink text-my-bg dark:bg-my-accent dark:text-black shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_var(--my-accent)]" 
-                      : "text-my-muted hover:text-my-ink dark:hover:text-white"
-                  )}
-                >
-                  <span className={clsx(currentView === item.id ? "" : "opacity-60")}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* The Neural Conduit (Center) */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-auto w-[400px]">
-        <div className="group relative flex items-center bg-my-bg/30 dark:bg-[#050508]/40 backdrop-blur-xl border border-my-border/40 hover:border-my-accent/50 rounded-full h-8 w-full px-4 transition-all cursor-text overflow-hidden justify-center shadow-inner">
-           <AnimatePresence mode="wait">
-             <motion.span
-               key={pulseMessage}
-               initial={{ opacity: 0, y: 5 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -5 }}
-               className="text-[9px] font-mono font-bold tracking-[0.2em] text-my-ink/70 dark:text-my-muted uppercase group-hover:opacity-0 transition-opacity absolute"
-             >
-               {pulseMessage}
-             </motion.span>
-           </AnimatePresence>
-           <span className="text-[9px] font-mono tracking-[0.2em] text-my-accent uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-             <Terminal size={10} /> [INPUT DIRECTIVE]
-           </span>
+          <AnimatePresence>
+            {isHoveringLogo && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scaleY: 0.95 }}
+                animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                exit={{ opacity: 0, y: -10, scaleY: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 mt-3 bg-my-bg/95 backdrop-blur-xl border border-my-border rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] p-2 min-w-[180px] flex flex-col gap-1 origin-top z-50"
+              >
+                <div className="px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.3em] text-my-muted opacity-60">
+                  System Modules
+                </div>
+                {modules.map((mod) => (
+                  <button
+                    key={mod.id}
+                    onClick={() => {
+                      setView(mod.id as any);
+                      setIsHoveringLogo(false);
+                    }}
+                    className={clsx(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors group",
+                      currentView === mod.id ? "bg-my-accent/10 text-my-accent" : "hover:bg-my-callout/50 text-my-muted"
+                    )}
+                  >
+                    <div className={clsx("transition-transform", currentView === mod.id ? "scale-110" : "group-hover:scale-110 group-hover:text-my-ink")}>
+                      {mod.icon}
+                    </div>
+                    <span className={clsx("text-[11px] font-bold tracking-wide", currentView === mod.id ? "text-my-accent" : "group-hover:text-my-ink")}>
+                      {mod.label}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
 
-      {/* Utility Cluster - Right (Ghost UI) */}
-      <div className="flex items-center gap-4 pointer-events-auto">
-         {user ? (
-            <div className="flex items-center gap-3">
-               <div className="flex flex-col items-end">
-                 <span className="text-[9px] font-mono text-my-ink dark:text-white uppercase tracking-widest hidden sm:block">{user.username}</span>
-                 <span className="text-[6px] text-my-accent font-bold uppercase tracking-[0.4em] opacity-80 flex items-center gap-1 mt-0.5">
-                   <ShieldCheck size={6} /> Authorized
-                 </span>
-               </div>
+        {/* Center: Command Bar */}
+        <div className="flex items-center justify-center w-1/3">
+          <button 
+            onClick={() => setIsCommandOpen(true)}
+            className="group flex items-center justify-between w-full max-w-md px-4 py-1.5 bg-my-callout/20 hover:bg-my-callout/40 border border-my-border/50 hover:border-my-accent/30 rounded-full transition-all"
+          >
+            <div className="flex items-center gap-2 text-my-muted group-hover:text-my-ink transition-colors">
+              <Search size={14} />
+              <span className="text-[11px] font-semibold opacity-70">Search or jump to module...</span>
+            </div>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black text-my-muted opacity-50 bg-my-bg border border-my-border">
+              <Command size={10} /> K
+            </div>
+          </button>
+        </div>
+
+        {/* Right: Utility Cluster */}
+        <div className="flex items-center justify-end w-1/3 gap-4">
+          {user ? (
+            <div className="flex items-center gap-4">
+               <button 
+                 onClick={() => setStatusOpen(true)}
+                 className="hidden lg:flex flex-col items-end group cursor-pointer"
+               >
+                  <span className="text-[10px] font-black text-my-ink uppercase tracking-widest group-hover:text-my-accent transition-colors">{user.username}</span>
+                  <span className="text-[7px] text-my-accent font-bold uppercase tracking-[0.3em] opacity-80 flex items-center gap-1 group-hover:opacity-100 transition-opacity">
+                    <ShieldCheck size={8} /> Authorized
+                  </span>
+               </button>
                <button 
                  onClick={logout}
-                 className="w-7 h-7 flex items-center justify-center rounded-full bg-transparent border border-my-border/30 text-my-muted hover:text-red-500 hover:border-red-500/50 transition-all"
+                 className="w-8 h-8 flex items-center justify-center rounded-full border border-my-border text-my-muted hover:text-red-500 hover:border-red-500/50 transition-all bg-my-bg"
+                 title="Terminate Session"
                >
-                  <X size={12} />
+                  <X size={14} />
                </button>
             </div>
-         ) : (
+          ) : (
             <button 
               onClick={() => setAuthOpen(true)}
-              className="h-7 px-4 bg-transparent border border-my-border/50 text-my-ink dark:text-white text-[9px] font-black uppercase tracking-widest hover:bg-my-ink hover:text-my-bg dark:hover:bg-my-accent dark:hover:text-black transition-all flex items-center gap-2 rounded-full"
+              className="px-4 py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
             >
-               <Terminal size={12} /> Sync
+               <User size={12} /> Sync Identity
             </button>
-         )}
+          )}
 
-         <div className="flex items-center bg-transparent rounded-full border border-my-border/30 p-1 gap-1">
+          <div className="flex items-center bg-my-bg rounded-full border border-my-border p-1 gap-1 shadow-sm">
             <button 
               onClick={toggleTheme}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-my-muted hover:text-my-ink dark:hover:text-white transition-colors"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-my-muted hover:text-my-ink transition-colors"
               title="Toggle Neural Mode"
             >
-               {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
+               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
             <button 
               onClick={() => setNotebookOpen(!isNotebookOpen)}
               className={clsx(
-                "w-6 h-6 rounded-full flex items-center justify-center transition-all",
-                isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_10px_var(--my-accent)]" : "text-my-muted hover:text-my-ink dark:hover:text-white"
+                "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)]" : "text-my-muted hover:text-my-ink"
               )}
               title="Tactical Notebook"
             >
-               <BookOpen size={12} />
+               <BookOpen size={14} />
             </button>
-         </div>
-      </div>
-    </nav>
+          </div>
+        </div>
+      </nav>
+
+      <CommandPalette isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} />
+    </>
   );
 }

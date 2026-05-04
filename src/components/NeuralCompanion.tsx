@@ -13,7 +13,7 @@ interface ClickMarker {
 export default function NeuralCompanion({ compact = false }: { compact?: boolean }) {
   const { rank, isResearching, currentReport, deepResearch, isBlinking } = useStore();
 
-  const isDeep = deepResearch.status === 'running' || !!currentReport?.deep_research;
+  const isDeep = deepResearch?.status === 'running' || !!currentReport?.deep_research;
 
   const confidence = useMemo(() => {
     if (!currentReport?.scores?.overall_credibility) return 50;
@@ -113,8 +113,8 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
       {/* ── The Eye Component ── */}
       <div
         className={clsx(
-          'flex flex-col items-center relative overflow-hidden group transition-all duration-700 pointer-events-none select-none',
-          compact ? '' : 'gap-3 p-8 bg-my-bg/80 backdrop-blur-3xl border border-my-border rounded-[4px] mx-4 my-2 mb-6 shadow-2xl',
+          'flex flex-col items-center relative group transition-all duration-700 pointer-events-none select-none',
+          compact ? 'overflow-visible' : 'overflow-hidden gap-3 p-8 bg-my-bg/80 backdrop-blur-3xl border border-my-border rounded-[4px] mx-4 my-2 mb-6 shadow-2xl',
           isDeep && !compact && 'border-purple-500/40 shadow-[0_0_50px_rgba(168,85,247,0.15)]',
           isScanning && !compact && 'border-my-accent/50 shadow-[0_0_40px_rgba(249,115,22,0.15)]'
         )}
@@ -155,16 +155,6 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
 
         {/* ── Eye Container ──────────────────────────────────────────────────── */}
         <div className={clsx('relative flex items-center justify-center', size)}>
-
-          {/* Squint Eyelids (close heavily when scanning) */}
-          <motion.div
-            animate={{ height: isScanning ? '35%' : isBlinking ? '50%' : '0%' }}
-            className="absolute top-0 left-0 w-full bg-my-sidebar z-40 transition-all duration-150 ease-out border-b border-my-accent/20"
-          />
-          <motion.div
-            animate={{ height: isScanning ? '35%' : isBlinking ? '50%' : '0%' }}
-            className="absolute bottom-0 left-0 w-full bg-my-sidebar z-40 transition-all duration-150 ease-out border-t border-my-accent/20"
-          />
 
           {/* Outer Chassis */}
           <motion.div
@@ -240,6 +230,18 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
             </AnimatePresence>
             
           </motion.div>
+
+          {/* Internal Mechanical Eyelids (Shutter) */}
+          <div className="absolute inset-0 rounded-full overflow-hidden z-30 pointer-events-none">
+            <motion.div
+              animate={{ height: isScanning ? '35%' : isBlinking ? '50%' : '0%' }}
+              className="absolute top-0 left-0 w-full bg-black/95 backdrop-blur-md transition-all duration-100 ease-out border-b border-my-accent/40"
+            />
+            <motion.div
+              animate={{ height: isScanning ? '35%' : isBlinking ? '50%' : '0%' }}
+              className="absolute bottom-0 left-0 w-full bg-black/95 backdrop-blur-md transition-all duration-100 ease-out border-t border-my-accent/40"
+            />
+          </div>
 
           {/* Tactical Orbital Arrays */}
           {[...Array(companionLevel + 1)].map((_, i) => (

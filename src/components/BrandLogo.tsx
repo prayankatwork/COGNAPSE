@@ -5,7 +5,7 @@ import NeuralCompanion from './NeuralCompanion';
 
 export default function BrandLogo({ size = 32, className = "", forceOriginal = false }: { size?: number, className?: string, forceOriginal?: boolean }) {
   const currentView = useStore(state => state.currentView);
-  const showEye = !forceOriginal;
+  const showEye = (currentView === 'research' || currentView === 'apps') && !forceOriginal;
   
   return (
     <div className={`relative flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
@@ -13,8 +13,9 @@ export default function BrandLogo({ size = 32, className = "", forceOriginal = f
         {showEye ? (
           <motion.div
             key="eye"
+            className="absolute inset-0 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            animate={{ opacity: 1, scale: size / 40, rotate: 0 }}
             exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
             transition={{ type: 'spring', damping: 15, stiffness: 200 }}
           >

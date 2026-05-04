@@ -42,7 +42,12 @@ COGNAPSE is built for operators who prioritize data privacy and isolated intelli
 ### 🏆 5. Operator Status & Gamification
 Turn research into an ascending path of mastery.
 - **Rank Progression**: Earn XP by executing high-level research. Ascend from *Novice* to *Omni-Observer*, unlocking higher tiers of system clearance.
-- **The Playground**: A built-in neural calibration module. Play logic and memory mini-games to stabilize neural connections and earn bonus XP between heavy research cycles.
+- **Operative Dossier**: Instantly check your real-time stats, current rank, research streak, and total forensic dossiers compiled.
+
+### ⚡ 6. Intelligence OS Navigation
+A complete paradigm shift away from traditional web interfaces, designed for speed.
+- **Universal Command Palette (⌘ + K)**: Instantly search your entire local and cloud-synced Research Archive directly from your keyboard, jumping straight into past investigations.
+- **Tactical Rollup HUD**: A completely decluttered, zero-distraction layout where system modules roll out dynamically upon hovering the central system emblem.
 
 ---
 
