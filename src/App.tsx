@@ -21,7 +21,6 @@ import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
 import CreatorProfile from './components/CreatorProfile';
-import CustomCursor from './components/CustomCursor';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
@@ -197,7 +196,6 @@ export default function App() {
   if (currentView === 'documentation') {
     return (
       <div className="pt-16 min-h-screen">
-        <CustomCursor />
         <Navbar />
         <Documentation />
 
