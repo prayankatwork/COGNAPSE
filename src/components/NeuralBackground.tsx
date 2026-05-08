@@ -15,10 +15,11 @@ export default function NeuralBackground() {
     let animationFrameId: number;
     let width: number;
     let height: number;
-    
     const particles: Particle[] = [];
-    const particleCount = 60;
-    const gridSize = 50;
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const particleCount = isMobile ? 20 : 60;
+    const gridSize = isMobile ? 80 : 50;
     const mouse = { x: -1000, y: -1000, active: false };
 
     class Particle {
@@ -120,6 +121,7 @@ export default function NeuralBackground() {
     };
 
     const drawConnections = () => {
+      if (isMobile) return; // Skip heavy connection logic on mobile
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;

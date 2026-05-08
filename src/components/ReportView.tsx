@@ -77,9 +77,6 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">Verified Intelligence</span>
             </div>
             <BrandLogo size={44} />
-            <div className="flex gap-1 border-l border-my-border pl-4 ml-2">
-               {/* Export removed per request */}
-            </div>
           </div>
         </div>
 

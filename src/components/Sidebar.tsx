@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, History, Search, Zap, Music, 
-  Layers, Globe, Sun, Moon, Database,
+  Layers, Globe as GlobeIcon, Sun, Moon, Database,
   Cpu, FileText, LayoutGrid, Activity, 
   BookOpen, ChevronLeft, ChevronRight, 
   ArrowUpRight, ShieldCheck, Terminal,
@@ -114,6 +114,8 @@ export default function Sidebar() {
                <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Research
              </button>
 
+
+
               <div className="flex items-center justify-between">
                   <div className="flex gap-4 shrink-0">
                      <button onClick={() => setViewMode('chronological')} className={clsx("transition-colors p-1", viewMode === 'chronological' ? "text-orange-500" : "text-[#CBD5E1] hover:text-black dark:hover:text-white")}>
@@ -194,15 +196,18 @@ export default function Sidebar() {
           <div className="p-8 bg-my-sidebar border-t border-my-border relative">
              <button 
                onClick={() => setStatusOpen(true)}
-               className="flex items-center justify-between mb-5 w-full text-left group hover:opacity-80 transition-opacity"
+               className="flex items-end justify-between mb-5 w-full text-left group hover:opacity-80 transition-opacity"
              >
-                <div className="flex flex-col">
-                    <h4 className="text-[20px] font-bold text-my-ink uppercase tracking-[0.3em] font-serif italic leading-none group-hover:text-my-accent transition-colors">
-                       {rank ? rank.replace(/[^\x00-\x7F]/g, "").trim() : 'OPERATIVE'}
-                    </h4>
-                 </div>
-                <div className="text-right">
-                   <span className="text-[12px] font-black text-my-ink opacity-100">{xp} / {(Math.floor(xp/100)+1)*100} XP</span>
+                <h4 className={clsx(
+                   "font-bold text-my-ink uppercase font-serif italic leading-none group-hover:text-my-accent transition-colors whitespace-nowrap",
+                   rank && rank.length > 8 ? "text-[16px] tracking-[0.2em]" : "text-[20px] tracking-[0.3em]"
+                )}>
+                   {rank ? rank.replace(/[^\x00-\x7F]/g, "").trim() : 'OPERATIVE'}
+                </h4>
+                <div className="text-right flex-shrink-0 ml-4 leading-none">
+                   <span className="text-[12px] font-black text-my-ink opacity-100 whitespace-nowrap leading-none">
+                      {xp} / {(Math.floor(xp/100)+1)*100} XP
+                   </span>
                 </div>
              </button>
 
@@ -236,14 +241,7 @@ export default function Sidebar() {
                 </p>
              </div>
 
-             <div className="flex items-center justify-between">
-                <button 
-                  onClick={() => setView('landing')}
-                  className="text-[11px] font-bold text-my-muted hover:text-my-ink transition-all uppercase tracking-[0.2em] flex items-center gap-2 group"
-                >
-                   Exit Protocol <ArrowUpRight size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-             </div>
+
           </div>
         </div>
       </aside>

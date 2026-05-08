@@ -169,12 +169,12 @@ export default function DecisionSidebar() {
                className="flex items-center justify-between mb-5 w-full text-left group hover:opacity-80 transition-opacity"
              >
                 <div className="flex flex-col">
-                    <h4 className="text-[20px] font-bold text-my-ink uppercase tracking-[0.3em] font-serif italic leading-none group-hover:text-my-accent transition-colors">
+                    <h4 className="text-[20px] font-bold text-my-ink uppercase tracking-[0.3em] font-serif italic leading-none group-hover:text-my-accent transition-colors truncate">
                        {rank ? rank.replace(/[^\x00-\x7F]/g, "").trim() : 'OPERATIVE'}
                     </h4>
                  </div>
-                <div className="text-right">
-                   <span className="text-[12px] font-black text-my-ink opacity-100">{xp} / {(Math.floor(xp/100)+1)*100} XP</span>
+                <div className="text-right flex-shrink-0 ml-4">
+                   <span className="text-[12px] font-black text-my-ink opacity-100 whitespace-nowrap">{xp} / {(Math.floor(xp/100)+1)*100} XP</span>
                 </div>
              </button>
 

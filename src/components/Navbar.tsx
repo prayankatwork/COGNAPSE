@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { 
   User, X, Moon, Sun, Search,
-  BookOpen, Command, ShieldCheck, ChevronDown, Activity
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +22,7 @@ export default function Navbar() {
 
   const modules = [
     { id: 'landing', label: 'Home', icon: <Search size={14} /> },
+    { id: 'news', label: 'Intelligence Hub', icon: <GlobeIcon size={14} /> },
     { id: 'research', label: 'Research', icon: <Activity size={14} /> },
     { id: 'documentation', label: 'Manual', icon: <BookOpen size={14} /> },
     { id: 'creator', label: 'Architect', icon: <User size={14} /> },

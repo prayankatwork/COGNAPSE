@@ -14,11 +14,12 @@ import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
 import { useEffect, useRef, useState } from 'react';
-import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight } from 'lucide-react';
+import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
+import IntelligenceFeed from './components/IntelligenceFeed';
 import CreatorProfile from './components/CreatorProfile';
 import { lazy, Suspense } from 'react';
 
@@ -125,12 +126,17 @@ export default function App() {
       const syncUser = async () => {
         try {
           console.log('[Vault] Syncing for user:', user.id);
-          const [reports, stats, notes] = await Promise.all([
+          const [reports, stats, notes, settings] = await Promise.all([
             dbService.getAllReports(user.id),
             dbService.loadStats(user.id),
-            dbService.getNotes(user.id)
+            dbService.getNotes(user.id),
+            dbService.loadSettings(user.id)
           ]);
           console.log('[Vault] Reports fetched:', reports.length);
+
+          if (settings && settings.subscribedCategories) {
+            useStore.getState().setSubscribedCategories(settings.subscribedCategories);
+          }
 
           if (stats) {
             setStats({
@@ -220,6 +226,57 @@ export default function App() {
         >
           <CreatorProfile />
         </motion.div>
+
+        <AnimatePresence>
+           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
+           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
+        </AnimatePresence>
+        <SelectionCapture />
+      </div>
+    );
+  }
+
+
+  if (currentView === 'news') {
+    if (!user) {
+      return (
+        <div className="pt-16 min-h-screen relative overflow-hidden flex flex-col items-center justify-center text-center p-8">
+          <Navbar />
+          <NeuralBackground />
+          <div className="relative z-10 max-w-md">
+             <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+                <LockIcon size={32} />
+             </div>
+             <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
+             <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
+                The Intelligence Hub requires an <br /> 
+                <span className="text-my-accent font-bold">Authorized Operative Signature</span> <br /> 
+                to sync global monitoring vectors.
+             </p>
+             <button 
+               onClick={() => setAuthOpen(true)}
+               className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
+             >
+                Authorize Identity
+             </button>
+          </div>
+          <AnimatePresence>
+             {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+          </AnimatePresence>
+        </div>
+      );
+    }
+
+    return (
+      <div className="pt-16 min-h-screen relative overflow-hidden flex flex-col">
+        <Navbar />
+        <NeuralBackground />
+        <div className="flex-1 relative z-10">
+           <IntelligenceFeed onTriggerResearch={(q) => {
+              useStore.setState({ initialQuery: q });
+           }} />
+        </div>
 
         <AnimatePresence>
            {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}

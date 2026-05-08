@@ -16,6 +16,8 @@ export default function MusicVisualizer() {
     let time = 0;
     let pulse = 0;
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -66,7 +68,8 @@ export default function MusicVisualizer() {
 
         ctx.fillStyle = waveColor;
 
-        for (let i = 0; i < 3; i++) {
+        const waveCount = isMobile ? 1 : 3;
+        for (let i = 0; i < waveCount; i++) {
           ctx.beginPath();
           ctx.moveTo(0, canvas.height);
           for (let x = 0; x <= canvas.width; x += 20) {

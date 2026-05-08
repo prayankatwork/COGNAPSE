@@ -81,11 +81,19 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
      }
   });
 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const canUseLocal = !isMobile && isLocalHost;
+
   const swarmQueue: string[] = [];
   if (estTokens > 15000) {
-    swarmQueue.push("gemini-1.5-flash", "gemini-1.5-pro", "ollama", "llama-3.1-8b-instant");
+    swarmQueue.push("gemini-1.5-flash", "gemini-1.5-pro");
+    if (canUseLocal) swarmQueue.push("ollama");
+    swarmQueue.push("llama-3.1-8b-instant");
   } else {
-    swarmQueue.push("gemini-1.5-flash", "llama-3.3-70b-versatile", "gemini-1.5-pro", "ollama", "llama-3.1-8b-instant");
+    swarmQueue.push("gemini-1.5-flash", "llama-3.3-70b-versatile", "gemini-1.5-pro");
+    if (canUseLocal) swarmQueue.push("ollama");
+    swarmQueue.push("llama-3.1-8b-instant");
   }
 
   for (const node of swarmQueue) {

@@ -390,13 +390,23 @@ export default function MainContent() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={startDeepResearch}
-              disabled={deepResearch.status === 'running' || (!query.trim() && !currentReport)}
-              className="flex items-center gap-2 px-4 py-1.5 border border-my-accent/30 text-my-accent text-[10px] font-black uppercase tracking-[0.2em] hover:bg-my-accent hover:text-white transition-all disabled:opacity-30"
-            >
-              <Cpu size={14} /> DEEP RESEARCH
-            </button>
+            {( (query.trim() || currentReport) && !currentReport?.deep_research && !loading) && (
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={startDeepResearch}
+                disabled={deepResearch.status === 'running' || (!query.trim() && !currentReport)}
+                className={clsx(
+                  "flex items-center gap-2 px-4 py-1.5 border text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
+                  query.trim() && !currentReport 
+                    ? "bg-my-accent text-white border-my-accent animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
+                    : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white"
+                )}
+              >
+                <Cpu size={14} className={clsx(deepResearch.status === 'running' && "animate-spin")} />
+                {query.trim() && !currentReport ? "Start Deep Research" : "Upgrade to Deep Research"}
+              </motion.button>
+            )}
           </div>
         </header>
 

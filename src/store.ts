@@ -114,8 +114,8 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev') => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news') => void;
 
   xp: number;
   searchCount: number;
@@ -125,6 +125,10 @@ interface AppState {
   lastSearchDate: string | null;
   streak: number;
 
+  subscribedCategories: string[];
+  setSubscribedCategories: (cats: string[]) => void;
+  toggleCategory: (category: string) => void;
+  
   currentReport: COGNAPSE_Output | null;
   setCurrentReport: (report: COGNAPSE_Output | null) => void;
   currentChat: ChatMessage[];
@@ -243,6 +247,19 @@ export const useStore = create<AppState>()(
       currentView: 'landing',
       setView: (view) => set({ currentView: view }),
 
+      subscribedCategories: ['TECH', 'FINANCE', 'GEOPOLITICS'], // Defaults
+      setSubscribedCategories: (cats) => set({ subscribedCategories: cats }),
+      toggleCategory: (cat) => set((state) => {
+        const newCats = state.subscribedCategories.includes(cat)
+          ? state.subscribedCategories.filter(c => c !== cat)
+          : [...state.subscribedCategories, cat];
+        
+        if (state.user) {
+          dbService.saveSettings(state.user.id, { subscribedCategories: newCats });
+        }
+        
+        return { subscribedCategories: newCats };
+      }),
 
       xp: 0,
       searchCount: 0,
@@ -516,7 +533,7 @@ export const useStore = create<AppState>()(
       setBlinking: (val) => set({ isBlinking: val }),
 
       isDevOpen: false,
-      setDevOpen: (val) => set({ isDevOpen: val }),
+      setDevOpen: (val: boolean) => set({ isDevOpen: val }),
     }),
     {
       name: 'cognapse-storage',
@@ -527,7 +544,8 @@ export const useStore = create<AppState>()(
         badges: state.badges,
         streak: state.streak,
         lastSearchDate: state.lastSearchDate,
-        theme: state.theme
+        theme: state.theme,
+        subscribedCategories: state.subscribedCategories
       }),
     }
   )
