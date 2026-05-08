@@ -51,11 +51,12 @@ Built with a "Zero-Trust" local security model to ensure total operative privacy
 
 ## 📦 Installation & Deployment
 
-### 🚀 For End-Users (One-Click Launch)
+### 🚀 For End-Users (Portable Launch)
 If you wish to deploy COGNAPSE as a native desktop terminal without local development tools:
-1.  **Download:** Navigate to the [Releases](https://github.com/prayankatwork/COGNAPSE/releases) page and download the latest `COGNAPSE-Setup.exe`.
-2.  **Initialize:** Run the installer. COGNAPSE will automatically verify your intelligence core upon first launch.
-3.  **Smart Setup:** If [Ollama](https://ollama.com/) is missing from your system, the terminal will guide you through the automated setup process to enable local hardware acceleration.
+1.  **Download:** Navigate to the [Releases](https://github.com/prayankatwork/COGNAPSE/releases) page and download the latest `COGNAPSE-V2.5.0-Portable.zip`.
+2.  **Extract:** Unzip the folder to your preferred location.
+3.  **Initialize:** Run the `COGNAPSE.exe` inside the folder. The terminal will automatically verify your intelligence core upon first launch.
+4.  **Smart Setup:** If [Ollama](https://ollama.com/) is missing from your system, the terminal will guide you through the automated setup process to enable local hardware acceleration.
 
 ### 🛠 For Developers (Building from Source)
 1. **Clone & Install**
