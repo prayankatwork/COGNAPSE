@@ -1,0 +1,405 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useStore } from '../store';
+import { 
+  Search, Cpu, Globe, Zap, 
+  ShieldCheck, ArrowRight, X, 
+  ChevronRight, ChevronLeft, Sparkles,
+  Command, Database, Target, Brain,
+  TrendingUp, Landmark, Shield
+} from 'lucide-react';
+import clsx from 'clsx';
+import { audioService } from '../services/audioService';
+
+interface WalkthroughStep {
+  title: string;
+  description: string;
+  anchorId?: string;
+  icon: React.ReactNode;
+  actionLabel?: string;
+  onEnter?: () => void;
+  id: string;
+}
+
+export default function NeuralWalkthrough() {
+  const { 
+    walkthroughCompleted, setWalkthroughCompleted, 
+    setView, setStatusOpen, updateGamification,
+    subscribedCategories, toggleCategory, currentReport,
+    deepResearch
+  } = useStore();
+  
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [spotlightRect, setSpotlightRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
+  
+  // Track if this is a replay to skip category selection
+  const [isReplay, setIsReplay] = useState(false);
+
+  useEffect(() => {
+    if (!walkthroughCompleted) {
+      setCurrentStepIdx(0);
+      if (subscribedCategories.length >= 2) {
+        setIsReplay(true);
+      } else {
+        setIsReplay(false);
+      }
+      audioService.playWalkthroughTick();
+    }
+  }, [walkthroughCompleted]);
+
+  const steps: WalkthroughStep[] = useMemo(() => {
+    const allSteps: WalkthroughStep[] = [
+      {
+        id: 'welcome',
+        title: "Welcome to COGNAPSE",
+        description: "Authorized Operative detected. This protocol will calibrate your neural connection to the COGNAPSE forensic swarm.",
+        icon: <Sparkles className="text-my-accent" size={32} />,
+        actionLabel: "Initialize Connection"
+      },
+      {
+        id: 'categories',
+        title: "Signal Calibration",
+        description: "Select at least two intelligence vectors to synchronize with your global signal horizon.",
+        icon: <Target className="text-my-accent" size={32} />,
+        actionLabel: "Confirm Vectors"
+      },
+      {
+        id: 'hub',
+        title: "Intelligence Hub",
+        description: "Your global signal horizon. Monitor real-time vectors across Tech, Finance, and Geopolitics based on your calibration.",
+        anchorId: "walkthrough-hub-anchor",
+        icon: <Globe className="text-blue-400" size={24} />,
+        onEnter: () => {
+          if (useStore.getState().currentView !== 'landing') setView('landing');
+        }
+      },
+      {
+        id: 'command',
+        title: "Neural Command",
+        description: "Activate the command bar (Ctrl+K) to pivot between intelligence nodes or recall vault data instantly.",
+        anchorId: "walkthrough-command-anchor",
+        icon: <Command className="text-my-accent" size={24} />
+      },
+      {
+        id: 'research',
+        title: "Core Research",
+        description: "Perform your first live research query now. Type an objective and press Enter to synchronize with the swarm.",
+        anchorId: "walkthrough-search-anchor",
+        icon: <Search className="text-my-ink" size={24} />,
+        onEnter: () => {
+          if (useStore.getState().currentView !== 'research') setView('research');
+          // Purge existing intelligence to force fresh calibration
+          useStore.getState().setCurrentReport(null);
+          useStore.getState().resetDeepResearch();
+        },
+        isActionGated: true
+      },
+      {
+        id: 'deep',
+        title: "Deep Research Protocol",
+        description: "Now, activate the Deep Research toggle inside the gateway to prepare for high-stakes forensic dossiers.",
+        anchorId: "walkthrough-deep-research-anchor",
+        icon: <Cpu className="text-emerald-400" size={24} />,
+        onEnter: () => {
+          // Ensure deep research is reset if they somehow triggered it earlier
+          useStore.getState().resetDeepResearch();
+        },
+        isActionGated: true
+      },
+      {
+        id: 'archive',
+        title: "Intelligence Archive",
+        description: "Review every synthesis in your private vault. Track your operative evolution and audit history.",
+        anchorId: "walkthrough-sidebar-anchor",
+        icon: <Database className="text-my-muted" size={24} />,
+        onEnter: () => {
+            if (useStore.getState().currentView !== 'research') setView('research');
+            if (!useStore.getState().isSidebarOpen) useStore.getState().toggleSidebar();
+        }
+      },
+      {
+        id: 'status',
+        title: "Operative Status",
+        description: "Earn XP for every synthesis. Unlock tactical ranks and expand your clearance as you master the swarm.",
+        anchorId: "walkthrough-profile-anchor",
+        icon: <ShieldCheck className="text-my-accent" size={24} />
+      },
+      {
+        id: 'complete',
+        title: "Sync Completed",
+        description: "Calibration successful. You have been awarded +100 XP for completing the neural initialization protocol.",
+        icon: <Zap className="text-my-accent" size={32} />,
+        actionLabel: "Enter Workspace"
+      }
+    ];
+
+    if (isReplay) {
+      return allSteps.filter(s => s.id !== 'categories');
+    }
+    
+    return allSteps;
+  }, [setView, isReplay]);
+
+  const currentStep = steps[currentStepIdx];
+
+  // Action Gate Listeners
+  useEffect(() => {
+    if (walkthroughCompleted || !currentStep) return;
+
+    if (currentStep.id === 'research' && currentReport) {
+      // Auto-advance when research is performed
+      handleNext();
+    }
+
+    if (currentStep.id === 'deep' && deepResearch.status === 'running') {
+      // Auto-advance when deep research starts
+      handleNext();
+    }
+  }, [currentReport, deepResearch.status]);
+
+  useEffect(() => {
+    if (walkthroughCompleted || !currentStep) return;
+
+    if (currentStep.onEnter) {
+      currentStep.onEnter();
+    }
+
+    audioService.speakProtocol(currentStep.title);
+    audioService.playNeuralHum(true);
+
+    const updateSpotlight = () => {
+      if (currentStep.anchorId) {
+        const el = document.getElementById(currentStep.anchorId);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setSpotlightRect({
+            top: rect.top - 10,
+            left: rect.left - 10,
+            width: rect.width + 20,
+            height: rect.height + 20
+          });
+          return;
+        }
+      }
+      setSpotlightRect(null);
+    };
+
+    const timer = setTimeout(updateSpotlight, 300);
+    window.addEventListener('resize', updateSpotlight);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateSpotlight);
+    };
+  }, [currentStepIdx, walkthroughCompleted, currentStep]);
+
+  if (walkthroughCompleted) return null;
+
+  const handleNext = () => {
+    audioService.playWalkthroughTick();
+    if (currentStepIdx < steps.length - 1) {
+      setCurrentStepIdx(prev => prev + 1);
+    } else {
+      updateGamification({ xpAcquired: 100 });
+      setWalkthroughCompleted(true);
+    }
+  };
+
+  const handlePrev = () => {
+    audioService.playWalkthroughTick();
+    if (currentStepIdx > 0) {
+      setCurrentStepIdx(prev => prev - 1);
+    }
+  };
+
+  const handleSkip = () => {
+    setWalkthroughCompleted(true);
+  };
+
+  const categoryOptions = [
+    { id: 'TECH', label: 'Technology', icon: <Cpu size={20} /> },
+    { id: 'FINANCE', label: 'Finance', icon: <Landmark size={20} /> },
+    { id: 'GEOPOLITICS', label: 'Geopolitics', icon: <Shield size={20} /> }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[1000] pointer-events-none overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={`overlay-${spotlightRect ? 'focused' : 'intro'}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-0"
+        >
+          {spotlightRect ? (
+            <>
+              <div className="absolute top-0 left-0 right-0 bg-black/30 pointer-events-auto" style={{ height: spotlightRect.top }} />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/30 pointer-events-auto" style={{ top: spotlightRect.top + spotlightRect.height }} />
+              <div className="absolute left-0 bg-black/30 pointer-events-auto" style={{ top: spotlightRect.top, height: spotlightRect.height, width: spotlightRect.left }} />
+              <div className="absolute right-0 bg-black/30 pointer-events-auto" style={{ top: spotlightRect.top, height: spotlightRect.height, left: spotlightRect.left + spotlightRect.width }} />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-black/30 pointer-events-auto" />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {spotlightRect && (
+          <motion.svg 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[1001] pointer-events-none"
+          >
+             <motion.path 
+               d={`M ${spotlightRect.left} ${spotlightRect.top} L ${spotlightRect.left + 20} ${spotlightRect.top - 20}`}
+               stroke="#f97316"
+               strokeWidth="2"
+               initial={{ pathLength: 0 }}
+               animate={{ pathLength: 1 }}
+               className="opacity-50"
+             />
+             <motion.path 
+               d={`M ${spotlightRect.left + spotlightRect.width} ${spotlightRect.top + spotlightRect.height} L ${spotlightRect.left + spotlightRect.width - 20} ${spotlightRect.top + spotlightRect.height + 20}`}
+               stroke="#f97316"
+               strokeWidth="2"
+               initial={{ pathLength: 0 }}
+               animate={{ pathLength: 1 }}
+               className="opacity-50"
+             />
+          </motion.svg>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {spotlightRect && (
+          <motion.div
+            key={`spotlight-${currentStepIdx}`}
+            initial={{ opacity: 0, scale: 0.9, filter: "brightness(2) blur(10px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "brightness(1) blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.1, filter: "brightness(0) blur(20px)" }}
+            className="absolute border-2 border-my-accent rounded-xl shadow-[0_0_50px_rgba(249,115,22,0.4)] pointer-events-none z-[1001]"
+            style={{
+              top: spotlightRect.top,
+              left: spotlightRect.left,
+              width: spotlightRect.width,
+              height: spotlightRect.height
+            }}
+          >
+             <motion.div 
+               animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.05, 1] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="absolute -inset-4 bg-my-accent/5 rounded-xl border border-my-accent/10"
+             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className={clsx(
+        "absolute inset-0 flex items-center justify-center z-[1002] transition-all duration-1000",
+        spotlightRect ? (
+          spotlightRect.top < 400 ? "items-end pb-32" : "items-start pt-32"
+        ) : ""
+      )}>
+         <motion.div 
+           key={`card-${currentStep?.id}`}
+           initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+           animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+           transition={{ type: "spring", damping: 20 }}
+           className={clsx(
+             "pointer-events-auto w-full max-w-md bg-my-bg/95 backdrop-blur-3xl border border-my-border rounded-2xl p-8 shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative overflow-hidden",
+             spotlightRect && spotlightRect.left < 500 ? "md:ml-[300px]" : ""
+           )}
+         >
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-[8px] font-mono select-none pointer-events-none uppercase tracking-tighter leading-none whitespace-pre">
+               {`SYNC_ACTIVE\nNODE_CALIBRATED\nTHROUGHPUT_HIGH\nFORENSIC_CLEARANCE_AUTH`}
+            </div>
+
+            <div className="flex items-center gap-4 mb-6">
+               <div className="p-3 bg-my-accent/10 rounded-xl">
+                  {currentStep?.icon}
+               </div>
+               <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-my-accent mb-1">Neural Protocol</h3>
+                  <h2 className="text-xl font-serif font-bold italic text-my-ink leading-tight">{currentStep?.title}</h2>
+               </div>
+            </div>
+
+            <p className="text-sm text-my-muted leading-relaxed mb-8 font-medium">
+               {currentStep?.description}
+            </p>
+
+            {currentStep?.id === 'categories' && (
+              <div className="flex flex-col gap-3 mb-10">
+                 {categoryOptions.map(cat => (
+                   <button 
+                     key={cat.id}
+                     onClick={() => { toggleCategory(cat.id); audioService.playWalkthroughTick(); }}
+                     className={clsx(
+                       "flex items-center justify-between p-4 border transition-all",
+                       subscribedCategories.includes(cat.id) 
+                         ? "border-my-accent bg-my-accent/5 text-my-ink" 
+                         : "border-my-border hover:border-my-accent/30 text-my-muted"
+                     )}
+                   >
+                      <div className="flex items-center gap-4">
+                         {cat.icon}
+                         <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
+                      </div>
+                      {subscribedCategories.includes(cat.id) && <Zap size={14} className="text-my-accent" />}
+                   </button>
+                 ))}
+                 <p className="text-[9px] text-my-accent font-bold italic">
+                   Requirement: Select {Math.max(0, 2 - subscribedCategories.length)} more vector(s)
+                 </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+               <button 
+                 onClick={handleSkip}
+                 className="text-[10px] font-bold text-my-muted hover:text-my-ink uppercase tracking-widest transition-colors"
+               >
+                  Skip
+               </button>
+
+               <div className="flex items-center gap-3">
+                  {currentStepIdx > 0 && (
+                    <button 
+                      onClick={handlePrev}
+                      className="p-3 text-my-muted hover:text-my-ink transition-colors"
+                    >
+                       <ChevronLeft size={20} />
+                    </button>
+                  )}
+                  
+                  {!currentStep?.isActionGated ? (
+                    <button 
+                      onClick={handleNext}
+                      disabled={currentStep?.id === 'categories' && subscribedCategories.length < 2}
+                      className="group px-8 py-3 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                       {currentStep?.actionLabel || (currentStepIdx === steps.length - 1 ? "Initialize" : "Proceed")}
+                       <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  ) : (
+                    <div className="px-8 py-3 bg-my-accent/10 border border-my-accent/30 text-my-accent text-[8px] font-black uppercase tracking-[0.2em] animate-pulse">
+                       Awaiting Operative Action...
+                    </div>
+                  )}
+               </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-my-border">
+               <motion.div 
+                 className="h-full bg-my-accent"
+                 initial={{ width: 0 }}
+                 animate={{ width: `${((currentStepIdx + 1) / steps.length) * 100}%` }}
+               />
+            </div>
+         </motion.div>
+      </div>
+    </div>
+  );
+}

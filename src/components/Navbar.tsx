@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { 
   User, X, Moon, Sun, Search,
@@ -17,6 +17,7 @@ export default function Navbar() {
   } = useStore();
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const handleCommandClose = useCallback(() => setIsCommandOpen(false), []);
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -55,6 +56,7 @@ export default function Navbar() {
       )}>
         {/* Left: Brand & Rollup Modules */}
         <div 
+          id="walkthrough-logo-anchor"
           className="flex items-center w-1/3 relative"
           onMouseEnter={() => setIsHoveringLogo(true)}
           onMouseLeave={() => setIsHoveringLogo(false)}
@@ -112,6 +114,7 @@ export default function Navbar() {
         {/* Center: Command Bar */}
         <div className="flex items-center justify-center w-1/3">
           <button 
+            id="walkthrough-command-anchor"
             onClick={() => setIsCommandOpen(true)}
             className="group flex items-center justify-between w-full max-w-md px-4 py-1.5 bg-my-callout/20 hover:bg-my-callout/40 border border-my-border/50 hover:border-my-accent/30 rounded-full transition-all"
           >
@@ -130,6 +133,7 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-4">
                <button 
+                 id="walkthrough-profile-anchor"
                  onClick={() => setStatusOpen(true)}
                  className="hidden lg:flex flex-col items-end group cursor-pointer"
                >
@@ -178,7 +182,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <CommandPalette isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} />
+      <CommandPalette isOpen={isCommandOpen} onClose={handleCommandClose} />
     </>
   );
 }

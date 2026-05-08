@@ -6,7 +6,7 @@ import {
   Cpu, FileText, LayoutGrid, Activity, 
   BookOpen, ChevronLeft, ChevronRight, 
   ArrowUpRight, ShieldCheck, Terminal,
-  Library, Box, Fingerprint, Lock, Shield
+  Library, Box, Fingerprint, Lock, Shield, Workflow
 } from 'lucide-react';
 import { useStore } from '../store';
 import clsx from 'clsx';
@@ -15,7 +15,7 @@ export default function Sidebar() {
   const { 
     isSidebarOpen, toggleSidebar, setView, archive, currentReport, 
     setCurrentReport, xp, rank, searchCount, user, setAuthOpen, setStatusOpen,
-    resetDeepResearch
+    resetDeepResearch, setWalkthroughCompleted
   } = useStore();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,6 +78,7 @@ export default function Sidebar() {
       )}
 
       <aside 
+        id="walkthrough-sidebar-anchor"
         className={clsx(
           "fixed md:relative top-0 left-0 h-full bg-my-sidebar border-r border-my-border flex flex-col z-50 transition-all duration-500 ease-in-out",
           isSidebarOpen ? "w-80" : "w-0 overflow-hidden border-none"
@@ -227,6 +228,7 @@ export default function Sidebar() {
                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                 </motion.div>
              </div>
+
 
 
              {/* Student Developer Disclaimer - Compact & Visible */}

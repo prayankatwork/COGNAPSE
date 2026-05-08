@@ -392,6 +392,7 @@ export default function MainContent() {
           <div className="flex items-center gap-4">
             {( (query.trim() || currentReport) && !currentReport?.deep_research && !loading) && (
               <motion.button
+                id="walkthrough-deep-research-anchor"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={startDeepResearch}
@@ -711,6 +712,7 @@ export default function MainContent() {
 
               <div className="relative">
                 <input
+                  id="walkthrough-search-anchor"
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}

@@ -180,8 +180,8 @@ export const dbService = {
     }
   },
 
-  // News Feed Subscriptions
-  async saveSettings(userId: string, settings: { subscribedCategories: string[] }) {
+  // News Feed Subscriptions & Walkthrough Status
+  async saveSettings(userId: string, settings: { subscribedCategories?: string[], walkthroughCompleted?: boolean }) {
     try {
       await setDoc(doc(db, "user_settings", userId), {
         ...settings,
@@ -192,7 +192,6 @@ export const dbService = {
       console.warn("Firebase settings sync failed.");
     }
   },
-
   async loadSettings(userId: string) {
     try {
       const docRef = doc(db, "user_settings", userId);
@@ -203,6 +202,40 @@ export const dbService = {
       return null;
     } catch (error) {
       return null;
+    }
+  },
+
+  async deleteUserAccount(userId: string) {
+    try {
+      const batch = writeBatch(db);
+      
+      // 1. Delete Reports
+      const reportsQ = query(collection(db, "intelligence_reports"), where("user_id", "==", userId));
+      const reportsSnap = await getDocs(reportsQ);
+      reportsSnap.forEach(doc => batch.delete(doc.ref));
+
+      // 2. Delete Notebook
+      const notesQ = query(collection(db, "notebook"), where("user_id", "==", userId));
+      const notesSnap = await getDocs(notesQ);
+      notesSnap.forEach(doc => batch.delete(doc.ref));
+
+      // 3. Delete Stats
+      batch.delete(doc(db, "user_stats", userId));
+
+      // 4. Delete Settings
+      batch.delete(doc(db, "user_settings", userId));
+
+      await batch.commit();
+
+      // 5. Delete Auth User
+      if (auth.currentUser) {
+        await auth.currentUser.delete();
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error("Account excision failed:", error);
+      throw error;
     }
   }
 };

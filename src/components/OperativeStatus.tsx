@@ -102,14 +102,22 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
            </div>
         </div>
 
-        {/* Technical Footer */}
-        <div className="px-10 py-5 border-t border-my-border flex justify-between items-center bg-my-callout/50 text-[9px] font-mono text-my-muted uppercase tracking-[0.2em]">
-           <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-my-accent rounded-full" />
-              <span>COGNAPSE CORE V4.2</span>
-           </div>
-           <span>AUTH: {Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
-        </div>
+         {/* Technical Footer */}
+         <div className="px-10 py-8 border-t border-my-border bg-my-callout/50 flex flex-col gap-4">
+            {/* Restricted Actions */}
+            <div className="pt-0">
+               <button 
+                 onClick={() => {
+                   if (window.confirm("CRITICAL WARNING: This protocol will irreversibly PURGE all intelligence reports, tactical notes, search history, and neural credentials associated with this operative signature from the cloud vault. \n\nProceed with terminal excision?")) {
+                      useStore.getState().deleteAccount();
+                   }
+                 }}
+                 className="w-full py-2.5 bg-red-500/5 hover:bg-red-500/20 border border-red-500/20 text-red-500 text-[8px] font-black uppercase tracking-[0.3em] transition-all rounded-[2px]"
+               >
+                  Initialize Nuclear Purge (Delete Account)
+               </button>
+            </div>
+         </div>
       </motion.div>
     </motion.div>
   );

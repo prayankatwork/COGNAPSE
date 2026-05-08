@@ -129,6 +129,9 @@ interface AppState {
   setSubscribedCategories: (cats: string[]) => void;
   toggleCategory: (category: string) => void;
   
+  walkthroughCompleted: boolean;
+  setWalkthroughCompleted: (completed: boolean) => void;
+  
   currentReport: COGNAPSE_Output | null;
   setCurrentReport: (report: COGNAPSE_Output | null) => void;
   currentChat: ChatMessage[];
@@ -191,6 +194,8 @@ interface AppState {
 
   isDevOpen: boolean;
   setDevOpen: (val: boolean) => void;
+
+  deleteAccount: () => Promise<void>;
 }
 
 const getRank = (xp: number) => {
@@ -235,6 +240,29 @@ export const useStore = create<AppState>()(
         });
       },
 
+      deleteAccount: async () => {
+        const user = get().user;
+        if (!user) return;
+        
+        try {
+          await dbService.deleteUserAccount(user.id);
+          set({ 
+            user: null, 
+            xp: 0, 
+            searchCount: 0, 
+            rank: 'OPERATIVE',
+            archive: [],
+            currentReport: null,
+            notes: [],
+            currentView: 'landing',
+            isStatusOpen: false
+          });
+        } catch (error) {
+          console.error("Account deletion failed:", error);
+          throw error;
+        }
+      },
+
       isAuthOpen: false,
       setAuthOpen: (open) => set({ isAuthOpen: open }),
 
@@ -259,6 +287,14 @@ export const useStore = create<AppState>()(
         }
         
         return { subscribedCategories: newCats };
+      }),
+
+      walkthroughCompleted: true, // Default to true to prevent flashes, will be updated on load
+      setWalkthroughCompleted: (completed) => set((state) => {
+        if (state.user) {
+          dbService.saveSettings(state.user.id, { walkthroughCompleted: completed });
+        }
+        return { walkthroughCompleted: completed };
       }),
 
       xp: 0,

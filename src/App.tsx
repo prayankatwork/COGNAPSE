@@ -21,6 +21,7 @@ import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
 import IntelligenceFeed from './components/IntelligenceFeed';
 import CreatorProfile from './components/CreatorProfile';
+import NeuralWalkthrough from './components/NeuralWalkthrough';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
@@ -137,6 +138,13 @@ export default function App() {
           if (settings && settings.subscribedCategories) {
             useStore.getState().setSubscribedCategories(settings.subscribedCategories);
           }
+          
+          if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
+            useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
+          } else if (user) {
+            // New user, trigger walkthrough
+            useStore.getState().setWalkthroughCompleted(false);
+          }
 
           if (stats) {
             setStats({
@@ -181,133 +189,71 @@ export default function App() {
     }
   }, [user]);
 
-  if (currentView === 'landing') {
-    return (
-      <div className="relative pt-16">
-        <Navbar />
-        <NeuralBackground />
-        <LandingPage />
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
-
-  if (currentView === 'documentation') {
-    return (
-      <div className="pt-16 min-h-screen">
-        <Navbar />
-        <Documentation />
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
-
-  if (currentView === 'creator') {
-    return (
-      <div className="pt-16 min-h-screen relative overflow-hidden">
-        <Navbar />
-        <NeuralBackground />
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="relative z-10"
-        >
-          <CreatorProfile />
-        </motion.div>
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
-
-
-  if (currentView === 'news') {
-    if (!user) {
-      return (
-        <div className="pt-16 min-h-screen relative overflow-hidden flex flex-col items-center justify-center text-center p-8">
-          <Navbar />
-          <NeuralBackground />
-          <div className="relative z-10 max-w-md">
-             <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
-                <LockIcon size={32} />
+  // Determine Content Based on View
+  const renderContent = () => {
+    switch (currentView) {
+      case 'landing':
+        return <LandingPage />;
+      case 'documentation':
+        return <Documentation />;
+      case 'creator':
+        return <CreatorProfile />;
+      case 'news':
+        if (!user) {
+           return (
+             <div className="flex flex-col items-center justify-center text-center p-8 h-full">
+                <div className="relative z-10 max-w-md">
+                   <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+                      <LockIcon size={32} />
+                   </div>
+                   <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
+                   <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
+                      The Intelligence Hub requires an <br /> 
+                      <span className="text-my-accent font-bold">Authorized Operative Signature</span> <br /> 
+                      to sync global monitoring vectors.
+                   </p>
+                   <button 
+                     onClick={() => setAuthOpen(true)}
+                     className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
+                   >
+                      Authorize Identity
+                   </button>
+                </div>
              </div>
-             <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
-             <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
-                The Intelligence Hub requires an <br /> 
-                <span className="text-my-accent font-bold">Authorized Operative Signature</span> <br /> 
-                to sync global monitoring vectors.
-             </p>
-             <button 
-               onClick={() => setAuthOpen(true)}
-               className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
-             >
-                Authorize Identity
-             </button>
+           );
+        }
+        return <IntelligenceFeed onTriggerResearch={(q) => useStore.setState({ initialQuery: q })} />;
+      case 'research':
+      default:
+        return (
+          <div className="flex h-full overflow-hidden relative">
+            <Sidebar />
+            <main className="flex-1 flex flex-col h-full relative">
+              <MainContent />
+            </main>
           </div>
-          <AnimatePresence>
-             {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-          </AnimatePresence>
-        </div>
-      );
+        );
     }
-
-    return (
-      <div className="pt-16 min-h-screen relative overflow-hidden flex flex-col">
-        <Navbar />
-        <NeuralBackground />
-        <div className="flex-1 relative z-10">
-           <IntelligenceFeed onTriggerResearch={(q) => {
-              useStore.setState({ initialQuery: q });
-           }} />
-        </div>
-
-        <AnimatePresence>
-           {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-           {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-           {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
-        </AnimatePresence>
-        <SelectionCapture />
-      </div>
-    );
-  }
-
+  };
 
   return (
     <div className={clsx(
-      "flex h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-hidden relative pt-16",
+      "min-h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16",
       theme === 'dark' ? 'dark' : ''
     )}>
       <Navbar />
       <NeuralBackground />
       
-      <Sidebar />
-      
-      <main className="flex-1 flex flex-col h-full relative">
-        <MainContent />
-      </main>
+      <div className="h-[calc(100vh-64px)] relative">
+         {renderContent()}
+      </div>
 
       <AnimatePresence>
          {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
          {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
          {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
       </AnimatePresence>
+      <NeuralWalkthrough />
       <SelectionCapture />
     </div>
   );

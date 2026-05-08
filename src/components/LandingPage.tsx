@@ -49,6 +49,7 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-10 mt-20"
           >
             <motion.button
+              id="walkthrough-search-anchor"
               onClick={() => setView('research')}
               className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
             >

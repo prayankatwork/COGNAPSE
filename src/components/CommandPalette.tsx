@@ -8,7 +8,7 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && query !== '') {
       setQuery('');
     }
     const handleKeyDown = (e: KeyboardEvent) => {

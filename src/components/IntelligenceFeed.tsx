@@ -124,8 +124,10 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <header className="px-12 py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-xl">
+      <header 
+        id="walkthrough-hub-anchor"
+        className="px-12 py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-xl"
+      >
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                <div className="flex items-center gap-3 mb-2">

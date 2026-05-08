@@ -80,6 +80,18 @@ const DOC_SECTIONS = [
               <p className="text-sm opacity-80 leading-relaxed pt-1">Submit your first query. The neural grid will calibrate to your investigative style.</p>
            </div>
         </div>
+
+        <div className="pt-8 border-t border-my-border">
+           <button 
+             onClick={() => useStore.getState().setWalkthroughCompleted(false)}
+             className="px-8 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-4 hover:scale-105 transition-all shadow-xl rounded-sm group"
+           >
+              <Workflow size={14} className="group-hover:rotate-180 transition-transform duration-1000" /> Re-Initialize Neural Protocol
+           </button>
+           <p className="mt-4 text-[9px] text-my-muted italic opacity-60">
+             Warning: Re-initialization will trigger a full neural calibration. Your established settings will be preserved but the protocol sequence will reset.
+           </p>
+        </div>
       </div>
     )
   },
