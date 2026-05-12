@@ -17,10 +17,13 @@ const groq = groqKey ? new Groq({
  * MASTER HEALTH REGISTRY
  */
 const healthRegistry: Record<string, { status: 'stable' | 'unstable', lastFailure: number }> = {
-  "gemini-1.5-flash-latest": { status: 'stable', lastFailure: 0 },
-  "gemini-1.5-pro-latest": { status: 'stable', lastFailure: 0 },
+  "gemini-1.5-flash": { status: 'stable', lastFailure: 0 },
+  "gemini-1.5-pro": { status: 'stable', lastFailure: 0 },
+  "gemini-1.5-flash-8b": { status: 'stable', lastFailure: 0 },
   "llama-3.3-70b-versatile": { status: 'stable', lastFailure: 0 },
   "llama-3.1-8b-instant": { status: 'stable', lastFailure: 0 },
+  "mixtral-8x7b-32768": { status: 'stable', lastFailure: 0 },
+  "gemma2-9b-it": { status: 'stable', lastFailure: 0 },
   "ollama": { status: 'stable', lastFailure: 0 }
 };
 
@@ -87,11 +90,11 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
   const swarmQueue: string[] = [];
   if (estTokens > 15000) {
-    swarmQueue.push("gemini-1.5-pro-latest", "gemini-1.5-flash-latest");
+    swarmQueue.push("gemini-1.5-pro", "gemini-1.5-flash");
     if (canUseLocal) swarmQueue.push("ollama");
-    swarmQueue.push("llama-3.1-8b-instant");
+    swarmQueue.push("mixtral-8x7b-32768");
   } else {
-    swarmQueue.push("gemini-1.5-flash-latest", "llama-3.3-70b-versatile", "gemini-1.5-pro-latest");
+    swarmQueue.push("gemini-1.5-flash", "gemini-1.5-flash-8b", "llama-3.3-70b-versatile", "gemma2-9b-it", "gemini-1.5-pro");
     if (canUseLocal) swarmQueue.push("ollama");
     swarmQueue.push("llama-3.1-8b-instant");
   }
@@ -112,7 +115,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
       }
 
       // GROQ Node
-      if (node.startsWith("llama") && groq) {
+      if ((node.startsWith("llama") || node.startsWith("mixtral") || node.startsWith("gemma")) && groq) {
         let finalPrompt = prompt;
         if (node.includes("8b") && estTokens > 5500) {
            finalPrompt = prompt.substring(0, 20000) + "\n[System: Content Pruned for Stability]";
