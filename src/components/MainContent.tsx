@@ -549,7 +549,7 @@ export default function MainContent() {
                           handleSearch(randomQuery);
                         }
                       }}
-                      className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
+                      className="group relative px-10 py-5 bg-my-ink !text-white dark:bg-my-accent dark:text-my-bg overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
                     >
                       {/* Corner Brackets */}
                       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -690,7 +690,7 @@ export default function MainContent() {
                   </p>
                   <button
                     onClick={() => useStore.getState().setView('games')}
-                    className="px-8 py-3 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
+                    className="px-8 py-3 bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
                   >
                     Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </button>
@@ -723,7 +723,7 @@ export default function MainContent() {
                 <button
                   type="submit"
                   disabled={!query.trim() || loading}
-                  className="absolute right-3 top-3 bottom-3 aspect-square bg-my-ink text-my-bg dark:bg-my-accent dark:text-black hover:bg-my-accent hover:text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-90"
+                  className="absolute right-3 top-3 bottom-3 aspect-square bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg hover:bg-my-accent hover:text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-90"
                 >
                   <Send size={20} />
                 </button>

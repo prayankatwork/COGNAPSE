@@ -153,7 +153,7 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={() => setAuthOpen(true)}
-              className="px-4 py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
+              className="px-4 py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
             >
                <User size={12} /> Sync Identity
             </button>
