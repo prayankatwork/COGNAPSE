@@ -57,6 +57,53 @@ Remember: Your output must be VALID JSON matching the provided schema. Structure
   }
 }
 
+export interface SessionSynthesisResult {
+  overarchingTheme: string;
+  researchMomentum: 'converging' | 'diverging' | 'expanding';
+  unifiedInsight: string;
+  keyPatterns: string[];
+  contradictions: string[];
+  forwardHypothesis: string;
+  knowledgeGaps: string[];
+}
+
+export async function executeSessionSynthesis(
+  reports: { query: string; bottomLine: string; topicCluster: string; credibility: number }[],
+  crossLinks: any[]
+): Promise<SessionSynthesisResult> {
+  const reportsContext = reports.map((r, i) => 
+    `REPORT ${i+1}:\nQuery: ${r.query}\nBottom Line: ${r.bottomLine}\nCluster: ${r.topicCluster}\nCredibility: ${r.credibility}%`
+  ).join('\n\n');
+
+  const prompt = `You are the COGNAPSE Session Intelligence Synthesis Engine.
+You have been provided with ${reports.length} related research reports from the current session.
+Your task is to synthesize them into a single, high-level intelligence brief.
+
+--- SESSION REPORTS ---
+${reportsContext}
+
+--- CROSS-QUERY LINKS ---
+${JSON.stringify(crossLinks)}
+
+Return a VALID JSON object with:
+1. overarchingTheme: A brilliant, short phrase describing the core thread.
+2. researchMomentum: One of "converging" (finding a single answer), "diverging" (growing complexity), or "expanding" (opening new fields).
+3. unifiedInsight: A 3-paragraph synthesis of how these reports connect.
+4. keyPatterns: String array of 3-5 recurring themes.
+5. contradictions: String array of any conflicting data points found.
+6. forwardHypothesis: A bold "what if" prediction based on this data.
+7. knowledgeGaps: String array of 3 specific questions we still haven't answered.
+
+Output ONLY the JSON object.`;
+
+  const raw = await callCloudAI(prompt, true, UTILITY_MODEL);
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch (e) {
+    throw new Error("Session synthesis failed. Analysis engine returned malformed results.");
+  }
+}
+
 export async function executeQuickInfo(nodeName: string): Promise<string> {
   const prompt = `You are COGNAPSE. Provide a brilliant, one-sentence tactical summary of the following topic for a quick forensic snapshot: "${nodeName}"
 Output pure plain text. No more than 30 words. Be sharp and professional.`;

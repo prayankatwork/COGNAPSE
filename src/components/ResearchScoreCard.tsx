@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResearchScore } from '../store';
+import { ResearchScore } from '../types';
 import { ShieldCheck, AlertTriangle, Globe, TrendingUp } from 'lucide-react';
 
 interface Props { scores: ResearchScore; }

@@ -49,11 +49,11 @@ const DOC_SECTIONS = [
         <div className="space-y-6">
            <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
               <h5 className="font-bold uppercase tracking-widest mb-2">Synthetic Intelligence</h5>
-              <p className="text-sm opacity-70 italic">Beyond search engines. We use multi-agent swarm logic to cross-reference conflicting data points and synthesize a singular truth.</p>
+              <p className="text-sm opacity-70 italic">Beyond search engines. We use multi-agent analysis logic to cross-reference conflicting data points and synthesize objective insights.</p>
            </div>
            <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
-              <h5 className="font-bold uppercase tracking-widest mb-2">Forensic Investigation</h5>
-              <p className="text-sm opacity-70 italic">Every claim is backed by a source. The Intelligence Vault allows you to audit the "why" behind every system output.</p>
+              <h5 className="font-bold uppercase tracking-widest mb-2">Detailed Investigation</h5>
+              <p className="text-sm opacity-70 italic">Every claim is backed by a source. The Research Archive allows you to audit the "why" behind every system output.</p>
            </div>
         </div>
       </div>
@@ -65,19 +65,19 @@ const DOC_SECTIONS = [
     icon: <Zap size={18} />,
     content: (
       <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">Initialize your operative profile and begin your first protocol.</p>
+        <p className="text-lg font-light leading-relaxed">Set up your analyst profile and begin your first research project.</p>
         <div className="space-y-4">
            <div className="flex gap-4 items-start">
               <div className="w-8 h-8 rounded-full bg-my-accent text-white flex items-center justify-center shrink-0 text-xs font-bold">1</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Register your codename and security key to enable the **Intelligence Vault**.</p>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Register your username and password to enable the **Research Archive**.</p>
            </div>
            <div className="flex gap-4 items-start">
               <div className="w-8 h-8 rounded-full bg-my-ink text-white flex items-center justify-center shrink-0 text-xs font-bold">2</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Select your **Workspace** (Research or Decision) from the main Apps hub.</p>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Select your **Workspace** (Research or Decision) from the main application hub.</p>
            </div>
            <div className="flex gap-4 items-start">
               <div className="w-8 h-8 rounded-full bg-my-muted text-white flex items-center justify-center shrink-0 text-xs font-bold">3</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Submit your first query. The neural grid will calibrate to your investigative style.</p>
+              <p className="text-sm opacity-80 leading-relaxed pt-1">Submit your first query. The analysis engine will adapt to your research style.</p>
            </div>
         </div>
 
@@ -86,10 +86,10 @@ const DOC_SECTIONS = [
              onClick={() => useStore.getState().setWalkthroughCompleted(false)}
              className="px-8 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-4 hover:scale-105 transition-all shadow-xl rounded-sm group"
            >
-              <Workflow size={14} className="group-hover:rotate-180 transition-transform duration-1000" /> Re-Initialize Neural Protocol
+              <Workflow size={14} className="group-hover:rotate-180 transition-transform duration-1000" /> Restart System Introduction
            </button>
            <p className="mt-4 text-[9px] text-my-muted italic opacity-60">
-             Warning: Re-initialization will trigger a full neural calibration. Your established settings will be preserved but the protocol sequence will reset.
+             Note: Restarting will trigger the initial onboarding flow. Your established settings will be preserved but the introductory sequence will reset.
            </p>
         </div>
       </div>
@@ -203,15 +203,15 @@ const DOC_SECTIONS = [
            <Lock size={20} />
            <span className="font-bold uppercase tracking-widest text-xs">Security Protocol: Active</span>
         </div>
-        <p className="text-lg leading-relaxed">Your intelligence history belongs only to you.</p>
+        <p className="text-lg leading-relaxed">Your research history belongs only to you.</p>
         <div className="space-y-4">
            <div className="p-6 border border-my-border bg-my-callout">
-              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Fingerprint size={16} className="text-my-accent" /> Operative Isolation</h5>
-              <p className="text-sm opacity-70 leading-relaxed">Data is partitioned using Firebase security rules. Your codename-to-email mapping ensures that your vault cannot be accessed by other system users.</p>
+              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Fingerprint size={16} className="text-my-accent" /> Analyst Isolation</h5>
+              <p className="text-sm opacity-70 leading-relaxed">Data is partitioned using secure architecture. Your username ensures that your private archive cannot be accessed by other system users.</p>
            </div>
            <div className="p-6 border border-my-border bg-my-callout">
-              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Database size={16} className="text-my-accent" /> Encrypted Vault</h5>
-              <p className="text-sm opacity-70 leading-relaxed">All research reports and simulations are encrypted at rest. We do not use your personal research data to train global AI models.</p>
+              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Database size={16} className="text-my-accent" /> Encrypted Archive</h5>
+              <p className="text-sm opacity-70 leading-relaxed">All research reports and simulations are encrypted at rest. We do not use your personal data to train global AI models.</p>
            </div>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function Documentation() {
   const [activeSection, setActiveSection] = useState('overview');
 
   return (
-    <div className="min-h-screen bg-my-bg text-my-ink selection:bg-my-accent selection:text-white flex flex-col">
+    <div className="min-h-screen text-my-ink selection:bg-my-accent selection:text-white flex flex-col">
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Navigation */}
@@ -251,10 +251,10 @@ export default function Documentation() {
            <div className="mt-12 p-6 border border-dashed border-my-border bg-my-callout/30">
               <div className="flex items-center gap-2 mb-2 text-my-accent">
                  <AlertCircle size={14} />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Operator Note</span>
+                 <span className="text-[10px] font-black uppercase tracking-widest">Analyst Note</span>
               </div>
               <p className="text-[10px] text-my-ink italic font-semibold leading-relaxed">
-                 Use the search function in the Vault to query your archived dossiers once indexes are enabled.
+                 Use the search function in the Archive to query your archived reports once indexes are enabled.
               </p>
            </div>
         </aside>
@@ -289,7 +289,7 @@ export default function Documentation() {
                    <span>COGNAPSE v2.5 // ARCHITECT_LEVEL_CLEARANCE</span>
                    <div className="flex gap-4">
                       <button className="hover:text-my-accent transition-colors">Privacy Protocol</button>
-                      <button className="hover:text-my-accent transition-colors">Neural Policy</button>
+                      <button className="hover:text-my-accent transition-colors">Privacy Policy</button>
                    </div>
                 </div>
              </motion.div>

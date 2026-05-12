@@ -1,3 +1,24 @@
+export interface DeepResearchThesis {
+  title: string;
+  abstract: string;
+  introduction: string;
+  problemStatement: string;
+  literatureReview: string;
+  methodology: string;
+  findings: string;
+  comparativeInsights: string;
+  limitations: string;
+  futureScope: string;
+  conclusion: string;
+}
+
+export interface ResearchScore {
+  accuracy: number;
+  bias: number;
+  sourceDiversity: number;
+  confidenceInterval: number;
+}
+
 export interface COGNAPSE_Output {
   query_understood: string;
   mode: "standard" | "eli5" | "deep" | "quick";

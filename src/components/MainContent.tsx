@@ -64,7 +64,7 @@ export default function MainContent() {
         try {
           const reports = await dbService.getAllReports(user.id);
           if (reports && reports.length > 0) {
-            const syncedArchive = reports.map(r => ({
+            const syncedArchive = (reports as any[]).map(r => ({
               id: r.id,
               query: r.query,
               timestamp: r.timestamp,
@@ -101,19 +101,19 @@ export default function MainContent() {
     // Immediately reset deep research state to ensure we are in standard search mode
     useStore.getState().resetDeepResearch();
 
-    setLoadingPhase("Analyzing objective...");
+    setLoadingPhase("Analyzing research query...");
 
     try {
       // update phrases purely for UX
-      setTimeout(() => setLoadingPhase("Scanning intelligence pool..."), 1500);
+      setTimeout(() => setLoadingPhase("Reviewing available data..."), 1500);
       setTimeout(() => setLoadingPhase("Synthesizing primary sources..."), 3500);
-      setTimeout(() => setLoadingPhase("Detecting contradictions..."), 5000);
-      setTimeout(() => setLoadingPhase("Structuring intelligence..."), 6500);
+      setTimeout(() => setLoadingPhase("Identifying data conflicts..."), 5000);
+      setTimeout(() => setLoadingPhase("Structuring report..."), 6500);
 
       const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank });
 
       if (!report || !report.summary) {
-        throw new Error("Intelligence synthesis yielded incomplete data. Retrying may resolve this.");
+        throw new Error("Data synthesis yielded incomplete results. Retrying may resolve this.");
       }
 
       const reportId = uuidv4();
@@ -405,13 +405,13 @@ export default function MainContent() {
                 )}
               >
                 <Cpu size={14} className={clsx(deepResearch.status === 'running' && "animate-spin")} />
-                {query.trim() && !currentReport ? "Start Deep Research" : "Upgrade to Deep Research"}
+                {query.trim() && !currentReport ? "Start Deep Analysis" : "Upgrade to Deep Analysis"}
               </motion.button>
             )}
           </div>
         </header>
 
-        {/* Investigation Stack / Umbrella UI */}
+        {/* Research Stack UI */}
         {investigationStack.length > 1 && (
           <div className="bg-my-sidebar border-b border-my-border px-8 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
             {investigationStack.map((report, idx) => (
@@ -427,7 +427,7 @@ export default function MainContent() {
                     idx === investigationStack.length - 1 ? "text-my-accent" : "text-my-muted hover:text-my-ink"
                   )}
                 >
-                  {report.query_understood?.substring(0, 20) || 'Investigation'}...
+                  {report.query_understood?.substring(0, 20) || 'Research'}...
                 </button>
                 {idx < investigationStack.length - 1 && <ChevronRight size={12} className="text-my-muted/40" />}
               </div>
@@ -437,7 +437,7 @@ export default function MainContent() {
 
         {/* Content Area */}
         <div ref={contentAreaRef} className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
-          {/* Deep Research Progress Banner */}
+          {/* Deep Analysis Progress Banner */}
           {deepResearch.status === 'running' && (
             <div className="sticky top-0 left-0 right-0 z-20 bg-my-accent text-my-bg py-2 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
@@ -459,7 +459,7 @@ export default function MainContent() {
               <div className="flex items-center gap-4">
                 <AlertCircle size={16} />
                 <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Deep Research Error: {deepResearch.error || 'System Failure'}
+                  Deep Analysis Error: {deepResearch.error || 'System Failure'}
                 </span>
               </div>
               <button
@@ -616,7 +616,7 @@ export default function MainContent() {
 
                 {/* Follow-up Chat UI */}
                 <div className="mt-8 border-t border-my-border pt-8 pb-16">
-                  <h4 className="text-xs uppercase tracking-widest font-bold text-my-muted mb-6">Investigative Thread</h4>
+                  <h4 className="text-xs uppercase tracking-widest font-bold text-my-muted mb-6">Analysis Thread</h4>
                   {useStore.getState().currentChat?.length > 0 ? (
                     <div className="space-y-6 mb-6">
                       {useStore.getState().currentChat.map(msg => (
@@ -672,10 +672,10 @@ export default function MainContent() {
                   </p>
                   <div className="h-1 w-full bg-my-border rounded-full overflow-hidden relative">
                     <div className="absolute inset-y-0 left-0 bg-my-accent transition-all duration-500 ease-out" style={{
-                      width: loadingPhase === "Analyzing objective..." ? "20%" :
-                        loadingPhase === "Scanning intelligence pool..." ? "40%" :
+                      width: loadingPhase === "Analyzing research query..." ? "20%" :
+                        loadingPhase === "Reviewing available data..." ? "40%" :
                           loadingPhase === "Synthesizing primary sources..." ? "60%" :
-                            loadingPhase === "Detecting contradictions..." ? "80%" : "100%"
+                            loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
                     }}></div>
                   </div>
                 </div>
@@ -683,10 +683,10 @@ export default function MainContent() {
                 <div className="mt-12 flex flex-col items-center max-w-sm text-center">
                   <div className="flex items-center gap-2 mb-3 text-my-accent">
                     <Zap size={14} className="animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Neural Diversion Active</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Processing Framework Active</span>
                   </div>
                   <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
-                    High-fidelity synthesis in progress. Because we prioritize academic-grade accuracy and professional verification, our cloud-hybrid engine is currently cross-referencing global sources. We recommend a neural diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
+                    High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources. We recommend a short diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
                   </p>
                   <button
                     onClick={() => useStore.getState().setView('games')}

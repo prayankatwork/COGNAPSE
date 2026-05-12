@@ -148,3 +148,10 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
   throw new Error("INTELLIGENCE OVERLOAD: All public cloud nodes are currently saturated. For unlimited research, we recommend enabling 'Local Acceleration' via Ollama on your machine.");
 };
+
+export const getSwarmHealth = () => healthRegistry;
+export const resetSwarmHealth = () => {
+  Object.keys(healthRegistry).forEach(node => {
+    healthRegistry[node] = { status: 'stable', lastFailure: 0 };
+  });
+};

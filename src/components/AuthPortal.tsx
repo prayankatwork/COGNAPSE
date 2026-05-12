@@ -39,15 +39,14 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
       ]);
 
       if (notes) {
-        useStore.getState().setNotes(notes);
+        useStore.getState().setNotes(notes as any[]);
       }
 
       if (stats) {
         setStats({
           xp: stats.xp,
           searchCount: stats.search_count,
-          rank: stats.rank,
-          gameScores: stats.game_scores
+          rank: stats.rank
         });
       }
 
@@ -67,15 +66,15 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
       onClose();
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        setError("Authorization discrepancy detected. Invalid security key.");
+        setError("Invalid credentials detected. Please check your password.");
       } else if (err.code === 'auth/user-not-found') {
-        setError("Operative not found in registry. Please create a profile.");
+        setError("User account not found. Please create a new profile.");
       } else if (err.code === 'auth/email-already-in-use') {
-        setError("Operative name already registered. Switch to Authentication.");
+        setError("Username already registered. Please login instead.");
       } else if (err.code === 'auth/weak-password') {
-        setError("Security key too weak. Minimum 6 characters required.");
+        setError("Password too weak. Minimum 6 characters required.");
       } else {
-        setError(err.message || "Intelligence Vault connection failure. Verify Firebase config.");
+        setError(err.message || "Database connection failure. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -105,22 +104,22 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         <div className="p-10">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px]">
-              <div className="w-8 h-px bg-my-accent" /> Operative Protocol
+              <div className="w-8 h-px bg-my-accent" /> Account Protocol
             </div>
             <BrandLogo size={32} />
           </div>
 
           <h2 className="text-5xl font-serif font-bold italic mb-2 text-white">
-            {isRegister ? 'Registry.' : 'Authentication.'}
+            {isRegister ? 'Registration.' : 'Login.'}
           </h2>
           <p className="text-[11px] text-white/40 uppercase tracking-widest mb-10 leading-relaxed">
-            {isRegister ? 'Register your forensic identity into the vault.' : 'Authorize access to your investigative dossiers.'}
+            {isRegister ? 'Create your user account to secure your research.' : 'Authorize access to your archived research reports.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
              <div className="space-y-2">
                 <label className="text-[9px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
-                   <User size={12} /> Operative Name
+                   <User size={12} /> Username
                 </label>
                 <input 
                   required
@@ -128,13 +127,13 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white focus:border-my-accent outline-none transition-colors placeholder:text-white/20"
-                  placeholder="CODE_NAME"
+                  placeholder="USERNAME"
                 />
              </div>
 
              <div className="space-y-2">
                 <label className="text-[9px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
-                   <Lock size={12} /> Security Key
+                   <Lock size={12} /> Password
                 </label>
                 <input 
                   required
@@ -159,7 +158,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
              >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : (
                    <>
-                      {isRegister ? 'Initialize Operative' : 'Authorize Access'}
+                      {isRegister ? 'Create Account' : 'Sign In'}
                       <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                    </>
                 )}
@@ -168,13 +167,13 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
           <div className="mt-10 pt-10 border-t border-my-border text-center">
              <p className="text-[10px] text-my-muted uppercase tracking-widest mb-4">
-                {isRegister ? 'Already have an active profile?' : 'New investigator requiring access?'}
+                {isRegister ? 'Already have an active account?' : 'New user requiring access?'}
              </p>
              <button 
                onClick={() => setIsRegister(!isRegister)}
                className="text-[10px] font-black text-my-accent uppercase tracking-[0.3em] hover:opacity-70 transition-opacity"
              >
-                {isRegister ? 'Switch to Authentication' : 'Create Operative Profile'}
+                {isRegister ? 'Switch to Login' : 'Create User Account'}
              </button>
           </div>
         </div>

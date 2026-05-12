@@ -18,7 +18,7 @@ export default function NeuralBackground() {
     const particles: Particle[] = [];
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const particleCount = isMobile ? 20 : 60;
+    const particleCount = isMobile ? 30 : 100;
     const gridSize = isMobile ? 80 : 50;
     const mouse = { x: -1000, y: -1000, active: false };
 
@@ -37,10 +37,10 @@ export default function NeuralBackground() {
         this.y = Math.random() * window.innerHeight;
         this.baseX = this.x;
         this.baseY = this.y;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.size = Math.random() * 1.5 + 0.5;
-        this.color = Math.random() > 0.7 ? '#F27D26' : (theme === 'dark' ? '#4A5568' : '#A0AEC0');
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.size = Math.random() * 2 + 0.5;
+        this.color = Math.random() > 0.8 ? '#F27D26' : (theme === 'dark' ? '#6B7280' : '#4A5568');
       }
 
       update() {
@@ -56,10 +56,10 @@ export default function NeuralBackground() {
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 150) {
-          const force = (150 - distance) / 150;
-          this.x -= dx * force * 0.02;
-          this.y -= dy * force * 0.02;
+        if (distance < 200) {
+          const force = (200 - distance) / 200;
+          this.x -= dx * force * 0.03;
+          this.y -= dy * force * 0.03;
         }
       }
 
@@ -72,7 +72,7 @@ export default function NeuralBackground() {
         
         // Add subtle glow
         if (this.color === '#F27D26') {
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 15;
           ctx.shadowColor = '#F27D26';
         } else {
           ctx.shadowBlur = 0;
@@ -102,7 +102,7 @@ export default function NeuralBackground() {
     };
 
     const drawGrid = () => {
-      const opacity = theme === 'dark' ? 0.05 : 0.03;
+      const opacity = theme === 'dark' ? 0.08 : 0.04;
       ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
       ctx.lineWidth = 0.5;
       
@@ -128,12 +128,12 @@ export default function NeuralBackground() {
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 120) {
+          if (distance < 180) {
             ctx.beginPath();
             ctx.strokeStyle = theme === 'dark' 
-              ? `rgba(255, 255, 255, ${0.1 * (1 - distance / 120)})`
-              : `rgba(42, 67, 101, ${0.05 * (1 - distance / 120)})`;
-            ctx.lineWidth = 0.5;
+              ? `rgba(255, 255, 255, ${0.2 * (1 - distance / 180)})`
+              : `rgba(42, 67, 101, ${0.15 * (1 - distance / 180)})`;
+            ctx.lineWidth = 0.8;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();

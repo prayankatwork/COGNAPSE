@@ -69,22 +69,21 @@ export default function DevDashboard() {
             {/* Quick Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <MetricCard 
-                label="Global Capacity" 
-                value={health.totalTokensRemaining.toLocaleString()} 
-                sub="Total Token Reserves" 
+                label="Total Nodes" 
+                value={Object.keys(health).length} 
+                sub="Registered Intelligence Layers" 
                 icon={<Database size={24} />} 
               />
               <MetricCard 
-                label="Active Nodes" 
-                value={health.nodes.filter(n => n.status === 'stable' && n.name !== 'ollama').length} 
-                sub={`${health.nodes.filter(n => n.name !== 'ollama').length} Registered Nodes`} 
+                label="Stable Nodes" 
+                value={Object.values(health).filter(n => n.status === 'stable').length} 
+                sub="Active and Available" 
                 icon={<ActivityIcon size={24} />} 
               />
-
               <MetricCard 
                 label="Uptime Index" 
                 value="99.98%" 
-                sub="Neural Link Stability" 
+                sub="System Link Stability" 
                 icon={<Shield size={24} />} 
               />
             </div>
@@ -95,52 +94,40 @@ export default function DevDashboard() {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {health.nodes
-                 .filter(node => node.name !== 'ollama')
-                 .map(node => (
-                 <div key={node.name} className="p-6 bg-white/5 border border-white/10 hover:border-my-accent/40 transition-all group relative overflow-hidden">
+               {Object.entries(health).map(([name, node]) => (
+                 <div key={name} className="p-6 bg-white/5 border border-white/10 hover:border-my-accent/40 transition-all group relative overflow-hidden">
 
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-4">
                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-white group-hover:text-my-accent transition-colors">{node.name}</span>
+                          <span className="text-sm font-bold text-white group-hover:text-my-accent transition-colors">{name}</span>
                           <span className="text-[9px] text-white/40 uppercase tracking-widest mt-1">Intelligence Layer Node</span>
                        </div>
                        <div className={clsx(
                          "px-2 py-1 text-[8px] font-black uppercase tracking-widest border",
                          node.status === 'stable' ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/5" :
-                         node.status === 'quarantined' ? "text-red-400 border-red-400/30 bg-red-400/10 animate-pulse" :
-                         "text-orange-400 border-orange-400/30 bg-orange-400/5"
+                         "text-red-400 border-red-400/30 bg-red-400/10 animate-pulse"
                        )}>
                          {node.status}
                        </div>
                     </div>
 
                     <div className="space-y-4">
-                       <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-white/40 uppercase tracking-widest">Token Capacity</span>
-                          <span className="text-white font-bold">{node.capacity.tokens.toLocaleString()}</span>
-                       </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (node.capacity.tokens / 1000000) * 100)}%` }}
+                            animate={{ width: node.status === 'stable' ? '100%' : '0%' }}
                             className={clsx(
                               "h-full transition-all duration-1000",
                               node.status === 'stable' ? "bg-emerald-500" : "bg-red-500"
                             )}
                           />
                        </div>
-
-                       <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-white/40 uppercase tracking-widest">Request Quota</span>
-                          <span className="text-white font-bold">{node.capacity.requests}</span>
-                       </div>
                     </div>
 
-                    {node.status !== 'stable' && node.quotaResetAt && (
+                    {node.status !== 'stable' && node.lastFailure > 0 && (
                       <div className="mt-6 pt-4 border-t border-white/5 flex items-center gap-2 text-[9px] text-red-400/60 uppercase tracking-widest">
                         <AlertCircle size={10} /> 
-                        Auto-Recovery: {new Date(node.quotaResetAt).toLocaleTimeString()}
+                        Node Quarantined at {new Date(node.lastFailure).toLocaleTimeString()}
                       </div>
                     )}
 

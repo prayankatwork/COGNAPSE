@@ -28,7 +28,7 @@ interface LinkData {
 
 export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onSubSearch: (q: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
   const theme = useStore((state) => state.theme);
 
   const safeText = (val: any) => {
@@ -173,7 +173,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       <div className="h-10 bg-my-sidebar/50 backdrop-blur-md border-b border-my-border flex items-center justify-between px-4 z-20">
         <div className="flex items-center gap-3">
           <Layers size={14} className="text-my-accent" />
-          <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest">Neural Cluster Analyzer</span>
+          <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest">Topic Cluster Analyzer</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
                   {loadingInfo ? (
                     <div className="flex flex-col items-center gap-3 py-4">
                       <Loader2 size={24} className="animate-spin text-my-accent" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse text-my-muted">Neural Mapping in Progress...</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse text-my-muted">Processing Analysis Map...</span>
                     </div>
                   ) : (
                     <div className="p-5 bg-my-bg border border-my-border italic shadow-inner max-h-[200px] overflow-y-auto scrollbar-hide">

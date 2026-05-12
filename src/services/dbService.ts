@@ -29,7 +29,7 @@ export const dbService = {
     await setDoc(doc(db, "user_stats", user.id), {
       xp: 0,
       search_count: 0,
-      rank: "OPERATIVE"
+      rank: "ANALYST"
     });
 
     return { success: true, user };

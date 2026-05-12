@@ -19,6 +19,7 @@ interface WalkthroughStep {
   actionLabel?: string;
   onEnter?: () => void;
   id: string;
+  isActionGated?: boolean;
 }
 
 export default function NeuralWalkthrough() {
@@ -52,21 +53,21 @@ export default function NeuralWalkthrough() {
       {
         id: 'welcome',
         title: "Welcome to COGNAPSE",
-        description: "Authorized Operative detected. This protocol will calibrate your neural connection to the COGNAPSE forensic swarm.",
+        description: "Authorized Analyst detected. This protocol will introduce you to the COGNAPSE research engine.",
         icon: <Sparkles className="text-my-accent" size={32} />,
-        actionLabel: "Initialize Connection"
+        actionLabel: "Initialize System"
       },
       {
         id: 'categories',
-        title: "Signal Calibration",
-        description: "Select at least two intelligence vectors to synchronize with your global signal horizon.",
+        title: "Analysis Setup",
+        description: "Select at least two research domains to synchronize with your global feed.",
         icon: <Target className="text-my-accent" size={32} />,
-        actionLabel: "Confirm Vectors"
+        actionLabel: "Confirm Domains"
       },
       {
         id: 'hub',
-        title: "Intelligence Hub",
-        description: "Your global signal horizon. Monitor real-time vectors across Tech, Finance, and Geopolitics based on your calibration.",
+        title: "Knowledge Hub",
+        description: "Your global event monitor. Track real-time developments across Tech, Finance, and Geopolitics based on your setup.",
         anchorId: "walkthrough-hub-anchor",
         icon: <Globe className="text-blue-400" size={24} />,
         onEnter: () => {
@@ -75,20 +76,20 @@ export default function NeuralWalkthrough() {
       },
       {
         id: 'command',
-        title: "Neural Command",
-        description: "Activate the command bar (Ctrl+K) to pivot between intelligence nodes or recall vault data instantly.",
+        title: "Command Center",
+        description: "Activate the command bar (Ctrl+K) to navigate between analysis modules or recall archived reports instantly.",
         anchorId: "walkthrough-command-anchor",
         icon: <Command className="text-my-accent" size={24} />
       },
       {
         id: 'research',
-        title: "Core Research",
-        description: "Perform your first live research query now. Type an objective and press Enter to synchronize with the swarm.",
+        title: "Core Analysis",
+        description: "Perform your first live research query now. Type a topic and press Enter to begin the analysis.",
         anchorId: "walkthrough-search-anchor",
         icon: <Search className="text-my-ink" size={24} />,
         onEnter: () => {
           if (useStore.getState().currentView !== 'research') setView('research');
-          // Purge existing intelligence to force fresh calibration
+          // Purge existing data to force fresh setup
           useStore.getState().setCurrentReport(null);
           useStore.getState().resetDeepResearch();
         },
@@ -96,8 +97,8 @@ export default function NeuralWalkthrough() {
       },
       {
         id: 'deep',
-        title: "Deep Research Protocol",
-        description: "Now, activate the Deep Research toggle inside the gateway to prepare for high-stakes forensic dossiers.",
+        title: "Deep Analysis Protocol",
+        description: "Activate the Deep Analysis toggle to generate comprehensive, professional research reports.",
         anchorId: "walkthrough-deep-research-anchor",
         icon: <Cpu className="text-emerald-400" size={24} />,
         onEnter: () => {
@@ -108,8 +109,8 @@ export default function NeuralWalkthrough() {
       },
       {
         id: 'archive',
-        title: "Intelligence Archive",
-        description: "Review every synthesis in your private vault. Track your operative evolution and audit history.",
+        title: "Research Archive",
+        description: "Review every analysis in your private archive. Track your research evolution and history.",
         anchorId: "walkthrough-sidebar-anchor",
         icon: <Database className="text-my-muted" size={24} />,
         onEnter: () => {
@@ -119,15 +120,15 @@ export default function NeuralWalkthrough() {
       },
       {
         id: 'status',
-        title: "Operative Status",
-        description: "Earn XP for every synthesis. Unlock tactical ranks and expand your clearance as you master the swarm.",
+        title: "Analyst Profile",
+        description: "Earn Score for every analysis. Unlock professional tiers and expand your system access as you master the platform.",
         anchorId: "walkthrough-profile-anchor",
         icon: <ShieldCheck className="text-my-accent" size={24} />
       },
       {
         id: 'complete',
-        title: "Sync Completed",
-        description: "Calibration successful. You have been awarded +100 XP for completing the neural initialization protocol.",
+        title: "Setup Completed",
+        description: "System calibration successful. You have been awarded +100 Score for completing the onboarding protocol.",
         icon: <Zap className="text-my-accent" size={32} />,
         actionLabel: "Enter Workspace"
       }
@@ -321,7 +322,7 @@ export default function NeuralWalkthrough() {
                   {currentStep?.icon}
                </div>
                <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-my-accent mb-1">Neural Protocol</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-my-accent mb-1">System Setup</h3>
                   <h2 className="text-xl font-serif font-bold italic text-my-ink leading-tight">{currentStep?.title}</h2>
                </div>
             </div>
@@ -385,7 +386,7 @@ export default function NeuralWalkthrough() {
                     </button>
                   ) : (
                     <div className="px-8 py-3 bg-my-accent/10 border border-my-accent/30 text-my-accent text-[8px] font-black uppercase tracking-[0.2em] animate-pulse">
-                       Awaiting Operative Action...
+                       Awaiting Analyst Action...
                     </div>
                   )}
                </div>

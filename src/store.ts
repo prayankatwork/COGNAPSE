@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { dbService } from './services/dbService';
-import type { COGNAPSE_Output } from './types';
+import type { COGNAPSE_Output, DeepResearchThesis, ResearchScore } from './types';
 
 export interface UserBadge {
   name: string;
@@ -28,26 +28,7 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface DeepResearchThesis {
-  title: string;
-  abstract: string;
-  introduction: string;
-  problemStatement: string;
-  literatureReview: string;
-  methodology: string;
-  findings: string;
-  comparativeInsights: string;
-  limitations: string;
-  futureScope: string;
-  conclusion: string;
-}
-
-export interface ResearchScore {
-  accuracy: number;
-  bias: number;
-  sourceDiversity: number;
-  confidenceInterval: number;
-}
+// DeepResearch interfaces moved to types.ts
 
 export type ThoughtType = 'claim' | 'evidence' | 'question' | 'assumption' | 'conclusion';
 
@@ -114,8 +95,8 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news') => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news' | 'games' | 'creator';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news' | 'games' | 'creator') => void;
 
   xp: number;
   searchCount: number;
@@ -196,6 +177,18 @@ interface AppState {
   setDevOpen: (val: boolean) => void;
 
   deleteAccount: () => Promise<void>;
+  isResearching: boolean;
+  setIsResearching: (val: boolean) => void;
+  
+  sessionMemory: {
+    sessionId: string;
+    entries: { id: string; query: string; timestamp: string; topicCluster: string; tags: string[]; bottomLine: string; credibility: number }[];
+    crossLinks: { type: 'reinforcement' | 'conflict' | 'expansion'; queryA: string; queryB: string; insight: string }[];
+    dominantTopics: string[];
+    researcherBias: string | null;
+    synthesisReady: boolean;
+  };
+  clearSessionMemory: () => void;
 }
 
 const getRank = (xp: number) => {
@@ -233,7 +226,7 @@ export const useStore = create<AppState>()(
           user: null, 
           xp: 0, 
           searchCount: 0, 
-          rank: 'OPERATIVE',
+          rank: 'ANALYST',
           archive: [],
           currentReport: null,
           notes: []
@@ -250,7 +243,7 @@ export const useStore = create<AppState>()(
             user: null, 
             xp: 0, 
             searchCount: 0, 
-            rank: 'OPERATIVE',
+            rank: 'ANALYST',
             archive: [],
             currentReport: null,
             notes: [],
@@ -329,16 +322,13 @@ export const useStore = create<AppState>()(
       clearStack: () => set({ investigationStack: [] }),
 
       archive: [],
-      setArchive: (archive) => 
-        set((state) => ({ 
-          archive: typeof archive === 'function' ? archive(state.archive) : archive 
-        })),
+      setArchive: (archive) => set({ archive }),
       addToArchive: (entry) =>
         set((state) => ({ archive: [entry, ...state.archive].slice(0, 100) })),
       removeFromArchive: (id) =>
         set((state) => {
           if (state.user) {
-            dbService.deleteReport(state.user.id, id);
+            dbService.deleteReport(id);
           }
           return { archive: state.archive.filter(item => item.id !== id) };
         }),
@@ -570,6 +560,28 @@ export const useStore = create<AppState>()(
 
       isDevOpen: false,
       setDevOpen: (val: boolean) => set({ isDevOpen: val }),
+
+      isResearching: false,
+      setIsResearching: (val: boolean) => set({ isResearching: val }),
+
+      sessionMemory: {
+        sessionId: Math.random().toString(36).substring(7),
+        entries: [],
+        crossLinks: [],
+        dominantTopics: [],
+        researcherBias: null,
+        synthesisReady: false
+      },
+      clearSessionMemory: () => set({ 
+        sessionMemory: {
+          sessionId: Math.random().toString(36).substring(7),
+          entries: [],
+          crossLinks: [],
+          dominantTopics: [],
+          researcherBias: null,
+          synthesisReady: false
+        }
+      }),
     }),
     {
       name: 'cognapse-storage',

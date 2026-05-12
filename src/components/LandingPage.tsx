@@ -19,7 +19,7 @@ export default function LandingPage() {
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -400]);
 
   return (
-    <div className="min-h-screen bg-my-bg text-my-ink selection:bg-my-accent selection:text-white overflow-x-hidden">
+    <div className="min-h-screen text-my-ink selection:bg-my-accent selection:text-white overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
         <motion.div
@@ -93,8 +93,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-end justify-between mb-32 gap-10">
             <div className="max-w-2xl">
-              <h2 className="text-6xl md:text-8xl font-serif font-bold mb-8 leading-none">The Forensic <br /> Ecosystem.</h2>
-              <p className="text-xl text-my-muted font-light leading-relaxed">Every tool you need to extract objective truth from the noise of the digital age.</p>
+              <h2 className="text-6xl md:text-8xl font-serif font-bold mb-8 leading-none">The Research <br /> Ecosystem.</h2>
+              <p className="text-xl text-my-muted font-light leading-relaxed">Every tool you need to extract objective insights from the noise of the digital age.</p>
             </div>
             <div className="text-my-accent font-bold uppercase tracking-[0.5em] text-xs flex items-center gap-4">
               <div className="w-16 h-px bg-my-accent" /> Full Feature Matrix
@@ -103,20 +103,20 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-px bg-my-border border border-my-border">
             <FeatureBox icon={<Search />} title="Autonomous Discovery" desc="Parallel crawling of global knowledge indexes with semantic clustering." />
-            <FeatureBox icon={<Sparkles />} title="Academic Thesis Protocol" desc="Autonomous generation of 5,000+ word professional forensic dossiers." />
+            <FeatureBox icon={<Sparkles />} title="Comprehensive Reports" desc="Autonomous generation of 5,000+ word professional analytical reports." />
             <FeatureBox icon={<History />} title="Thought Replay" desc="Deconstruct and replay the step-by-step logic used to reach conclusions." />
-            <FeatureBox icon={<Layers />} title="Research Umbrella" desc="Hierarchical investigation stacks and cross-reference layers." />
+            <FeatureBox icon={<Layers />} title="Research Hub" desc="Hierarchical investigation stacks and cross-reference layers." />
             <FeatureBox icon={<HardDrive />} title="Native Desktop Client" desc="Zero-configuration local AI acceleration via Ollama. 100% private and offline." />
-            <FeatureBox icon={<BarChart3 />} title="Tactical Intelligence Map" desc="Interactive semantic node-branching logic and evidence mapping." />
+            <FeatureBox icon={<BarChart3 />} title="Visual Research Map" desc="Interactive semantic node-branching logic and evidence mapping." />
             <FeatureBox icon={<FileText />} title="Cognitive Notebook" desc="Instantly capture snippets and insights into a persistent research journal." />
-            <FeatureBox icon={<Database />} title="Intelligence Vault" desc="Persistent SQLite-backed research dossiers with operative isolation." />
+            <FeatureBox icon={<Database />} title="Secure Archive" desc="Persistent SQLite-backed research reports with analyst isolation." />
             <FeatureBox icon={<Waves />} title="Adaptive Sonification" desc="Syncs with Spotify to visually react to your music in both dark and light modes." />
-            <FeatureBox icon={<Trophy />} title="Operator Status" desc="Earn XP, unlock tactical ranks, and expand system clearance." />
+            <FeatureBox icon={<Trophy />} title="Research Analytics" desc="Acquire experience, unlock new tiers, and expand system access." />
           </div>
         </div>
       </section>
 
-      {/* Neural Flow Section (ELITE UPGRADE) */}
+      {/* Workflow Section */}
       <section className="py-40 px-6 bg-[#05080F] text-white overflow-hidden relative">
         {/* Dynamic Background Data Stream */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none">
@@ -135,9 +135,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-60">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-my-accent text-white text-[10px] font-bold uppercase tracking-[0.5em] mb-12 shadow-[0_0_40px_rgba(242,125,38,0.3)]">
-              <Workflow size={14} className="animate-spin-slow" /> Neural Protocol Walkthrough
+              <Workflow size={14} className="animate-spin-slow" /> Research Protocol Walkthrough
             </motion.div>
-            <h2 className="text-8xl md:text-[10rem] font-serif font-bold italic leading-tight tracking-tighter">The Neural <br /> Flow.</h2>
+            <h2 className="text-8xl md:text-[10rem] font-serif font-bold italic leading-tight tracking-tighter">The Analysis <br /> Flow.</h2>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-32 relative">
@@ -152,19 +152,19 @@ export default function LandingPage() {
 
             <FlowStep
               title="Capture"
-              desc="Input your query. COGNAPSE deconstructs your objective into multi-dimensional search vectors."
+              desc="Input your query. COGNAPSE deconstructs your objective into multi-dimensional research vectors."
               icon={<Radio size={48} />}
               accent="text-my-accent"
             />
             <FlowStep
               title="Synthesize"
-              desc="Global Synthetic Intelligence with Visual Sonification. Cogentra crawls, cross-references, and eliminates noise at the edge."
+              desc="Cross-platform Synthetic Intelligence. COGNAPSE crawls, cross-references, and eliminates noise."
               icon={<Brain size={48} />}
               accent="text-blue-400"
             />
             <FlowStep
-              title="Awareness"
-              desc="A cinematic synthesis of truth, with Thought Replay allowing you to audit every logical step."
+              title="Insight"
+              desc="A comprehensive synthesis of findings, with Thought Replay allowing you to audit every logical step."
               icon={<Sparkles size={48} />}
               accent="text-emerald-400"
             />

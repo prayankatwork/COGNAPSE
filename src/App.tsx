@@ -155,7 +155,7 @@ export default function App() {
           }
 
           if (notes) {
-            const sortedNotes = notes.sort((a: any, b: any) => 
+            const sortedNotes = (notes as any[]).sort((a: any, b: any) => 
               new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
             );
             setNotes(sortedNotes);
@@ -208,15 +208,15 @@ export default function App() {
                    </div>
                    <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
                    <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
-                      The Intelligence Hub requires an <br /> 
-                      <span className="text-my-accent font-bold">Authorized Operative Signature</span> <br /> 
-                      to sync global monitoring vectors.
+                      The Knowledge Hub requires an <br /> 
+                      <span className="text-my-accent font-bold">Authorized Analyst Profile</span> <br /> 
+                      to synchronize your global feed.
                    </p>
                    <button 
                      onClick={() => setAuthOpen(true)}
                      className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
                    >
-                      Authorize Identity
+                      Sign In to Access
                    </button>
                 </div>
              </div>
@@ -242,7 +242,6 @@ export default function App() {
       theme === 'dark' ? 'dark' : ''
     )}>
       <Navbar />
-      <NeuralBackground />
       
       <div className="h-[calc(100vh-64px)] relative">
          {renderContent()}
@@ -255,6 +254,7 @@ export default function App() {
       </AnimatePresence>
       <NeuralWalkthrough />
       <SelectionCapture />
+      <NeuralBackground />
     </div>
   );
 }

@@ -76,7 +76,7 @@ export async function executeDeepResearch(query: string) {
     console.error("Deep Research Failure:", error);
     setDeepResearch({ 
       status: 'error', 
-      error: error.message || "Deep research protocol failed due to neural link instability." 
+      error: error.message || "Deep analysis protocol failed due to connection instability." 
     });
   }
 }

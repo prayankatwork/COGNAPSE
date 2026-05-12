@@ -89,12 +89,12 @@ export default function Sidebar() {
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none -z-10" 
                style={{ backgroundImage: 'radial-gradient(#1A1A1A 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
-          {/* Tactical Header */}
+          {/* Sidebar Header */}
           <div className="p-8 pb-6 border-b border-my-border">
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em]">Intel Archive</h2>
+                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em]">Research History</h2>
                  </div>
                  <div className="flex items-center gap-3">
                     <ClearAllButton />
@@ -115,8 +115,6 @@ export default function Sidebar() {
                <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Research
              </button>
 
-
-
               <div className="flex items-center justify-between">
                   <div className="flex gap-4 shrink-0">
                      <button onClick={() => setViewMode('chronological')} className={clsx("transition-colors p-1", viewMode === 'chronological' ? "text-orange-500" : "text-[#CBD5E1] hover:text-black dark:hover:text-white")}>
@@ -131,7 +129,7 @@ export default function Sidebar() {
                      <Search size={12} className="absolute left-0 top-1/2 -translate-y-1/2 text-[#CBD5E1]" />
                      <input 
                        type="text"
-                       placeholder="Filter..."
+                       placeholder="Filter History..."
                        value={searchQuery}
                        onChange={(e) => setSearchQuery(e.target.value)}
                        className="w-full bg-transparent pl-6 pr-4 py-1 text-[9px] font-bold uppercase tracking-widest border-b border-my-border focus:outline-none focus:border-my-accent transition-all text-my-ink"
@@ -140,13 +138,13 @@ export default function Sidebar() {
               </div>
           </div>
 
-          {/* Intelligence List */}
+          {/* Research List */}
           <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
               {filteredArchive.length === 0 ? (
                  <div className="h-60 flex flex-col items-center justify-center text-center px-4">
                     <div className="opacity-20 text-[#64748B] flex flex-col items-center mb-6">
                        <Library size={48} className="mb-4" />
-                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">No Evidence Found</span>
+                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">No Reports Found</span>
                     </div>
                     
                     {!user && (
@@ -161,12 +159,12 @@ export default function Sidebar() {
                              <span className="text-[10px] font-bold uppercase tracking-widest">Restricted Access</span>
                           </div>
                           <p className="text-[9px] text-[#718096] uppercase tracking-widest leading-relaxed">
-                             Authorize access to your <br /> operative profile to <br /> archive intelligence.
+                             Authorize access to your <br /> analyst profile to <br /> archive research.
                           </p>
                        </motion.button>
                     )}
                  </div>
-             ) : (
+              ) : (
                  <div className="flex flex-col gap-12">
                     {viewMode === 'chronological' ? (
                        Object.entries(dateGroups).map(([group, items]) => (
@@ -193,7 +191,7 @@ export default function Sidebar() {
              )}
           </div>
 
-          {/* Forensic Dashboard Footer */}
+          {/* Profile Footer */}
           <div className="p-8 bg-my-sidebar border-t border-my-border relative">
              <button 
                onClick={() => setStatusOpen(true)}
@@ -203,11 +201,11 @@ export default function Sidebar() {
                    "font-bold text-my-ink uppercase font-serif italic leading-none group-hover:text-my-accent transition-colors whitespace-nowrap",
                    rank && rank.length > 8 ? "text-[16px] tracking-[0.2em]" : "text-[20px] tracking-[0.3em]"
                 )}>
-                   {rank ? rank.replace(/[^\x00-\x7F]/g, "").trim() : 'OPERATIVE'}
+                   {rank ? rank.replace(/[^\x00-\x7F]/g, "").trim() : 'ANALYST'}
                 </h4>
                 <div className="text-right flex-shrink-0 ml-4 leading-none">
                    <span className="text-[12px] font-black text-my-ink opacity-100 whitespace-nowrap leading-none">
-                      {xp} / {(Math.floor(xp/100)+1)*100} XP
+                      {xp} / {(Math.floor(xp/100)+1)*100} Score
                    </span>
                 </div>
              </button>

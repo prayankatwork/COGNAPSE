@@ -83,7 +83,7 @@ export default function SpotifyWidget() {
            >
              <Music size={24} className={clsx("fill-black text-black", activeEmbed && "animate-pulse")} />
              <div className="absolute left-16 bg-black text-white border border-white/10 text-[10px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none tracking-wide uppercase font-bold shadow-2xl">
-               {activeEmbed ? "Expand Player" : "Neural Audio"}
+               {activeEmbed ? "Expand Player" : "Ambient Audio"}
              </div>
            </motion.div>
          )}
@@ -132,7 +132,7 @@ export default function SpotifyWidget() {
                     <Music size={28} className="text-[#1DB954] fill-[#1DB954]" />
                   </div>
                   <h3 className="text-white font-bold text-sm mb-2">Connect Spotify</h3>
-                  <p className="text-white/50 text-[11px] mb-8 leading-relaxed">Paste any Spotify Playlist, Album, or Track link to inject neural audio into your session.</p>
+                  <p className="text-white/50 text-[11px] mb-8 leading-relaxed">Paste any Spotify Playlist, Album, or Track link to enable ambient audio for your session.</p>
                   
                   <form onSubmit={handleEmbed} className="w-full relative">
                     <input 

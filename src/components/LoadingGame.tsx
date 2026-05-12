@@ -33,7 +33,7 @@ export default function LoadingGame() {
       <div className="text-center space-y-3">
         <h3 className="text-xl font-serif italic font-bold">Synthesizing Intelligence.</h3>
         <p className="text-[10px] text-my-muted uppercase tracking-[0.4em] animate-pulse">
-          Accessing Neural Vault • Verifying Claims • Building Thesis
+          Accessing Research Archive • Verifying Claims • Building Thesis
         </p>
       </div>
 

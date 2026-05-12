@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useStore, DeepResearchThesis } from '../store';
-import { ChevronDown, ChevronRight, FileText, Download, CheckCircle2, Shield, Info, AlertTriangle } from 'lucide-react';
-import clsx from 'clsx';
+import { useStore } from '../store';
+import { ChevronDown, ChevronRight, CheckCircle2, Shield } from 'lucide-react';
 import ResearchScoreCard from './ResearchScoreCard';
-import ThoughtReplayEngine from './ThoughtReplayEngine';
 
 export default function DeepResearchView() {
   const { deepResearch, resetDeepResearch } = useStore();
@@ -45,13 +43,12 @@ export default function DeepResearchView() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Shield size={14} className="text-my-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-my-muted">Autonomous Research Thesis</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-my-muted">Detailed Analysis Report</span>
           </div>
           <h1 className="font-serif text-4xl leading-tight text-my-ink max-w-2xl">
             {safeText(thesis.title)}
           </h1>
         </div>
-        {/* Export removed per request */}
       </div>
 
       <div className="space-y-4">
@@ -82,7 +79,6 @@ export default function DeepResearchView() {
           </div>
         ))}
 
-        {/* Research Quality Score Card */}
         {deepResearch.scores && (
           <ResearchScoreCard scores={deepResearch.scores} />
         )}
@@ -93,7 +89,7 @@ export default function DeepResearchView() {
           onClick={resetDeepResearch}
           className="px-6 py-3 border border-my-border text-[11px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink hover:border-my-accent transition-all"
         >
-          Return to Standard Interface
+          Back to Main Dashboard
         </button>
       </div>
     </div>

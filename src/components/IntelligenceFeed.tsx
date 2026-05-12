@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Globe as GlobeIcon, Zap, ArrowRight, Check, Plus, 
+  Globe, Zap, ArrowRight, Check, Plus, 
   TrendingUp, Newspaper, ShieldAlert, Cpu, 
   BarChart3, FlaskConical, Landmark, Activity,
-  ChevronRight, Search, LayoutGrid, List as ListIcon
+  ChevronRight, Search, LayoutGrid, List as ListIcon, RefreshCw
 } from 'lucide-react';
 import { useStore } from '../store';
 import { callCloudAI } from '../services/aiService';
@@ -22,7 +22,7 @@ interface NewsItem {
 const CATEGORIES = [
   { id: 'TECH', icon: <Cpu size={14} />, label: 'Technology' },
   { id: 'FINANCE', icon: <BarChart3 size={14} />, label: 'Finance' },
-  { id: 'GEOPOLITICS', icon: <GlobeIcon size={14} />, label: 'Geopolitics' },
+  { id: 'GEOPOLITICS', icon: <Globe size={14} />, label: 'Geopolitics' },
   { id: 'SCIENCE', icon: <FlaskConical size={14} />, label: 'Science' },
   { id: 'HEALTH', icon: <Activity size={14} />, label: 'Health' },
 ];
@@ -32,8 +32,10 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'feed' | 'subscriptions'>('feed');
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  // Trigger immediate update when categories change
+  // Trigger update when categories change OR on interval
   useEffect(() => {
     if (subscribedCategories.length > 0) {
       fetchNews();
@@ -43,13 +45,27 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
     }
   }, [subscribedCategories]);
 
-  const fetchNews = async () => {
-    setLoading(true);
+  // Auto-refresh interval (5 minutes)
+  useEffect(() => {
+    if (subscribedCategories.length === 0) return;
+
+    const interval = setInterval(() => {
+      console.log("[Knowledge Hub] Auto-refreshing signals...");
+      fetchNews(true); // silent refresh
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [subscribedCategories]);
+
+  const fetchNews = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    if (isManualRefreshing) return;
+
     try {
       const prompt = `
         Generate 10 trending global intelligence headlines for these categories: ${subscribedCategories.join(', ')}.
         Categorize each item correctly.
-        Focus on complex, high-impact news that would require forensic research.
+        Focus on complex, high-impact news that would require professional research.
         
         Return ONLY a JSON array of objects:
         [{
@@ -57,7 +73,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
           "category": "TECH", 
           "headline": "Headline text",
           "summary": "One sentence summary",
-          "timestamp": "2 hours ago",
+          "timestamp": "Just now",
           "impact": "high"
         }]
       `;
@@ -65,17 +81,26 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
       const response = await callCloudAI(prompt, true, "gemini-1.5-flash");
       const data = JSON.parse(response);
       setNews(data);
+      setLastRefreshed(new Date());
     } catch (error) {
       console.error("Failed to fetch intelligence feed:", error);
-      // Mock data grouped by category
-      setNews([
-        { id: '1', category: 'TECH', headline: 'Quantum Supremacy Breakout in Silicon Photonics', summary: 'New experimental data suggests a breakthrough in room-temperature quantum computing.', timestamp: '1h ago', impact: 'high' },
-        { id: '2', category: 'FINANCE', headline: 'Global Liquidity Crisis Looming in Tier-2 Banking', summary: 'Multiple mid-sized institutions reporting unexpected capital shortfalls.', timestamp: '3h ago', impact: 'medium' },
-        { id: '3', category: 'GEOPOLITICS', headline: 'Subsurface Mineral Rights Conflict in Arctic Circle', summary: 'Diplomatic tensions rise as new seismic surveys reveal massive rare-earth deposits.', timestamp: '5h ago', impact: 'high' }
-      ]);
+      // Fallback data if needed
+      if (news.length === 0) {
+        setNews([
+          { id: '1', category: 'TECH', headline: 'Quantum Supremacy Breakout in Silicon Photonics', summary: 'New experimental data suggests a breakthrough in room-temperature quantum computing.', timestamp: '1h ago', impact: 'high' },
+          { id: '2', category: 'FINANCE', headline: 'Global Liquidity Crisis Looming in Tier-2 Banking', summary: 'Multiple mid-sized institutions reporting unexpected capital shortfalls.', timestamp: '3h ago', impact: 'medium' },
+          { id: '3', category: 'GEOPOLITICS', headline: 'Subsurface Mineral Rights Conflict in Arctic Circle', summary: 'Diplomatic tensions rise as new seismic surveys reveal massive rare-earth deposits.', timestamp: '5h ago', impact: 'high' }
+        ]);
+      }
     } finally {
       setLoading(false);
+      setIsManualRefreshing(false);
     }
+  };
+
+  const handleManualRefresh = () => {
+    setIsManualRefreshing(true);
+    fetchNews();
   };
 
   // Group news by category
@@ -99,7 +124,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
   };
 
   return (
-    <div className="flex flex-col h-full bg-my-bg overflow-hidden animate-in fade-in duration-700 relative">
+    <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-700 relative">
       <AnimatePresence>
         {isTransitioning && (
           <motion.div 
@@ -115,10 +140,10 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                    <Zap size={32} className="text-my-accent animate-pulse" />
                 </div>
              </div>
-             <h2 className="text-xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Synchronizing Swarm</h2>
+             <h2 className="text-xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Preparing Analysis</h2>
              <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] max-w-md">
-                Redirecting intelligence nodes to headline forensics. <br />
-                Initializing deep-packet knowledge extraction.
+                Connecting to primary data sources for in-depth review. <br />
+                Initializing research framework for the selected topic.
              </p>
           </motion.div>
         )}
@@ -134,30 +159,50 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                   <div className="p-2 bg-my-accent/10 rounded-lg text-my-accent">
                     <Newspaper size={20} />
                   </div>
-                  <h1 className="text-2xl font-serif font-bold italic text-my-ink tracking-tight">Intelligence Hub</h1>
+                  <h1 className="text-2xl font-serif font-bold italic text-my-ink tracking-tight">Knowledge Hub</h1>
                </div>
-               <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] font-black">Global Event Monitoring & Forensics</p>
+               <div className="flex items-center gap-4">
+                  <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] font-black">Global Event Tracking</p>
+                  <div className="w-1 h-1 rounded-full bg-my-border" />
+                  <div className="flex items-center gap-2">
+                     <div className={clsx("w-1.5 h-1.5 rounded-full", loading ? "bg-my-accent animate-pulse" : "bg-green-500")} />
+                     <span className="text-[9px] text-my-muted font-bold uppercase tracking-widest">
+                        Last Sync: {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                     </span>
+                  </div>
+               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-1 bg-my-border/30 rounded-full">
+            <div className="flex items-center gap-4">
                <button 
-                 onClick={() => setActiveTab('feed')}
-                 className={clsx(
-                   "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                   activeTab === 'feed' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
-                 )}
+                 onClick={handleManualRefresh}
+                 disabled={loading}
+                 className="p-3 border border-my-border rounded-full text-my-muted hover:text-my-accent hover:border-my-accent transition-all group"
+                 title="Refresh Signals"
                >
-                 <ListIcon size={14} /> Live Feed
+                  <RefreshCw size={16} className={clsx(loading && "animate-spin")} />
                </button>
-               <button 
-                 onClick={() => setActiveTab('subscriptions')}
-                 className={clsx(
-                   "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                   activeTab === 'subscriptions' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
-                 )}
-               >
-                 <LayoutGrid size={14} /> Subscriptions
-               </button>
+
+               <div className="flex items-center gap-2 p-1 bg-my-border/30 rounded-full">
+                  <button 
+                    onClick={() => setActiveTab('feed')}
+                    className={clsx(
+                      "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
+                      activeTab === 'feed' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
+                    )}
+                  >
+                    <ListIcon size={14} /> Live Feed
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('subscriptions')}
+                    className={clsx(
+                      "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
+                      activeTab === 'subscriptions' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
+                    )}
+                  >
+                    <LayoutGrid size={14} /> Subscriptions
+                  </button>
+               </div>
             </div>
          </div>
       </header>
@@ -183,7 +228,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                        </div>
                     ) : subscribedCategories.length === 0 ? (
                        <div className="py-20 text-center">
-                          <GlobeIcon size={48} className="mx-auto text-my-muted opacity-20 mb-6" />
+                          <Globe className="mx-auto text-my-muted opacity-20 mb-6" size={48} />
                           <h2 className="text-xl font-bold text-my-ink mb-2 uppercase tracking-widest">No Intelligence Vectors Active</h2>
                           <p className="text-sm text-my-muted mb-8">Subscribe to categories to begin global forensic monitoring.</p>
                           <button 
@@ -313,7 +358,7 @@ function NewsCard({ item, idx, onResearch }: { item: NewsItem, idx: number, onRe
          onClick={onResearch}
          className="w-full py-4 bg-my-border/30 text-my-ink text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group-hover:bg-my-accent group-hover:text-white transition-all rounded-lg"
        >
-          <Search size={14} /> Start Forensic Research <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          <Search size={14} /> Begin Detailed Analysis <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
        </button>
 
        {/* Decorative Impact Line */}
