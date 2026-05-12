@@ -1,0 +1,8 @@
+release/
+node_modules/
+.git/
+dist/
+build/
+*.zip
+*.asar
+*.exe

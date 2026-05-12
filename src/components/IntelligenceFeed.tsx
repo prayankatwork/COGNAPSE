@@ -188,7 +188,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                     onClick={() => setActiveTab('feed')}
                     className={clsx(
                       "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                      activeTab === 'feed' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
+                      activeTab === 'feed' ? "bg-my-accent text-white dark:text-my-bg shadow-lg" : "text-my-muted hover:text-my-ink"
                     )}
                   >
                     <ListIcon size={14} /> Live Feed
@@ -197,7 +197,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                     onClick={() => setActiveTab('subscriptions')}
                     className={clsx(
                       "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                      activeTab === 'subscriptions' ? "bg-my-accent text-white shadow-lg" : "text-my-muted hover:text-my-ink"
+                      activeTab === 'subscriptions' ? "bg-my-accent text-white dark:text-my-bg shadow-lg" : "text-my-muted hover:text-my-ink"
                     )}
                   >
                     <LayoutGrid size={14} /> Subscriptions
@@ -233,7 +233,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                           <p className="text-sm text-my-muted mb-8">Subscribe to categories to begin global forensic monitoring.</p>
                           <button 
                             onClick={() => setActiveTab('subscriptions')}
-                            className="px-8 py-3 bg-my-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl"
+                            className="px-8 py-3 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl"
                           >
                             Set Subscriptions
                           </button>
@@ -296,7 +296,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                                 <div className="flex items-center gap-6">
                                    <div className={clsx(
                                      "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
-                                     isSubscribed ? "bg-my-accent text-white" : "bg-my-border text-my-muted group-hover:text-my-accent"
+                                     isSubscribed ? "bg-my-accent text-white dark:text-my-bg" : "bg-my-border text-my-muted group-hover:text-my-accent"
                                    )}>
                                       {cat.icon}
                                    </div>

@@ -400,7 +400,7 @@ export default function MainContent() {
                 className={clsx(
                   "flex items-center gap-2 px-4 py-1.5 border text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
                   query.trim() && !currentReport 
-                    ? "bg-my-accent text-white border-my-accent animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
+                    ? "bg-my-accent text-white dark:text-my-bg border-my-accent animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
                     : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white"
                 )}
               >
