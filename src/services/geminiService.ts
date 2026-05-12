@@ -3,8 +3,8 @@ import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
 import type { COGNAPSE_Output } from '../types';
 import { callCloudAI } from './aiService';
 
-const RESEARCH_MODEL = "gemini-1.5-flash";      
-const UTILITY_MODEL = "gemini-1.5-flash";   
+const RESEARCH_MODEL = "gemini-1.5-flash-latest";      
+const UTILITY_MODEL = "gemini-1.5-flash-latest";   
 
 export async function executeCognapseChat(
   query: string,

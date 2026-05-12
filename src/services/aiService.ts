@@ -17,8 +17,8 @@ const groq = groqKey ? new Groq({
  * MASTER HEALTH REGISTRY
  */
 const healthRegistry: Record<string, { status: 'stable' | 'unstable', lastFailure: number }> = {
-  "gemini-1.5-flash": { status: 'stable', lastFailure: 0 },
-  "gemini-1.5-pro": { status: 'stable', lastFailure: 0 },
+  "gemini-1.5-flash-latest": { status: 'stable', lastFailure: 0 },
+  "gemini-1.5-pro-latest": { status: 'stable', lastFailure: 0 },
   "llama-3.3-70b-versatile": { status: 'stable', lastFailure: 0 },
   "llama-3.1-8b-instant": { status: 'stable', lastFailure: 0 },
   "ollama": { status: 'stable', lastFailure: 0 }
@@ -87,11 +87,11 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
   const swarmQueue: string[] = [];
   if (estTokens > 15000) {
-    swarmQueue.push("gemini-1.5-flash", "gemini-1.5-pro");
+    swarmQueue.push("gemini-1.5-pro-latest", "gemini-1.5-flash-latest");
     if (canUseLocal) swarmQueue.push("ollama");
     swarmQueue.push("llama-3.1-8b-instant");
   } else {
-    swarmQueue.push("gemini-1.5-flash", "llama-3.3-70b-versatile", "gemini-1.5-pro");
+    swarmQueue.push("gemini-1.5-flash-latest", "llama-3.3-70b-versatile", "gemini-1.5-pro-latest");
     if (canUseLocal) swarmQueue.push("ollama");
     swarmQueue.push("llama-3.1-8b-instant");
   }
@@ -141,7 +141,13 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
       }
 
     } catch (e: any) {
+      console.warn(`Swarm Node [${node}] saturated or unavailable. Shifting logic...`, e);
       markUnstable(node);
+      
+      // If it's a 429, wait a tiny bit before hitting the next node to avoid cascading failures
+      if (e.status === 429 || e.message?.includes('429')) {
+        await new Promise(r => setTimeout(r, 500));
+      }
       continue; 
     }
   }
