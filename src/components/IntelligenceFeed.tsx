@@ -45,14 +45,17 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
     }
   }, [subscribedCategories]);
 
-  // Auto-refresh interval (5 minutes)
+  // Auto-refresh interval (10 minutes) with visibility check
   useEffect(() => {
     if (subscribedCategories.length === 0) return;
 
     const interval = setInterval(() => {
-      console.log("[Knowledge Hub] Auto-refreshing signals...");
-      fetchNews(true); // silent refresh
-    }, 5 * 60 * 1000);
+      // Only refresh if the user is actually looking at the page
+      if (document.visibilityState === 'visible') {
+        console.log("[Knowledge Hub] Auto-refreshing signals...");
+        fetchNews(true); // silent refresh
+      }
+    }, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [subscribedCategories]);
