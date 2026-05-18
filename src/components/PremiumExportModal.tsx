@@ -42,35 +42,91 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
   const handleStartPayment = async () => {
     setLoading(true);
     
-    const res = await loadRazorpayScript();
-    
-    if (!res) {
-      alert('Razorpay SDK failed to load. Please disable your adblocker or check your internet connection.');
+    try {
+      // 1. Create order on backend
+      const orderResponse = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 2900 }) // Amount in paise
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create order');
+      }
+      
+      const orderData = await orderResponse.json();
+
+      // 2. Load Razorpay script
+      const res = await loadRazorpayScript();
+      
+      if (!res) {
+        alert('Razorpay SDK failed to load. Please disable your adblocker or check your internet connection.');
+        setLoading(false);
+        return;
+      }
+
+      // 3. Configure and open Razorpay
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SqrBlXoXysz16A', 
+        amount: orderData.amount.toString(), 
+        currency: orderData.currency,
+        name: 'COGNAPSE',
+        description: 'Premium Intelligence Dossier Export',
+        order_id: orderData.order_id,
+        handler: async function (response: any) {
+          try {
+            // 4. Verify signature on backend
+            const verifyResponse = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            const verifyData = await verifyResponse.json();
+            
+            if (verifyData.success) {
+              handleConfirmPayment();
+            } else {
+              alert('Payment verification failed. Please contact support.');
+              setLoading(false);
+            }
+          } catch (err) {
+            console.error('Verification Error:', err);
+            alert('Payment verification failed.');
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.name || 'COGNAPSE Analyst',
+          email: 'analyst@cognapse.core',
+        },
+        theme: {
+          color: '#F27D26',
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      
+      paymentObject.on('payment.failed', function (response: any) {
+        alert(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
+      
+      paymentObject.open();
+    } catch (error) {
+      console.error('Payment Error:', error);
+      alert('Failed to initialize payment. Please try again.');
       setLoading(false);
-      return;
     }
-
-    const options = {
-      key: 'rzp_test_SqqjQcUQZZtYqf', // Razorpay Test Key provided by user
-      amount: 2900, // Amount in paise (INR 29.00)
-      currency: 'INR',
-      name: 'COGNAPSE',
-      description: 'Premium Intelligence Dossier Export',
-      handler: function (response: any) {
-        handleConfirmPayment();
-      },
-      prefill: {
-        name: user?.name || 'COGNAPSE Analyst',
-        email: 'analyst@cognapse.core',
-      },
-      theme: {
-        color: '#F27D26',
-      },
-    };
-
-    const paymentObject = new (window as any).Razorpay(options);
-    paymentObject.open();
-    setLoading(false);
   };
 
   const handleConfirmPayment = async () => {
