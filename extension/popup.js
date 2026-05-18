@@ -63,6 +63,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = store.cognapse_user;
     const selectedText = store.selectedText;
 
+    // Immediately clear selectedText from storage to prevent infinite query loops on next popup opens
+    if (selectedText) {
+      chrome.storage.local.remove("selectedText", () => {
+        console.log("COGNAPSE Extension: Cleared selectedText from storage for next session.");
+      });
+    }
+
     if (!user || !user.id) {
       console.log("COGNAPSE Extension: No user logged in.");
       premiumBadge.textContent = "AUTH REQ";
