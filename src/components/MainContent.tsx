@@ -518,7 +518,7 @@ export default function MainContent() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, type: 'spring', damping: 20 }}
                   >
-                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-my-ink mb-6 tracking-tighter leading-none italic">
+                    <h1 className="text-4xl md:text-7xl font-serif font-bold text-my-ink mb-6 tracking-tighter leading-none italic">
                       COGNAPSE <span className="text-transparent bg-clip-text bg-gradient-to-tr from-my-accent via-my-ink dark:via-white to-my-accent animate-gradient-x">CORE.</span>
                     </h1>
 
@@ -549,7 +549,7 @@ export default function MainContent() {
                           handleSearch(randomQuery);
                         }
                       }}
-                      className="group relative px-10 py-5 bg-my-ink text-white dark:bg-my-accent dark:text-my-bg overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all"
+                      className="group relative px-6 py-4 md:px-10 md:py-5 bg-my-ink text-white dark:bg-my-accent dark:text-my-bg overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all w-full sm:w-auto"
                     >
                       {/* Corner Brackets */}
                       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />

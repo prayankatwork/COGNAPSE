@@ -112,7 +112,7 @@ export default function Navbar() {
         </div>
 
         {/* Center: Command Bar */}
-        <div className="flex items-center justify-center w-1/3">
+        <div className="hidden md:flex items-center justify-center w-1/3">
           <button 
             id="walkthrough-command-anchor"
             onClick={() => setIsCommandOpen(true)}
@@ -153,9 +153,9 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={() => setAuthOpen(true)}
-              className="px-4 py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
+              className="px-3 py-2 md:px-4 md:py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
             >
-               <User size={12} /> Sync Identity
+               <User size={12} /> <span className="hidden sm:inline">Sync Identity</span>
             </button>
           )}
 
