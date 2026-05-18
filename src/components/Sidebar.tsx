@@ -94,7 +94,7 @@ export default function Sidebar() {
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em]">Research History</h2>
+                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em]">Intelligence Archive</h2>
                  </div>
                  <div className="flex items-center gap-3">
                     <ClearAllButton />
@@ -112,7 +112,7 @@ export default function Sidebar() {
                }}
                className="w-full py-4 bg-black text-white font-bold uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-orange-500 transition-all shadow-xl group mb-8"
              >
-               <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Research
+               <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Investigation
              </button>
 
               <div className="flex items-center justify-between">
@@ -144,10 +144,10 @@ export default function Sidebar() {
                  <div className="h-60 flex flex-col items-center justify-center text-center px-4">
                     <div className="opacity-20 text-[#64748B] flex flex-col items-center mb-6">
                        <Library size={48} className="mb-4" />
-                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">No Reports Found</span>
+                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Archive Empty</span>
                     </div>
                     
-                    {!user && (
+                    {!user ? (
                        <motion.button 
                          initial={{ opacity: 0, y: 10 }}
                          animate={{ opacity: 1, y: 0 }}
@@ -162,6 +162,10 @@ export default function Sidebar() {
                              Authorize access to your <br /> analyst profile to <br /> archive research.
                           </p>
                        </motion.button>
+                    ) : (
+                      <p className="text-[9px] text-my-muted uppercase tracking-widest leading-relaxed px-4">
+                        Build your permanent intelligence library by collecting Premium Dossiers over time.
+                      </p>
                     )}
                  </div>
               ) : (

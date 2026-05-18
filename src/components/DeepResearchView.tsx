@@ -79,30 +79,35 @@ export default function DeepResearchView() {
           </h1>
         </div>
 
-        <button
-          onClick={handleDownloadPDF}
-          disabled={generatingPDF}
-          className={clsx(
-            "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 self-stretch md:self-auto justify-center shrink-0",
-            isUnlocked 
-              ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
-              : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-my-bg hover:scale-105"
-          )}
-        >
-          {generatingPDF ? (
-            <>
-              <Loader2 size={12} className="animate-spin" /> Packaging...
-            </>
-          ) : isUnlocked ? (
-            <>
-              <Download size={12} /> Download PDF
-            </>
-          ) : (
-            <>
-              <Lock size={12} /> Unlock PDF Report
-            </>
-          )}
-        </button>
+        <div className="flex flex-col gap-2 shrink-0 self-stretch md:self-auto">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={generatingPDF}
+            className={clsx(
+              "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2",
+              isUnlocked 
+                ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+                : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-my-bg hover:scale-105"
+            )}
+          >
+            {generatingPDF ? (
+              <>
+                <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
+              </>
+            ) : isUnlocked ? (
+              <>
+                <Download size={12} /> Generate Premium Intelligence Report
+              </>
+            ) : (
+              <>
+                <Lock size={12} /> Unlock Full Intelligence Dossier
+              </>
+            )}
+          </button>
+          <span className="hidden md:block text-[9px] font-black uppercase tracking-[0.1em] text-my-muted max-w-[200px] text-right ml-auto leading-tight">
+            This session is temporary. Exports preserve full intelligence history.
+          </span>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -136,6 +141,14 @@ export default function DeepResearchView() {
         {deepResearch.scores && (
           <ResearchScoreCard scores={deepResearch.scores} />
         )}
+        
+        <div className="mt-4 p-4 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-4 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
+          <div className="text-2xl">🧠</div>
+          <div>
+            <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent mb-1">Export-Only Advanced Analysis Layer Hidden</span>
+            <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, hidden reasoning layers, and strategic interpretations are preserved exclusively in the printed Premium Analyst Dossier.</p>
+          </div>
+        </div>
       </div>
 
       <div className="mt-12 flex justify-center">

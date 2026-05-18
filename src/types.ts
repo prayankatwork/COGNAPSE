@@ -88,4 +88,32 @@ export interface COGNAPSE_Output {
   deep_research?: any;
   deep_scores?: any;
   id?: string;
+  premium_export_data?: {
+    executive_summary: {
+      key_findings: string[];
+      critical_insights: string[];
+      consensus_overview: string;
+      risk_factors: string[];
+      strategic_takeaways: string[];
+    };
+    advanced_analysis: {
+      deeper_synthesis: string;
+      expanded_reasoning: string;
+      contradiction_analysis: string;
+      strategic_interpretation: string;
+      hidden_reasoning_layers: string[];
+    };
+    multi_ai_consensus: {
+      consensus_score: number;
+      agreement_points: string[];
+      conflicting_viewpoints: string[];
+      models_compared: { provider: string; stance: string; confidence: number }[];
+    };
+    next_research_directions: string[];
+    metadata: {
+      synthesis_depth: number;
+      research_complexity: number;
+      model_routing: string;
+    };
+  };
 }

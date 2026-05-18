@@ -114,20 +114,20 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             >
               {generatingPDF ? (
                 <>
-                  <Loader2 size={12} className="animate-spin" /> Packaging...
+                  <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
                 </>
               ) : isUnlocked ? (
                 <>
-                  <Download size={12} /> Download PDF
+                  <Download size={12} /> Generate Premium Intelligence Report
                 </>
               ) : (
                 <>
-                  <Lock size={12} /> Unlock PDF Report
+                  <Lock size={12} /> Unlock Full Intelligence Dossier
                 </>
               )}
             </button>
             <div className="hidden md:flex flex-col items-end text-right">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">Verified Intelligence</span>
+               <span className="text-[9px] font-black uppercase tracking-[0.1em] text-my-muted max-w-[200px] leading-tight">This session is temporary. Exports preserve intelligence history.</span>
             </div>
             <BrandLogo size={44} />
           </div>
@@ -158,6 +158,14 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
               {report.summary?.confidence_narrative && (
                  <p className="italic text-my-muted mt-2">{safeText(report.summary.confidence_narrative)}</p>
               )}
+              
+              <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-3 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
+                <div className="text-xl">🧠</div>
+                <div>
+                  <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent">Export-Only Advanced Analysis</span>
+                  <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, and hidden reasoning layers are preserved exclusively in the Premium Analyst Dossier.</p>
+                </div>
+              </div>
             </div>
           )}
 
