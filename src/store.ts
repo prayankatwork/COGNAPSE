@@ -234,9 +234,17 @@ export const useStore = create<AppState>()(
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
 
       user: null,
-      setUser: (user) => set({ user }),
+      setUser: (user) => {
+        set({ user });
+        if (user) {
+          localStorage.setItem('cognapse_session', JSON.stringify({ id: user.id, username: user.username }));
+        } else {
+          localStorage.removeItem('cognapse_session');
+        }
+      },
       logout: async () => {
         try { await dbService.logout(); } catch(e) {}
+        localStorage.removeItem('cognapse_session');
         set({ 
           user: null, 
           xp: 0, 
