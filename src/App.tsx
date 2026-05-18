@@ -121,27 +121,32 @@ export default function App() {
   const setArchive = useStore(state => state.setArchive);
   const setNotes = useStore(state => state.setNotes);
 
+  const userId = user?.id;
+
   useEffect(() => {
-    if (user) {
+    if (userId) {
       const syncUser = async () => {
         try {
-          console.log('[Vault] Syncing for user:', user.id);
+          console.log('[Vault] Syncing for user:', userId);
           const [reports, stats, notes, settings, premiumStatus] = await Promise.all([
-            dbService.getAllReports(user.id),
-            dbService.loadStats(user.id),
-            dbService.getNotes(user.id),
-            dbService.loadSettings(user.id),
-            dbService.loadPremium(user.id)
+            dbService.getAllReports(userId),
+            dbService.loadStats(userId),
+            dbService.getNotes(userId),
+            dbService.loadSettings(userId),
+            dbService.loadPremium(userId)
           ]);
           console.log('[Vault] Reports fetched:', reports.length);
 
           if (premiumStatus) {
-            useStore.setState({
-              user: {
-                ...user,
-                ...premiumStatus
-              }
-            });
+            const currentUser = useStore.getState().user;
+            if (currentUser) {
+              useStore.setState({
+                user: {
+                  ...currentUser,
+                  ...premiumStatus
+                }
+              });
+            }
           }
 
           if (settings && settings.subscribedCategories) {
@@ -150,7 +155,7 @@ export default function App() {
           
           if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
             useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
-          } else if (user) {
+          } else {
             // New user, trigger walkthrough
             useStore.getState().setWalkthroughCompleted(false);
           }
@@ -196,7 +201,7 @@ export default function App() {
       };
       syncUser();
     }
-  }, [user]);
+  }, [userId, setStats, setNotes, setArchive]);
 
   // Determine Content Based on View
   const renderContent = () => {
