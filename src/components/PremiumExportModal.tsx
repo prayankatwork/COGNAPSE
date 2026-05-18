@@ -212,35 +212,35 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <div className="flex gap-3">
                     <Shield size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Futuristic Dark Theme</h4>
-                      <p className="text-[10px] text-my-muted">Beautifully tailored SaaS-style template formatted for print and screens.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Tactical Visual Formatting</h4>
+                      <p className="text-[10px] text-my-muted">Optimized high-contrast intelligence template, engineered for digital review and executive print.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <FileText size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Full Research Synthesis</h4>
-                      <p className="text-[10px] text-my-muted">Includes complete Deep Analysis, consensus scores, SWOT grids, and references.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Comprehensive Data Synthesis</h4>
+                      <p className="text-[10px] text-my-muted">Unrestricted access to multi-layered AI reasoning, strategic consensus scoring, and threat matrices.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <Zap size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Credentials & Verification</h4>
-                      <p className="text-[10px] text-my-muted">AES-256 secure verification signature block, timestamps, and AI metadata.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Cryptographic Verification</h4>
+                      <p className="text-[10px] text-my-muted">Embedded AES-256 digital signature, chronological timestamps, and verifiable source metadata.</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-my-accent/5 border border-my-accent/20 p-4 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">Premium License Code</span>
-                    <span className="text-[16px] font-serif font-bold text-my-ink italic">INR 29.00 <span className="text-xs font-sans text-my-muted not-italic">/ single synthesis</span></span>
+                <div className="bg-my-accent/5 border border-my-accent/20 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+                  <div className="text-center md:text-left">
+                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">Export Clearance Fee</span>
+                    <span className="text-[16px] font-serif font-bold text-my-ink italic">INR 29.00 <span className="text-xs font-sans text-my-muted not-italic">/ dossier</span></span>
                   </div>
                   <button 
                     onClick={handleStartPayment}
                     disabled={loading}
-                    className="px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
+                    className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
                   >
                     {loading ? "Initializing Secure Transaction..." : "Unlock Full Intelligence Dossier"}
                   </button>
