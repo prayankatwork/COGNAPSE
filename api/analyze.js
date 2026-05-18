@@ -96,6 +96,9 @@ JSON format:
 
   } catch (error) {
     console.error('Extension Analysis Error:', error);
-    res.status(500).json({ error: 'Failed to process AI research insight.' });
+    res.status(500).json({ 
+      error: error.message || 'Failed to process AI research insight.',
+      details: error.stack || null
+    });
   }
 }

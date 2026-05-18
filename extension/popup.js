@@ -126,11 +126,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!analyzeRes.ok) {
           if (analyzeRes.status === 403) {
-            // Entitlement failed on serverless gateway
             showPanel(premiumPanel);
             return;
           }
-          throw new Error("Analysis failed");
+          let errorMsg = "Analysis failed";
+          try {
+            const errJson = await analyzeRes.json();
+            errorMsg = errJson.error || errorMsg;
+          } catch (e) {}
+          throw new Error(errorMsg);
         }
 
         const result = await analyzeRes.json();
