@@ -189,6 +189,12 @@ interface AppState {
     synthesisReady: boolean;
   };
   clearSessionMemory: () => void;
+
+  pdfExports: any[];
+  unlockedReports: Record<string, boolean>;
+  unlockReport: (researchId: string) => void;
+  addExport: (exportData: any) => Promise<void>;
+  fetchExports: () => Promise<void>;
 }
 
 const getRank = (xp: number) => {
@@ -582,6 +588,24 @@ export const useStore = create<AppState>()(
           synthesisReady: false
         }
       }),
+
+      pdfExports: [],
+      unlockedReports: {},
+      unlockReport: (researchId) => set((state) => ({
+        unlockedReports: { ...state.unlockedReports, [researchId]: true }
+      })),
+      addExport: async (exportData) => {
+        await dbService.saveExport(exportData);
+        set((state) => ({
+          pdfExports: [exportData, ...state.pdfExports]
+        }));
+      },
+      fetchExports: async () => {
+        const user = get().user;
+        if (!user) return;
+        const exports = await dbService.getUserExports(user.id);
+        set({ pdfExports: exports });
+      },
     }),
     {
       name: 'cognapse-storage',

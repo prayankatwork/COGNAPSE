@@ -205,6 +205,37 @@ export const dbService = {
     }
   },
 
+  async saveExport(exportData: {
+    id: string;
+    userId: string;
+    researchId: string;
+    exportType: 'normal' | 'deep';
+    aiProvider: string;
+    query: string;
+    timestamp: string;
+  }) {
+    try {
+      await setDoc(doc(db, "pdf_exports", exportData.id), exportData);
+    } catch (error) {
+      console.warn("Firebase save export failed:", error);
+    }
+  },
+
+  async getUserExports(userId: string) {
+    try {
+      const q = query(
+        collection(db, "pdf_exports"),
+        where("userId", "==", userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const exports = querySnapshot.docs.map(doc => doc.data() as any);
+      return exports.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    } catch (error) {
+      console.warn("Firebase load exports failed:", error);
+      return [];
+    }
+  },
+
   async deleteUserAccount(userId: string) {
     try {
       const batch = writeBatch(db);
@@ -237,76 +268,5 @@ export const dbService = {
       console.error("Account excision failed:", error);
       throw error;
     }
-  },
-
-  // Premium PDF Export History Sync
-  async saveExportRecord(id: string, userId: string, researchId: string, queryText: string, exportType: string, aiProvider: string) {
-    const record = {
-      id,
-      user_id: userId,
-      research_id: researchId,
-      query: queryText,
-      export_type: exportType,
-      ai_provider: aiProvider,
-      created_at: new Date().toISOString()
-    };
-
-    // 1. Save to Firestore
-    try {
-      await setDoc(doc(db, "user_exports", id), record);
-    } catch (error) {
-      console.warn("Firestore export save failed, using local vault sync...");
-    }
-
-    // 2. Synchronize to Local SQLite Express Backend
-    try {
-      await fetch("http://127.0.0.1:3001/api/exports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(record)
-      });
-    } catch (error) {
-      // Local server is not running or unreachable
-    }
-  },
-
-  async getExportHistory(userId: string) {
-    // 1. Try Firestore First
-    try {
-      const q = query(
-        collection(db, "user_exports"),
-        where("user_id", "==", userId)
-      );
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        return querySnapshot.docs.map(doc => {
-          const d = doc.data();
-          return {
-            id: d.id,
-            user_id: d.user_id,
-            research_id: d.research_id,
-            query: d.query,
-            export_type: d.export_type,
-            ai_provider: d.ai_provider,
-            created_at: d.created_at
-          };
-        });
-      }
-    } catch (error) {
-      console.warn("Firestore export fetch failed, falling back to local vault...");
-    }
-
-    // 2. Fallback to Local SQLite Express Server
-    try {
-      const res = await fetch(`http://127.0.0.1:3001/api/exports/${userId}`);
-      if (res.ok) {
-        const localExports = await res.json();
-        return localExports;
-      }
-    } catch (error) {
-      // Local server offline
-    }
-
-    return [];
   }
 };

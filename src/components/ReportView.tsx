@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { COGNAPSE_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
 import PhysicsMap from './PhysicsMap';
@@ -9,9 +9,9 @@ import confetti from 'canvas-confetti';
 import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
+import { generatePremiumPDF } from '../utils/pdfGenerator';
 
 export default function ReportView({ report, onSubSearch, onChatFollowUp }: { report: COGNAPSE_Output, onSubSearch: (q: string) => void, onChatFollowUp?: (q: string) => void }) {
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const safeText = (val: any) => {
     if (typeof val === 'string') return val;
@@ -21,7 +21,34 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
   const hasConflicts = report.conflicts && report.conflicts.length > 0;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
-  const { updateGamification } = useStore();
+  const { updateGamification, unlockedReports, user } = useStore();
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+
+  const reportId = report.id || report.query_understood;
+  const isUnlocked = unlockedReports[reportId] || false;
+
+  const handleDownloadPDF = async () => {
+    if (!isUnlocked) {
+      setIsExportModalOpen(true);
+      return;
+    }
+
+    setGeneratingPDF(true);
+    try {
+      await generatePremiumPDF({
+        query: report.query_understood,
+        report: report,
+        deepThesis: report.deep_research || null,
+        aiProvider: report.provider || 'gemini'
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Error packaging PDF. Please try again.");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   const handleRating = (rating: number) => {
     if (rated) return;
@@ -74,13 +101,30 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             {safeText(report.query_understood)}
           </h1>
           
-          <div className="flex items-center gap-4 shrink-0 pt-1">
-            <button 
-              onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2 border border-my-accent/30 hover:border-my-accent px-4 py-2 text-[10px] font-black uppercase tracking-widest text-my-accent hover:text-white transition-all bg-my-accent/5 hover:bg-my-accent/20 cursor-pointer shadow-sm rounded-none"
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 pt-1">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={generatingPDF}
+              className={clsx(
+                "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
+                isUnlocked 
+                  ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+                  : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-my-bg hover:scale-105"
+              )}
             >
-              <Lock size={10} className="text-my-accent" />
-              Download Full PDF
+              {generatingPDF ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" /> Packaging...
+                </>
+              ) : isUnlocked ? (
+                <>
+                  <Download size={12} /> Download PDF
+                </>
+              ) : (
+                <>
+                  <Lock size={12} /> Unlock PDF Report
+                </>
+              )}
             </button>
             <div className="hidden md:flex flex-col items-end text-right">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">Verified Intelligence</span>
@@ -306,15 +350,13 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
         </div>
       )}
 
-
-      {/* Premium PDF Export Modal Overlay */}
-      {isExportModalOpen && (
-        <PremiumExportModal 
-          onClose={() => setIsExportModalOpen(false)}
-          researchData={report}
-          isDeepResearch={false}
-        />
-      )}
+      <PremiumExportModal 
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        researchId={reportId}
+        query={report.query_understood}
+        onUnlockSuccess={handleDownloadPDF}
+      />
     </div>
   );
 }

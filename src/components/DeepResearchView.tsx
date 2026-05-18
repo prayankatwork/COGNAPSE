@@ -1,20 +1,47 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { ChevronDown, ChevronRight, CheckCircle2, Shield, Lock } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCircle2, Shield, Lock, Download, Loader2 } from 'lucide-react';
 import ResearchScoreCard from './ResearchScoreCard';
 import PremiumExportModal from './PremiumExportModal';
+import { generatePremiumPDF } from '../utils/pdfGenerator';
+import clsx from 'clsx';
 
 export default function DeepResearchView() {
-  const { deepResearch, resetDeepResearch } = useStore();
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const { deepResearch, resetDeepResearch, unlockedReports, currentReport } = useStore();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     abstract: true,
     introduction: true
   });
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   if (!deepResearch.thesis) return null;
 
   const thesis = deepResearch.thesis;
+  const reportId = currentReport?.id || currentReport?.query_understood || 'deep_research';
+  const isUnlocked = unlockedReports[reportId] || false;
+
+  const handleDownloadPDF = async () => {
+    if (!isUnlocked) {
+      setIsExportModalOpen(true);
+      return;
+    }
+
+    setGeneratingPDF(true);
+    try {
+      await generatePremiumPDF({
+        query: thesis.title,
+        report: currentReport,
+        deepThesis: thesis,
+        aiProvider: currentReport?.provider || 'gemini'
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Error packaging PDF. Please try again.");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
@@ -41,7 +68,7 @@ export default function DeepResearchView() {
 
   return (
     <div className="w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
-      <div className="mb-8 border-b border-my-border pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="mb-8 border-b border-my-border pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Shield size={14} className="text-my-accent" />
@@ -51,12 +78,30 @@ export default function DeepResearchView() {
             {safeText(thesis.title)}
           </h1>
         </div>
-        <button 
-          onClick={() => setIsExportModalOpen(true)}
-          className="flex items-center gap-2 border border-my-accent/30 hover:border-my-accent px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-my-accent hover:text-white transition-all bg-my-accent/5 hover:bg-my-accent/20 cursor-pointer shadow-sm rounded-none shrink-0"
+
+        <button
+          onClick={handleDownloadPDF}
+          disabled={generatingPDF}
+          className={clsx(
+            "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 self-stretch md:self-auto justify-center shrink-0",
+            isUnlocked 
+              ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+              : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-my-bg hover:scale-105"
+          )}
         >
-          <Lock size={10} className="text-my-accent" />
-          Download Full PDF
+          {generatingPDF ? (
+            <>
+              <Loader2 size={12} className="animate-spin" /> Packaging...
+            </>
+          ) : isUnlocked ? (
+            <>
+              <Download size={12} /> Download PDF
+            </>
+          ) : (
+            <>
+              <Lock size={12} /> Unlock PDF Report
+            </>
+          )}
         </button>
       </div>
 
@@ -102,14 +147,13 @@ export default function DeepResearchView() {
         </button>
       </div>
 
-      {/* Premium PDF Export Modal Overlay */}
-      {isExportModalOpen && (
-        <PremiumExportModal 
-          onClose={() => setIsExportModalOpen(false)}
-          researchData={thesis}
-          isDeepResearch={true}
-        />
-      )}
+      <PremiumExportModal 
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        researchId={reportId}
+        query={thesis.title}
+        onUnlockSuccess={handleDownloadPDF}
+      />
     </div>
   );
 }

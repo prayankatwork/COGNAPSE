@@ -8,8 +8,8 @@ import {
   TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
-import { pdfService } from '../services/pdfService';
 import { dbService } from '../services/dbService';
+import { generatePremiumPDF } from '../utils/pdfGenerator';
 
 // ─── Analytics Components ─────────────────────────────────────────────────────
 
@@ -176,71 +176,46 @@ function TacticalGauge({ label, value, icon, colorClass = "text-my-accent" }: { 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function OperativeStatus({ onClose }: OperativeStatusProps) {
-  const { xp, rank, searchCount, streak, archive, user } = useStore();
+  const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'exports'>('overview');
-  const [exportsList, setExportsList] = useState<any[]>([]);
-  const [loadingExports, setLoadingExports] = useState(false);
-  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (activeTab === 'exports' && user) {
-      setLoadingExports(true);
-      dbService.getExportHistory(user.id).then(list => {
-        setExportsList(list || []);
-        setLoadingExports(false);
-      });
-    }
-  }, [activeTab, user]);
+    fetchExports();
+  }, [fetchExports]);
 
-  const handleDownloadFromHistory = async (record: any) => {
-    setRegeneratingId(record.id);
+  const handleRedownload = async (exp: any) => {
+    setDownloadingId(exp.id);
     try {
-      // Find matching report in local archive
-      const matchingEntry = archive.find(e => e.id === record.research_id || e.query.toLowerCase() === record.query.toLowerCase());
+      const archiveEntry = archive.find(a => a.id === exp.researchId);
+      let reportToExport = archiveEntry ? archiveEntry.report : null;
       
-      if (matchingEntry) {
-        const report = matchingEntry.report;
-        await pdfService.generateAndDownloadPDF({
-          title: record.query,
-          bottomLine: report.summary?.bottom_line || "No summary recorded.",
-          fullSynthesis: report.summary?.full_synthesis || "No synthesis recorded.",
-          eli5: report.summary?.eli5_version,
-          aiProvider: record.ai_provider,
-          timestamp: new Date(record.created_at).toLocaleString(),
-          swot: report.swot ? {
-            strengths: report.swot.strengths || [],
-            weaknesses: report.swot.weaknesses || [],
-            opportunities: report.swot.opportunities || [],
-            threats: report.swot.threats || []
-          } : undefined,
-          metrics: report.scores ? {
-            credibility: report.scores.overall_credibility || '95%',
-            relevance: report.scores.overall_relevance || '98%',
-            consensus: report.scores.evidence_consensus || 'consensus'
-          } : undefined,
-          sources: (report.sources || []).map((s: any) => ({
-            title: s.title || "Source Reference",
-            url: s.url || undefined,
-            credibilityScore: s.credibility_score || "A+"
-          }))
+      if (!reportToExport) {
+        const fetchedReports = await dbService.getAllReports(user?.id || '');
+        const target = fetchedReports.find(r => r.id === exp.researchId);
+        if (target) {
+          reportToExport = target.data;
+        }
+      }
+
+      if (reportToExport) {
+        await generatePremiumPDF({
+          query: exp.query,
+          report: reportToExport,
+          deepThesis: reportToExport.deep_research || null,
+          aiProvider: exp.aiProvider
         });
       } else {
-        // Fallback for missing local archive entry: construct static dossier from metadata
-        await pdfService.generateAndDownloadPDF({
-          title: record.query,
-          bottomLine: "Offline Decrypted Blueprint Report",
-          fullSynthesis: "Dossier entry synthesized by COGNAPSE main core. Decryption succeeded.",
-          aiProvider: record.ai_provider,
-          timestamp: new Date(record.created_at).toLocaleString()
-        });
+        alert("Report context not found in archive. Please run a new research session.");
       }
     } catch (err) {
       console.error(err);
+      alert("Error generating PDF. Please try again.");
     } finally {
-      setRegeneratingId(null);
+      setDownloadingId(null);
     }
   };
-
+  
   const nextRankXp = (Math.floor(xp / 100) + 1) * 100;
   const progress = (xp % 100);
 
@@ -321,7 +296,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                 activeTab === 'exports' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
-              03/ Exports History
+              03/ My Exports
               {activeTab === 'exports' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
             </button>
           </div>
@@ -511,7 +486,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                    <p className="text-[7px] text-my-muted uppercase tracking-[0.2em] mt-4 font-bold text-center">Historical research frequency over the trailing 42-day cycle</p>
                 </div>
               </motion.div>
-            ) : (
+            ) : activeTab === 'exports' ? (
               <motion.div
                 key="exports"
                 initial={{ opacity: 0, x: 20 }}
@@ -519,64 +494,66 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                 exit={{ opacity: 0, x: -20 }}
                 className="p-8 md:p-10 flex flex-col gap-6"
               >
-                <div className="flex justify-between items-center border-b border-my-border pb-3">
+                <div className="flex items-center justify-between border-b border-my-border pb-4">
                   <div>
-                    <h4 className="text-[10px] font-black text-my-accent uppercase tracking-[0.3em]">Verified Dossier Archive</h4>
-                    <p className="text-[8px] text-my-muted mt-1">Telemetry log of all premium decryptions compiled by this operative.</p>
+                     <h3 className="text-lg font-serif font-bold italic text-my-ink">Dossier Export History</h3>
+                     <p className="text-[8px] text-my-muted uppercase tracking-[0.2em] mt-1">Authorized PDF credentials and download logs</p>
                   </div>
-                  <div className="text-[8px] font-mono text-my-muted border border-my-border px-2.5 py-1 uppercase">
-                    Count: {exportsList.length}
+                  <div className="flex items-center gap-2 text-[10px] text-my-accent font-mono uppercase bg-my-accent/5 px-3 py-1 border border-my-accent/10">
+                    <FileText size={12} />
+                    <span>{pdfExports?.length || 0} Exports</span>
                   </div>
                 </div>
 
-                {loadingExports ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 className="text-my-accent animate-spin" size={24} />
-                    <span className="text-[9px] font-black uppercase tracking-[0.25em] text-my-muted animate-pulse">Retrieving vault index...</span>
-                  </div>
-                ) : exportsList.length > 0 ? (
-                  <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
-                    {exportsList.map(record => (
-                      <div key={record.id} className="p-4 bg-my-callout/40 border border-my-border rounded-[2px] flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-my-accent/15 rounded text-my-accent shrink-0">
-                            <FileText size={16} />
-                          </div>
-                          <div>
-                            <h5 className="text-[11px] font-bold text-my-ink leading-tight">{record.query}</h5>
-                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                              <span className="text-[8px] font-mono text-my-muted uppercase">TYPE: {record.export_type.toUpperCase()}</span>
-                              <span className="text-[8px] font-mono text-my-muted">•</span>
-                              <span className="text-[8px] font-mono text-my-muted uppercase">ENGINE: {record.ai_provider}</span>
-                              <span className="text-[8px] font-mono text-my-muted">•</span>
-                              <span className="text-[8px] font-mono text-my-muted">{new Date(record.created_at).toLocaleDateString()}</span>
-                            </div>
+                {(pdfExports && pdfExports.length > 0) ? (
+                  <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {pdfExports.map((exp: any) => (
+                      <div 
+                        key={exp.id} 
+                        className="p-4 bg-my-callout/40 border border-my-border hover:border-my-accent/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group"
+                      >
+                        <div className="space-y-1 flex-1">
+                          <span className="text-[8px] font-black uppercase tracking-[0.25em] text-my-accent block">
+                            {exp.exportType === 'deep' ? 'Deep Analytical Synthesis' : 'Standard Intelligence Brief'}
+                          </span>
+                          <h4 className="text-xs font-bold text-my-ink leading-snug group-hover:text-my-accent transition-colors">
+                            {exp.query}
+                          </h4>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-my-muted font-mono uppercase mt-2">
+                            <span>Provider: {exp.aiProvider}</span>
+                            <span>Date: {new Date(exp.timestamp).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <button 
-                          onClick={() => handleDownloadFromHistory(record)}
-                          disabled={regeneratingId === record.id}
-                          className="p-2 border border-my-border hover:border-my-accent hover:text-my-accent text-my-muted transition-all shrink-0 rounded-[2px]"
-                          title="Redownload Report"
+
+                        <button
+                          onClick={() => handleRedownload(exp)}
+                          disabled={downloadingId === exp.id}
+                          className="px-4 py-2 border border-my-border hover:border-my-accent text-[9px] font-black uppercase tracking-widest text-my-ink hover:text-my-accent transition-all flex items-center gap-2 self-stretch md:self-auto justify-center bg-my-bg disabled:opacity-50"
                         >
-                          {regeneratingId === record.id ? (
-                            <Loader2 size={14} className="animate-spin text-my-accent" />
+                          {downloadingId === exp.id ? (
+                            <>
+                              <Loader2 size={12} className="animate-spin" /> Packaging...
+                            </>
                           ) : (
-                            <Download size={14} />
+                            <>
+                              <Download size={12} /> Get PDF
+                            </>
                           )}
                         </button>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 border border-dashed border-my-border/50 bg-my-callout/10 rounded-[2px]">
-                    <FileText size={28} className="text-my-muted/30 mx-auto mb-3" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-my-muted">Archive Empty</p>
-                    <p className="text-[9px] text-my-muted mt-1 max-w-xs mx-auto">No premium PDF dossiers have been compiled by this identity. Export a research session to initialize.</p>
+                  <div className="text-center py-12 border border-dashed border-my-border bg-my-callout/10">
+                    <FileText size={32} className="mx-auto text-my-muted opacity-40 mb-3" />
+                    <p className="text-xs text-my-ink font-bold">No Premium Exports Authorized</p>
+                    <p className="text-[10px] text-my-muted max-w-xs mx-auto mt-1 leading-relaxed">
+                      Upgrade and authorize any research report to compile a premium enterprise PDF brief.
+                    </p>
                   </div>
                 )}
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
 
