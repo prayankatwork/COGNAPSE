@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { COGNAPSE_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
 import PhysicsMap from './PhysicsMap';
@@ -8,8 +8,10 @@ import { useStore } from '../store';
 import confetti from 'canvas-confetti';
 import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
+import PremiumExportModal from './PremiumExportModal';
 
 export default function ReportView({ report, onSubSearch, onChatFollowUp }: { report: COGNAPSE_Output, onSubSearch: (q: string) => void, onChatFollowUp?: (q: string) => void }) {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const safeText = (val: any) => {
     if (typeof val === 'string') return val;
@@ -73,6 +75,13 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
           </h1>
           
           <div className="flex items-center gap-4 shrink-0 pt-1">
+            <button 
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 border border-my-accent/30 hover:border-my-accent px-4 py-2 text-[10px] font-black uppercase tracking-widest text-my-accent hover:text-white transition-all bg-my-accent/5 hover:bg-my-accent/20 cursor-pointer shadow-sm rounded-none"
+            >
+              <Lock size={10} className="text-my-accent" />
+              Download Full PDF
+            </button>
             <div className="hidden md:flex flex-col items-end text-right">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-my-accent">Verified Intelligence</span>
             </div>
@@ -297,6 +306,15 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
         </div>
       )}
 
+
+      {/* Premium PDF Export Modal Overlay */}
+      {isExportModalOpen && (
+        <PremiumExportModal 
+          onClose={() => setIsExportModalOpen(false)}
+          researchData={report}
+          isDeepResearch={false}
+        />
+      )}
     </div>
   );
 }

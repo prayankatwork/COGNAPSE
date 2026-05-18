@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { ChevronDown, ChevronRight, CheckCircle2, Shield } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCircle2, Shield, Lock } from 'lucide-react';
 import ResearchScoreCard from './ResearchScoreCard';
+import PremiumExportModal from './PremiumExportModal';
 
 export default function DeepResearchView() {
   const { deepResearch, resetDeepResearch } = useStore();
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     abstract: true,
     introduction: true
@@ -39,7 +41,7 @@ export default function DeepResearchView() {
 
   return (
     <div className="w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
-      <div className="mb-8 border-b border-my-border pb-6 flex justify-between items-end">
+      <div className="mb-8 border-b border-my-border pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Shield size={14} className="text-my-accent" />
@@ -49,6 +51,13 @@ export default function DeepResearchView() {
             {safeText(thesis.title)}
           </h1>
         </div>
+        <button 
+          onClick={() => setIsExportModalOpen(true)}
+          className="flex items-center gap-2 border border-my-accent/30 hover:border-my-accent px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-my-accent hover:text-white transition-all bg-my-accent/5 hover:bg-my-accent/20 cursor-pointer shadow-sm rounded-none shrink-0"
+        >
+          <Lock size={10} className="text-my-accent" />
+          Download Full PDF
+        </button>
       </div>
 
       <div className="space-y-4">
@@ -92,6 +101,15 @@ export default function DeepResearchView() {
           Back to Main Dashboard
         </button>
       </div>
+
+      {/* Premium PDF Export Modal Overlay */}
+      {isExportModalOpen && (
+        <PremiumExportModal 
+          onClose={() => setIsExportModalOpen(false)}
+          researchData={thesis}
+          isDeepResearch={true}
+        />
+      )}
     </div>
   );
 }

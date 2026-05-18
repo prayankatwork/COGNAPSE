@@ -42,6 +42,17 @@ db.exec(`
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS user_exports (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    research_id TEXT,
+    query TEXT,
+    export_type TEXT,
+    ai_provider TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
 `);
 
 export default db;

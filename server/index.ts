@@ -149,11 +149,24 @@ app.delete('/api/notebook/:noteId', (req, res) => {
   }
 });
 
-app.delete('/api/notebook/user/:userId', (req, res) => {
+// --- EXPORTS ROUTES ---
+
+app.post('/api/exports', (req, res) => {
+  const { id, userId, researchId, query, exportType, aiProvider } = req.body;
+  try {
+    const stmt = db.prepare('INSERT OR REPLACE INTO user_exports (id, user_id, research_id, query, export_type, ai_provider) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(id, userId, researchId, query, exportType, aiProvider);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/exports/:userId', (req, res) => {
   const { userId } = req.params;
   try {
-    db.prepare('DELETE FROM notebook WHERE user_id = ?').run(userId);
-    res.json({ success: true });
+    const exports = db.prepare('SELECT * FROM user_exports WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+    res.json(exports);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
