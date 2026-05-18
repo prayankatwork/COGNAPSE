@@ -57,12 +57,10 @@ export default function SpotifyWidget() {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       style={{ 
         position: 'fixed',
-        left: 24,
-        bottom: 24, // Using bottom 24 instead of top to keep it pinned correctly
         touchAction: 'none'
       }}
       className={clsx(
-        "z-[200] overflow-hidden flex flex-col shadow-2xl",
+        "z-[200] overflow-hidden flex flex-col shadow-2xl bottom-0 left-0 md:bottom-6 md:left-6 rounded-tr-3xl md:rounded-2xl",
         isMini ? "bg-[#1DB954] text-black shadow-[0_8px_30px_rgba(29,185,84,0.4)]" : "bg-black/80 backdrop-blur-2xl border border-white/10"
       )}
     >

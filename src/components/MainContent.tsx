@@ -718,7 +718,7 @@ export default function MainContent() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={currentReport ? "Drill deeper into this synthesis..." : "What do you need to research?"}
                   disabled={loading}
-                  className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-2xl border border-my-border rounded-none py-6 pl-8 pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-lg font-light tracking-tight placeholder:text-my-muted/40"
+                  className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-2xl border border-my-border rounded-none py-4 pl-4 pr-14 md:py-6 md:pl-8 md:pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-base md:text-lg font-light tracking-tight placeholder:text-my-muted/40"
                 />
                 <button
                   type="submit"
