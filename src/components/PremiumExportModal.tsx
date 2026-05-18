@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
-import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award } from 'lucide-react';
+import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award, Chrome, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface PremiumExportModalProps {
@@ -13,11 +13,27 @@ interface PremiumExportModalProps {
 }
 
 export default function PremiumExportModal({ isOpen, onClose, researchId, query: researchQuery, onUnlockSuccess }: PremiumExportModalProps) {
-  const { unlockReport, addExport, user, currentReport, deepResearch } = useStore();
-  const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
+  const { user, setUser, setAuthOpen } = useStore();
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
+  const [step, setStep] = useState<'info' | 'success'>('info');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const planDetails = {
+    monthly: {
+      amount: 9900, // paise
+      priceStr: 'INR 99.00',
+      label: 'Monthly Pass',
+      billing: 'Billed monthly'
+    },
+    yearly: {
+      amount: 79900, // paise
+      priceStr: 'INR 799.00',
+      label: 'Annual Pass',
+      billing: 'Billed annually • Save 33%'
+    }
+  };
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -40,14 +56,20 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
   };
 
   const handleStartPayment = async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+
     setLoading(true);
+    const plan = planDetails[selectedPlan];
     
     try {
       // 1. Create order on backend
       const orderResponse = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: 2900 }) // Amount in paise
+        body: JSON.stringify({ amount: plan.amount })
       });
 
       if (!orderResponse.ok) {
@@ -71,7 +93,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
         amount: orderData.amount.toString(), 
         currency: orderData.currency,
         name: 'COGNAPSE',
-        description: 'Premium Intelligence Dossier Export',
+        description: `COGNAPSE Premium ${plan.label}`,
         order_id: orderData.order_id,
         handler: async function (response: any) {
           try {
@@ -82,13 +104,20 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature
+                razorpay_signature: response.razorpay_signature,
+                userId: user.id,
+                plan: selectedPlan
               })
             });
 
             const verifyData = await verifyResponse.json();
             
-            if (verifyData.success) {
+            if (verifyData.success && verifyData.premiumData) {
+              // Update in-memory user store
+              setUser({
+                ...user,
+                ...verifyData.premiumData
+              });
               handleConfirmPayment();
             } else {
               alert('Payment verification failed. Please contact support.');
@@ -101,8 +130,8 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
           }
         },
         prefill: {
-          name: user?.name || 'COGNAPSE Analyst',
-          email: 'analyst@cognapse.core',
+          name: user.username || 'COGNAPSE Analyst',
+          email: `${user.username.toLowerCase()}@cognapse.vault`,
         },
         theme: {
           color: '#F27D26',
@@ -129,36 +158,18 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     }
   };
 
-  const handleConfirmPayment = async () => {
+  const handleConfirmPayment = () => {
     setLoading(true);
-    // Simulate slight verification delay for premium feel
-    setTimeout(async () => {
-      unlockReport(researchId);
-      
-      // Fire premium feedback success!
+    setTimeout(() => {
       confetti({
         particleCount: 150,
         spread: 80,
         origin: { y: 0.6 },
         colors: ['#F27D26', '#10B981', '#FFFFFF']
       });
-
-      // Save to Firebase exports history
-      if (user) {
-        await addExport({
-          id: Math.random().toString(36).substring(7),
-          userId: user.id,
-          researchId: researchId,
-          exportType: deepResearch.thesis ? 'deep' : 'normal',
-          aiProvider: currentReport?.provider || 'gemini',
-          query: researchQuery,
-          timestamp: new Date().toISOString()
-        });
-      }
-
       setLoading(false);
       setStep('success');
-    }, 1500);
+    }, 1000);
   };
 
   const handleDownloadAndClose = () => {
@@ -169,7 +180,6 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 md:p-6">
-        {/* Backdrop overlay */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -178,17 +188,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
           className="absolute inset-0 bg-black/80 backdrop-blur-md"
         />
 
-        {/* Modal body */}
         <motion.div
           initial={{ scale: 0.95, y: 30, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.95, y: 30, opacity: 0 }}
-          className="relative w-full max-w-lg bg-my-bg border border-my-border shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-lg bg-white dark:bg-[#0A0F1A] border border-my-border shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[90vh]"
         >
-          {/* Top border glow line */}
           <div className="h-1 w-full bg-gradient-to-r from-my-accent via-amber-500 to-my-accent" />
 
-          {/* Close button */}
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 p-2 text-my-muted hover:text-my-ink transition-colors z-50"
@@ -196,7 +203,6 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             <X size={18} />
           </button>
 
-          {/* Main Container */}
           <div className="p-6 md:p-8 overflow-y-auto no-scrollbar">
             {step === 'info' && (
               <div className="space-y-6">
@@ -204,71 +210,141 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <div className="mx-auto w-12 h-12 bg-my-accent/10 rounded-full flex items-center justify-center text-my-accent mb-4">
                     <Award size={24} />
                   </div>
-                  <h2 className="text-xl font-serif font-bold text-my-ink italic">Premium PDF Export</h2>
-                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Download Complete Research Report</p>
+                  <h2 className="text-xl font-serif font-bold text-my-ink italic">COGNAPSE Premium Required</h2>
+                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Unlock Advanced Research Tools</p>
                 </div>
 
-                <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-3">
+                {/* Premium Benefits List */}
+                <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-4">
                   <div className="flex gap-3">
-                    <Shield size={16} className="text-my-accent shrink-0 mt-0.5" />
+                    <div className="p-1.5 bg-my-accent/10 rounded text-my-accent h-fit shrink-0">
+                      <FileText size={16} />
+                    </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Professional PDF Template</h4>
-                      <p className="text-[10px] text-my-muted">Clean, highly readable layout optimized for screens and printing.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Unlimited PDF Exports</h4>
+                      <p className="text-[10px] text-my-muted leading-relaxed">Download unlimited beautifully formatted, academically rigorous reports ready for archiving or sharing.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <FileText size={16} className="text-my-accent shrink-0 mt-0.5" />
+                    <div className="p-1.5 bg-my-accent/10 rounded text-my-accent h-fit shrink-0">
+                      <Chrome size={16} />
+                    </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Full Research Details</h4>
-                      <p className="text-[10px] text-my-muted">Includes all analysis, scoring, deep-dive data, and source links.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Chrome Research Extension</h4>
+                      <p className="text-[10px] text-my-muted leading-relaxed">Bring the COGNAPSE research engine directly to any web page. Instantly analyze and cross-reference information.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Zap size={16} className="text-my-accent shrink-0 mt-0.5" />
+                    <div className="p-1.5 bg-my-accent/10 rounded text-my-accent h-fit shrink-0">
+                      <Shield size={16} />
+                    </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Verified Authenticity</h4>
-                      <p className="text-[10px] text-my-muted">Includes timestamped digital signature and AI generation metadata.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Priority Computing & Model Routing</h4>
+                      <p className="text-[10px] text-my-muted leading-relaxed">Experience faster research speeds with prioritized server queues and premium AI processing.</p>
                     </div>
                   </div>
                 </div>
 
+                {/* Authentication Banner */}
+                {!user && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-red-500">
+                      <AlertCircle size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Authentication Required</span>
+                    </div>
+                    <button 
+                      onClick={() => setAuthOpen(true)}
+                      className="px-3 py-1 bg-red-500 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-red-600 transition-colors"
+                    >
+                      Login / Register
+                    </button>
+                  </div>
+                )}
+
+                {/* Plan Selector */}
+                {user && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div 
+                      onClick={() => setSelectedPlan('monthly')}
+                      className={`p-4 border cursor-pointer transition-all flex flex-col justify-between ${
+                        selectedPlan === 'monthly' 
+                          ? 'border-my-accent bg-my-accent/5 shadow-md' 
+                          : 'border-my-border hover:border-my-accent/50'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-my-ink uppercase tracking-wider">Monthly Pass</span>
+                          {selectedPlan === 'monthly' && <Check size={12} className="text-my-accent" />}
+                        </div>
+                        <span className="text-xs text-my-muted block mt-1">Billed monthly</span>
+                      </div>
+                      <span className="text-base font-serif font-bold text-my-ink italic mt-4 block">INR 99.00</span>
+                    </div>
+
+                    <div 
+                      onClick={() => setSelectedPlan('yearly')}
+                      className={`p-4 border cursor-pointer relative transition-all flex flex-col justify-between ${
+                        selectedPlan === 'yearly' 
+                          ? 'border-my-accent bg-my-accent/5 shadow-md' 
+                          : 'border-my-border hover:border-my-accent/50'
+                      }`}
+                    >
+                      <div className="absolute -top-2.5 right-2 px-1.5 py-0.5 bg-my-accent text-white dark:text-my-bg text-[7px] font-black uppercase tracking-wider">
+                        Save 33%
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[10px] font-bold text-my-ink uppercase tracking-wider">Annual Pass</span>
+                          {selectedPlan === 'yearly' && <Check size={12} className="text-my-accent" />}
+                        </div>
+                        <span className="text-xs text-my-muted block mt-1">Billed annually</span>
+                      </div>
+                      <span className="text-base font-serif font-bold text-my-ink italic mt-4 block">INR 799.00</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Price Display and Trigger Button */}
                 <div className="bg-my-accent/5 border border-my-accent/20 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
                   <div className="text-center md:text-left">
-                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">One-Time Fee</span>
-                    <span className="text-[16px] font-serif font-bold text-my-ink italic">INR 29.00 <span className="text-xs font-sans text-my-muted not-italic">/ report</span></span>
+                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">
+                      {user ? planDetails[selectedPlan].billing : 'Starting At'}
+                    </span>
+                    <span className="text-[16px] font-serif font-bold text-my-ink italic">
+                      {user ? planDetails[selectedPlan].priceStr : 'INR 99.00'}
+                    </span>
                   </div>
                   <button 
                     onClick={handleStartPayment}
                     disabled={loading}
                     className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
                   >
-                    {loading ? "Connecting to Razorpay..." : "Unlock Full Report"}
+                    {loading ? "Connecting..." : user ? "Activate Premium" : "Authenticate to Unlock"}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Payment step is now handled by Razorpay overlay, but we keep this empty or remove it. I'll remove it entirely. */}
-
             {step === 'success' && (
               <div className="space-y-6 text-center py-4">
-                <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 border border-green-500/20">
+                <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 border border-green-500/20 animate-pulse">
                   <CheckCircle2 size={36} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-serif font-bold text-my-ink italic">Payment Successful</h3>
-                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">Premium PDF Unlocked</p>
+                  <h3 className="text-xl font-serif font-bold text-my-ink italic">COGNAPSE Premium Activated</h3>
+                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">All Core Utility Features Unlocked</p>
                 </div>
 
                 <p className="text-[10px] text-my-muted leading-relaxed max-w-sm mx-auto">
-                  Your payment has been securely processed. The PDF generator is now compiling your full research report.
+                  Welcome to COGNAPSE Premium! You now have unlimited professional PDF exports and full browser extension privileges.
                 </p>
 
                 <button 
                   onClick={handleDownloadAndClose}
-                  className="w-full py-4 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-xl flex items-center justify-center gap-3"
+                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-xl flex items-center justify-center gap-3"
                 >
-                  <Download size={14} /> Download PDF Report
+                  <Download size={14} /> Download PDF Dossier Now
                 </button>
               </div>
             )}

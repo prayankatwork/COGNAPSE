@@ -236,6 +236,34 @@ export const dbService = {
     }
   },
 
+  // Premium Access Models
+  async loadPremium(userId: string) {
+    try {
+      const docRef = doc(db, "user_premium", userId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  },
+  
+  async activatePremium(userId: string, plan: string) {
+    try {
+      await setDoc(doc(db, "user_premium", userId), {
+        premium: true,
+        premiumPlan: plan,
+        premiumActivatedAt: new Date().toISOString(),
+        premiumExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+      });
+    } catch (error) {
+      console.warn("Firebase activate premium failed:", error);
+      throw error;
+    }
+  },
+
   async deleteUserAccount(userId: string) {
     try {
       const batch = writeBatch(db);
@@ -256,9 +284,12 @@ export const dbService = {
       // 4. Delete Settings
       batch.delete(doc(db, "user_settings", userId));
 
+      // 5. Delete Premium
+      batch.delete(doc(db, "user_premium", userId));
+
       await batch.commit();
 
-      // 5. Delete Auth User
+      // 6. Delete Auth User
       if (auth.currentUser) {
         await auth.currentUser.delete();
       }

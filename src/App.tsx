@@ -121,19 +121,28 @@ export default function App() {
   const setArchive = useStore(state => state.setArchive);
   const setNotes = useStore(state => state.setNotes);
 
-  // Auto-sync with Vault on mount if user is logged in (handles hard refresh)
   useEffect(() => {
     if (user) {
       const syncUser = async () => {
         try {
           console.log('[Vault] Syncing for user:', user.id);
-          const [reports, stats, notes, settings] = await Promise.all([
+          const [reports, stats, notes, settings, premiumStatus] = await Promise.all([
             dbService.getAllReports(user.id),
             dbService.loadStats(user.id),
             dbService.getNotes(user.id),
-            dbService.loadSettings(user.id)
+            dbService.loadSettings(user.id),
+            dbService.loadPremium(user.id)
           ]);
           console.log('[Vault] Reports fetched:', reports.length);
+
+          if (premiumStatus) {
+            useStore.setState({
+              user: {
+                ...user,
+                ...premiumStatus
+              }
+            });
+          }
 
           if (settings && settings.subscribedCategories) {
             useStore.getState().setSubscribedCategories(settings.subscribedCategories);

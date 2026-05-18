@@ -75,6 +75,15 @@ export interface Note {
   timestamp: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  premium?: boolean;
+  premiumPlan?: string;
+  premiumActivatedAt?: string;
+  premiumExpiresAt?: string;
+}
+
 interface AppState {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -82,8 +91,8 @@ interface AppState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
 
-  user: { id: string, username: string } | null;
-  setUser: (user: { id: string, username: string } | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
   logout: () => void;
   
   isAuthOpen: boolean;

@@ -29,14 +29,20 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         : await dbService.login(trimmedName, password);
       
       const loggedUser = userRes.user;
-      setUser(loggedUser);
 
       // Restore Intelligence Data from Vault
-      const [reports, stats, notes] = await Promise.all([
+      const [reports, stats, notes, premiumStatus] = await Promise.all([
         dbService.getAllReports(loggedUser.id),
         dbService.loadStats(loggedUser.id),
-        dbService.getNotes(loggedUser.id)
+        dbService.getNotes(loggedUser.id),
+        dbService.loadPremium(loggedUser.id)
       ]);
+
+      const fullUser = {
+        ...loggedUser,
+        ...(premiumStatus || {})
+      };
+      setUser(fullUser);
 
       if (notes) {
         useStore.getState().setNotes(notes as any[]);

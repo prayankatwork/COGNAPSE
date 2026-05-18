@@ -26,7 +26,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
   const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const reportId = report.id || report.query_understood;
-  const isUnlocked = unlockedReports[reportId] || false;
+  const isUnlocked = !!user?.premium;
 
   const handleDownloadPDF = async () => {
     if (!isUnlocked) {

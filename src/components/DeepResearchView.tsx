@@ -7,7 +7,7 @@ import { generatePremiumPDF } from '../utils/pdfGenerator';
 import clsx from 'clsx';
 
 export default function DeepResearchView() {
-  const { deepResearch, resetDeepResearch, unlockedReports, currentReport } = useStore();
+  const { deepResearch, resetDeepResearch, currentReport, user } = useStore();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     abstract: true,
     introduction: true
@@ -19,7 +19,7 @@ export default function DeepResearchView() {
 
   const thesis = deepResearch.thesis;
   const reportId = currentReport?.id || currentReport?.query_understood || 'deep_research';
-  const isUnlocked = unlockedReports[reportId] || false;
+  const isUnlocked = !!user?.premium;
 
   const handleDownloadPDF = async () => {
     if (!isUnlocked) {

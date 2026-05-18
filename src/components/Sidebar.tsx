@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store';
 import clsx from 'clsx';
+import PremiumExportModal from './PremiumExportModal';
 
 export default function Sidebar() {
   const { 
@@ -20,6 +21,7 @@ export default function Sidebar() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'chronological' | 'topic'>('chronological');
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
 
   const filteredArchive = useMemo(() => {
     if (!archive) return [];
@@ -233,7 +235,36 @@ export default function Sidebar() {
 
 
 
-             {/* Student Developer Disclaimer - Compact & Visible */}
+             {/* Premium Panel Indicator */}
+             {user?.premium ? (
+                <div className="mb-4 p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-[2px] relative overflow-hidden">
+                   <div className="flex items-center gap-2 mb-1 text-green-500">
+                      <ShieldCheck size={12} className="shrink-0" />
+                      <span className="text-[8px] font-black uppercase tracking-widest">COGNAPSE Premium Active</span>
+                   </div>
+                   <p className="text-[9px] text-my-ink leading-relaxed font-semibold italic">
+                     You have unlimited high-fidelity PDF exports and full browser extension access unlocked.
+                   </p>
+                </div>
+             ) : (
+                <button 
+                  onClick={() => setIsPremiumModalOpen(true)}
+                  className="w-full mb-4 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-my-accent/20 rounded-[2px] text-left hover:scale-[101%] transition-transform block relative overflow-hidden group"
+                >
+                   <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 text-my-accent">
+                         <Zap size={10} className="animate-pulse shrink-0" />
+                         <span className="text-[8px] font-black uppercase tracking-widest">COGNAPSE Premium</span>
+                      </div>
+                      <span className="text-[7px] font-bold text-my-muted uppercase tracking-wider group-hover:text-my-accent transition-colors">Upgrade →</span>
+                   </div>
+                   <p className="text-[9px] text-my-ink leading-normal font-semibold italic">
+                     Unlock unlimited PDF dossier exports & Chrome extension access.
+                   </p>
+                </button>
+             )}
+
+              {/* Student Developer Disclaimer - Compact & Visible */}
              <div className="mb-4 p-3 bg-my-bg/50 border border-my-border rounded-[2px] relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-1 text-my-accent">
                    <Fingerprint size={10} />
@@ -259,6 +290,13 @@ export default function Sidebar() {
           <ChevronRight size={20} />
         </button>
       )}
+          <PremiumExportModal 
+            isOpen={isPremiumModalOpen} 
+            onClose={() => setIsPremiumModalOpen(false)} 
+            researchId="sidebar_upgrade" 
+            query="Premium Upgrade" 
+            onUnlockSuccess={() => {}} 
+          />
     </>
   );
 }
