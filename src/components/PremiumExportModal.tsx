@@ -41,7 +41,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     }
 
     const options = {
-      key: 'rzp_test_dummy_key_please_replace', // Replace with your actual Razorpay Key
+      key: 'rzp_test_SqqjQcUQZZtYqf', // Razorpay Test Key provided by user
       amount: 2900, // Amount in paise (INR 29.00)
       currency: 'INR',
       name: 'COGNAPSE',
