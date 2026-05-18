@@ -204,45 +204,45 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <div className="mx-auto w-12 h-12 bg-my-accent/10 rounded-full flex items-center justify-center text-my-accent mb-4">
                     <Award size={24} />
                   </div>
-                  <h2 className="text-xl font-serif font-bold text-my-ink italic">Secure Intelligence Dossier Access</h2>
-                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Acquire Analyst-Grade Intelligence Report</p>
+                  <h2 className="text-xl font-serif font-bold text-my-ink italic">Premium PDF Export</h2>
+                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Download Complete Research Report</p>
                 </div>
 
                 <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-3">
                   <div className="flex gap-3">
                     <Shield size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Tactical Visual Formatting</h4>
-                      <p className="text-[10px] text-my-muted">Optimized high-contrast intelligence template, engineered for digital review and executive print.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Professional PDF Template</h4>
+                      <p className="text-[10px] text-my-muted">Clean, highly readable layout optimized for screens and printing.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <FileText size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Comprehensive Data Synthesis</h4>
-                      <p className="text-[10px] text-my-muted">Unrestricted access to multi-layered AI reasoning, strategic consensus scoring, and threat matrices.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Full Research Details</h4>
+                      <p className="text-[10px] text-my-muted">Includes all analysis, scoring, deep-dive data, and source links.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <Zap size={16} className="text-my-accent shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Cryptographic Verification</h4>
-                      <p className="text-[10px] text-my-muted">Embedded AES-256 digital signature, chronological timestamps, and verifiable source metadata.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Verified Authenticity</h4>
+                      <p className="text-[10px] text-my-muted">Includes timestamped digital signature and AI generation metadata.</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-my-accent/5 border border-my-accent/20 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
                   <div className="text-center md:text-left">
-                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">Export Clearance Fee</span>
-                    <span className="text-[16px] font-serif font-bold text-my-ink italic">INR 29.00 <span className="text-xs font-sans text-my-muted not-italic">/ dossier</span></span>
+                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">One-Time Fee</span>
+                    <span className="text-[16px] font-serif font-bold text-my-ink italic">INR 29.00 <span className="text-xs font-sans text-my-muted not-italic">/ report</span></span>
                   </div>
                   <button 
                     onClick={handleStartPayment}
                     disabled={loading}
                     className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
                   >
-                    {loading ? "Initializing Secure Transaction..." : "Unlock Full Intelligence Dossier"}
+                    {loading ? "Connecting to Razorpay..." : "Unlock Full Report"}
                   </button>
                 </div>
               </div>
@@ -256,19 +256,19 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <CheckCircle2 size={36} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-serif font-bold text-my-ink italic">Transaction Cryptographically Verified</h3>
-                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">Intelligence Dossier Successfully Unlocked</p>
+                  <h3 className="text-xl font-serif font-bold text-my-ink italic">Payment Successful</h3>
+                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">Premium PDF Unlocked</p>
                 </div>
 
                 <p className="text-[10px] text-my-muted leading-relaxed max-w-sm mx-auto">
-                  Your transaction has been securely processed and recorded. The advanced intelligence extraction engine is now compiled and ready to generate your comprehensive PDF dossier.
+                  Your payment has been securely processed. The PDF generator is now compiling your full research report.
                 </p>
 
                 <button 
                   onClick={handleDownloadAndClose}
                   className="w-full py-4 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-xl flex items-center justify-center gap-3"
                 >
-                  <Download size={14} /> Generate & Download Intelligence Dossier
+                  <Download size={14} /> Download PDF Report
                 </button>
               </div>
             )}

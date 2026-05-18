@@ -100,7 +100,7 @@ export default function DeepResearchView() {
               </>
             ) : (
               <>
-                <Lock size={12} /> Unlock Full Intelligence Dossier
+                <Lock size={12} /> Unlock Full Report
               </>
             )}
           </button>
