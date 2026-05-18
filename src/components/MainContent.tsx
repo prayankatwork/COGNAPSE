@@ -372,7 +372,7 @@ export default function MainContent() {
   return (
     <ErrorBoundary>
       <MusicVisualizer />
-      <div className="flex-1 flex flex-col h-full bg-my-callout/20 backdrop-blur-xl relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full bg-my-callout/20 backdrop-blur-md md:backdrop-blur-xl relative overflow-hidden">
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-8 border-b border-my-border z-10 shrink-0 bg-my-bg/40 backdrop-blur-md">
           <div className="flex items-center gap-4">
@@ -481,8 +481,9 @@ export default function MainContent() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
                 {/* Floating Orbs */}
-                <div className="absolute top-[20%] left-[20%] w-64 h-64 bg-my-accent/5 rounded-full blur-3xl animate-[pulse_6s_ease-in-out_infinite]"></div>
-                <div className="absolute bottom-[20%] right-[20%] w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite_reverse]"></div>
+                {/* Floating Orbs - Hidden on mobile to save GPU */}
+                <div className="hidden md:block absolute top-[20%] left-[20%] w-64 h-64 bg-my-accent/5 rounded-full blur-3xl animate-[pulse_6s_ease-in-out_infinite]"></div>
+                <div className="hidden md:block absolute bottom-[20%] right-[20%] w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite_reverse]"></div>
 
                 <div className="relative z-10 flex flex-col items-center text-center mt-[-60px]">
                   <motion.div
@@ -508,7 +509,7 @@ export default function MainContent() {
                       className="absolute inset-0 bg-my-accent/5 rounded-full blur-3xl"
                     />
 
-                    <div className="relative z-10 p-8 bg-my-bg/40 backdrop-blur-2xl rounded-full border border-my-border/20 shadow-[0_32px_64px_rgba(0,0,0,0.1)]">
+                    <div className="relative z-10 p-8 bg-my-bg/40 backdrop-blur-sm md:backdrop-blur-2xl rounded-full border border-my-border/20 shadow-[0_32px_64px_rgba(0,0,0,0.1)]">
                       <BrandLogo size={64} />
                     </div>
                   </motion.div>
@@ -718,7 +719,7 @@ export default function MainContent() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={currentReport ? "Drill deeper into this synthesis..." : "What do you need to research?"}
                   disabled={loading}
-                  className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-2xl border border-my-border rounded-none py-4 pl-4 pr-14 md:py-6 md:pl-8 md:pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-base md:text-lg font-light tracking-tight placeholder:text-my-muted/40"
+                  className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-md md:backdrop-blur-2xl border border-my-border rounded-none py-4 pl-4 pr-14 md:py-6 md:pl-8 md:pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-base md:text-lg font-light tracking-tight placeholder:text-my-muted/40"
                 />
                 <button
                   type="submit"

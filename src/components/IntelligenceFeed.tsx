@@ -134,7 +134,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-my-bg/90 backdrop-blur-2xl flex flex-col items-center justify-center text-center p-12"
+            className="absolute inset-0 z-[100] bg-my-bg/90 backdrop-blur-md md:backdrop-blur-2xl flex flex-col items-center justify-center text-center p-12"
           >
              <div className="w-24 h-24 relative mb-8">
                 <div className="absolute inset-0 border-4 border-my-accent/20 rounded-full" />
@@ -154,7 +154,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
 
       <header 
         id="walkthrough-hub-anchor"
-        className="px-6 py-6 md:px-12 md:py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-xl"
+        className="px-6 py-6 md:px-12 md:py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-md md:backdrop-blur-xl"
       >
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>

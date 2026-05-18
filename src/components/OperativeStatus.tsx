@@ -215,7 +215,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-2xl flex items-center justify-center p-4 md:p-6"
+      className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md md:backdrop-blur-2xl flex items-center justify-center p-4 md:p-6"
     >
       <motion.div
         initial={{ scale: 0.95, y: 20 }}
@@ -228,7 +228,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
         </div>
 
         {/* Header / Tabs */}
-        <div className="px-8 pt-8 flex items-center justify-between border-b border-my-border bg-my-bg/50 backdrop-blur-xl relative z-10">
+        <div className="px-8 pt-8 flex items-center justify-between border-b border-my-border bg-my-bg/50 backdrop-blur-md md:backdrop-blur-xl relative z-10">
           <div className="flex gap-8">
             <button 
               onClick={() => setActiveTab('overview')}
