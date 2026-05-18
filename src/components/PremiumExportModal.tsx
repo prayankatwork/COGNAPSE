@@ -67,7 +67,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
       // 3. Configure and open Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SqrBlXoXysz16A', 
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SqxlsNGxINl4mY', 
         amount: orderData.amount.toString(), 
         currency: orderData.currency,
         name: 'COGNAPSE',
