@@ -24,7 +24,6 @@ export default function LandingPage() {
       <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
         <motion.div
           style={{ y: y1 }}
-          {/* Optimized background glow for mobile */}
           className="hidden md:block absolute top-1/4 left-1/10 w-[600px] h-[600px] bg-my-accent/5 rounded-full blur-[140px] -z-10 animate-pulse"
         />
         <div className="absolute inset-0 opacity-[0.02] -z-20 pointer-events-none"
