@@ -77,20 +77,18 @@ export default async function handler(req, res) {
     const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
     const groq = groqKey ? new Groq({ apiKey: groqKey }) : null;
 
-    const prompt = `You are the COGNAPSE Strategic Intelligence Analyst OS. Provide a deep, premium, and highly professional strategic intelligence assessment of the following webpage text.
-Your analysis must be comprehensive, detailed, and strictly match the COGNAPSE branding—using advanced analytical terminology (e.g. key strategic assets, cognitive nodes, structural impact, influence mappings).
+    const prompt = `You are the COGNAPSE Strategic Intelligence Analyst OS. Provide an extremely concise, high-impact strategic summary and takeaway of the following webpage text.
+To conserve operational credits, keep the output highly condensed, ultra-concise, and straight-to-the-point using direct, premium analytical terminology.
 
-Specifically, you must provide a detailed 'summary' (exactly 4 to 6 lines of text when displayed, approx 3 substantial sentences) and a high-impact 'insight'.
-
-Highlighted Intelligence Text to Analyze:
+Text to Analyze:
 "${text}"
 
 Return a strictly valid JSON response with these exact keys:
 {
-  "summary": "A detailed, concise context summary and strategic overview of the highlighted text of exactly 4 to 6 lines of text (about 3 sentences), highlighting its core significance, operational context, and strategic relevance.",
-  "insight": "A premium, sophisticated, high-impact key strategic/technical takeaway.",
-  "confidence": "HIGH, MEDIUM, or LOW based on data entropy and source certainty",
-  "recommendation": "A professional, strategic follow-up research direction or operational action query."
+  "summary": "A highly condensed strategic summary of exactly 20-30 words (strictly 2 sentences max). Be extremely direct, concise, and dense.",
+  "insight": "A single premium, high-impact key takeaway of exactly 10-15 words (strictly 1 sentence).",
+  "confidence": "HIGH, MEDIUM, or LOW",
+  "recommendation": "An extremely brief research direction of exactly 8-12 words."
 }`;
 
     // Order of execution in the Serverless Swarm
@@ -111,7 +109,10 @@ Return a strictly valid JSON response with these exact keys:
           const genModel = genAI.getGenerativeModel({ model: node.model });
           const result = await genModel.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            generationConfig: { 
+              responseMimeType: "application/json",
+              maxOutputTokens: 150
+            }
           });
           const textResponse = (await result.response).text();
           if (textResponse) {
@@ -125,6 +126,7 @@ Return a strictly valid JSON response with these exact keys:
             messages: [{ role: "user", content: prompt }],
             model: node.model,
             temperature: 0.1,
+            max_tokens: 150,
             response_format: { type: "json_object" }
           });
           const content = response.choices[0]?.message?.content || "";
