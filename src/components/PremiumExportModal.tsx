@@ -204,8 +204,8 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <div className="mx-auto w-12 h-12 bg-my-accent/10 rounded-full flex items-center justify-center text-my-accent mb-4">
                     <Award size={24} />
                   </div>
-                  <h2 className="text-xl font-serif font-bold text-my-ink italic">Upgrade to Intelligence Dossier</h2>
-                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Unlock Premium PDF Export</p>
+                  <h2 className="text-xl font-serif font-bold text-my-ink italic">Secure Intelligence Dossier Access</h2>
+                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Acquire Analyst-Grade Intelligence Report</p>
                 </div>
 
                 <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-3">
@@ -242,7 +242,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     disabled={loading}
                     className="px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
                   >
-                    {loading ? "Connecting to Razorpay..." : "Pay with Razorpay"}
+                    {loading ? "Initializing Secure Transaction..." : "Unlock Full Intelligence Dossier"}
                   </button>
                 </div>
               </div>
@@ -256,19 +256,19 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <CheckCircle2 size={36} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-serif font-bold text-my-ink italic">Protocol Authorized</h3>
-                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">Premium PDF Token Unlocked Successfully</p>
+                  <h3 className="text-xl font-serif font-bold text-my-ink italic">Transaction Cryptographically Verified</h3>
+                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">Intelligence Dossier Successfully Unlocked</p>
                 </div>
 
                 <p className="text-[10px] text-my-muted leading-relaxed max-w-sm mx-auto">
-                  Your payment has been successfully recorded in Firestore telemetry. The secure PDF packaging tool is compiled and ready to compile your strategic report.
+                  Your transaction has been securely processed and recorded. The advanced intelligence extraction engine is now compiled and ready to generate your comprehensive PDF dossier.
                 </p>
 
                 <button 
                   onClick={handleDownloadAndClose}
                   className="w-full py-4 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-xl flex items-center justify-center gap-3"
                 >
-                  <Download size={14} /> Download Secure PDF Report
+                  <Download size={14} /> Generate & Download Intelligence Dossier
                 </button>
               </div>
             )}
