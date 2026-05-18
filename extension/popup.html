@@ -10,7 +10,28 @@
     <!-- Header -->
     <header class="app-header">
       <div class="logo-container">
-        <div class="pulse-indicator"></div>
+        <div class="eye-logo-wrapper">
+          <svg class="eye-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(250, 204, 21, 0.2)" stroke-width="2" stroke-dasharray="6, 4" class="orbit-ring" />
+            <circle cx="82" cy="18" r="4.5" fill="#FACC15" />
+            <circle cx="50" cy="50" r="36" fill="none" stroke="#FACC15" stroke-width="3" />
+            <circle cx="50" cy="50" r="30" fill="url(#eye-iris-gradient)" />
+            <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(250, 204, 21, 0.3)" stroke-width="1.5" />
+            <circle cx="50" cy="50" r="14" fill="url(#eye-laser-glow)" />
+            <ellipse cx="50" cy="50" rx="3" ry="9" fill="#000000" />
+            <defs>
+              <radialGradient id="eye-iris-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="rgba(250, 204, 21, 0.5)" />
+                <stop offset="100%" stop-color="rgba(0, 0, 0, 0.95)" />
+              </radialGradient>
+              <radialGradient id="eye-laser-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="30%" stop-color="rgba(250, 204, 21, 0.85)" />
+                <stop offset="100%" stop-color="rgba(250, 204, 21, 0)" />
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
         <span class="logo-text">COGNAPSE <span class="accent-text">ANALYST</span></span>
       </div>
       <div class="status-badge" id="premium-status-badge">FREE</div>

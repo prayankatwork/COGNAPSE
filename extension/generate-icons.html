@@ -2,11 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>COGNAPSE Icon Generator</title>
+  <title>COGNAPSE Eye Logo Generator</title>
   <style>
     body {
-      background-color: #030712;
-      color: #f3f4f6;
+      background-color: #000000;
+      color: #ffffff;
       font-family: sans-serif;
       text-align: center;
       padding: 40px;
@@ -14,15 +14,15 @@
     .container {
       max-width: 600px;
       margin: 0 auto;
-      background: #090d16;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #0A0A0A;
+      border: 1px solid #222222;
       padding: 30px;
-      border-radius: 8px;
+      border-radius: 4px;
     }
     .canvas-row {
       display: flex;
       justify-content: center;
-      align-items: bottom;
+      align-items: flex-end;
       gap: 30px;
       margin: 40px 0;
     }
@@ -34,28 +34,29 @@
     }
     canvas {
       background: #000;
-      border: 1px dashed rgba(255,255,255,0.1);
+      border: 1px dashed #222222;
     }
     button {
       padding: 12px 24px;
-      background: #f97316;
-      color: #fff;
+      background: #FACC15;
+      color: #000000;
       border: none;
-      font-weight: bold;
-      border-radius: 4px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      border-radius: 2px;
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      transition: all 0.3s ease;
     }
     button:hover {
-      background: #ea580c;
+      background: #ca8a04;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>COGNAPSE Chrome Extension Icon Generator</h2>
-    <p>This utility generates web-store-ready, high-fidelity PNG icons from our canvas design system.</p>
+    <h2>COGNAPSE Chrome Extension Eye Logo Generator</h2>
+    <p>This utility generates the webstore-ready Neural Companion Eye icons from the native canvas vector configurations.</p>
     
     <div class="canvas-row">
       <div class="canvas-box">
@@ -80,58 +81,73 @@
       const canvas = document.getElementById(canvasId);
       const ctx = canvas.getContext('2d');
       
-      // Clear
+      // Clear canvas
       ctx.clearRect(0, 0, size, size);
       
-      // Dark Base background circle
-      ctx.fillStyle = '#090d16';
-      ctx.beginPath();
-      ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Cyber Glowing Outer Ring
-      ctx.strokeStyle = '#f97316';
-      ctx.lineWidth = Math.max(1, size * 0.05);
-      ctx.beginPath();
-      ctx.arc(size / 2, size / 2, size / 2 - size * 0.08, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Inner Glowing Core Gradient
-      const grad = ctx.createRadialGradient(
-        size / 2, size / 2, size * 0.05, 
-        size / 2, size / 2, size * 0.4
-      );
-      grad.addColorStop(0, 'rgba(249, 115, 22, 0.4)');
-      grad.addColorStop(1, 'rgba(249, 115, 22, 0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(size / 2, size / 2, size * 0.4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Draw Stylized Cyber Lock/Omega Symbol
-      ctx.strokeStyle = '#f97316';
-      ctx.fillStyle = '#ffffff';
-      ctx.lineWidth = Math.max(1, size * 0.06);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
       const cx = size / 2;
       const cy = size / 2;
-      const r = size * 0.16;
-
-      // Draw Keyhole / Arch
-      ctx.beginPath();
-      ctx.arc(cx, cy - size * 0.04, r, Math.PI * 0.8, Math.PI * 2.2);
-      // Leg down-left
-      ctx.lineTo(cx - r * 0.8, cy + size * 0.15);
-      ctx.lineTo(cx + r * 0.8, cy + size * 0.15);
-      ctx.closePath();
-      ctx.stroke();
       
-      // Center Glow Dot
-      ctx.fillStyle = '#f97316';
+      // 1. Dark Base Background Circle
+      ctx.fillStyle = '#000000';
       ctx.beginPath();
-      ctx.arc(cx, cy - size * 0.04, r * 0.4, 0, Math.PI * 2);
+      ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 2. Tactical Orbital Arrays (ambient outer dashed ring)
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.2)';
+      ctx.lineWidth = Math.max(1, size * 0.02);
+      ctx.setLineDash([Math.max(2, size * 0.05), Math.max(2, size * 0.05)]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.44, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset
+      
+      // Orbit dot (glowing cyber yellow control node)
+      ctx.fillStyle = '#FACC15';
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(-Math.PI / 4) * (size * 0.44), cy + Math.sin(-Math.PI / 4) * (size * 0.44), Math.max(2, size * 0.045), 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Outer Chassis Circle
+      ctx.strokeStyle = '#FACC15';
+      ctx.lineWidth = Math.max(1.5, size * 0.04);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.38, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 4. Conic gradient/glow in Iris
+      const grad = ctx.createRadialGradient(cx, cy, size * 0.08, cx, cy, size * 0.32);
+      grad.addColorStop(0, 'rgba(250, 204, 21, 0.45)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.32, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Iris border ring
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.3)';
+      ctx.lineWidth = Math.max(1, size * 0.02);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.32, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 5. Pupil / Central Laser Glow Dot
+      // Outer glow for the laser pupil
+      const coreGrad = ctx.createRadialGradient(cx, cy, size * 0.02, cx, cy, size * 0.16);
+      coreGrad.addColorStop(0, '#FFFFFF');
+      coreGrad.addColorStop(0.3, 'rgba(250, 204, 21, 0.85)');
+      coreGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core black pupil void (Vertical slit / cyber-mechanical look)
+      ctx.fillStyle = '#000000';
+      const slitW = Math.max(2, size * 0.06);
+      const slitH = Math.max(4, size * 0.18);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, slitW / 2, slitH / 2, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 

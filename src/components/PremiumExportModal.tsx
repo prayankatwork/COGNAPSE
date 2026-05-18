@@ -327,25 +327,81 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             )}
 
             {step === 'success' && (
-              <div className="space-y-6 text-center py-4">
-                <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 border border-green-500/20 animate-pulse">
-                  <CheckCircle2 size={36} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-serif font-bold text-my-ink italic">COGNAPSE Premium Activated</h3>
-                  <p className="text-[9px] text-green-500 uppercase tracking-widest font-black mt-1">All Core Utility Features Unlocked</p>
+              <div className="space-y-6 py-2">
+                <div className="text-center">
+                  <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-3 border border-green-500/20 animate-pulse">
+                    <CheckCircle2 size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-serif font-bold text-my-ink italic">COGNAPSE Premium Activated</h3>
+                    <p className="text-[8px] text-green-500 uppercase tracking-widest font-black mt-0.5">All Core Utility Features Unlocked</p>
+                  </div>
                 </div>
 
-                <p className="text-[10px] text-my-muted leading-relaxed max-w-sm mx-auto">
-                  Welcome to COGNAPSE Premium! You now have unlimited professional PDF exports and full browser extension privileges.
-                </p>
+                {/* Chrome Extension Layman Installation Card */}
+                <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-4 text-left">
+                  <div className="flex items-center gap-2 text-my-accent border-b border-my-border pb-2">
+                    <Chrome size={16} />
+                    <h4 className="text-[11px] font-black uppercase tracking-wider">Chrome Research Extension Guide</h4>
+                  </div>
+                  
+                  <p className="text-[10px] text-my-muted leading-relaxed">
+                    Bring the power of COGNAPSE directly to any webpage. Follow these simple steps to install the extension:
+                  </p>
 
-                <button 
-                  onClick={handleDownloadAndClose}
-                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-xl flex items-center justify-center gap-3"
-                >
-                  <Download size={14} /> Download PDF Dossier Now
-                </button>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">1</span>
+                      <p className="text-[10px] text-my-ink leading-normal">
+                        <strong>Download extension zip</strong> by clicking the yellow button below and extract (unzip) it on your computer.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">2</span>
+                      <p className="text-[10px] text-my-ink leading-normal">
+                        Open Google Chrome, navigate to <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-accent font-mono text-[9px]">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">3</span>
+                      <p className="text-[10px] text-my-ink leading-normal">
+                        Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-ink font-mono text-[9px]">extension</code> folder.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">4</span>
+                      <p className="text-[10px] text-my-ink leading-normal">
+                        Click the puzzle piece icon (🧩) in Chrome, pin <strong>COGNAPSE Strategic Analyst</strong>, highlight any webpage text, right-click, and select <strong>"Analyze with COGNAPSE"</strong>!
+                      </p>
+                    </div>
+                  </div>
+
+                  <a 
+                    href="/cognapse-extension.zip" 
+                    download="cognapse-extension.zip"
+                    className="w-full py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-[101%] transition-all shadow-md flex items-center justify-center gap-2 rounded-sm border border-transparent text-center block"
+                  >
+                    <Download size={12} /> Download Extension Package (ZIP)
+                  </a>
+                </div>
+
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleDownloadAndClose}
+                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Download size={14} /> Download PDF Dossier
+                  </button>
+                  <button 
+                    onClick={onClose}
+                    className="px-4 py-3 bg-my-border hover:bg-my-border/80 text-my-ink text-[10px] font-bold uppercase tracking-wider transition-all"
+                  >
+                    Close Setup
+                  </button>
+                </div>
               </div>
             )}
           </div>
