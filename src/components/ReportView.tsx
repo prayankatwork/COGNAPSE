@@ -127,7 +127,6 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
               )}
             </button>
             <div className="hidden md:flex flex-col items-end text-right">
-               <span className="text-[9px] font-black uppercase tracking-[0.1em] text-my-muted max-w-[200px] leading-tight">This session is temporary. Exports preserve intelligence history.</span>
             </div>
             <BrandLogo size={44} />
           </div>

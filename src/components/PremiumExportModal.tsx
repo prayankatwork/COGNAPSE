@@ -19,8 +19,48 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
   if (!isOpen) return null;
 
-  const handleStartPayment = () => {
-    setStep('payment');
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleStartPayment = async () => {
+    setLoading(true);
+    
+    const res = await loadRazorpayScript();
+    
+    if (!res) {
+      alert('Razorpay SDK failed to load. Are you online?');
+      setLoading(false);
+      return;
+    }
+
+    const options = {
+      key: 'rzp_test_dummy_key_please_replace', // Replace with your actual Razorpay Key
+      amount: 2900, // Amount in paise (INR 29.00)
+      currency: 'INR',
+      name: 'COGNAPSE',
+      description: 'Premium Intelligence Dossier Export',
+      handler: function (response: any) {
+        handleConfirmPayment();
+      },
+      prefill: {
+        name: user?.name || 'COGNAPSE Analyst',
+        email: 'analyst@cognapse.core',
+      },
+      theme: {
+        color: '#F27D26',
+      },
+    };
+
+    const paymentObject = new (window as any).Razorpay(options);
+    paymentObject.open();
+    setLoading(false);
   };
 
   const handleConfirmPayment = async () => {
@@ -133,62 +173,16 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   </div>
                   <button 
                     onClick={handleStartPayment}
-                    className="px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg"
+                    disabled={loading}
+                    className="px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
                   >
-                    Unlock PDF Report
+                    {loading ? "Connecting to Razorpay..." : "Pay with Razorpay"}
                   </button>
                 </div>
               </div>
             )}
 
-            {step === 'payment' && (
-              <div className="space-y-6 text-center">
-                <div>
-                  <h3 className="text-lg font-serif font-bold text-my-ink italic">Scan QR to Complete Secure Protocol</h3>
-                  <p className="text-[9px] text-my-muted uppercase tracking-widest mt-1">Single-Use License Authorization</p>
-                </div>
-
-                {/* Paytm QR Holder */}
-                <div className="mx-auto w-52 h-52 bg-white p-3 border border-my-border flex items-center justify-center relative shadow-lg">
-                  <img 
-                    src="/assets/qr.png" 
-                    alt="Paytm QR Code" 
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      // Fallback if public asset is slow/errored
-                      e.currentTarget.src = "https://placehold.co/200x200/ffffff/000000?text=Scan+to+Pay+INR+29";
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] text-my-muted leading-relaxed max-w-sm mx-auto">
-                    Please scan the QR code using any UPI app (Paytm, PhonePe, GPay) and pay <span className="font-bold text-my-ink">₹29</span>. After transferring, click the button below to authorize the secure download token.
-                  </p>
-                  <div className="flex justify-center gap-2 items-center text-[9px] text-my-muted uppercase font-mono bg-my-callout p-2 border border-my-border">
-                    <AlertCircle size={10} className="text-amber-500" />
-                    <span>Demo mode is active. "I Have Paid" will instantly unlock the PDF.</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => setStep('info')}
-                    disabled={loading}
-                    className="flex-1 py-3 border border-my-border text-[9px] font-black uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors"
-                  >
-                    Go Back
-                  </button>
-                  <button 
-                    onClick={handleConfirmPayment}
-                    disabled={loading}
-                    className="flex-1 py-3 bg-my-accent text-white dark:text-my-bg text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl disabled:opacity-50"
-                  >
-                    {loading ? "Verifying Token..." : "I Have Paid"}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Payment step is now handled by Razorpay overlay, but we keep this empty or remove it. I'll remove it entirely. */}
 
             {step === 'success' && (
               <div className="space-y-6 text-center py-4">

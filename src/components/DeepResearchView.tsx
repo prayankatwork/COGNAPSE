@@ -104,9 +104,6 @@ export default function DeepResearchView() {
               </>
             )}
           </button>
-          <span className="hidden md:block text-[9px] font-black uppercase tracking-[0.1em] text-my-muted max-w-[200px] text-right ml-auto leading-tight">
-            This session is temporary. Exports preserve full intelligence history.
-          </span>
         </div>
       </div>
 
