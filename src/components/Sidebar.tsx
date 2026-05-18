@@ -85,8 +85,8 @@ export default function Sidebar() {
         )}
       >
         <div className="flex flex-col h-full w-80 relative overflow-hidden">
-          {/* Blueprint Overlay */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none -z-10" 
+          {/* Blueprint Overlay - Hidden on mobile for performance */}
+          <div className="hidden md:block absolute inset-0 opacity-[0.03] pointer-events-none -z-10" 
                style={{ backgroundImage: 'radial-gradient(#1A1A1A 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
           {/* Sidebar Header */}

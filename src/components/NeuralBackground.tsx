@@ -5,6 +5,10 @@ export default function NeuralBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const theme = useStore((state) => state.theme);
 
+  // Skip rendering completely on mobile to save GPU cycles and battery life
+  const isMobile = typeof window !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+  if (isMobile) return null;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

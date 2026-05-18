@@ -6,6 +6,10 @@ export default function MusicVisualizer() {
   const vibe = useStore((s) => s.vibe);
   const consensus = useStore((s) => s.currentReport?.scores?.evidence_consensus || 'insufficient');
 
+  // Skip visualizer completely on mobile to prevent canvas redrawing lag
+  const isMobile = typeof window !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+  if (isMobile) return null;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
