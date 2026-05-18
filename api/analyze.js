@@ -80,14 +80,14 @@ export default async function handler(req, res) {
     const prompt = `You are the COGNAPSE Strategic Intelligence Analyst OS. Provide a deep, premium, and highly professional strategic intelligence assessment of the following webpage text.
 Your analysis must be comprehensive, detailed, and strictly match the COGNAPSE branding—using advanced analytical terminology (e.g. key strategic assets, cognitive nodes, structural impact, influence mappings).
 
-Specifically, you must provide a detailed 3-to-4 sentence 'summary' (comprehensive overview) and a high-impact 'insight'.
+Specifically, you must provide a detailed 'summary' (exactly 4 to 6 lines of text when displayed, approx 3 substantial sentences) and a high-impact 'insight'.
 
 Highlighted Intelligence Text to Analyze:
 "${text}"
 
 Return a strictly valid JSON response with these exact keys:
 {
-  "summary": "A detailed, comprehensive 3-to-4 sentence strategic summary and context breakdown of the highlighted text, highlighting its core significance, operational context, and strategic relevance.",
+  "summary": "A detailed, concise context summary and strategic overview of the highlighted text of exactly 4 to 6 lines of text (about 3 sentences), highlighting its core significance, operational context, and strategic relevance.",
   "insight": "A premium, sophisticated, high-impact key strategic/technical takeaway.",
   "confidence": "HIGH, MEDIUM, or LOW based on data entropy and source certainty",
   "recommendation": "A professional, strategic follow-up research direction or operational action query."

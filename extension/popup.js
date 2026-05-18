@@ -90,8 +90,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!verifyData.premium) {
         console.log("COGNAPSE Extension: User is not premium.");
         premiumBadge.textContent = "FREE TIER";
-        premiumBadge.style.background = "rgba(249, 115, 22, 0.15)";
-        premiumBadge.style.color = "#f97316";
+        premiumBadge.style.background = "rgba(250, 204, 21, 0.15)";
+        premiumBadge.style.color = "#FACC15";
         showPanel(premiumPanel);
         return;
       }
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         showState(stateSuccess);
       } else {
         // Empty state
-        selectionTextPreview.innerHTML = `No webpage text selected. Highlight text on any page, right-click, and select <strong style="color: #f97316;">Analyze with COGNAPSE</strong>.`;
+        selectionTextPreview.innerHTML = `No webpage text selected. Highlight text on any page, right-click, and select <strong style="color: #FACC15;">Analyze with COGNAPSE</strong>.`;
         selectionCharCount.textContent = "0 chars";
         showState(stateIdle);
       }

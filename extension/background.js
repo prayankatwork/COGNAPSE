@@ -24,7 +24,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       
       // Prompt the user to open extension popup by setting action badge
       chrome.action.setBadgeText({ text: "NEW" });
-      chrome.action.setBadgeBackgroundColor({ color: "#f97316" }); // Orange
+      chrome.action.setBadgeBackgroundColor({ color: "#FACC15" }); // Cyber Yellow
       
       // Try to open popup programmatically (Chrome 116+)
       if (chrome.action.openPopup) {
