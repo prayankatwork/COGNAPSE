@@ -258,7 +258,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
           <h4 class="serif-title" style="font-size: 20px; color: #FFFFFF; font-weight: bold; margin: 0; line-height: 1.3;">${safeText(deepThesis.title)}</h4>
         </div>
 
-        <div style="display: flex; flex-col; gap: 25px;">
+        <div style="display: flex; flex-direction: column; gap: 25px;">
           <div style="border-bottom: 1px solid #22222B; padding-bottom: 20px; margin-bottom: 20px;">
             <h5 style="color: #F27D26; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin: 0 0 8px 0; font-weight: bold;">1. Abstract</h5>
             <p style="font-size: 11px; line-height: 1.7; color: #CBD5E0; margin: 0; text-align: justify;">${safeText(deepThesis.abstract)}</p>
