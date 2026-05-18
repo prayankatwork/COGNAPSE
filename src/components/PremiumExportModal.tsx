@@ -21,8 +21,19 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const existingScript = document.getElementById('razorpay-checkout-js');
+      if (existingScript) {
+        resolve(true);
+        return;
+      }
       const script = document.createElement('script');
+      script.id = 'razorpay-checkout-js';
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.crossOrigin = 'anonymous';
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -35,7 +46,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     const res = await loadRazorpayScript();
     
     if (!res) {
-      alert('Razorpay SDK failed to load. Are you online?');
+      alert('Razorpay SDK failed to load. Please disable your adblocker or check your internet connection.');
       setLoading(false);
       return;
     }
