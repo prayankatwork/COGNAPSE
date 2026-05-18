@@ -125,7 +125,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             <div className="mt-4">
               <SectionTitle>Decision Matrix (SWOT)</SectionTitle>
               <p className="text-[10px] text-my-muted font-mono mb-2">Perspective: {report.swot.perspective}</p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-[1px] bg-my-border border border-my-border">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-my-border border border-my-border">
                 <SwotQuadrant title="Strengths" items={report.swot.strengths || []} />
                 <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses || []} />
                 <SwotQuadrant title="Opportunities" items={report.swot.opportunities || []} />
@@ -158,7 +158,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
           {/* Metrics */}
           <SectionTitle>Metrics</SectionTitle>
           {report.scores && (
-            <div className="grid grid-cols-2 gap-[1px] bg-my-border border border-my-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-my-border border border-my-border">
                <ScoreCard label="Credibility" value={safeText(report.scores.overall_credibility)} />
                <ScoreCard label="Relevance" value={safeText(report.scores.overall_relevance)} />
                <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">

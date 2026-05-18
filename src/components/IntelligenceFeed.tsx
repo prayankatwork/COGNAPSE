@@ -154,7 +154,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
 
       <header 
         id="walkthrough-hub-anchor"
-        className="px-12 py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-xl"
+        className="px-6 py-6 md:px-12 md:py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-xl"
       >
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -176,7 +176,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
                <button 
                  onClick={handleManualRefresh}
                  disabled={loading}
@@ -212,7 +212,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar">
-         <div className="max-w-7xl mx-auto px-12 py-12">
+         <div className="max-w-7xl mx-auto px-4 md:px-12 py-6 md:py-12">
             
             <AnimatePresence mode="wait">
                {activeTab === 'feed' ? (
