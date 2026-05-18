@@ -77,18 +77,20 @@ export default async function handler(req, res) {
     const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
     const groq = groqKey ? new Groq({ apiKey: groqKey }) : null;
 
-    const prompt = `You are the COGNAPSE browser analyst. Analyze the following highlighted webpage text and return a strictly valid JSON response with these keys: "summary", "insight", "confidence", "recommendation".
-Ensure the values are extremely concise, highly professional, and insightful.
+    const prompt = `You are the COGNAPSE Strategic Intelligence Analyst OS. Provide a deep, premium, and highly professional strategic intelligence assessment of the following webpage text.
+Your analysis must be comprehensive, detailed, and strictly match the COGNAPSE branding—using advanced analytical terminology (e.g. key strategic assets, cognitive nodes, structural impact, influence mappings).
 
-Text to analyze:
+Specifically, you must provide a detailed 3-to-4 sentence 'summary' (comprehensive overview) and a high-impact 'insight'.
+
+Highlighted Intelligence Text to Analyze:
 "${text}"
 
-JSON format:
+Return a strictly valid JSON response with these exact keys:
 {
-  "summary": "Concise 1-2 sentence summary of the highlighted text",
-  "insight": "1 key technical/strategic takeaway",
-  "confidence": "High/Medium/Low based on analysis depth",
-  "recommendation": "Optional logical follow-up action or research query"
+  "summary": "A detailed, comprehensive 3-to-4 sentence strategic summary and context breakdown of the highlighted text, highlighting its core significance, operational context, and strategic relevance.",
+  "insight": "A premium, sophisticated, high-impact key strategic/technical takeaway.",
+  "confidence": "HIGH, MEDIUM, or LOW based on data entropy and source certainty",
+  "recommendation": "A professional, strategic follow-up research direction or operational action query."
 }`;
 
     // Order of execution in the Serverless Swarm

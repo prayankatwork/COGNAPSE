@@ -16,6 +16,21 @@ body {
   overflow: hidden;
 }
 
+/* Premium Cyber Scrollbar Customizer */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
