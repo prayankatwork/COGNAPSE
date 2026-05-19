@@ -24,7 +24,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    return res.status(200).json({ envKeys: Object.keys(process.env) });
     const hasAdminCreds = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
     let data = null;
     let exists = false;
