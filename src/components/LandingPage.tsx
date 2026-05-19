@@ -74,10 +74,10 @@ export default function LandingPage() {
                     transition={{ duration: 1.5, repeat: Infinity }}
                     className="w-2 h-2 bg-my-accent rounded-full"
                   />
-                  <span className="text-[10px] font-black uppercase tracking-[0.5em]">
+                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white dark:text-black">
                     ENTER RESEARCH
                   </span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                  <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300 text-white dark:text-black" />
                 </div>
 
               </div>

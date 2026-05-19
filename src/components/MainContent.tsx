@@ -578,10 +578,10 @@ export default function MainContent() {
                             transition={{ duration: 1.5, repeat: Infinity }}
                             className="w-2 h-2 bg-my-accent rounded-full"
                           />
-                          <span className="text-[10px] font-black uppercase tracking-[0.5em]">
+                          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white dark:text-black">
                             Random Rabbit Hole
                           </span>
-                          <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                          <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300 text-white dark:text-black" />
                         </div>
                       </div>
                     </motion.button>
@@ -731,7 +731,7 @@ export default function MainContent() {
                   disabled={!query.trim() || loading || (!walkthroughCompleted && !!currentReport)}
                   className="absolute right-3 top-3 bottom-3 aspect-square bg-my-ink text-white dark:bg-my-accent dark:text-black hover:bg-my-accent hover:text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-90"
                 >
-                  <Send size={20} />
+                  <Send size={20} className="text-white dark:text-black" />
                 </button>
               </div>
             </form>
