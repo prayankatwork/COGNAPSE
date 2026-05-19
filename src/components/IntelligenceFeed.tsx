@@ -65,18 +65,44 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
     if (isManualRefreshing) return;
 
     try {
+      const currentDate = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Diverse intelligence angles to prevent repetitive outputs
+      const scenarioAngles = [
+        "quantum cybersecurity standards, semiconductor supply chain choke points, and zero-day vulnerabilities in satellite grids",
+        "global sovereign debt restructurings, trade embargoes on critical minerals, and central bank digital currency trials",
+        "deep-sea energy infrastructure security, space-based telecom blockades, and rare-earth element processing anomalies",
+        "biosecurity protocols, synthetic gene-editing therapeutic breakthroughs, and neural computing interfaces",
+        "lithium and cobalt procurement standoffs, Baltic logistics choke points, and micro-satellite orbital deployment failures",
+        "nuclear fusion commercial milestones, critical smart-grid pipeline security, and geothermal power regulations"
+      ];
+
+      // Shuffle and pick 2 random vectors to focus this query's creative output
+      const dynamicVectors = [...scenarioAngles].sort(() => 0.5 - Math.random()).slice(0, 2);
+
       const prompt = `
-        Generate 10 trending global intelligence headlines for these categories: ${subscribedCategories.join(', ')}.
-        Categorize each item correctly.
-        Focus on complex, high-impact news that would require professional research.
+        Current System Time: ${currentDate}.
+        Generate exactly 10 trending, highly realistic, and detailed global intelligence headlines for these categories: ${subscribedCategories.join(', ')}.
+        
+        To ensure maximum freshness and prevent repetitive output, heavily align your headlines around these dynamic context vectors:
+        - ${dynamicVectors.join('\n        - ')}
+
+        Avoid standard generic cliches. Focus on realistic scenarios featuring specific geographic hotspots (e.g. Taiwan Strait, North Sea, Baltic region, Sub-Saharan mineral fields), fictional/real global conglomerates, or government regulatory bodies.
         
         Return ONLY a JSON array of objects:
         [{
           "id": "unique-id",
           "category": "TECH", 
-          "headline": "Headline text",
-          "summary": "One sentence summary",
-          "timestamp": "Just now",
+          "headline": "Highly specific and detailed industry headline",
+          "summary": "1-2 sentence analytical summary detailing the immediate macro implications.",
+          "timestamp": "e.g., '12m ago', '3h ago', '7h ago' (vary these randomly between 5 minutes and 24 hours)",
           "impact": "high"
         }]
       `;
