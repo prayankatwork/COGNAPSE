@@ -51,7 +51,7 @@ export default function LandingPage() {
             <motion.button
               id="walkthrough-search-anchor"
               onClick={() => setView('research')}
-              className="group relative px-6 py-4 md:px-10 md:py-5 bg-my-ink text-white dark:bg-my-accent dark:text-my-bg overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all w-full sm:w-auto"
+              className="group relative px-6 py-4 md:px-10 md:py-5 bg-my-ink text-white dark:bg-my-accent dark:text-black overflow-hidden border border-my-accent/30 shadow-[0_20px_60px_rgba(0,0,0,0.2)] transition-all w-full sm:w-auto"
             >
               {/* Corner Brackets */}
               <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-my-accent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -177,7 +177,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--accent) 2px, transparent 2px)', backgroundSize: '100px 100px' }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl md:text-9xl font-serif font-bold mb-12 md:mb-20 leading-none tracking-tighter italic">Ready for <br /> clarity?</h2>
-          <button onClick={() => setView('research')} className="px-10 py-6 md:px-20 md:py-10 bg-my-accent text-white dark:text-my-bg font-bold uppercase tracking-[0.5em] hover:bg-my-ink transition-all shadow-2xl transform hover:-translate-y-4 w-full md:w-auto text-sm md:text-base">
+          <button onClick={() => setView('research')} className="px-10 py-6 md:px-20 md:py-10 bg-my-accent text-white dark:text-black font-bold uppercase tracking-[0.5em] hover:bg-my-ink transition-all shadow-2xl transform hover:-translate-y-4 w-full md:w-auto text-sm md:text-base">
             ENTER COGNAPSE
           </button>
           <div className="mt-14 flex items-center justify-center gap-10">

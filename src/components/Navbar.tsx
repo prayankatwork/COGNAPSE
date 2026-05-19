@@ -30,7 +30,7 @@ export default function Navbar() {
   ];
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 2);
     window.addEventListener('scroll', handleScroll);
     
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -136,7 +136,7 @@ export default function Navbar() {
                  id="walkthrough-profile-anchor"
                  onClick={() => setStatusOpen(true)}
                  className="hidden lg:flex flex-col items-end group cursor-pointer"
-               >
+                >
                   <span className="text-[10px] font-black text-my-ink uppercase tracking-widest group-hover:text-my-accent transition-colors">{user.username}</span>
                   <span className="text-[7px] text-my-accent font-bold uppercase tracking-[0.3em] opacity-80 flex items-center gap-1 group-hover:opacity-100 transition-opacity">
                     <ShieldCheck size={8} /> Authorized
@@ -153,7 +153,7 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={() => setAuthOpen(true)}
-              className="px-3 py-2 md:px-4 md:py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-my-bg text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
+              className="px-3 py-2 md:px-4 md:py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
             >
                <User size={12} /> <span className="hidden sm:inline">Sync Identity</span>
             </button>

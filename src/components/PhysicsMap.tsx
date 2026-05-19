@@ -180,7 +180,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
           <button 
             onClick={() => setFilterMode(f => f === 'all' ? 'high' : 'all')}
             className={`flex items-center gap-1.5 px-2 py-1 text-[9px] font-bold uppercase transition-all border ${
-              filterMode === 'high' ? 'bg-my-accent text-white dark:text-my-bg border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
+              filterMode === 'high' ? 'bg-my-accent text-white dark:text-black border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
             }`}
           >
             <Filter size={10} /> {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
@@ -226,7 +226,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-my-accent text-white dark:text-my-bg px-6 py-3 shadow-2xl border border-white/20"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-my-accent text-white dark:text-black px-6 py-3 shadow-2xl border border-white/20"
             >
               <div className="flex items-center gap-3">
                 <Loader2 size={14} className="animate-spin" />
@@ -360,7 +360,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
                       setShowScrollMessage(true);
                       setTimeout(() => setShowScrollMessage(false), 5000);
                     }}
-                    className="col-span-2 bg-my-accent text-white dark:text-my-bg py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl"
+                    className="col-span-2 bg-my-accent text-white dark:text-black py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl"
                   >
                     <Target size={16} /> Execute Research
                   </button>

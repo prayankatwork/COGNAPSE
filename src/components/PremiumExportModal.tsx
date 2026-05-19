@@ -337,7 +337,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                           : 'border-my-border hover:border-my-accent/50'
                       }`}
                     >
-                      <div className="absolute -top-2.5 right-2 px-1.5 py-0.5 bg-my-accent text-white dark:text-my-bg text-[7px] font-black uppercase tracking-wider">
+                      <div className="absolute -top-2.5 right-2 px-1.5 py-0.5 bg-my-accent text-white dark:text-black text-[7px] font-black uppercase tracking-wider">
                         Save 33%
                       </div>
                       <div>
@@ -365,7 +365,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <button 
                     onClick={handleStartPayment}
                     disabled={loading}
-                    className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
+                    className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
                   >
                     {loading ? "Connecting..." : user ? "Activate Premium" : "Authenticate to Unlock"}
                   </button>
@@ -404,28 +404,28 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   {/* Step-by-Step Onboarding */}
                   <div className="space-y-3">
                     <div className="flex gap-2">
-                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">1</span>
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">1</span>
                       <p className="text-[10px] text-my-ink leading-normal">
                         <strong>Download extension zip</strong> by clicking the yellow button below and extract (unzip) it on your computer.
                       </p>
                     </div>
 
                     <div className="flex gap-2">
-                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">2</span>
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">2</span>
                       <p className="text-[10px] text-my-ink leading-normal">
                         Open Google Chrome, navigate to <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-accent font-mono text-[9px]">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
                       </p>
                     </div>
 
                     <div className="flex gap-2">
-                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">3</span>
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">3</span>
                       <p className="text-[10px] text-my-ink leading-normal">
                         Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-ink font-mono text-[9px]">extension</code> folder.
                       </p>
                     </div>
 
                     <div className="flex gap-2">
-                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-my-bg rounded-full text-[9px] font-bold shrink-0">4</span>
+                      <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">4</span>
                       <p className="text-[10px] text-my-ink leading-normal">
                         Click the puzzle piece icon (🧩) in Chrome, pin <strong>COGNAPSE Strategic Analyst</strong>, highlight any webpage text, right-click, and select <strong>"Analyze with COGNAPSE"</strong>!
                       </p>
@@ -436,7 +436,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <a 
                     href="/cognapse-extension.zip" 
                     download="cognapse-extension.zip"
-                    className="w-full py-3 bg-my-accent text-white dark:text-my-bg text-[10px] font-black uppercase tracking-widest hover:scale-[101%] transition-all shadow-md flex items-center justify-center gap-2 rounded-sm border border-transparent text-center block"
+                    className="w-full py-3 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest hover:scale-[101%] transition-all shadow-md flex items-center justify-center gap-2 rounded-sm border border-transparent text-center block"
                   >
                     <Download size={12} /> Download Extension Package (ZIP)
                   </a>

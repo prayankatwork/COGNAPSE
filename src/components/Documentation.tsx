@@ -68,7 +68,7 @@ const DOC_SECTIONS = [
         <p className="text-lg font-light leading-relaxed">Set up your analyst profile and begin your first research project.</p>
         <div className="space-y-4">
            <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-my-accent text-white dark:text-my-bg flex items-center justify-center shrink-0 text-xs font-bold">1</div>
+              <div className="w-8 h-8 rounded-full bg-my-accent text-white dark:text-black flex items-center justify-center shrink-0 text-xs font-bold">1</div>
               <p className="text-sm opacity-80 leading-relaxed pt-1">Register your username and password to enable the **Research Archive**.</p>
            </div>
            <div className="flex gap-4 items-start">
