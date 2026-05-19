@@ -1,3 +1,4 @@
+import admin from 'firebase-admin';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -42,23 +43,48 @@ export default async function handler(req, res) {
 
   try {
     // 1. Verify Premium Status
-    const firebaseConfig = {
-      apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
-      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-      storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
-    };
+    const hasAdminCreds = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
+    let data = null;
+    let exists = false;
 
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    const db = getFirestore(app);
-    const docRef = doc(db, 'user_premium', userId);
-    const docSnap = await getDoc(docRef);
+    if (hasAdminCreds) {
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          })
+        });
+      }
+      const dbAdmin = admin.firestore();
+      const docSnap = await dbAdmin.collection('user_premium').doc(userId).get();
+      exists = docSnap.exists;
+      if (exists) {
+        data = docSnap.data();
+      }
+    } else {
+      const firebaseConfig = {
+        apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
+        authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
+      };
+
+      const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+      const db = getFirestore(app);
+      const docRef = doc(db, 'user_premium', userId);
+      const docSnap = await getDoc(docRef);
+      exists = docSnap.exists();
+      if (exists) {
+        data = docSnap.data();
+      }
+    }
 
     let isPremium = false;
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    if (exists && data) {
       const now = new Date();
       const expiry = data.premiumExpiresAt ? new Date(data.premiumExpiresAt) : null;
       if (data.premium && (!expiry || expiry > now)) {
