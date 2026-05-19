@@ -40,7 +40,7 @@ export default function MainContent() {
     toggleSidebar, initialQuery, setInitialQuery, currentReport,
     setCurrentReport, xp, searchCount, rank, updateGamification,
     addToArchive, currentChat, addChatMessage, deepResearch, setDeepResearch, resetDeepResearch,
-    investigationStack, pushToStack, popFromStack, clearStack
+    investigationStack, pushToStack, popFromStack, clearStack, walkthroughCompleted
   } = useStore();
 
   const [query, setQuery] = useState("");
@@ -396,12 +396,17 @@ export default function MainContent() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={startDeepResearch}
-                disabled={deepResearch.status === 'running' || (!query.trim() && !currentReport)}
+                disabled={
+                  deepResearch.status === 'running' || 
+                  (!query.trim() && !currentReport) ||
+                  (!walkthroughCompleted && !currentReport)
+                }
                 className={clsx(
                   "flex items-center gap-2 px-4 py-1.5 border text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
                   query.trim() && !currentReport 
                     ? "bg-my-accent text-white dark:text-black border-my-accent animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
-                    : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white"
+                    : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white",
+                  (!walkthroughCompleted && !currentReport) && "opacity-25 cursor-not-allowed hover:bg-transparent"
                 )}
               >
                 <Cpu size={14} className={clsx(deepResearch.status === 'running' && "animate-spin")} />
@@ -711,13 +716,19 @@ export default function MainContent() {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={currentReport ? "Drill deeper into this synthesis..." : "What do you need to research?"}
-                  disabled={loading}
+                  placeholder={
+                    !walkthroughCompleted && currentReport
+                      ? "Onboarding Active: Standard chat follow-up is locked."
+                      : currentReport 
+                        ? "Drill deeper into this synthesis..." 
+                        : "What do you need to research?"
+                  }
+                  disabled={loading || (!walkthroughCompleted && !!currentReport)}
                   className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-md md:backdrop-blur-2xl border border-my-border rounded-none py-4 pl-4 pr-14 md:py-6 md:pl-8 md:pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-base md:text-lg font-light tracking-tight placeholder:text-my-muted/40"
                 />
                 <button
                   type="submit"
-                  disabled={!query.trim() || loading}
+                  disabled={!query.trim() || loading || (!walkthroughCompleted && !!currentReport)}
                   className="absolute right-3 top-3 bottom-3 aspect-square bg-my-ink text-white dark:bg-my-accent dark:text-black hover:bg-my-accent hover:text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-90"
                 >
                   <Send size={20} />

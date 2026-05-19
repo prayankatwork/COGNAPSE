@@ -15,7 +15,7 @@ export default function Sidebar() {
   const { 
     isSidebarOpen, toggleSidebar, setView, archive, currentReport, 
     setCurrentReport, xp, rank, searchCount, user, setAuthOpen, setStatusOpen,
-    resetDeepResearch, setWalkthroughCompleted
+    resetDeepResearch, setWalkthroughCompleted, walkthroughCompleted
   } = useStore();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,7 +98,14 @@ export default function Sidebar() {
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
                     <ClearAllButton />
-                    <button onClick={toggleSidebar} className="p-1 text-[#CBD5E1] hover:text-black dark:hover:text-white transition-colors shrink-0">
+                    <button 
+                      onClick={() => walkthroughCompleted && toggleSidebar()} 
+                      disabled={!walkthroughCompleted}
+                      className={clsx(
+                        "p-1 transition-colors shrink-0",
+                        walkthroughCompleted ? "text-[#CBD5E1] hover:text-black dark:hover:text-white cursor-pointer" : "text-[#CBD5E1]/30 cursor-not-allowed"
+                      )}
+                    >
                        <ChevronLeft size={18} />
                     </button>
                  </div>
@@ -106,11 +113,16 @@ export default function Sidebar() {
 
              <button 
                onClick={() => { 
+                 if (!walkthroughCompleted) return;
                  setView('research'); 
                  setCurrentReport(null); 
                  resetDeepResearch();
                }}
-               className="w-full py-4 bg-black text-white font-bold uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-orange-500 transition-all shadow-xl group mb-8"
+               disabled={!walkthroughCompleted}
+               className={clsx(
+                 "w-full py-4 bg-black text-white font-bold uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-orange-500 transition-all shadow-xl group mb-8",
+                 !walkthroughCompleted && "opacity-30 cursor-not-allowed"
+               )}
              >
                <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Investigation
              </button>
@@ -266,7 +278,7 @@ export default function Sidebar() {
 }
 
 function ClearAllButton() {
-  const { clearArchive, archive } = useStore();
+  const { clearArchive, archive, walkthroughCompleted } = useStore();
   const [confirming, setConfirming] = useState(false);
 
   if (archive.length === 0) return null;
@@ -275,6 +287,7 @@ function ClearAllButton() {
     <button 
       onClick={(e) => {
         e.stopPropagation();
+        if (!walkthroughCompleted) return;
         if (confirming) {
           clearArchive();
           setConfirming(false);
@@ -283,8 +296,10 @@ function ClearAllButton() {
           setTimeout(() => setConfirming(false), 3000);
         }
       }}
+      disabled={!walkthroughCompleted}
       className={clsx(
         "px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] transition-all border",
+        !walkthroughCompleted && "opacity-30 cursor-not-allowed",
         confirming 
           ? "bg-red-500 text-white border-red-500 animate-pulse" 
           : "text-my-muted border-my-border hover:border-red-500/50 hover:text-red-500"
@@ -296,7 +311,7 @@ function ClearAllButton() {
 }
 
 function ArchiveItem({ item }: { item: any }) {
-  const { setView, setCurrentReport, currentReport, setDeepResearch, resetDeepResearch, removeFromArchive } = useStore();
+  const { setView, setCurrentReport, currentReport, setDeepResearch, resetDeepResearch, removeFromArchive, walkthroughCompleted } = useStore();
   const isActive = currentReport?.id === item.id || currentReport?.id === item.report?.id;
 
   const safeText = (val: any) => {
@@ -321,6 +336,7 @@ function ArchiveItem({ item }: { item: any }) {
   return (
     <div
       onClick={() => { 
+        if (!walkthroughCompleted) return;
         setView('research'); 
         setCurrentReport(item.report); 
         if (item.report.deep_research) {
@@ -338,7 +354,10 @@ function ArchiveItem({ item }: { item: any }) {
       }}
       role="button"
       tabIndex={0}
-      className="w-full text-left group transition-all cursor-pointer"
+      className={clsx(
+        "w-full text-left group transition-all",
+        walkthroughCompleted ? "cursor-pointer" : "cursor-not-allowed opacity-80"
+      )}
     >
       <div className="flex items-start justify-between gap-3 mb-1.5">
           <h3 className={clsx(
@@ -352,9 +371,14 @@ function ArchiveItem({ item }: { item: any }) {
             <button 
               onClick={(e) => {
                 e.stopPropagation();
+                if (!walkthroughCompleted) return;
                 removeFromArchive(item.id);
               }}
-              className="opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-1 hover:text-red-500"
+              disabled={!walkthroughCompleted}
+              className={clsx(
+                "opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-1 hover:text-red-500",
+                !walkthroughCompleted && "hidden"
+              )}
             >
               <Plus size={12} className="rotate-45" /> 
             </button>

@@ -7,7 +7,7 @@ import { generatePremiumPDF } from '../utils/pdfGenerator';
 import clsx from 'clsx';
 
 export default function DeepResearchView() {
-  const { deepResearch, resetDeepResearch, currentReport, user } = useStore();
+  const { deepResearch, resetDeepResearch, currentReport, user, walkthroughCompleted } = useStore();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     abstract: true,
     introduction: true
@@ -161,10 +161,16 @@ export default function DeepResearchView() {
 
       <div className="mt-12 flex justify-center">
         <button 
-          onClick={resetDeepResearch}
-          className="px-6 py-3 border border-my-border text-[11px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink hover:border-my-accent transition-all"
+          onClick={() => walkthroughCompleted && resetDeepResearch()}
+          disabled={!walkthroughCompleted}
+          className={clsx(
+            "px-6 py-3 border text-[11px] font-bold uppercase tracking-widest transition-all",
+            walkthroughCompleted 
+              ? "border-my-border text-my-muted hover:text-my-ink hover:border-my-accent cursor-pointer" 
+              : "border-my-border/30 text-my-muted/30 cursor-not-allowed"
+          )}
         >
-          Back to Main Dashboard
+          {walkthroughCompleted ? "Back to Main Dashboard" : "Lockout Active (Training)"}
         </button>
       </div>
 

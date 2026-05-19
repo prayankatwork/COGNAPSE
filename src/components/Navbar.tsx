@@ -14,7 +14,8 @@ export default function Navbar() {
   const { 
     currentView, setView, user, logout, setAuthOpen,
     isNotebookOpen, setNotebookOpen,
-    theme, toggleTheme, setStatusOpen
+    theme, toggleTheme, setStatusOpen,
+    walkthroughCompleted
   } = useStore();
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -38,7 +39,10 @@ export default function Navbar() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsCommandOpen(prev => !prev);
+        // Block command palette during training setup
+        if (walkthroughCompleted) {
+          setIsCommandOpen(prev => !prev);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -46,7 +50,7 @@ export default function Navbar() {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [walkthroughCompleted]);
 
   if (currentView === 'onboarding') return null;
 
@@ -60,24 +64,32 @@ export default function Navbar() {
         <div 
           id="walkthrough-logo-anchor"
           className="flex items-center w-1/3 relative"
-          onMouseEnter={() => setIsHoveringLogo(true)}
-          onMouseLeave={() => setIsHoveringLogo(false)}
+          onMouseEnter={() => walkthroughCompleted && setIsHoveringLogo(true)}
+          onMouseLeave={() => walkthroughCompleted && setIsHoveringLogo(false)}
         >
           <button 
-            onClick={() => setView('landing')}
-            className="flex items-center gap-3 group active:scale-95 transition-transform"
+            onClick={() => walkthroughCompleted && setView('landing')}
+            disabled={!walkthroughCompleted}
+            className={clsx(
+              "flex items-center gap-3 group transition-transform",
+              walkthroughCompleted ? "active:scale-95 cursor-pointer" : "opacity-75 cursor-not-allowed"
+            )}
           >
             <BrandLogo size={32} />
             <div className="flex flex-col items-start leading-none">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-black uppercase tracking-[0.4em] text-my-ink group-hover:text-my-accent transition-colors">Cognapse</span>
-                <span className={clsx("text-[6px] font-bold uppercase tracking-widest px-1 py-0.5 rounded transition-all duration-300", isHoveringLogo ? "opacity-0" : "text-my-accent/70 border border-my-accent/30 animate-pulse")}>Hover</span>
+                {walkthroughCompleted ? (
+                  <span className={clsx("text-[6px] font-bold uppercase tracking-widest px-1 py-0.5 rounded transition-all duration-300", isHoveringLogo ? "opacity-0" : "text-my-accent/70 border border-my-accent/30 animate-pulse")}>Hover</span>
+                ) : (
+                  <span className="text-[6px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded text-orange-500 border border-orange-500/20 bg-orange-500/5">Training</span>
+                )}
               </div>
             </div>
           </button>
 
           <AnimatePresence>
-            {isHoveringLogo && (
+            {isHoveringLogo && walkthroughCompleted && (
               <motion.div
                 initial={{ opacity: 0, y: -10, scaleY: 0.95 }}
                 animate={{ opacity: 1, y: 0, scaleY: 1 }}
@@ -117,12 +129,20 @@ export default function Navbar() {
         <div className="hidden md:flex items-center justify-center w-1/3">
           <button 
             id="walkthrough-command-anchor"
-            onClick={() => setIsCommandOpen(true)}
-            className="group flex items-center justify-between w-full max-w-md px-4 py-1.5 bg-my-callout/20 hover:bg-my-callout/40 border border-my-border/50 hover:border-my-accent/30 rounded-full transition-all"
+            onClick={() => walkthroughCompleted && setIsCommandOpen(true)}
+            disabled={!walkthroughCompleted}
+            className={clsx(
+              "group flex items-center justify-between w-full max-w-md px-4 py-1.5 rounded-full transition-all border border-my-border/50",
+              walkthroughCompleted 
+                ? "bg-my-callout/20 hover:bg-my-callout/40 hover:border-my-accent/30 cursor-pointer" 
+                : "bg-my-callout/5 opacity-40 cursor-not-allowed"
+            )}
           >
             <div className="flex items-center gap-2 text-my-muted group-hover:text-my-ink transition-colors">
               <Search size={14} />
-              <span className="text-[11px] font-semibold opacity-70">Search or jump to module...</span>
+              <span className="text-[11px] font-semibold opacity-70">
+                {walkthroughCompleted ? "Search or jump to module..." : "Lockout Active (Training)"}
+              </span>
             </div>
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black text-my-muted opacity-50 bg-my-bg border border-my-border">
               <Command size={10} /> K
@@ -134,8 +154,14 @@ export default function Navbar() {
         <div className="flex items-center justify-end w-1/3 gap-4">
           {!user?.premium && (
             <button
-              onClick={() => setIsPremiumModalOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-[2px] bg-my-accent/5 border border-my-accent/20 hover:border-my-accent hover:bg-my-accent/10 transition-colors group cursor-pointer"
+              onClick={() => walkthroughCompleted && setIsPremiumModalOpen(true)}
+              disabled={!walkthroughCompleted}
+              className={clsx(
+                "hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-[2px] border transition-colors group",
+                walkthroughCompleted 
+                  ? "bg-my-accent/5 border-my-accent/20 hover:border-my-accent hover:bg-my-accent/10 cursor-pointer" 
+                  : "bg-my-border opacity-30 cursor-not-allowed"
+              )}
             >
                <Zap size={10} className="text-my-accent group-hover:scale-110 transition-transform" />
                <span className="text-[8px] font-black text-my-ink uppercase tracking-widest">COGNAPSE Premium</span>
@@ -145,8 +171,12 @@ export default function Navbar() {
             <div className="flex items-center gap-4">
                <button 
                  id="walkthrough-profile-anchor"
-                 onClick={() => setStatusOpen(true)}
-                 className="hidden lg:flex flex-col items-end group cursor-pointer"
+                 onClick={() => walkthroughCompleted && setStatusOpen(true)}
+                 disabled={!walkthroughCompleted}
+                 className={clsx(
+                   "hidden lg:flex flex-col items-end group",
+                   walkthroughCompleted ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+                 )}
                 >
                   <span className="text-[10px] font-black text-my-ink uppercase tracking-widest group-hover:text-my-accent transition-colors">{user.username}</span>
                   <span className="text-[7px] text-my-accent font-bold uppercase tracking-[0.3em] opacity-80 flex items-center gap-1 group-hover:opacity-100 transition-opacity">
@@ -154,8 +184,12 @@ export default function Navbar() {
                   </span>
                </button>
                <button 
-                 onClick={logout}
-                 className="w-8 h-8 flex items-center justify-center rounded-full border border-my-border text-my-muted hover:text-red-500 hover:border-red-500/50 transition-all bg-my-bg"
+                 onClick={() => walkthroughCompleted && logout()}
+                 disabled={!walkthroughCompleted}
+                 className={clsx(
+                   "w-8 h-8 flex items-center justify-center rounded-full border border-my-border text-my-muted transition-all bg-my-bg",
+                   walkthroughCompleted ? "hover:text-red-500 hover:border-red-500/50 cursor-pointer" : "opacity-30 cursor-not-allowed"
+                 )}
                  title="Terminate Session"
                >
                   <X size={14} />
@@ -163,8 +197,14 @@ export default function Navbar() {
             </div>
           ) : (
             <button 
-              onClick={() => setAuthOpen(true)}
-              className="px-3 py-2 md:px-4 md:py-2 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 rounded-[2px]"
+              onClick={() => walkthroughCompleted && setAuthOpen(true)}
+              disabled={!walkthroughCompleted}
+              className={clsx(
+                "px-3 py-2 md:px-4 md:py-2 text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 rounded-[2px]",
+                walkthroughCompleted 
+                  ? "bg-my-ink text-my-bg dark:bg-my-accent dark:text-black hover:opacity-90 cursor-pointer" 
+                  : "bg-my-border text-my-muted opacity-40 cursor-not-allowed"
+              )}
             >
                <User size={12} /> <span className="hidden sm:inline">Sync Identity</span>
             </button>
@@ -172,18 +212,25 @@ export default function Navbar() {
 
           <div className="flex items-center bg-my-bg rounded-full border border-my-border p-1 gap-1 shadow-sm">
             <button 
-              onClick={toggleTheme}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-my-muted hover:text-my-ink transition-colors"
+              onClick={() => walkthroughCompleted && toggleTheme()}
+              disabled={!walkthroughCompleted}
+              className={clsx(
+                "w-8 h-8 rounded-full flex items-center justify-center text-my-muted transition-colors",
+                walkthroughCompleted ? "hover:text-my-ink cursor-pointer" : "opacity-30 cursor-not-allowed"
+              )}
               title="Toggle Neural Mode"
             >
                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
             <button 
-              onClick={() => setNotebookOpen(!isNotebookOpen)}
+              onClick={() => walkthroughCompleted && setNotebookOpen(!isNotebookOpen)}
+              disabled={!walkthroughCompleted}
               className={clsx(
                 "w-8 h-8 rounded-full flex items-center justify-center transition-all",
-                isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)]" : "text-my-muted hover:text-my-ink"
+                walkthroughCompleted 
+                  ? (isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)] cursor-pointer" : "text-my-muted hover:text-my-ink cursor-pointer")
+                  : "text-my-muted opacity-30 cursor-not-allowed"
               )}
               title="Tactical Notebook"
             >
