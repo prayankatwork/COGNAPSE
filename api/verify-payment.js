@@ -77,7 +77,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Razorpay Verify Error:', error);
-    res.status(500).json({ error: 'Failed to verify payment or activate premium' });
+    res.status(500).json({ 
+      error: 'Failed to verify payment or activate premium', 
+      details: error.message || String(error),
+      stack: error.stack 
+    });
   }
 };
 
