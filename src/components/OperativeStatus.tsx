@@ -221,13 +221,35 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
 
   // Derive Radar Data from Archive
   const radarData = useMemo(() => {
-    const counts: Record<string, number> = { TECH: 0, FINANCE: 0, GEOPOLITICS: 0, SCIENCE: 0, HEALTH: 0 };
+    const counts: Record<string, number> = {};
     archive.forEach(entry => {
-      if (counts[entry.topic_cluster]) counts[entry.topic_cluster]++;
+      const cat = entry.topic_cluster ? entry.topic_cluster.toUpperCase() : "GENERAL";
+      counts[cat] = (counts[cat] || 0) + 1;
     });
-    const max = Math.max(...Object.values(counts), 1);
-    return Object.entries(counts).map(([category, count]) => ({
-      category,
+
+    let entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    // Ensure we have exactly 5 points for a proper pentagon radar
+    const defaultCats = ["TECH", "FINANCE", "GEOPOLITICS", "SCIENCE", "HEALTH"];
+    if (entries.length === 0) {
+      entries = defaultCats.map(c => [c, 0]);
+    } else if (entries.length < 5) {
+      const fillers = defaultCats.filter(c => !counts[c]);
+      while (entries.length < 5 && fillers.length > 0) {
+        entries.push([fillers.shift()!, 0]);
+      }
+      // If we still need more, just add generics
+      let i = 1;
+      while (entries.length < 5) {
+        entries.push([`TOPIC ${i++}`, 0]);
+      }
+    }
+
+    entries = entries.slice(0, 5);
+    const max = Math.max(...entries.map(e => e[1]), 1);
+
+    return entries.map(([category, count]) => ({
+      category: category.length > 12 ? category.substring(0, 10) + ".." : category,
       value: Math.max(20, (count / max) * 100) // Ensure a minimum shape
     }));
   }, [archive]);
@@ -397,7 +419,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                   <div className="flex-1 p-6 bg-my-callout/30 border border-my-border flex flex-col items-center">
                     <h4 className="text-[9px] font-black text-my-accent uppercase tracking-[0.3em] mb-8 text-center">Research Focus (Topic Bias)</h4>
                     <NeuralRadar data={radarData} />
-                    <p className="mt-6 text-[8px] text-my-muted text-center italic">Specialization: {radarData.sort((a,b)=>b.value-a.value)[0].category} Specialist</p>
+                    <p className="mt-6 text-[8px] text-my-muted text-center italic">Specialization: {[...radarData].sort((a,b)=>b.value-a.value)[0].category} Specialist</p>
                   </div>
                   
                   <div className="flex-[1.5] p-6 bg-my-callout/30 border border-my-border flex flex-col justify-between">
