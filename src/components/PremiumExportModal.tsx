@@ -4,7 +4,6 @@ import { useStore } from '../store';
 import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award, Chrome, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { dbService } from '../services/dbService';
-import IntelligenceLoader from './IntelligenceLoader';
 
 interface PremiumExportModalProps {
   isOpen: boolean;
@@ -243,12 +242,6 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
           className="relative w-full max-w-lg bg-white dark:bg-[#0A0F1A] border border-my-border shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[90vh]"
         >
           <div className="h-1 w-full bg-gradient-to-r from-my-accent via-amber-500 to-my-accent" />
-
-          {loading && (
-            <div className="absolute inset-0 bg-white dark:bg-[#0A0F1A] z-50 flex flex-col items-center justify-center animate-in fade-in duration-300">
-              <IntelligenceLoader scenario="premium-validation" />
-            </div>
-          )}
 
           <button 
             onClick={onClose}

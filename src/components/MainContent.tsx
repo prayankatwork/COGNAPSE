@@ -4,7 +4,7 @@ import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Databa
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
-import IntelligenceLoader, { LoaderScenario } from './IntelligenceLoader';
+import LoadingGame from './LoadingGame';
 import SpotifyWidget from './SpotifyWidget';
 import MusicVisualizer from './MusicVisualizer';
 import clsx from 'clsx';
@@ -657,39 +657,48 @@ export default function MainContent() {
               </>
             )}
 
-            {loading && loadingPhase !== "Analyzing context..." && (() => {
-              let currentScenario: LoaderScenario = 'general-load';
-              const phase = loadingPhase.toLowerCase();
-              if (deepResearch.status === 'processing') {
-                currentScenario = 'deep-research';
-              } else if (phase.includes('premium') || phase.includes('subscription')) {
-                currentScenario = 'premium-validation';
-              } else if (phase.includes('pdf') || phase.includes('report') || phase.includes('export') || phase.includes('dossier')) {
-                currentScenario = 'pdf-export';
-              } else if (phase.includes('relationship') || phase.includes('graph') || phase.includes('concept') || phase.includes('structure')) {
-                currentScenario = 'graph-system';
-              } else if (phase.includes('analysis') || phase.includes('research query')) {
-                currentScenario = 'deep-research';
-              }
+            {loading && loadingPhase !== "Analyzing context..." && (
+              <div className="flex flex-col items-center justify-center py-16 mt-24 animate-in fade-in zoom-in duration-500">
+                <div className="relative flex items-center justify-center w-24 h-24 mb-8">
+                  {/* Outer rotating ring */}
+                  <div className="absolute inset-0 border-[2px] border-my-accent/20 border-t-my-accent rounded-full animate-[spin_2s_linear_infinite]"></div>
+                  {/* Inner rotating element */}
+                  <Hexagon className="w-10 h-10 text-my-accent animate-pulse" strokeWidth={1} />
+                  <div className="absolute inset-2 border-[1px] border-my-border border-b-my-ink rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                </div>
 
-              return (
-                <div className="flex flex-col items-center justify-center py-8 mt-8 animate-in fade-in zoom-in duration-500 w-full">
-                  <IntelligenceLoader scenario={currentScenario} label={loadingPhase} className="max-w-2xl mx-auto" />
-
-                  <div className="mt-8 flex flex-col items-center max-w-sm text-center">
-                    <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
-                      Our intelligence swarm is analyzing high-fidelity data. We recommend a short diversion in the <span className="text-my-accent font-bold">Playground</span> while the engine works.
-                    </p>
-                    <button
-                      onClick={() => useStore.getState().setView('games')}
-                      className="px-8 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
-                    >
-                      Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                <div className="w-64">
+                  <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-my-ink mb-4 text-center animate-pulse">
+                    {loadingPhase}
+                  </p>
+                  <div className="h-1 w-full bg-my-border rounded-full overflow-hidden relative">
+                    <div className="absolute inset-y-0 left-0 bg-my-accent transition-all duration-500 ease-out" style={{
+                      width: loadingPhase === "Analyzing research query..." ? "20%" :
+                        loadingPhase === "Reviewing available data..." ? "40%" :
+                          loadingPhase === "Synthesizing primary sources..." ? "60%" :
+                            loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
+                    }}></div>
                   </div>
                 </div>
-              );
-            })()}
+
+                <div className="mt-12 flex flex-col items-center max-w-sm text-center">
+                  <div className="flex items-center gap-2 mb-3 text-my-accent">
+                    <Zap size={14} className="animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Processing Framework Active</span>
+                  </div>
+                  <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
+                    High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources. We recommend a short diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
+                  </p>
+                  <button
+                    onClick={() => useStore.getState().setView('games')}
+                    className="px-8 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
+                  >
+                    Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+              </div>
+            )}
 
             <div ref={bottomRef} />
           </div>

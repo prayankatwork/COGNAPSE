@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { 
   User, X, Moon, Sun, Search,
-  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import CommandPalette from './CommandPalette';
+import PremiumExportModal from './PremiumExportModal';
 
 export default function Navbar() {
   const { 
@@ -17,6 +18,7 @@ export default function Navbar() {
   } = useStore();
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const handleCommandClose = useCallback(() => setIsCommandOpen(false), []);
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -130,6 +132,15 @@ export default function Navbar() {
 
         {/* Right: Utility Cluster */}
         <div className="flex items-center justify-end w-1/3 gap-4">
+          {!user?.premium && (
+            <button
+              onClick={() => setIsPremiumModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-[2px] bg-my-accent/5 border border-my-accent/20 hover:border-my-accent hover:bg-my-accent/10 transition-colors group cursor-pointer"
+            >
+               <Zap size={10} className="text-my-accent group-hover:scale-110 transition-transform" />
+               <span className="text-[8px] font-black text-my-ink uppercase tracking-widest">COGNAPSE Premium</span>
+            </button>
+          )}
           {user ? (
             <div className="flex items-center gap-4">
                <button 
@@ -183,6 +194,13 @@ export default function Navbar() {
       </nav>
 
       <CommandPalette isOpen={isCommandOpen} onClose={handleCommandClose} />
+      <PremiumExportModal 
+        isOpen={isPremiumModalOpen} 
+        onClose={() => setIsPremiumModalOpen(false)} 
+        researchId="navbar_upgrade" 
+        query="Premium Upgrade" 
+        onUnlockSuccess={() => setIsPremiumModalOpen(false)} 
+      />
     </>
   );
 }
