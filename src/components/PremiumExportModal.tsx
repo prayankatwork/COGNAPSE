@@ -263,14 +263,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 </div>
 
                 {/* Premium Benefits List */}
-                <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-4">
+                <div className="border border-my-border bg-slate-50 dark:bg-black/30 p-4 rounded-md space-y-4">
                   <div className="flex gap-3">
                     <div className="p-1.5 bg-my-accent/10 rounded text-my-accent h-fit shrink-0">
                       <FileText size={16} />
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Unlimited PDF Exports</h4>
-                      <p className="text-[10px] text-my-muted leading-relaxed">Download unlimited beautifully formatted, academically rigorous reports ready for archiving or sharing.</p>
+                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Download unlimited beautifully formatted, academically rigorous reports ready for archiving or sharing.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -279,7 +279,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Chrome Research Extension</h4>
-                      <p className="text-[10px] text-my-muted leading-relaxed">Bring the COGNAPSE research engine directly to any web page. Instantly analyze and cross-reference information.</p>
+                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Bring the COGNAPSE research engine directly to any web page. Instantly analyze and cross-reference information.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -288,7 +288,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Priority Computing & Model Routing</h4>
-                      <p className="text-[10px] text-my-muted leading-relaxed">Experience faster research speeds with prioritized server queues and premium AI processing.</p>
+                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Experience faster research speeds with prioritized server queues and premium AI processing.</p>
                     </div>
                   </div>
                 </div>
@@ -328,7 +328,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                           <span className="text-[10px] font-bold text-my-ink uppercase tracking-wider">Monthly Pass</span>
                           {selectedPlan === 'monthly' && <Check size={12} className="text-my-accent" />}
                         </div>
-                        <span className="text-xs text-my-muted block mt-1">Billed monthly</span>
+                        <span className="text-xs text-my-ink/70 block mt-1">Billed monthly</span>
                       </div>
                       <span className="text-base font-serif font-bold text-my-ink italic mt-4 block">INR 99.00</span>
                     </div>
@@ -349,7 +349,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                           <span className="text-[10px] font-bold text-my-ink uppercase tracking-wider">Annual Pass</span>
                           {selectedPlan === 'yearly' && <Check size={12} className="text-my-accent" />}
                         </div>
-                        <span className="text-xs text-my-muted block mt-1">Billed annually</span>
+                        <span className="text-xs text-my-ink/70 block mt-1">Billed annually</span>
                       </div>
                       <span className="text-base font-serif font-bold text-my-ink italic mt-4 block">INR 799.00</span>
                     </div>
@@ -359,7 +359,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 {/* Price Display and Trigger Button */}
                 <div className="bg-my-accent/5 border border-my-accent/20 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
                   <div className="text-center md:text-left">
-                    <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest block">
+                    <span className="text-[10px] font-bold text-my-ink/70 uppercase tracking-widest block">
                       {user ? planDetails[selectedPlan].billing : 'Starting At'}
                     </span>
                     <span className="text-[16px] font-serif font-bold text-my-ink italic">
@@ -390,7 +390,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 </div>
 
                 {/* Chrome Extension Layman Installation Card */}
-                <div className="border border-my-border bg-my-callout/40 p-4 rounded-md space-y-4 text-left">
+                <div className="border border-my-border bg-slate-50 dark:bg-black/30 p-4 rounded-md space-y-4 text-left">
                   <div className="flex items-center justify-between border-b border-my-border pb-2">
                     <div className="flex items-center gap-2 text-my-accent">
                       <Chrome size={16} />
@@ -401,7 +401,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     </span>
                   </div>
                   
-                  <p className="text-[10px] text-my-muted leading-relaxed">
+                  <p className="text-[10px] text-my-ink/80 leading-relaxed">
                     Bring the COGNAPSE AI Research Swarm directly to any webpage. Follow these simple steps to install the extension for free:
                   </p>
 
@@ -417,14 +417,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     <div className="flex gap-2">
                       <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">2</span>
                       <p className="text-[10px] text-my-ink leading-normal">
-                        Open Google Chrome, navigate to <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-accent font-mono text-[9px]">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
+                        Open Google Chrome, navigate to <code className="bg-slate-100 dark:bg-black border border-slate-200 dark:border-my-border px-1.5 py-0.5 text-my-accent font-mono text-[9px] rounded-sm font-bold">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
                       </p>
                     </div>
 
                     <div className="flex gap-2">
                       <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">3</span>
                       <p className="text-[10px] text-my-ink leading-normal">
-                        Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-my-bg border border-my-border px-1 py-0.5 text-my-ink font-mono text-[9px]">extension</code> folder.
+                        Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-slate-100 dark:bg-black border border-slate-200 dark:border-my-border px-1.5 py-0.5 text-my-ink font-mono text-[9px] rounded-sm font-bold">extension</code> folder.
                       </p>
                     </div>
 
