@@ -1,27 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import Groq from "groq-sdk";
-
-// Initialize Gemini safely
-const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const groqKey = import.meta.env.VITE_GROQ_API_KEY;
-
-const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
-
-// Initialize Groq safely
-const groq = groqKey ? new Groq({
-  apiKey: groqKey,
-  dangerouslyAllowBrowser: true 
-}) : null;
-
 /**
  * MASTER HEALTH REGISTRY
  */
 const healthRegistry: Record<string, { status: 'stable' | 'unstable', lastFailure: number }> = {
-  "gemini-1.5-flash": { status: 'stable', lastFailure: 0 },
-  "gemini-1.5-pro": { status: 'stable', lastFailure: 0 },
-  "llama-3.3-70b-versatile": { status: 'stable', lastFailure: 0 },
-  "llama-3.1-8b-instant": { status: 'stable', lastFailure: 0 },
-  "ollama": { status: 'stable', lastFailure: 0 }
+  "ollama": { status: 'stable', lastFailure: 0 },
+  "cloud-swarm": { status: 'stable', lastFailure: 0 }
 };
 
 const COOLDOWN_PERIOD = 1000 * 60 * 2;
@@ -32,8 +14,8 @@ const markUnstable = (node: string) => {
 
 const isStable = (node: string) => {
   const entry = healthRegistry[node];
-  if (entry.status === 'stable') return true;
-  if (Date.now() - entry.lastFailure > COOLDOWN_PERIOD) {
+  if (entry && entry.status === 'stable') return true;
+  if (entry && Date.now() - entry.lastFailure > COOLDOWN_PERIOD) {
     entry.status = 'stable';
     return true;
   }
@@ -70,6 +52,7 @@ const getLocalOllamaModel = async () => {
 
 /**
  * PRODUCTION-READY INTELLIGENCE SWARM
+ * Relies on Vercel Serverless Endpoint (/api/research) to hide API Keys
  */
 export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "gemini-1.5-flash") => {
   const estTokens = Math.ceil(prompt.length / 4);
@@ -85,68 +68,50 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
   const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const canUseLocal = !isMobile && isLocalHost;
 
-  const swarmQueue: string[] = [];
-  if (estTokens > 15000) {
-    swarmQueue.push("gemini-1.5-flash", "gemini-1.5-pro");
-    if (canUseLocal) swarmQueue.push("ollama");
-    swarmQueue.push("llama-3.1-8b-instant");
-  } else {
-    swarmQueue.push("gemini-1.5-flash", "llama-3.3-70b-versatile", "gemini-1.5-pro");
-    if (canUseLocal) swarmQueue.push("ollama");
-    swarmQueue.push("llama-3.1-8b-instant");
-  }
-
-  for (const node of swarmQueue) {
-    if (!isStable(node)) continue;
-
+  // 1. Try Local Acceleration First (if available and stable)
+  if (canUseLocal && isStable("ollama")) {
     try {
-      // GEMINI Node
-      if (node.startsWith("gemini") && genAI) {
-        const genModel = genAI.getGenerativeModel({ model: node });
-        const result = await genModel.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: isJson ? { responseMimeType: "application/json" } : {}
-        });
-        const text = (await result.response).text();
-        if (text) return isJson ? JSON.stringify(extractJson(text)) : text;
+      const localModel = await getLocalOllamaModel();
+      const ollamaRes = await fetch("http://127.0.0.1:11434/api/generate", {
+        method: "POST",
+        body: JSON.stringify({ model: localModel, prompt, stream: false, format: isJson ? "json" : undefined }),
+        signal: AbortSignal.timeout(90000)
+      });
+      if (ollamaRes.ok) {
+        const data = await ollamaRes.json();
+        return isJson ? JSON.stringify(extractJson(data.response)) : data.response;
       }
-
-      // GROQ Node
-      if (node.startsWith("llama") && groq) {
-        let finalPrompt = prompt;
-        if (node.includes("8b") && estTokens > 5500) {
-           finalPrompt = prompt.substring(0, 20000) + "\n[System: Content Pruned for Stability]";
-        }
-        const response = await groq.chat.completions.create({
-          messages: [{ role: "user", content: finalPrompt }],
-          model: node,
-          temperature: 0.1, 
-        });
-        const content = response.choices[0]?.message?.content || "";
-        return isJson ? JSON.stringify(extractJson(content)) : content;
-      }
-
-      // OLLAMA Node
-      if (node === "ollama") {
-        const localModel = await getLocalOllamaModel();
-        const ollamaRes = await fetch("http://127.0.0.1:11434/api/generate", {
-          method: "POST",
-          body: JSON.stringify({ model: localModel, prompt, stream: false, format: isJson ? "json" : undefined }),
-          signal: AbortSignal.timeout(90000)
-        });
-        if (ollamaRes.ok) {
-          const data = await ollamaRes.json();
-          return isJson ? JSON.stringify(extractJson(data.response)) : data.response;
-        }
-      }
-
     } catch (e: any) {
-      markUnstable(node);
-      continue; 
+      console.warn("Local Ollama node failed, falling back to secure Cloud Swarm.");
+      markUnstable("ollama");
     }
   }
 
-  throw new Error("INTELLIGENCE OVERLOAD: All public cloud nodes are currently saturated. For unlimited research, we recommend enabling 'Local Acceleration' via Ollama on your machine.");
+  // 2. Call Vercel Serverless Backend (Secure API Keys)
+  if (isStable("cloud-swarm")) {
+    try {
+      const baseUrl = isLocalHost ? 'http://localhost:5173' : '';
+      const response = await fetch(`${baseUrl}/api/research`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, isJson, estTokens })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Serverless backend failed");
+      }
+
+      return data.result;
+
+    } catch (e: any) {
+      console.warn("Secure Cloud Swarm failed:", e);
+      markUnstable("cloud-swarm");
+    }
+  }
+
+  throw new Error("INTELLIGENCE OVERLOAD: All secure cloud nodes are currently saturated. For unlimited research, we recommend enabling 'Local Acceleration' via Ollama on your machine.");
 };
 
 export const getSwarmHealth = () => healthRegistry;

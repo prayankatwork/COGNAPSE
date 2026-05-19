@@ -369,22 +369,34 @@ export const dbService = {
       const filtered = localExports.filter((e: any) => e.id !== exportData.id);
       filtered.unshift(exportData);
       localStorage.setItem(`cognapse_exports_${exportData.userId}`, JSON.stringify(filtered));
-    } catch (e) {
-      console.warn("Failed to write export to local storage:", e);
+    } catch (e) {}
+
+    try {
+      await setDoc(doc(db, "pdf_exports", exportData.id), exportData);
+    } catch (error) {
+      console.warn("Firebase save export failed, using local fallback:", error);
     }
   },
 
   async getUserExports(userId: string) {
-    const local = localStorage.getItem(`cognapse_exports_${userId}`);
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        return parsed.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      } catch (e) {
-        return [];
+    try {
+      const q = query(
+        collection(db, "pdf_exports"),
+        where("userId", "==", userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const exports = querySnapshot.docs.map(doc => doc.data() as any);
+      const sorted = exports.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      localStorage.setItem(`cognapse_exports_${userId}`, JSON.stringify(sorted));
+      return sorted;
+    } catch (error) {
+      console.warn("Firebase load exports failed, loading from local storage:", error);
+      const local = localStorage.getItem(`cognapse_exports_${userId}`);
+      if (local) {
+        try { return JSON.parse(local); } catch (e) { return []; }
       }
+      return [];
     }
-    return [];
   },
 
   // Premium Access Models

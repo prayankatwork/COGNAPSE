@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { 
   User, X, Moon, Sun, Search,
-  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -179,8 +179,21 @@ export default function Navbar() {
                  )}
                 >
                   <span className="text-[10px] font-black text-my-ink uppercase tracking-widest group-hover:text-my-accent transition-colors">{user.username}</span>
-                  <span className="text-[7px] text-my-accent font-bold uppercase tracking-[0.3em] opacity-80 flex items-center gap-1 group-hover:opacity-100 transition-opacity">
-                    <ShieldCheck size={8} /> Authorized
+                  <span className={clsx(
+                    "text-[7px] font-bold uppercase tracking-[0.3em] flex items-center gap-1 transition-opacity",
+                    user.premium 
+                      ? "text-amber-500 dark:text-my-accent opacity-100 animate-pulse font-black" 
+                      : "text-my-accent opacity-80 group-hover:opacity-100"
+                  )}>
+                    {user.premium ? (
+                      <>
+                        <Crown size={8} className="text-amber-500 dark:text-my-accent animate-bounce-slow" /> Premium
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck size={8} /> Authorized
+                      </>
+                    )}
                   </span>
                </button>
                <button 
