@@ -58,6 +58,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
   const handleStartPayment = async () => {
     if (!user) {
+      onClose();
       setAuthOpen(true);
       return;
     }
@@ -300,7 +301,10 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                       <span className="text-[10px] font-bold uppercase tracking-wider">Authentication Required</span>
                     </div>
                     <button 
-                      onClick={() => setAuthOpen(true)}
+                      onClick={() => {
+                        onClose();
+                        setAuthOpen(true);
+                      }}
                       className="px-3 py-1 bg-red-500 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-red-600 transition-colors"
                     >
                       Login / Register
