@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>COGNAPSE Eye Logo Generator</title>
+  <style>
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #0A0A0A;
+      border: 1px solid #222222;
+      padding: 30px;
+      border-radius: 4px;
+    }
+    .canvas-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 30px;
+      margin: 40px 0;
+    }
+    .canvas-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    canvas {
+      background: #000;
+      border: 1px dashed #222222;
+    }
+    button {
+      padding: 12px 24px;
+      background: #FACC15;
+      color: #000000;
+      border: none;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      border-radius: 2px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #ca8a04;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>COGNAPSE Chrome Extension Eye Logo Generator</h2>
+    <p>This utility generates the webstore-ready Neural Companion Eye icons from the native canvas vector configurations.</p>
+    
+    <div class="canvas-row">
+      <div class="canvas-box">
+        <canvas id="c128" width="128" height="128"></canvas>
+        <span>128 x 128 px</span>
+      </div>
+      <div class="canvas-box">
+        <canvas id="c48" width="48" height="48"></canvas>
+        <span>48 x 48 px</span>
+      </div>
+      <div class="canvas-box">
+        <canvas id="c16" width="16" height="16"></canvas>
+        <span>16 x 16 px</span>
+      </div>
+    </div>
+
+    <button id="btn-generate">Download Icon Pack</button>
+  </div>
+
+  <script>
+    function drawIcon(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+      
+      const cx = size / 2;
+      const cy = size / 2;
+      
+      // 1. Dark Base Background Circle
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 2. Tactical Orbital Arrays (ambient outer dashed ring)
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.2)';
+      ctx.lineWidth = Math.max(1, size * 0.02);
+      ctx.setLineDash([Math.max(2, size * 0.05), Math.max(2, size * 0.05)]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.44, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset
+      
+      // Orbit dot (glowing cyber yellow control node)
+      ctx.fillStyle = '#FACC15';
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(-Math.PI / 4) * (size * 0.44), cy + Math.sin(-Math.PI / 4) * (size * 0.44), Math.max(2, size * 0.045), 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Outer Chassis Circle
+      ctx.strokeStyle = '#FACC15';
+      ctx.lineWidth = Math.max(1.5, size * 0.04);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.38, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 4. Conic gradient/glow in Iris
+      const grad = ctx.createRadialGradient(cx, cy, size * 0.08, cx, cy, size * 0.32);
+      grad.addColorStop(0, 'rgba(250, 204, 21, 0.45)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.32, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Iris border ring
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.3)';
+      ctx.lineWidth = Math.max(1, size * 0.02);
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.32, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 5. Pupil / Central Laser Glow Dot
+      // Outer glow for the laser pupil
+      const coreGrad = ctx.createRadialGradient(cx, cy, size * 0.02, cx, cy, size * 0.16);
+      coreGrad.addColorStop(0, '#FFFFFF');
+      coreGrad.addColorStop(0.3, 'rgba(250, 204, 21, 0.85)');
+      coreGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core black pupil void (Vertical slit / cyber-mechanical look)
+      ctx.fillStyle = '#000000';
+      const slitW = Math.max(2, size * 0.06);
+      const slitH = Math.max(4, size * 0.18);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, slitW / 2, slitH / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw all
+    drawIcon('c128', 128);
+    drawIcon('c48', 48);
+    drawIcon('c16', 16);
+
+    // Download Handler
+    document.getElementById('btn-generate').addEventListener('click', () => {
+      const sizes = [128, 48, 16];
+      sizes.forEach(size => {
+        const canvas = document.getElementById(`c${size}`);
+        const link = document.createElement('a');
+        link.download = `icon${size}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    });
+  </script>
+</body>
+</html>
