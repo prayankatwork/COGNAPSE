@@ -59,8 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("COGNAPSE Extension: Initializing popup...");
   
   // 1. Get logged-in user from storage (synced via content.js)
-  chrome.storage.local.get(["cognapse_user", "selectedText"], async (store) => {
+  chrome.storage.local.get(["cognapse_user", "cognapse_premium", "selectedText"], async (store) => {
     const user = store.cognapse_user;
+    const localPremium = store.cognapse_premium;
     const selectedText = store.selectedText;
 
     // Immediately clear selectedText from storage to prevent infinite query loops on next popup opens
@@ -81,10 +82,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log("COGNAPSE Extension: Authenticated user detected:", user.username);
     
-    // 2. Validate Premium Status using backend validator
+    // 2. Validate Premium Status using backend validator (with local fallback support)
     showPanel(analysisPanel);
     showState(stateLoading);
     loadingStatusText.textContent = "Verifying premium security layer...";
+
+    let isPremium = false;
+    let fallbackUsed = false;
 
     try {
       const verifyRes = await fetch(`${BASE_URL}/api/check-premium?userId=${user.id}`);
@@ -93,22 +97,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       
       const verifyData = await verifyRes.json();
-      
-      if (!verifyData.premium) {
-        console.log("COGNAPSE Extension: User is not premium.");
-        premiumBadge.textContent = "FREE TIER";
-        premiumBadge.style.background = "rgba(250, 204, 21, 0.15)";
-        premiumBadge.style.color = "#FACC15";
-        showPanel(premiumPanel);
-        return;
+      isPremium = !!verifyData.premium;
+    } catch (err) {
+      console.warn("COGNAPSE Extension: Server verification failed. Attempting local storage validation fallback:", err);
+      if (localPremium && localPremium.premium) {
+        const now = new Date();
+        const expiry = localPremium.premiumExpiresAt ? new Date(localPremium.premiumExpiresAt) : null;
+        if (!expiry || expiry > now) {
+          isPremium = true;
+          fallbackUsed = true;
+        }
       }
+    }
 
-      // Premium verified!
-      console.log("COGNAPSE Extension: Premium entitlement verified.");
-      premiumBadge.textContent = "PREMIUM";
-      premiumBadge.style.background = "rgba(16, 185, 129, 0.2)";
-      premiumBadge.style.color = "#10b981";
-      premiumBadge.style.boxShadow = "0 0 10px rgba(16, 185, 129, 0.3)";
+    if (!isPremium) {
+      console.log("COGNAPSE Extension: User is not premium.");
+      premiumBadge.textContent = "FREE TIER";
+      premiumBadge.style.background = "rgba(250, 204, 21, 0.15)";
+      premiumBadge.style.color = "#FACC15";
+      showPanel(premiumPanel);
+      return;
+    }
+
+    // Premium verified!
+    console.log("COGNAPSE Extension: Premium entitlement verified." + (fallbackUsed ? " (local storage fallback)" : ""));
+    premiumBadge.textContent = "PREMIUM";
+    premiumBadge.style.background = "rgba(16, 185, 129, 0.2)";
+    premiumBadge.style.color = "#10b981";
+    premiumBadge.style.boxShadow = "0 0 10px rgba(16, 185, 129, 0.3)";
 
       // 3. Process highlighted raw intelligence if present
       if (selectedText) {
