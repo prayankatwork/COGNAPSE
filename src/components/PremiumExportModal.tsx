@@ -153,6 +153,13 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             const verifyData = await verifyResponse.json();
             
             if (verifyData.success && verifyData.premiumData) {
+              // Write premium activation to Firestore from the authenticated client side
+              try {
+                await dbService.activatePremium(user.id, selectedPlan);
+              } catch (dbErr) {
+                console.warn('Client-side premium activation write failed, using local storage:', dbErr);
+              }
+
               // Update in-memory user store
               setUser({
                 ...user,
