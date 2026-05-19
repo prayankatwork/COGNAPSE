@@ -40,29 +40,33 @@ export default async function handler(req, res) {
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
 
-    const hasAdminCreds = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
-    
-    if (hasAdminCreds) {
-      try {
-        if (!admin.apps.length) {
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-              clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-              privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            })
-          });
+    try {
+      const hasAdminCreds = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
+      
+      if (hasAdminCreds) {
+        try {
+          if (!admin.apps.length) {
+            admin.initializeApp({
+              credential: admin.credential.cert({
+                projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+              })
+            });
+          }
+          const dbAdmin = admin.firestore();
+          await dbAdmin.collection('user_premium').doc(userId).set(premiumData);
+          console.log(`[Admin SDK] Activated premium for user: ${userId}`);
+        } catch (adminError) {
+          console.error('Failed using admin SDK, falling back to Client SDK:', adminError);
+          await fallbackClientUpdate(userId, premiumData);
         }
-        const dbAdmin = admin.firestore();
-        await dbAdmin.collection('user_premium').doc(userId).set(premiumData);
-        console.log(`[Admin SDK] Activated premium for user: ${userId}`);
-      } catch (adminError) {
-        console.error('Failed using admin SDK, falling back to Client SDK:', adminError);
+      } else {
+        console.log('Firebase Private Key/Email env vars not detected. Falling back to Client SDK.');
         await fallbackClientUpdate(userId, premiumData);
       }
-    } else {
-      console.log('Firebase Private Key/Email env vars not detected. Falling back to Client SDK.');
-      await fallbackClientUpdate(userId, premiumData);
+    } catch (dbError) {
+      console.warn('[Resilient Payments] Firestore write failed, but signature verification succeeded. Proceeding to unlock premium for user:', dbError);
     }
 
     res.status(200).json({ 
