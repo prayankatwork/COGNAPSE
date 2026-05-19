@@ -94,7 +94,11 @@ class AudioService {
   speakProtocol(text: string) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Replace uppercase COGNAPSE with mixed-case to prevent spelling the letters "C-O-G-N-A-P-S-E"
+    const normalizedText = text.replace(/COGNAPSE/g, "Cognapse");
+    
+    const utterance = new SpeechSynthesisUtterance(normalizedText);
     utterance.rate = 0.85;
     utterance.pitch = 0.1; // Monotone/Low
     utterance.volume = 0.4;

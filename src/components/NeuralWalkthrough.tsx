@@ -71,7 +71,7 @@ export default function NeuralWalkthrough() {
         anchorId: "walkthrough-hub-anchor",
         icon: <Globe className="text-blue-400" size={24} />,
         onEnter: () => {
-          if (useStore.getState().currentView !== 'landing') setView('landing');
+          if (useStore.getState().currentView !== 'news') setView('news');
         }
       },
       {
