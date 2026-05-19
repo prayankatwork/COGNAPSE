@@ -35,6 +35,17 @@ export default function DeepResearchView() {
         deepThesis: thesis,
         aiProvider: currentReport?.provider || 'gemini'
       });
+      if (user) {
+        await useStore.getState().addExport({
+          id: crypto.randomUUID(),
+          userId: user.id,
+          researchId: reportId,
+          exportType: 'deep',
+          aiProvider: currentReport?.provider || 'gemini',
+          query: thesis.title,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (err) {
       console.error(err);
       alert("Error packaging PDF. Please try again.");

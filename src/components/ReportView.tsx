@@ -42,6 +42,17 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
         deepThesis: report.deep_research || null,
         aiProvider: report.provider || 'gemini'
       });
+      if (user) {
+        await useStore.getState().addExport({
+          id: crypto.randomUUID(),
+          userId: user.id,
+          researchId: reportId,
+          exportType: report.deep_research ? 'deep' : 'normal',
+          aiProvider: report.provider || 'gemini',
+          query: report.query_understood,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (err) {
       console.error(err);
       alert("Error packaging PDF. Please try again.");
