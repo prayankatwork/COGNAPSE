@@ -88,6 +88,7 @@ export interface COGNAPSE_Output {
   deep_research?: any;
   deep_scores?: any;
   id?: string;
+  provider?: string;
   premium_export_data?: {
     executive_summary: {
       key_findings: string[];

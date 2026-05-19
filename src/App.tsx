@@ -32,11 +32,11 @@ export default function App() {
   const currentView = useStore((state) => state.currentView);
   const theme = useStore((state) => state.theme);
   const isAuthOpen = useStore((state) => state.isAuthOpen);
-  
+
   const isLoading = useStore((state) => state.isLoading);
   const currentReport = useStore((state) => state.currentReport);
   const deepResearch = useStore((state) => state.deepResearch);
-  
+
   // Sound Trigger: Normal Research
   const lastPlayedReportId = useRef<string | null>(null);
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
-  
+
   const user = useStore(state => state.user);
   const setStats = useStore(state => state.setStats);
   const setArchive = useStore(state => state.setArchive);
@@ -152,7 +152,7 @@ export default function App() {
           if (settings && settings.subscribedCategories) {
             useStore.getState().setSubscribedCategories(settings.subscribedCategories);
           }
-          
+
           if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
             useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
           } else {
@@ -169,7 +169,7 @@ export default function App() {
           }
 
           if (notes) {
-            const sortedNotes = (notes as any[]).sort((a: any, b: any) => 
+            const sortedNotes = (notes as any[]).sort((a: any, b: any) =>
               new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
             );
             setNotes(sortedNotes);
@@ -214,27 +214,27 @@ export default function App() {
         return <CreatorProfile />;
       case 'news':
         if (!user) {
-           return (
-             <div className="flex flex-col items-center justify-center text-center p-8 h-full">
-                <div className="relative z-10 max-w-md">
-                   <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
-                      <LockIcon size={32} />
-                   </div>
-                   <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
-                   <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
-                      The Knowledge Hub requires an <br /> 
-                      <span className="text-my-accent font-bold">Authorized Analyst Profile</span> <br /> 
-                      to synchronize your global feed.
-                   </p>
-                   <button 
-                     onClick={() => setAuthOpen(true)}
-                     className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
-                   >
-                      Sign In to Access
-                   </button>
+          return (
+            <div className="flex flex-col items-center justify-center text-center p-8 h-full">
+              <div className="relative z-10 max-w-md">
+                <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+                  <LockIcon size={32} />
                 </div>
-             </div>
-           );
+                <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
+                <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
+                  The Knowledge Hub requires an <br />
+                  <span className="text-my-accent font-bold">Authorized Analyst Profile</span> <br />
+                  to synchronize your global feed.
+                </p>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
+                >
+                  Sign In to Access
+                </button>
+              </div>
+            </div>
+          );
         }
         return <IntelligenceFeed onTriggerResearch={(q) => useStore.setState({ initialQuery: q })} />;
       case 'research':
@@ -256,15 +256,15 @@ export default function App() {
       theme === 'dark' ? 'dark' : ''
     )}>
       <Navbar />
-      
+
       <div className="h-[calc(100vh-64px)] relative">
-         {renderContent()}
+        {renderContent()}
       </div>
 
       <AnimatePresence>
-         {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-         {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-         {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
+        {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
+        {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
+        {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
       </AnimatePresence>
       <NeuralWalkthrough />
       <SelectionCapture />
