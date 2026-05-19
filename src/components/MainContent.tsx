@@ -673,27 +673,12 @@ export default function MainContent() {
               }
 
               return (
-                <div className="flex flex-col items-center justify-center py-16 mt-16 animate-in fade-in zoom-in duration-500">
-                  <IntelligenceLoader scenario={currentScenario} label={loadingPhase} />
+                <div className="flex flex-col items-center justify-center py-8 mt-8 animate-in fade-in zoom-in duration-500 w-full">
+                  <IntelligenceLoader scenario={currentScenario} label={loadingPhase} className="max-w-2xl mx-auto" />
 
-                  <div className="w-64 mt-6">
-                    <div className="h-1 w-full bg-my-border rounded-full overflow-hidden relative">
-                      <div className="absolute inset-y-0 left-0 bg-my-accent transition-all duration-500 ease-out" style={{
-                        width: loadingPhase === "Analyzing research query..." ? "20%" :
-                          loadingPhase === "Reviewing available data..." ? "40%" :
-                            loadingPhase === "Synthesizing primary sources..." ? "60%" :
-                              loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
-                      }}></div>
-                    </div>
-                  </div>
-
-                  <div className="mt-12 flex flex-col items-center max-w-sm text-center">
-                    <div className="flex items-center gap-2 mb-3 text-my-accent">
-                      <Zap size={14} className="animate-pulse" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Processing Swarm Active</span>
-                    </div>
+                  <div className="mt-8 flex flex-col items-center max-w-sm text-center">
                     <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
-                      High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources. We recommend a short diversion in the <span className="text-my-accent font-bold">Playground</span> while our engine validates its findings.
+                      Our intelligence swarm is analyzing high-fidelity data. We recommend a short diversion in the <span className="text-my-accent font-bold">Playground</span> while the engine works.
                     </p>
                     <button
                       onClick={() => useStore.getState().setView('games')}
