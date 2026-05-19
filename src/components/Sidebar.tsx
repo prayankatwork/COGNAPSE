@@ -91,14 +91,14 @@ export default function Sidebar() {
 
           {/* Sidebar Header */}
           <div className="p-8 pb-6 border-b border-my-border">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em]">Intelligence Archive</h2>
+              <div className="flex items-center justify-between gap-4 mb-8">
+                 <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shrink-0" />
+                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em] truncate">Archive</h2>
                  </div>
-                 <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-3 shrink-0">
                     <ClearAllButton />
-                    <button onClick={toggleSidebar} className="p-1 text-[#CBD5E1] hover:text-black dark:hover:text-white transition-colors">
+                    <button onClick={toggleSidebar} className="p-1 text-[#CBD5E1] hover:text-black dark:hover:text-white transition-colors shrink-0">
                        <ChevronLeft size={18} />
                     </button>
                  </div>
