@@ -686,15 +686,9 @@ export default function MainContent() {
                     <Zap size={14} className="animate-pulse" />
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Processing Framework Active</span>
                   </div>
-                  <p className="text-[11px] text-my-muted leading-relaxed italic mb-6">
-                    High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources. We recommend a short diversion in the <span className="text-my-ink font-bold">Playground</span> while our engine validates its findings.
+                  <p className="text-[11px] text-my-muted leading-relaxed italic">
+                    High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources and validating its findings.
                   </p>
-                  <button
-                    onClick={() => useStore.getState().setView('games')}
-                    className="px-8 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-my-accent hover:text-white transition-all flex items-center gap-2 group shadow-xl"
-                  >
-                    Launch Playground <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
                 </div>
 
               </div>
