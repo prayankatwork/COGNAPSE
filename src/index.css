@@ -125,3 +125,37 @@
     transform: rotate(360deg);
   }
 }
+
+/* ==========================================
+   GLOBAL THEME CONTRAST ACCESSIBILITY CORRECTIONS
+   ========================================== */
+
+/* Enforce pure white text & icons on dark background buttons in light mode */
+html:not(.dark) .bg-my-ink,
+html:not(.dark) .bg-my-accent,
+html:not(.dark) button.bg-my-ink,
+html:not(.dark) button.bg-my-accent {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .bg-my-ink *,
+html:not(.dark) .bg-my-accent *,
+html:not(.dark) button.bg-my-ink *,
+html:not(.dark) button.bg-my-accent * {
+  color: #FFFFFF !important;
+}
+
+/* Enforce pure black text & icons on bright yellow / white background buttons in dark mode */
+html.dark .bg-my-ink,
+html.dark .bg-my-accent,
+html.dark button.bg-my-ink,
+html.dark button.bg-my-accent {
+  color: #000000 !important;
+}
+
+html.dark .bg-my-ink *,
+html.dark .bg-my-accent *,
+html.dark button.bg-my-ink *,
+html.dark button.bg-my-accent * {
+  color: #000000 !important;
+}
