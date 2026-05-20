@@ -91,7 +91,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       });
     }
 
-    if (mapData?.nodes) {
+    if (mapData?.nodes && Array.isArray(mapData.nodes)) {
       mapData.nodes.forEach((n: any) => {
         const importance = n.importance || 0.5;
         if (filterMode === 'high' && importance < 0.7) return;
@@ -108,7 +108,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
       });
     }
 
-    if (mapData?.edges) {
+    if (mapData?.edges && Array.isArray(mapData.edges)) {
       mapData.edges.forEach((e: any) => {
         if (nodes.find(n => n.id === e.from) && nodes.find(n => n.id === e.to)) {
           links.push({
@@ -122,9 +122,11 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
     } else {
       // Fallback star layout
       const rootId = mapData?.central_node?.id || 'root';
-      nodes.forEach(n => {
-        if (n.id !== rootId) links.push({ source: rootId, target: n.id, strength: n.importance });
-      });
+      if (Array.isArray(nodes)) {
+        nodes.forEach(n => {
+          if (n.id !== rootId) links.push({ source: rootId, target: n.id, strength: n.importance });
+        });
+      }
     }
 
     return { nodes, links };

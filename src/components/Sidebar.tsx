@@ -22,7 +22,7 @@ export default function Sidebar() {
   const [viewMode, setViewMode] = useState<'chronological' | 'topic'>('chronological');
 
   const filteredArchive = useMemo(() => {
-    if (!archive) return [];
+    if (!archive || !Array.isArray(archive)) return [];
     return archive.filter(item => 
       (item.query || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.report?.query_understood || "").toLowerCase().includes(searchQuery.toLowerCase())

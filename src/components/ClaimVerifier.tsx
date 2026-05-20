@@ -226,7 +226,7 @@ function ClaimRow({
   const [expanded, setExpanded] = useState(false);
   const col = confidenceColor(claim.confidence, claim.isOrphan);
   const citedSources = useMemo(
-    () => (sources || []).filter(s => claim.citations.includes(s.id)),
+    () => (Array.isArray(sources) ? sources : []).filter(s => s && claim.citations.includes(s.id)),
     [sources, claim.citations]
   );
   const canExpand = citedSources.length > 0 || claim.isOrphan;
@@ -329,7 +329,7 @@ export default function ClaimVerifier({ report }: { report: COGNAPSE_Output }) {
   const [expandedSourceId, setExpandedSourceId] = useState<number | null>(null);
 
   const synthesis = report.summary?.full_synthesis || '';
-  const sources = report.sources || [];
+  const sources = Array.isArray(report.sources) ? report.sources : [];
   const allClaims = useMemo(() => parseClaims(synthesis, sources), [synthesis, sources]);
 
   const orphanCount = allClaims.filter(c => c.isOrphan).length;

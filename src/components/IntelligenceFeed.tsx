@@ -108,13 +108,21 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
       `;
       
       const response = await callCloudAI(prompt, true, "gemini-1.5-flash");
-      const data = JSON.parse(response);
+      let data = JSON.parse(response);
+      if (!Array.isArray(data)) {
+        if (data && typeof data === 'object') {
+          const arrayField = Object.values(data).find(val => Array.isArray(val));
+          data = Array.isArray(arrayField) ? arrayField : [];
+        } else {
+          data = [];
+        }
+      }
       setNews(data);
       setLastRefreshed(new Date());
     } catch (error) {
       console.error("Failed to fetch intelligence feed:", error);
       // Fallback data if needed
-      if (news.length === 0) {
+      if (!Array.isArray(news) || news.length === 0) {
         setNews([
           { id: '1', category: 'TECH', headline: 'Quantum Supremacy Breakout in Silicon Photonics', summary: 'New experimental data suggests a breakthrough in room-temperature quantum computing.', timestamp: '1h ago', impact: 'high' },
           { id: '2', category: 'FINANCE', headline: 'Global Liquidity Crisis Looming in Tier-2 Banking', summary: 'Multiple mid-sized institutions reporting unexpected capital shortfalls.', timestamp: '3h ago', impact: 'medium' },
@@ -135,10 +143,14 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
   // Group news by category
   const groupedNews = useMemo(() => {
     const groups: Record<string, NewsItem[]> = {};
-    news.forEach(item => {
-      if (!groups[item.category]) groups[item.category] = [];
-      groups[item.category].push(item);
-    });
+    if (Array.isArray(news)) {
+      news.forEach(item => {
+        if (item && item.category) {
+          if (!groups[item.category]) groups[item.category] = [];
+          groups[item.category].push(item);
+        }
+      });
+    }
     return groups;
   }, [news]);
 

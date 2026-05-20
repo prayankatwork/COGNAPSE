@@ -222,10 +222,12 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
   // Derive Radar Data from Archive
   const radarData = useMemo(() => {
     const counts: Record<string, number> = {};
-    archive.forEach(entry => {
-      const cat = entry.topic_cluster ? entry.topic_cluster.toUpperCase() : "GENERAL";
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
+    if (Array.isArray(archive)) {
+      archive.forEach(entry => {
+        const cat = entry.topic_cluster ? entry.topic_cluster.toUpperCase() : "GENERAL";
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+    }
 
     let entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
@@ -263,9 +265,13 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
   // Top Investigative Clusters
   const topClusters = useMemo(() => {
     const clusters: Record<string, number> = {};
-    archive.forEach(e => {
-      clusters[e.topic_cluster] = (clusters[e.topic_cluster] || 0) + 1;
-    });
+    if (Array.isArray(archive)) {
+      archive.forEach(e => {
+        if (e && e.topic_cluster) {
+          clusters[e.topic_cluster] = (clusters[e.topic_cluster] || 0) + 1;
+        }
+      });
+    }
     return Object.entries(clusters)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
