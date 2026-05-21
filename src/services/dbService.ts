@@ -16,7 +16,7 @@ import {
   deleteDoc,
   writeBatch
 } from "firebase/firestore";
-import type { BoardMode, COGNAPSE_Output, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
+import type { BoardInvite, BoardMode, COGNAPSE_Output, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
 
 const safeParse = <T>(value: string | null, fallback: T): T => {
   if (!value) return fallback;
@@ -36,6 +36,11 @@ const deserializeBoard = (data: any) => ({
   researches: typeof data.researches === "string" ? JSON.parse(data.researches) : data.researches || [],
   nodeNotes: typeof data.nodeNotes === "string" ? JSON.parse(data.nodeNotes) : data.nodeNotes || {}
 }) as IntelligenceBoard;
+
+const deserializeInvite = (data: any) => ({
+  ...data,
+  inviteeKeys: Array.isArray(data.inviteeKeys) ? data.inviteeKeys : []
+}) as BoardInvite;
 
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
@@ -620,6 +625,105 @@ export const dbService = {
     const boards = Array.from(byId.values());
     boards.forEach(board => localStorage.setItem(`cognapse_board_${board.id}`, JSON.stringify(board)));
     return boards.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  },
+
+  async createBoardInvite(board: IntelligenceBoard, invitee: string, inviter: { id: string; username: string }) {
+    const cleanInvitee = invitee.trim();
+    const now = new Date().toISOString();
+    const inviteeKeys = Array.from(new Set([
+      cleanInvitee,
+      normalizeAccessKey(cleanInvitee)
+    ].filter(Boolean)));
+    const id = `invite_${board.id}_${normalizeAccessKey(cleanInvitee).replace(/[^a-z0-9_-]/g, '_')}`;
+    const invite: BoardInvite = {
+      id,
+      boardId: board.id,
+      boardTitle: board.title,
+      boardDescription: board.description,
+      invitedById: inviter.id,
+      invitedByName: inviter.username,
+      invitee: cleanInvitee,
+      inviteeKeys,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now
+    };
+
+    localStorage.setItem(`cognapse_board_invite_${id}`, JSON.stringify(invite));
+    inviteeKeys.forEach(key => {
+      const indexKey = `cognapse_board_invite_index_${normalizeAccessKey(key)}`;
+      const existing = safeParse<string[]>(localStorage.getItem(indexKey), []);
+      localStorage.setItem(indexKey, JSON.stringify(Array.from(new Set([id, ...existing]))));
+    });
+
+    try {
+      await setDoc(doc(db, "board_invites", id), invite);
+    } catch (error) {
+      console.warn("Firebase board invite save failed, local invite cache active:", error);
+    }
+
+    return invite;
+  },
+
+  async getUserBoardInvites(userId: string, username: string) {
+    const byId = new Map<string, BoardInvite>();
+    const accessKeys = Array.from(new Set([userId, username, normalizeAccessKey(username)].filter(Boolean)));
+
+    for (const accessKey of accessKeys) {
+      try {
+        const q = query(collection(db, "board_invites"), where("inviteeKeys", "array-contains", accessKey));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.docs
+          .map(doc => deserializeInvite(doc.data()))
+          .forEach(invite => byId.set(invite.id, invite));
+      } catch (error) {
+        console.warn("Firebase board invite lookup failed, checking local cache:", error);
+        const ids = safeParse<string[]>(localStorage.getItem(`cognapse_board_invite_index_${normalizeAccessKey(accessKey)}`), []);
+        ids
+          .map(id => safeParse<BoardInvite | null>(localStorage.getItem(`cognapse_board_invite_${id}`), null))
+          .filter(Boolean)
+          .forEach(invite => byId.set((invite as BoardInvite).id, invite as BoardInvite));
+      }
+    }
+
+    const invites = Array.from(byId.values()).filter(invite => invite.status === "pending");
+    invites.forEach(invite => localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(invite)));
+    return invites.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async acceptBoardInvite(invite: BoardInvite, user: { id: string; username: string }) {
+    const board = await this.getBoard(invite.boardId);
+    if (!board) throw new Error("Board invitation target was not found.");
+
+    const collaborators = Array.from(new Set([
+      ...board.collaborators,
+      user.id,
+      user.username,
+      normalizeAccessKey(user.username)
+    ].filter(Boolean)));
+
+    const updatedBoard = await this.updateBoardCollaborators(board, collaborators);
+    const updatedInvite = { ...invite, status: "accepted" as const, updatedAt: new Date().toISOString() };
+    localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(updatedInvite));
+
+    try {
+      await setDoc(doc(db, "board_invites", invite.id), updatedInvite, { merge: true });
+    } catch (error) {
+      console.warn("Firebase board invite acceptance update failed:", error);
+    }
+
+    return updatedBoard;
+  },
+
+  async declineBoardInvite(invite: BoardInvite) {
+    const updatedInvite = { ...invite, status: "declined" as const, updatedAt: new Date().toISOString() };
+    localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(updatedInvite));
+    try {
+      await setDoc(doc(db, "board_invites", invite.id), updatedInvite, { merge: true });
+    } catch (error) {
+      console.warn("Firebase board invite decline update failed:", error);
+    }
+    return updatedInvite;
   },
 
   async updateBoardMode(board: IntelligenceBoard, mode: BoardMode) {

@@ -164,3 +164,17 @@ export interface IntelligenceBoard {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface BoardInvite {
+  id: string;
+  boardId: string;
+  boardTitle: string;
+  boardDescription: string;
+  invitedById: string;
+  invitedByName: string;
+  invitee: string;
+  inviteeKeys: string[];
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+  updatedAt: string;
+}

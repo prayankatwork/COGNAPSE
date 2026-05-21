@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Calendar, Copy, ExternalLink, FilePlus2, FlaskConical, GitBranch, Loader2, Lock, Network, Plus, Share2, Trash2, Users } from 'lucide-react';
+import { AlertCircle, Calendar, CheckCircle2, Copy, ExternalLink, FilePlus2, FlaskConical, GitBranch, Loader2, Lock, MailCheck, Network, Plus, Share2, Trash2, Users, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
-import type { BoardMode, IntelligenceBoard } from '../types';
+import type { BoardInvite, BoardMode, IntelligenceBoard } from '../types';
 import PhysicsMap from './PhysicsMap';
 
 const matchesCollaborator = (board: IntelligenceBoard, user: { id: string; username: string } | null) => {
@@ -12,9 +12,22 @@ const matchesCollaborator = (board: IntelligenceBoard, user: { id: string; usern
   return board.collaborators.map(item => item.toLowerCase()).some(item => keys.includes(item));
 };
 
+const displayCollaborators = (board: IntelligenceBoard, ownerId: string) => {
+  const seen = new Set<string>();
+  return board.collaborators
+    .filter(item => item !== ownerId)
+    .filter(item => {
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
 export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: string }) {
   const { user, setAuthOpen, archive, currentReport, setCurrentReport, setView } = useStore();
   const [boards, setBoards] = useState<IntelligenceBoard[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<BoardInvite[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -23,6 +36,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
   const [description, setDescription] = useState("");
   const [mode, setMode] = useState<BoardMode>("private");
   const [collaborator, setCollaborator] = useState("");
+  const [inviteStatus, setInviteStatus] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
   const activeBoard = useMemo(
@@ -46,6 +60,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
       } else if (user) {
         data = await dbService.getAccessibleBoards(user.id, user.username);
       }
+      const invites = user ? await dbService.getUserBoardInvites(user.id, user.username) : [];
       if (mounted) {
         const visible = data.filter(board =>
           board.mode === 'public' ||
@@ -53,6 +68,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
           (board.mode === 'shared' && matchesCollaborator(board, user))
         );
         setBoards(visible);
+        setPendingInvites(invites);
         setActiveId(routeBoardId || visible[0]?.id || null);
         if (routeBoardId && data[0] && visible.length === 0) {
           setAccessError(data[0].mode === 'private' ? "This board is private." : "Sign in as an invited collaborator to access this shared board.");
@@ -115,17 +131,35 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
     const clean = collaborator.trim();
     if (!clean) return;
     setCollaborator("");
-    replaceBoard(await dbService.updateBoardCollaborators(board, Array.from(new Set([...board.collaborators, clean, clean.toLowerCase()]))));
+    setInviteStatus("");
+    await dbService.createBoardInvite(board, clean, { id: user!.id, username: user!.username });
+    setInviteStatus(`Invitation sent to ${clean}. They will see it in Intelligence Boards and must accept before access is enabled.`);
   };
 
   const removeCollaborator = async (board: IntelligenceBoard, value: string) => {
     if (!isOwner) return;
-    replaceBoard(await dbService.updateBoardCollaborators(board, board.collaborators.filter(item => item !== value)));
+    const normalized = value.toLowerCase();
+    replaceBoard(await dbService.updateBoardCollaborators(board, board.collaborators.filter(item => item.toLowerCase() !== normalized)));
   };
 
   const saveNodeNote = async (board: IntelligenceBoard, key: string) => {
     if (!canManageBoard) return;
     replaceBoard(await dbService.updateBoardNodeNote(board, key, noteDrafts[key] || ""));
+  };
+
+  const acceptInvite = async (invite: BoardInvite) => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    const board = await dbService.acceptBoardInvite(invite, { id: user.id, username: user.username });
+    setPendingInvites(prev => prev.filter(item => item.id !== invite.id));
+    replaceBoard(board);
+  };
+
+  const declineInvite = async (invite: BoardInvite) => {
+    await dbService.declineBoardInvite(invite);
+    setPendingInvites(prev => prev.filter(item => item.id !== invite.id));
   };
 
   const copyBoardLink = async (board: IntelligenceBoard) => {
@@ -182,6 +216,35 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
             </button>
           </div>
         </div>
+
+        {user && pendingInvites.length > 0 && (
+          <section className="mb-6 border border-my-accent/25 bg-my-accent/5 p-4">
+            <div className="flex items-center gap-2 mb-4 text-my-accent">
+              <MailCheck size={15} />
+              <h2 className="text-[10px] font-black uppercase tracking-[0.3em]">Pending Board Invitations</h2>
+            </div>
+            <div className="grid gap-3">
+              {pendingInvites.map(invite => (
+                <div key={invite.id} className="border border-my-border bg-my-callout p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl text-my-ink">{invite.boardTitle}</h3>
+                    <p className="text-xs text-my-muted mt-1">
+                      Invited by {invite.invitedByName}. {invite.boardDescription || "No board description provided."}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => acceptInvite(invite)} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <CheckCircle2 size={12} /> Accept
+                    </button>
+                    <button onClick={() => declineInvite(invite)} className="px-4 py-2 border border-my-border text-my-muted hover:text-red-500 text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <X size={12} /> Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {loading ? (
           <div className="flex items-center gap-3 text-my-muted text-[10px] font-black uppercase tracking-[0.3em]">
@@ -243,6 +306,11 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                           {item}
                         </button>
                       ))}
+                      {inviteStatus && (
+                        <span className="w-full text-[10px] text-my-muted leading-relaxed">
+                          {inviteStatus}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </section>
@@ -270,7 +338,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                       <button onClick={() => addCollaborator(activeBoard)} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">Invite</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {activeBoard.collaborators.map(item => (
+                      {displayCollaborators(activeBoard, activeBoard.ownerId).map(item => (
                         <button key={item} onClick={() => removeCollaborator(activeBoard, item)} className="px-3 py-1.5 border border-my-border text-[10px] text-my-muted hover:text-red-500">
                           {item} ×
                         </button>
