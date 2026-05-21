@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { COGNAPSE_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2 } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, GitFork, Copy, Eye, Globe2, FlaskConical } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
 import PhysicsMap from './PhysicsMap';
@@ -10,8 +10,22 @@ import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
+import { dbService } from '../services/dbService';
+import type { ResearchVisibility } from '../types';
 
-export default function ReportView({ report, onSubSearch, onChatFollowUp }: { report: COGNAPSE_Output, onSubSearch: (q: string) => void, onChatFollowUp?: (q: string) => void }) {
+export default function ReportView({
+  report,
+  onSubSearch,
+  onChatFollowUp,
+  readOnly = false,
+  onFork
+}: {
+  report: COGNAPSE_Output,
+  onSubSearch: (q: string) => void,
+  onChatFollowUp?: (q: string) => void,
+  readOnly?: boolean,
+  onFork?: () => void
+}) {
   
   const safeText = (val: any) => {
     if (typeof val === 'string') return val;
@@ -21,12 +35,41 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
   const hasConflicts = report.conflicts && report.conflicts.length > 0;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
-  const { updateGamification, unlockedReports, user } = useStore();
+  const { updateGamification, user, setAuthOpen } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [shareVisibility, setShareVisibility] = useState<ResearchVisibility>('unlisted');
+  const [shareLink, setShareLink] = useState("");
+  const [sharing, setSharing] = useState(false);
 
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
+
+  const handleCreateShare = async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    setSharing(true);
+    try {
+      const researchId = report.id || crypto.randomUUID();
+      const shared = await dbService.createSharedResearch({
+        ownerId: user.id,
+        ownerName: user.username,
+        researchId,
+        report: { ...report, id: researchId },
+        visibility: shareVisibility
+      });
+      const url = `${window.location.origin}/share/${shared.id}`;
+      setShareLink(url);
+      await navigator.clipboard?.writeText(url);
+    } catch (err) {
+      console.error("Failed to create share link:", err);
+      alert("Unable to create share link. Please try again.");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     if (!isUnlocked) {
@@ -113,6 +156,40 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
           </h1>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 pt-1">
+            {report.fork_lineage && (
+              <div className="px-3 py-2 border border-my-accent/30 bg-my-accent/5 text-my-accent text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                <GitFork size={12} /> Forked Research
+              </div>
+            )}
+            {readOnly && onFork && (
+              <button
+                onClick={onFork}
+                className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 bg-my-ink text-white dark:bg-my-accent dark:text-black hover:scale-105"
+              >
+                <GitFork size={12} /> Fork Research
+              </button>
+            )}
+            {!readOnly && (
+              <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout">
+                <select
+                  value={shareVisibility}
+                  onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
+                  className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
+                >
+                  <option value="private">Private</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="public">Public</option>
+                </select>
+                <button
+                  onClick={handleCreateShare}
+                  disabled={sharing}
+                  className="px-3 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                >
+                  {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+                  Share
+                </button>
+              </div>
+            )}
             <button
               onClick={handleDownloadPDF}
               disabled={generatingPDF}
@@ -146,6 +223,34 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
         <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-4 italic font-serif text-base text-my-ink">
           {safeText(report.summary?.bottom_line) || "No summary provided."}
         </div>
+        {!readOnly && (
+          <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
+            <FlaskConical size={13} className="text-my-accent mt-0.5 shrink-0" />
+            <p className="text-[11px] leading-relaxed">
+              Sharing, board saving, and research forking are preview features. They are available for testing and may receive UX and permissions refinements before final release.
+            </p>
+          </div>
+        )}
+        {shareLink && (
+          <div className="mt-4 p-3 border border-my-border bg-my-bg flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <Eye size={14} className="text-my-accent shrink-0" />
+              <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest shrink-0">Read-only link copied</span>
+              <span className="text-[11px] text-my-ink truncate">{shareLink}</span>
+            </div>
+            <button
+              onClick={() => navigator.clipboard?.writeText(shareLink)}
+              className="text-[9px] font-black uppercase tracking-widest text-my-accent flex items-center gap-1.5"
+            >
+              <Copy size={11} /> Copy
+            </button>
+          </div>
+        )}
+        {readOnly && (
+          <div className="mt-4 p-3 border border-my-border bg-my-callout flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted">
+            <Globe2 size={13} className="text-my-accent" /> Public read-only research view
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-[24px]">
@@ -244,7 +349,7 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             <div className="mt-6 lg:mt-0">
               <SectionTitle>Intelligence Map</SectionTitle>
               <div className="mt-3">
-                 <PhysicsMap mapData={report.intelligence_map} onSubSearch={onSubSearch} />
+                 <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
               </div>
             </div>
           )}
@@ -339,7 +444,8 @@ export default function ReportView({ report, onSubSearch, onChatFollowUp }: { re
             {normalizedSuggestions.map((f: string, i: number) => (
               <button 
                 key={i} 
-                onClick={() => onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f)}
+                onClick={() => !readOnly && (onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f))}
+                disabled={readOnly}
                 className="bg-my-bg border border-my-border hover:border-my-accent text-[12px] text-my-ink py-1.5 px-3 transition-colors flex items-center gap-2"
               >
                 {safeText(f)} <ArrowRight size={12} className="opacity-50" />

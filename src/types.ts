@@ -89,6 +89,12 @@ export interface COGNAPSE_Output {
   deep_scores?: any;
   id?: string;
   provider?: string;
+  fork_lineage?: {
+    originalResearchId: string;
+    originalShareId?: string;
+    forkedAt: string;
+    forkedFromTitle: string;
+  };
   premium_export_data?: {
     executive_summary: {
       key_findings: string[];
@@ -117,4 +123,44 @@ export interface COGNAPSE_Output {
       model_routing: string;
     };
   };
+}
+
+export type ResearchVisibility = "private" | "unlisted" | "public";
+export type BoardMode = "private" | "shared" | "public";
+
+export interface SharedResearchRecord {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  researchId: string;
+  title: string;
+  summary: string;
+  visibility: ResearchVisibility;
+  report: COGNAPSE_Output;
+  sourceCount: number;
+  graphNodeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BoardResearchItem {
+  researchId: string;
+  title: string;
+  summary: string;
+  report: COGNAPSE_Output;
+  addedAt: string;
+}
+
+export interface IntelligenceBoard {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  title: string;
+  description: string;
+  mode: BoardMode;
+  collaborators: string[];
+  researches: BoardResearchItem[];
+  nodeNotes: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
 }

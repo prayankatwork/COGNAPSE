@@ -26,7 +26,7 @@ interface LinkData {
   strength?: number;
 }
 
-export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onSubSearch: (q: string) => void }) {
+export default function PhysicsMap({ mapData, onSubSearch, readOnly = false }: { mapData: any, onSubSearch: (q: string) => void, readOnly?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>(null);
   const theme = useStore((state) => state.theme);
@@ -147,7 +147,7 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
         return;
       }
 
-      onSubSearch(node.sub_query || node.name);
+      if (!readOnly) onSubSearch(node.sub_query || node.name);
     } else {
       setClickedNode({ id: node.id, time: now });
       
@@ -357,14 +357,16 @@ export default function PhysicsMap({ mapData, onSubSearch }: { mapData: any, onS
                 <div className="grid grid-cols-2 gap-3">
                   <button 
                     onClick={() => {
+                      if (readOnly) return;
                       onSubSearch(selectedNode.sub_query || selectedNode.name);
                       setSelectedNode(null);
                       setShowScrollMessage(true);
                       setTimeout(() => setShowScrollMessage(false), 5000);
                     }}
-                    className="col-span-2 bg-my-accent text-white dark:text-black py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl"
+                    disabled={readOnly}
+                    className="col-span-2 bg-my-accent text-white dark:text-black py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Target size={16} /> Execute Research
+                    <Target size={16} /> {readOnly ? "Read Only Snapshot" : "Execute Research"}
                   </button>
 
                 </div>

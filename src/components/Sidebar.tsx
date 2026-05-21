@@ -127,6 +127,17 @@ export default function Sidebar() {
                <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Investigation
              </button>
 
+             <button
+               onClick={() => walkthroughCompleted && setView('boards')}
+               disabled={!walkthroughCompleted}
+               className={clsx(
+                 "w-full py-3 border border-my-border text-my-ink font-bold uppercase tracking-[0.25em] text-[9px] flex items-center justify-center gap-3 hover:border-orange-500 hover:text-orange-500 transition-all mb-6",
+                 !walkthroughCompleted && "opacity-30 cursor-not-allowed"
+               )}
+             >
+               <Workflow size={13} /> Intelligence Boards
+             </button>
+
               <div className="flex items-center justify-between">
                   <div className="flex gap-4 shrink-0">
                      <button onClick={() => setViewMode('chronological')} className={clsx("transition-colors p-1", viewMode === 'chronological' ? "text-orange-500" : "text-[#CBD5E1] hover:text-black dark:hover:text-white")}>

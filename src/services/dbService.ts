@@ -16,7 +16,26 @@ import {
   deleteDoc,
   writeBatch
 } from "firebase/firestore";
-import type { COGNAPSE_Output } from '../types';
+import type { BoardMode, COGNAPSE_Output, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
+
+const safeParse = <T>(value: string | null, fallback: T): T => {
+  if (!value) return fallback;
+  try { return JSON.parse(value); } catch { return fallback; }
+};
+
+const getReportTitle = (report: COGNAPSE_Output) =>
+  report.query_understood || report.deep_research?.title || "Untitled Research";
+
+const getReportSummary = (report: COGNAPSE_Output) =>
+  report.summary?.bottom_line || report.summary?.full_synthesis || report.deep_research?.abstract || "";
+
+const normalizeAccessKey = (value: string) => value.trim().toLowerCase();
+
+const deserializeBoard = (data: any) => ({
+  ...data,
+  researches: typeof data.researches === "string" ? JSON.parse(data.researches) : data.researches || [],
+  nodeNotes: typeof data.nodeNotes === "string" ? JSON.parse(data.nodeNotes) : data.nodeNotes || {}
+}) as IntelligenceBoard;
 
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
@@ -397,6 +416,256 @@ export const dbService = {
       }
       return [];
     }
+  },
+
+  // Shared Research
+  async createSharedResearch(input: {
+    ownerId: string;
+    ownerName: string;
+    researchId: string;
+    report: COGNAPSE_Output;
+    visibility: ResearchVisibility;
+  }) {
+    const now = new Date().toISOString();
+    const id = `share_${input.researchId}_${Date.now()}`;
+    const record: SharedResearchRecord = {
+      id,
+      ownerId: input.ownerId,
+      ownerName: input.ownerName,
+      researchId: input.researchId,
+      title: getReportTitle(input.report),
+      summary: getReportSummary(input.report),
+      visibility: input.visibility,
+      report: input.report,
+      sourceCount: input.report.sources?.length || 0,
+      graphNodeCount: input.report.intelligence_map?.nodes?.length || 0,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    const localKey = `cognapse_shared_${id}`;
+    localStorage.setItem(localKey, JSON.stringify(record));
+    if (input.ownerId) {
+      const ownerKey = `cognapse_shared_index_${input.ownerId}`;
+      const existing = safeParse<string[]>(localStorage.getItem(ownerKey), []);
+      localStorage.setItem(ownerKey, JSON.stringify(Array.from(new Set([id, ...existing]))));
+    }
+
+    try {
+      await setDoc(doc(db, "shared_research", id), {
+        ...record,
+        report: JSON.stringify(record.report)
+      });
+    } catch (error) {
+      console.warn("Firebase shared research save failed, local share cache active:", error);
+    }
+    return record;
+  },
+
+  async updateSharedResearchVisibility(shareId: string, visibility: ResearchVisibility) {
+    const localKey = `cognapse_shared_${shareId}`;
+    const local = safeParse<SharedResearchRecord | null>(localStorage.getItem(localKey), null);
+    const updatedAt = new Date().toISOString();
+    if (local) {
+      localStorage.setItem(localKey, JSON.stringify({ ...local, visibility, updatedAt }));
+    }
+    try {
+      await setDoc(doc(db, "shared_research", shareId), { visibility, updatedAt }, { merge: true });
+    } catch (error) {
+      console.warn("Firebase share visibility update failed:", error);
+    }
+  },
+
+  async getSharedResearch(shareId: string) {
+    try {
+      const docSnap = await getDoc(doc(db, "shared_research", shareId));
+      if (docSnap.exists()) {
+        const data = docSnap.data() as any;
+        const record = {
+          ...data,
+          report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
+        } as SharedResearchRecord;
+        localStorage.setItem(`cognapse_shared_${shareId}`, JSON.stringify(record));
+        return record;
+      }
+    } catch (error) {
+      console.warn("Firebase shared research load failed, checking local cache:", error);
+    }
+    return safeParse<SharedResearchRecord | null>(localStorage.getItem(`cognapse_shared_${shareId}`), null);
+  },
+
+  async getUserSharedResearch(ownerId: string) {
+    try {
+      const q = query(collection(db, "shared_research"), where("ownerId", "==", ownerId));
+      const querySnapshot = await getDocs(q);
+      const shares = querySnapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        return {
+          ...data,
+          report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
+        } as SharedResearchRecord;
+      });
+      shares.forEach(share => localStorage.setItem(`cognapse_shared_${share.id}`, JSON.stringify(share)));
+      localStorage.setItem(`cognapse_shared_index_${ownerId}`, JSON.stringify(shares.map(s => s.id)));
+      return shares.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    } catch (error) {
+      console.warn("Firebase shared research index failed, loading local shares:", error);
+      const ids = safeParse<string[]>(localStorage.getItem(`cognapse_shared_index_${ownerId}`), []);
+      return ids
+        .map(id => safeParse<SharedResearchRecord | null>(localStorage.getItem(`cognapse_shared_${id}`), null))
+        .filter(Boolean) as SharedResearchRecord[];
+    }
+  },
+
+  // Intelligence Boards
+  async saveBoard(board: IntelligenceBoard) {
+    const localKey = `cognapse_board_${board.id}`;
+    localStorage.setItem(localKey, JSON.stringify(board));
+    const ownerKey = `cognapse_board_index_${board.ownerId}`;
+    const existing = safeParse<string[]>(localStorage.getItem(ownerKey), []);
+    localStorage.setItem(ownerKey, JSON.stringify(Array.from(new Set([board.id, ...existing]))));
+    board.collaborators.forEach(collaborator => {
+      const collabKey = `cognapse_board_collab_index_${normalizeAccessKey(collaborator)}`;
+      const collabExisting = safeParse<string[]>(localStorage.getItem(collabKey), []);
+      localStorage.setItem(collabKey, JSON.stringify(Array.from(new Set([board.id, ...collabExisting]))));
+    });
+
+    try {
+      await setDoc(doc(db, "intelligence_boards", board.id), {
+        ...board,
+        researches: JSON.stringify(board.researches),
+        nodeNotes: JSON.stringify(board.nodeNotes)
+      });
+    } catch (error) {
+      console.warn("Firebase board save failed, local board cache active:", error);
+    }
+    return board;
+  },
+
+  async createBoard(input: {
+    ownerId: string;
+    ownerName: string;
+    title: string;
+    description: string;
+    mode: BoardMode;
+  }) {
+    const now = new Date().toISOString();
+    return this.saveBoard({
+      id: `board_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      ownerId: input.ownerId,
+      ownerName: input.ownerName,
+      title: input.title,
+      description: input.description,
+      mode: input.mode,
+      collaborators: [],
+      researches: [],
+      nodeNotes: {},
+      createdAt: now,
+      updatedAt: now
+    });
+  },
+
+  async getBoard(boardId: string) {
+    try {
+      const docSnap = await getDoc(doc(db, "intelligence_boards", boardId));
+      if (docSnap.exists()) {
+        const board = deserializeBoard(docSnap.data());
+        localStorage.setItem(`cognapse_board_${boardId}`, JSON.stringify(board));
+        return board;
+      }
+    } catch (error) {
+      console.warn("Firebase board load failed, checking local cache:", error);
+    }
+    return safeParse<IntelligenceBoard | null>(localStorage.getItem(`cognapse_board_${boardId}`), null);
+  },
+
+  async getUserBoards(ownerId: string) {
+    try {
+      const q = query(collection(db, "intelligence_boards"), where("ownerId", "==", ownerId));
+      const querySnapshot = await getDocs(q);
+      const boards = querySnapshot.docs.map(doc => deserializeBoard(doc.data()));
+      boards.forEach(board => localStorage.setItem(`cognapse_board_${board.id}`, JSON.stringify(board)));
+      localStorage.setItem(`cognapse_board_index_${ownerId}`, JSON.stringify(boards.map(b => b.id)));
+      return boards.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    } catch (error) {
+      console.warn("Firebase board index failed, loading local boards:", error);
+      const ids = safeParse<string[]>(localStorage.getItem(`cognapse_board_index_${ownerId}`), []);
+      return ids
+        .map(id => safeParse<IntelligenceBoard | null>(localStorage.getItem(`cognapse_board_${id}`), null))
+        .filter(Boolean) as IntelligenceBoard[];
+    }
+  },
+
+  async getAccessibleBoards(userId: string, username: string) {
+    const byId = new Map<string, IntelligenceBoard>();
+    const addBoards = (boards: IntelligenceBoard[]) => boards.forEach(board => byId.set(board.id, board));
+
+    addBoards(await this.getUserBoards(userId));
+
+    const accessKeys = Array.from(new Set([userId, username, normalizeAccessKey(username)].filter(Boolean)));
+    for (const accessKey of accessKeys) {
+      try {
+        const q = query(collection(db, "intelligence_boards"), where("collaborators", "array-contains", accessKey));
+        const querySnapshot = await getDocs(q);
+        addBoards(querySnapshot.docs.map(doc => deserializeBoard(doc.data())));
+      } catch (error) {
+        console.warn("Firebase collaborator board lookup failed, checking local cache:", error);
+        const ids = safeParse<string[]>(localStorage.getItem(`cognapse_board_collab_index_${normalizeAccessKey(accessKey)}`), []);
+        addBoards(ids
+          .map(id => safeParse<IntelligenceBoard | null>(localStorage.getItem(`cognapse_board_${id}`), null))
+          .filter(Boolean) as IntelligenceBoard[]);
+      }
+    }
+
+    const boards = Array.from(byId.values());
+    boards.forEach(board => localStorage.setItem(`cognapse_board_${board.id}`, JSON.stringify(board)));
+    return boards.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  },
+
+  async updateBoardMode(board: IntelligenceBoard, mode: BoardMode) {
+    return this.saveBoard({ ...board, mode, updatedAt: new Date().toISOString() });
+  },
+
+  async addResearchToBoard(board: IntelligenceBoard, report: COGNAPSE_Output) {
+    const researchId = report.id || `research_${Date.now()}`;
+    const existing = board.researches.filter(item => item.researchId !== researchId);
+    return this.saveBoard({
+      ...board,
+      researches: [
+        {
+          researchId,
+          title: getReportTitle(report),
+          summary: getReportSummary(report),
+          report: { ...report, id: researchId },
+          addedAt: new Date().toISOString()
+        },
+        ...existing
+      ],
+      updatedAt: new Date().toISOString()
+    });
+  },
+
+  async removeResearchFromBoard(board: IntelligenceBoard, researchId: string) {
+    return this.saveBoard({
+      ...board,
+      researches: board.researches.filter(item => item.researchId !== researchId),
+      updatedAt: new Date().toISOString()
+    });
+  },
+
+  async updateBoardCollaborators(board: IntelligenceBoard, collaborators: string[]) {
+    return this.saveBoard({
+      ...board,
+      collaborators,
+      updatedAt: new Date().toISOString()
+    });
+  },
+
+  async updateBoardNodeNote(board: IntelligenceBoard, noteKey: string, content: string) {
+    const nodeNotes = { ...board.nodeNotes };
+    if (content.trim()) nodeNotes[noteKey] = content;
+    else delete nodeNotes[noteKey];
+    return this.saveBoard({ ...board, nodeNotes, updatedAt: new Date().toISOString() });
   },
 
   // Premium Access Models
