@@ -139,6 +139,8 @@ export interface SharedResearchRecord {
   report: COGNAPSE_Output;
   sourceCount: number;
   graphNodeCount: number;
+  active?: boolean;
+  disabledAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -148,7 +150,37 @@ export interface BoardResearchItem {
   title: string;
   summary: string;
   report: COGNAPSE_Output;
+  addedById?: string;
+  addedByName?: string;
   addedAt: string;
+}
+
+export interface BoardNodeNote {
+  content: string;
+  authorId: string;
+  authorName: string;
+  updatedAt: string;
+}
+
+export interface BoardActivity {
+  id: string;
+  type:
+    | "created"
+    | "updated"
+    | "mode_changed"
+    | "research_added"
+    | "research_removed"
+    | "invite_sent"
+    | "invite_accepted"
+    | "invite_declined"
+    | "invite_cancelled"
+    | "collaborator_removed"
+    | "note_updated"
+    | "duplicated";
+  actorId: string;
+  actorName: string;
+  detail: string;
+  timestamp: string;
 }
 
 export interface IntelligenceBoard {
@@ -160,7 +192,10 @@ export interface IntelligenceBoard {
   mode: BoardMode;
   collaborators: string[];
   researches: BoardResearchItem[];
-  nodeNotes: Record<string, string>;
+  nodeNotes: Record<string, string | BoardNodeNote>;
+  activity?: BoardActivity[];
+  archived?: boolean;
+  archivedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

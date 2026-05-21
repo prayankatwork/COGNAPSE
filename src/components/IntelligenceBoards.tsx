@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Calendar, CheckCircle2, Copy, ExternalLink, FilePlus2, FlaskConical, GitBranch, Loader2, Lock, MailCheck, Network, Plus, Share2, Trash2, Users, X } from 'lucide-react';
+import { AlertCircle, Archive, Calendar, CheckCircle2, Copy, ExternalLink, FilePlus2, FlaskConical, GitBranch, History, Loader2, Lock, MailCheck, Network, Plus, RotateCcw, Search, Settings, Share2, Trash2, Users, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
-import type { BoardInvite, BoardMode, IntelligenceBoard } from '../types';
+import type { BoardInvite, BoardMode, BoardNodeNote, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
 import PhysicsMap from './PhysicsMap';
 
 const matchesCollaborator = (board: IntelligenceBoard, user: { id: string; username: string } | null) => {
@@ -24,10 +24,25 @@ const displayCollaborators = (board: IntelligenceBoard, ownerId: string) => {
     });
 };
 
+const noteContent = (note: string | BoardNodeNote | undefined) =>
+  typeof note === 'string' ? note : note?.content || "";
+
+const noteMeta = (note: string | BoardNodeNote | undefined) =>
+  typeof note === 'object' && note ? `${note.authorName} · ${new Date(note.updatedAt).toLocaleString()}` : "";
+
+const explainVisibility = (visibility: ResearchVisibility | BoardMode) => {
+  if (visibility === "private") return "Only you can access it.";
+  if (visibility === "unlisted") return "Anyone with the link can view it.";
+  if (visibility === "shared") return "Accepted collaborators can co-manage it.";
+  return "Anyone with the board link can view it read-only.";
+};
+
 export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: string }) {
   const { user, setAuthOpen, archive, currentReport, setCurrentReport, setView } = useStore();
   const [boards, setBoards] = useState<IntelligenceBoard[]>([]);
   const [pendingInvites, setPendingInvites] = useState<BoardInvite[]>([]);
+  const [sentInvites, setSentInvites] = useState<BoardInvite[]>([]);
+  const [sharedResearch, setSharedResearch] = useState<SharedResearchRecord[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -38,6 +53,13 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
   const [collaborator, setCollaborator] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [boardSearch, setBoardSearch] = useState("");
+  const [archiveSearch, setArchiveSearch] = useState("");
+  const [settingsTitle, setSettingsTitle] = useState("");
+  const [settingsDescription, setSettingsDescription] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [syncNotice, setSyncNotice] = useState("");
 
   const activeBoard = useMemo(
     () => boards.find(board => board.id === activeId) || boards[0] || null,
@@ -47,6 +69,27 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
   const isCollaborator = !!activeBoard && matchesCollaborator(activeBoard, user);
   const canManageBoard = !!activeBoard && (isOwner || (activeBoard.mode === 'shared' && isCollaborator));
   const canViewBoard = !!activeBoard && (activeBoard.mode === 'public' || isOwner || (activeBoard.mode === 'shared' && isCollaborator));
+
+  const filteredBoards = useMemo(() => {
+    const q = boardSearch.trim().toLowerCase();
+    return boards.filter(board => {
+      if (!q) return true;
+      return (
+        board.title.toLowerCase().includes(q) ||
+        board.description.toLowerCase().includes(q) ||
+        board.mode.toLowerCase().includes(q) ||
+        board.researches.some(item => item.title.toLowerCase().includes(q) || item.summary.toLowerCase().includes(q))
+      );
+    });
+  }, [boards, boardSearch]);
+
+  const filteredArchive = useMemo(() => {
+    const q = archiveSearch.trim().toLowerCase();
+    return archive.filter(item => {
+      const title = item.report?.query_understood || item.query || "";
+      return !q || title.toLowerCase().includes(q) || (item.summary_snippet || "").toLowerCase().includes(q);
+    });
+  }, [archive, archiveSearch]);
 
   useEffect(() => {
     let mounted = true;
@@ -61,14 +104,20 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
         data = await dbService.getAccessibleBoards(user.id, user.username);
       }
       const invites = user ? await dbService.getUserBoardInvites(user.id, user.username) : [];
+      const sent = user ? await dbService.getSentBoardInvites(user.id) : [];
+      const shares = user ? await dbService.getUserSharedResearch(user.id) : [];
       if (mounted) {
         const visible = data.filter(board =>
-          board.mode === 'public' ||
-          board.ownerId === user?.id ||
-          (board.mode === 'shared' && matchesCollaborator(board, user))
+          !board.archived && (
+            board.mode === 'public' ||
+            board.ownerId === user?.id ||
+            (board.mode === 'shared' && matchesCollaborator(board, user))
+          )
         );
         setBoards(visible);
         setPendingInvites(invites);
+        setSentInvites(sent);
+        setSharedResearch(shares);
         setActiveId(routeBoardId || visible[0]?.id || null);
         if (routeBoardId && data[0] && visible.length === 0) {
           setAccessError(data[0].mode === 'private' ? "This board is private." : "Sign in as an invited collaborator to access this shared board.");
@@ -82,9 +131,18 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
     return () => { mounted = false; };
   }, [routeBoardId, user?.id, user?.username]);
 
+  useEffect(() => {
+    if (activeBoard) {
+      setSettingsTitle(activeBoard.title);
+      setSettingsDescription(activeBoard.description);
+      setConfirmArchive(false);
+    }
+  }, [activeBoard?.id]);
+
   const replaceBoard = (board: IntelligenceBoard) => {
     setBoards(prev => [board, ...prev.filter(item => item.id !== board.id)]);
     setActiveId(board.id);
+    setSyncNotice("Saved to Firebase. If cloud sync is temporarily unavailable, Cognapse keeps a local cache and retries on the next load.");
   };
 
   const createBoard = async () => {
@@ -102,28 +160,29 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
     setTitle("");
     setDescription("");
     replaceBoard(board);
+    setShowSettings(false);
   };
 
   const addCurrentResearch = async (board: IntelligenceBoard) => {
     if (!canManageBoard || !currentReport) return;
-    replaceBoard(await dbService.addResearchToBoard(board, currentReport));
+    replaceBoard(await dbService.addResearchToBoard(board, currentReport, user ? { id: user.id, username: user.username } : undefined));
   };
 
   const addArchivedResearch = async (board: IntelligenceBoard, reportId: string) => {
     if (!canManageBoard) return;
     const entry = archive.find(item => item.id === reportId);
     if (!entry) return;
-    replaceBoard(await dbService.addResearchToBoard(board, entry.report));
+    replaceBoard(await dbService.addResearchToBoard(board, entry.report, user ? { id: user.id, username: user.username } : undefined));
   };
 
   const removeResearch = async (board: IntelligenceBoard, researchId: string) => {
     if (!canManageBoard) return;
-    replaceBoard(await dbService.removeResearchFromBoard(board, researchId));
+    replaceBoard(await dbService.removeResearchFromBoard(board, researchId, user ? { id: user.id, username: user.username } : undefined));
   };
 
   const updateMode = async (board: IntelligenceBoard, nextMode: BoardMode) => {
     if (!isOwner) return;
-    replaceBoard(await dbService.updateBoardMode(board, nextMode));
+    replaceBoard(await dbService.updateBoardMode(board, nextMode, user ? { id: user.id, username: user.username } : undefined));
   };
 
   const addCollaborator = async (board: IntelligenceBoard) => {
@@ -132,19 +191,25 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
     if (!clean) return;
     setCollaborator("");
     setInviteStatus("");
-    await dbService.createBoardInvite(board, clean, { id: user!.id, username: user!.username });
+    const invite = await dbService.createBoardInvite(board, clean, { id: user!.id, username: user!.username });
+    setSentInvites(prev => [invite, ...prev.filter(item => item.id !== invite.id)]);
     setInviteStatus(`Invitation sent to ${clean}. They will see it in Intelligence Boards and must accept before access is enabled.`);
   };
 
   const removeCollaborator = async (board: IntelligenceBoard, value: string) => {
     if (!isOwner) return;
     const normalized = value.toLowerCase();
-    replaceBoard(await dbService.updateBoardCollaborators(board, board.collaborators.filter(item => item.toLowerCase() !== normalized)));
+    replaceBoard(await dbService.updateBoardCollaborators(
+      board,
+      board.collaborators.filter(item => item.toLowerCase() !== normalized),
+      user ? { id: user.id, username: user.username } : undefined,
+      `Revoked collaborator access for ${value}`
+    ));
   };
 
   const saveNodeNote = async (board: IntelligenceBoard, key: string) => {
     if (!canManageBoard) return;
-    replaceBoard(await dbService.updateBoardNodeNote(board, key, noteDrafts[key] || ""));
+    replaceBoard(await dbService.updateBoardNodeNote(board, key, noteDrafts[key] || "", user ? { id: user.id, username: user.username } : undefined));
   };
 
   const acceptInvite = async (invite: BoardInvite) => {
@@ -160,6 +225,63 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
   const declineInvite = async (invite: BoardInvite) => {
     await dbService.declineBoardInvite(invite);
     setPendingInvites(prev => prev.filter(item => item.id !== invite.id));
+  };
+
+  const cancelInvite = async (invite: BoardInvite) => {
+    if (!user) return;
+    const updated = await dbService.cancelBoardInvite(invite, { id: user.id, username: user.username });
+    setSentInvites(prev => prev.map(item => item.id === invite.id ? updated : item));
+  };
+
+  const resendInvite = async (invite: BoardInvite) => {
+    if (!user) return;
+    const updated = await dbService.resendBoardInvite(invite, { id: user.id, username: user.username });
+    setSentInvites(prev => prev.map(item => item.id === invite.id ? updated : item));
+  };
+
+  const saveSettings = async () => {
+    if (!activeBoard || !user || !isOwner) return;
+    replaceBoard(await dbService.updateBoardDetails(activeBoard, {
+      title: settingsTitle,
+      description: settingsDescription
+    }, { id: user.id, username: user.username }));
+    setShowSettings(false);
+  };
+
+  const archiveActiveBoard = async () => {
+    if (!activeBoard || !user || !isOwner) return;
+    if (!confirmArchive) {
+      setConfirmArchive(true);
+      return;
+    }
+    const archived = await dbService.archiveBoard(activeBoard, { id: user.id, username: user.username });
+    setBoards(prev => prev.filter(board => board.id !== archived.id));
+    setActiveId(null);
+    setConfirmArchive(false);
+  };
+
+  const duplicateActiveBoard = async () => {
+    if (!activeBoard) return;
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    replaceBoard(await dbService.duplicateBoard(activeBoard, { id: user.id, username: user.username }));
+  };
+
+  const updateShareVisibility = async (share: SharedResearchRecord, visibility: ResearchVisibility) => {
+    const updated = await dbService.updateSharedResearch(share, visibility);
+    setSharedResearch(prev => prev.map(item => item.id === updated.id ? updated : item));
+  };
+
+  const disableShare = async (share: SharedResearchRecord) => {
+    const updated = await dbService.disableSharedResearch(share);
+    setSharedResearch(prev => prev.map(item => item.id === updated.id ? updated : item));
+  };
+
+  const deleteShare = async (share: SharedResearchRecord) => {
+    await dbService.deleteSharedResearch(share);
+    setSharedResearch(prev => prev.filter(item => item.id !== share.id));
   };
 
   const copyBoardLink = async (board: IntelligenceBoard) => {
@@ -217,6 +339,12 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
           </div>
         </div>
 
+        {syncNotice && (
+          <div className="mb-5 border border-my-border bg-my-callout/60 px-4 py-3 text-[11px] text-my-muted leading-relaxed">
+            {syncNotice}
+          </div>
+        )}
+
         {user && pendingInvites.length > 0 && (
           <section className="mb-6 border border-my-accent/25 bg-my-accent/5 p-4">
             <div className="flex items-center gap-2 mb-4 text-my-accent">
@@ -246,6 +374,84 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
           </section>
         )}
 
+        {user && sharedResearch.length > 0 && (
+          <section className="mb-6 border border-my-border bg-my-callout p-5">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted flex items-center gap-2">
+                  <Share2 size={13} className="text-my-accent" /> Shared Research Manager
+                </h2>
+                <p className="text-[11px] text-my-muted mt-2">Manage active research links, visibility, and disabled shares.</p>
+              </div>
+            </div>
+            <div className="grid gap-3">
+              {sharedResearch.map(share => (
+                <div key={share.id} className="border border-my-border bg-my-bg p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="font-serif text-lg text-my-ink truncate">{share.title}</h3>
+                    <p className="text-[11px] text-my-muted mt-1 line-clamp-2">{share.summary}</p>
+                    <div className="flex flex-wrap gap-3 mt-2 text-[9px] uppercase tracking-widest font-bold text-my-muted">
+                      <span>{share.active === false ? "Disabled" : "Active"}</span>
+                      <span>{share.visibility}</span>
+                      <span>{new Date(share.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={share.visibility}
+                      onChange={e => updateShareVisibility(share, e.target.value as ResearchVisibility)}
+                      disabled={share.active === false}
+                      className="bg-my-callout border border-my-border px-3 py-2 text-[9px] uppercase tracking-widest font-bold text-my-ink disabled:opacity-50"
+                    >
+                      <option value="private">Private</option>
+                      <option value="unlisted">Unlisted</option>
+                      <option value="public">Public</option>
+                    </select>
+                    <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/share/${share.id}`)} className="px-3 py-2 border border-my-border text-[9px] font-black uppercase tracking-widest text-my-muted flex items-center gap-2">
+                      <Copy size={12} /> Copy
+                    </button>
+                    <button onClick={() => disableShare(share)} disabled={share.active === false} className="px-3 py-2 border border-my-border text-[9px] font-black uppercase tracking-widest text-my-muted disabled:opacity-50">
+                      Disable
+                    </button>
+                    <button onClick={() => deleteShare(share)} className="px-3 py-2 border border-red-500/30 text-[9px] font-black uppercase tracking-widest text-red-500">
+                      Delete
+                    </button>
+                  </div>
+                  <p className="lg:basis-full text-[10px] text-my-muted">{explainVisibility(share.visibility)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {user && sentInvites.length > 0 && (
+          <section className="mb-6 border border-my-border bg-my-callout p-5">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2">
+              <MailCheck size={13} className="text-my-accent" /> Sent Invitations
+            </h2>
+            <div className="grid gap-3">
+              {sentInvites.slice(0, 8).map(invite => (
+                <div key={invite.id} className="border border-my-border bg-my-bg p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-my-ink">{invite.invitee}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-my-muted">{invite.boardTitle} · {invite.status}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => resendInvite(invite)} className="px-3 py-2 border border-my-border text-[9px] font-black uppercase tracking-widest text-my-muted flex items-center gap-2">
+                      <RotateCcw size={11} /> Resend
+                    </button>
+                    {invite.status === "pending" && (
+                      <button onClick={() => cancelInvite(invite)} className="px-3 py-2 border border-red-500/30 text-[9px] font-black uppercase tracking-widest text-red-500">
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {loading ? (
           <div className="flex items-center gap-3 text-my-muted text-[10px] font-black uppercase tracking-[0.3em]">
             <Loader2 size={16} className="animate-spin text-my-accent" /> Loading Boards
@@ -253,9 +459,23 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
         ) : (
           <div className="grid lg:grid-cols-[280px_1fr] gap-6">
             <aside className="border border-my-border bg-my-callout p-3 h-fit">
+              <div className="relative mb-3">
+                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-my-muted" />
+                <input
+                  value={boardSearch}
+                  onChange={e => setBoardSearch(e.target.value)}
+                  placeholder="Search boards..."
+                  className="w-full bg-my-bg border border-my-border pl-8 pr-3 py-2 text-xs text-my-ink focus:outline-none focus:border-my-accent"
+                />
+              </div>
               {boards.length === 0 ? (
-                <p className="text-xs text-my-muted p-4">Create your first board to collect research over time.</p>
-              ) : boards.map(board => (
+                <div className="text-xs text-my-muted p-4 space-y-3">
+                  <p>Create your first board to collect research over time.</p>
+                  <p className="text-[10px] uppercase tracking-widest">Start by saving the current research, adding from archive, or inviting collaborators after switching to shared mode.</p>
+                </div>
+              ) : filteredBoards.length === 0 ? (
+                <p className="text-xs text-my-muted p-4">No boards match your search.</p>
+              ) : filteredBoards.map(board => (
                 <button
                   key={board.id}
                   onClick={() => setActiveId(board.id)}
@@ -291,16 +511,26 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                         <span className="flex items-center gap-1.5"><Calendar size={12} /> {new Date(activeBoard.updatedAt).toLocaleString()}</span>
                         <span className="flex items-center gap-1.5"><GitBranch size={12} /> {activeBoard.researches.length} saved</span>
                         {!isOwner && isCollaborator && <span className="flex items-center gap-1.5"><Users size={12} /> Collaborator</span>}
+                        {!canManageBoard && activeBoard.mode === 'public' && <span>Read-only public board</span>}
                       </div>
+                      <p className="text-[11px] text-my-muted mt-3">{explainVisibility(activeBoard.mode)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button onClick={() => copyBoardLink(activeBoard)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
                         {copiedBoardId === activeBoard.id ? <Copy size={12} /> : <Share2 size={12} />}
                         {copiedBoardId === activeBoard.id ? "Copied" : "Board Link"}
                       </button>
+                      <button onClick={duplicateActiveBoard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
+                        <GitBranch size={12} /> Duplicate
+                      </button>
                       <a href={`/board/${activeBoard.id}`} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
                         <ExternalLink size={12} /> Open
                       </a>
+                      {isOwner && (
+                        <button onClick={() => setShowSettings(v => !v)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
+                          <Settings size={12} /> Settings
+                        </button>
+                      )}
                       {(['private', 'shared', 'public'] as BoardMode[]).map(item => (
                         <button key={item} disabled={!isOwner} onClick={() => updateMode(activeBoard, item)} className={clsx("px-3 py-2 text-[9px] font-black uppercase tracking-widest border disabled:opacity-40", activeBoard.mode === item ? "bg-my-accent text-white dark:text-black border-my-accent" : "border-my-border text-my-muted")}>
                           {item}
@@ -315,33 +545,92 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                   </div>
                 </section>
 
+                {showSettings && isOwner && (
+                  <section className="border border-my-border bg-my-callout p-5">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2">
+                      <Settings size={13} /> Board Settings
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-3 mb-4">
+                      <input value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                      <input value={settingsDescription} onChange={e => setSettingsDescription(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button onClick={saveSettings} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">
+                        Save Settings
+                      </button>
+                      <button onClick={archiveActiveBoard} className="px-4 py-2 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <Archive size={12} /> {confirmArchive ? "Confirm Archive" : "Archive Board"}
+                      </button>
+                      <span className="text-[10px] text-my-muted">Archiving hides this board without deleting its saved research.</span>
+                    </div>
+                  </section>
+                )}
+
                 {canManageBoard && (
                 <section className="border border-my-border bg-my-callout p-5">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4">Add Research</h3>
-                  <div className="flex flex-col md:flex-row gap-2">
+                  <div className="flex flex-col md:flex-row gap-2 mb-3">
                     <button disabled={!currentReport} onClick={() => addCurrentResearch(activeBoard)} className="px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black disabled:opacity-40 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 justify-center">
                       <FilePlus2 size={13} /> Current Research
                     </button>
+                    <input
+                      value={archiveSearch}
+                      onChange={e => setArchiveSearch(e.target.value)}
+                      placeholder="Search archive before adding..."
+                      className="flex-1 bg-my-bg border border-my-border px-3 py-3 text-sm text-my-ink focus:outline-none focus:border-my-accent"
+                    />
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2">
                     <select onChange={e => e.target.value && addArchivedResearch(activeBoard, e.target.value)} value="" className="flex-1 bg-my-bg border border-my-border px-3 py-3 text-sm text-my-ink">
                       <option value="">Add from archive...</option>
-                      {archive.map(item => <option key={item.id} value={item.id}>{item.report?.query_understood || item.query}</option>)}
+                      {filteredArchive.map(item => <option key={item.id} value={item.id}>{item.report?.query_understood || item.query}</option>)}
                     </select>
                   </div>
+                  {archive.length === 0 && (
+                    <p className="text-[11px] text-my-muted mt-3">Your archive is empty. Run or fork a research session first, then return here to save it to a board.</p>
+                  )}
                 </section>
                 )}
 
                 {activeBoard.mode === 'shared' && isOwner && (
                   <section className="border border-my-border bg-my-callout p-5">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2"><Users size={13} /> Collaborators</h3>
+                    <p className="text-[11px] text-my-muted mb-3">
+                      Role: Editor. Accepted collaborators can add or remove saved research and edit node notes. Owners control visibility, settings, and access.
+                    </p>
                     <div className="flex gap-2 mb-3">
                       <input value={collaborator} onChange={e => setCollaborator(e.target.value)} placeholder="Collaborator username or email" className="flex-1 bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink" />
                       <button onClick={() => addCollaborator(activeBoard)} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">Invite</button>
+                      <button
+                        onClick={() => navigator.clipboard?.writeText(`You have been invited to collaborate on "${activeBoard.title}" in Cognapse. Sign in with the invited username and open Intelligence Boards to accept. Board link: ${window.location.origin}/board/${activeBoard.id}`)}
+                        className="px-4 py-2 border border-my-border text-my-muted text-[10px] font-black uppercase tracking-widest"
+                      >
+                        Copy Invite Text
+                      </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {displayCollaborators(activeBoard, activeBoard.ownerId).map(item => (
                         <button key={item} onClick={() => removeCollaborator(activeBoard, item)} className="px-3 py-1.5 border border-my-border text-[10px] text-my-muted hover:text-red-500">
                           {item} ×
                         </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {activeBoard.activity && activeBoard.activity.length > 0 && (
+                  <section className="border border-my-border bg-my-callout p-5">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2">
+                      <History size={13} /> Board Activity
+                    </h3>
+                    <div className="grid gap-2">
+                      {activeBoard.activity.slice(0, 8).map(item => (
+                        <div key={item.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 border-b border-my-border last:border-b-0 py-2">
+                          <span className="text-xs text-my-ink">{item.detail}</span>
+                          <span className="text-[9px] uppercase tracking-widest text-my-muted">
+                            {item.actorName} · {new Date(item.timestamp).toLocaleString()}
+                          </span>
+                        </div>
                       ))}
                     </div>
                   </section>
@@ -378,11 +667,16 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                                   <div key={key} className="bg-my-bg border border-my-border p-3">
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-my-accent mb-2">{node.label}</div>
                                     <textarea
-                                      value={noteDrafts[key] ?? activeBoard.nodeNotes[key] ?? ""}
+                                      value={noteDrafts[key] ?? noteContent(activeBoard.nodeNotes[key])}
                                       onChange={e => setNoteDrafts(prev => ({ ...prev, [key]: e.target.value }))}
                                       className="w-full min-h-20 bg-transparent text-xs text-my-ink focus:outline-none"
                                       placeholder="Add a knowledge note..."
                                     />
+                                    {noteMeta(activeBoard.nodeNotes[key]) && (
+                                      <div className="mt-1 text-[9px] text-my-muted uppercase tracking-widest">
+                                        Last updated by {noteMeta(activeBoard.nodeNotes[key])}
+                                      </div>
+                                    )}
                                     <button onClick={() => saveNodeNote(activeBoard, key)} className="mt-2 text-[9px] font-black uppercase tracking-widest text-my-accent">Save Note</button>
                                   </div>
                                 );

@@ -9,7 +9,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
   const [shared, setShared] = useState<SharedResearchRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, addToArchive, setCurrentReport, setView, pushToStack, clearStack } = useStore();
+  const { user, addToArchive, setCurrentReport, setView, pushToStack, clearStack, setAuthOpen } = useStore();
 
   useEffect(() => {
     let mounted = true;
@@ -20,6 +20,8 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
       if (!mounted) return;
       if (!record) {
         setError("Shared research link was not found.");
+      } else if (record.active === false) {
+        setError("This shared research link has been disabled by its owner.");
       } else if (record.visibility === 'private' && record.ownerId !== user?.id) {
         setError("This research is private.");
       } else {
@@ -33,6 +35,10 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
 
   const handleFork = async () => {
     if (!shared) return;
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
     const forkId = crypto.randomUUID();
     const forkedAt = new Date().toISOString();
     const forkedReport = {

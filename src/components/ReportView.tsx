@@ -223,6 +223,21 @@ export default function ReportView({
         <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-4 italic font-serif text-base text-my-ink">
           {safeText(report.summary?.bottom_line) || "No summary provided."}
         </div>
+        {report.fork_lineage && (
+          <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-my-muted">
+            <div className="flex items-start gap-2">
+              <GitFork size={13} className="text-my-accent mt-0.5 shrink-0" />
+              <p className="text-[11px] leading-relaxed">
+                Forked from {safeText(report.fork_lineage.forkedFromTitle)} on {new Date(report.fork_lineage.forkedAt).toLocaleString()}.
+              </p>
+            </div>
+            {report.fork_lineage.originalShareId && (
+              <a href={`/share/${report.fork_lineage.originalShareId}`} className="text-[9px] font-black uppercase tracking-widest text-my-accent">
+                Open Original
+              </a>
+            )}
+          </div>
+        )}
         {!readOnly && (
           <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
             <FlaskConical size={13} className="text-my-accent mt-0.5 shrink-0" />

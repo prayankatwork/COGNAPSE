@@ -16,7 +16,7 @@ import {
   deleteDoc,
   writeBatch
 } from "firebase/firestore";
-import type { BoardInvite, BoardMode, COGNAPSE_Output, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
+import type { BoardActivity, BoardInvite, BoardMode, COGNAPSE_Output, IntelligenceBoard, ResearchVisibility, SharedResearchRecord } from '../types';
 
 const safeParse = <T>(value: string | null, fallback: T): T => {
   if (!value) return fallback;
@@ -34,13 +34,39 @@ const normalizeAccessKey = (value: string) => value.trim().toLowerCase();
 const deserializeBoard = (data: any) => ({
   ...data,
   researches: typeof data.researches === "string" ? JSON.parse(data.researches) : data.researches || [],
-  nodeNotes: typeof data.nodeNotes === "string" ? JSON.parse(data.nodeNotes) : data.nodeNotes || {}
+  nodeNotes: typeof data.nodeNotes === "string" ? JSON.parse(data.nodeNotes) : data.nodeNotes || {},
+  activity: typeof data.activity === "string" ? JSON.parse(data.activity) : data.activity || [],
+  archived: !!data.archived,
+  archivedAt: data.archivedAt || null
 }) as IntelligenceBoard;
 
 const deserializeInvite = (data: any) => ({
   ...data,
   inviteeKeys: Array.isArray(data.inviteeKeys) ? data.inviteeKeys : []
 }) as BoardInvite;
+
+const activityEntry = (
+  type: BoardActivity["type"],
+  actor: { id: string; username: string },
+  detail: string
+): BoardActivity => ({
+  id: crypto.randomUUID(),
+  type,
+  actorId: actor.id,
+  actorName: actor.username,
+  detail,
+  timestamp: new Date().toISOString()
+});
+
+const withActivity = (
+  board: IntelligenceBoard,
+  type: BoardActivity["type"],
+  actor: { id: string; username: string },
+  detail: string
+) => ({
+  ...board,
+  activity: [activityEntry(type, actor, detail), ...(board.activity || [])].slice(0, 100)
+});
 
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
@@ -444,6 +470,8 @@ export const dbService = {
       report: input.report,
       sourceCount: input.report.sources?.length || 0,
       graphNodeCount: input.report.intelligence_map?.nodes?.length || 0,
+      active: true,
+      disabledAt: null,
       createdAt: now,
       updatedAt: now
     };
@@ -488,6 +516,8 @@ export const dbService = {
         const data = docSnap.data() as any;
         const record = {
           ...data,
+          active: data.active !== false,
+          disabledAt: data.disabledAt || null,
           report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
         } as SharedResearchRecord;
         localStorage.setItem(`cognapse_shared_${shareId}`, JSON.stringify(record));
@@ -507,6 +537,8 @@ export const dbService = {
         const data = doc.data() as any;
         return {
           ...data,
+          active: data.active !== false,
+          disabledAt: data.disabledAt || null,
           report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
         } as SharedResearchRecord;
       });
@@ -519,6 +551,57 @@ export const dbService = {
       return ids
         .map(id => safeParse<SharedResearchRecord | null>(localStorage.getItem(`cognapse_shared_${id}`), null))
         .filter(Boolean) as SharedResearchRecord[];
+    }
+  },
+
+  async updateSharedResearch(record: SharedResearchRecord, visibility: ResearchVisibility) {
+    const updated = {
+      ...record,
+      visibility,
+      active: record.active !== false,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`cognapse_shared_${record.id}`, JSON.stringify(updated));
+    try {
+      await setDoc(doc(db, "shared_research", record.id), {
+        ...updated,
+        report: JSON.stringify(updated.report)
+      }, { merge: true });
+    } catch (error) {
+      console.warn("Firebase shared research update failed, local share cache active:", error);
+    }
+    return updated;
+  },
+
+  async disableSharedResearch(record: SharedResearchRecord) {
+    const updated = {
+      ...record,
+      active: false,
+      disabledAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`cognapse_shared_${record.id}`, JSON.stringify(updated));
+    try {
+      await setDoc(doc(db, "shared_research", record.id), {
+        active: false,
+        disabledAt: updated.disabledAt,
+        updatedAt: updated.updatedAt
+      }, { merge: true });
+    } catch (error) {
+      console.warn("Firebase shared research disable failed, local share cache active:", error);
+    }
+    return updated;
+  },
+
+  async deleteSharedResearch(record: SharedResearchRecord) {
+    localStorage.removeItem(`cognapse_shared_${record.id}`);
+    const ownerKey = `cognapse_shared_index_${record.ownerId}`;
+    const existing = safeParse<string[]>(localStorage.getItem(ownerKey), []);
+    localStorage.setItem(ownerKey, JSON.stringify(existing.filter(id => id !== record.id)));
+    try {
+      await deleteDoc(doc(db, "shared_research", record.id));
+    } catch (error) {
+      console.warn("Firebase shared research delete failed, local share cache removed:", error);
     }
   },
 
@@ -565,6 +648,16 @@ export const dbService = {
       collaborators: [],
       researches: [],
       nodeNotes: {},
+      activity: [{
+        id: crypto.randomUUID(),
+        type: "created",
+        actorId: input.ownerId,
+        actorName: input.ownerName,
+        detail: "Board created",
+        timestamp: now
+      }],
+      archived: false,
+      archivedAt: null,
       createdAt: now,
       updatedAt: now
     });
@@ -656,6 +749,9 @@ export const dbService = {
       localStorage.setItem(indexKey, JSON.stringify(Array.from(new Set([id, ...existing]))));
     });
 
+    const boardWithActivity = withActivity(board, "invite_sent", inviter, `Invited ${cleanInvitee}`);
+    await this.saveBoard(boardWithActivity);
+
     try {
       await setDoc(doc(db, "board_invites", id), invite);
     } catch (error) {
@@ -702,7 +798,12 @@ export const dbService = {
       normalizeAccessKey(user.username)
     ].filter(Boolean)));
 
-    const updatedBoard = await this.updateBoardCollaborators(board, collaborators);
+    const updatedBoard = await this.saveBoard(withActivity(
+      { ...board, collaborators, updatedAt: new Date().toISOString() },
+      "invite_accepted",
+      user,
+      `Accepted invitation to ${board.title}`
+    ));
     const updatedInvite = { ...invite, status: "accepted" as const, updatedAt: new Date().toISOString() };
     localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(updatedInvite));
 
@@ -726,14 +827,95 @@ export const dbService = {
     return updatedInvite;
   },
 
-  async updateBoardMode(board: IntelligenceBoard, mode: BoardMode) {
-    return this.saveBoard({ ...board, mode, updatedAt: new Date().toISOString() });
+  async getSentBoardInvites(ownerId: string) {
+    try {
+      const q = query(collection(db, "board_invites"), where("invitedById", "==", ownerId));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs
+        .map(doc => deserializeInvite(doc.data()))
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    } catch (error) {
+      console.warn("Firebase sent invite lookup failed:", error);
+      return [];
+    }
   },
 
-  async addResearchToBoard(board: IntelligenceBoard, report: COGNAPSE_Output) {
+  async cancelBoardInvite(invite: BoardInvite, actor: { id: string; username: string }) {
+    const updatedInvite = { ...invite, status: "declined" as const, updatedAt: new Date().toISOString() };
+    localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(updatedInvite));
+    const board = await this.getBoard(invite.boardId);
+    if (board) {
+      await this.saveBoard(withActivity(board, "invite_cancelled", actor, `Cancelled invitation for ${invite.invitee}`));
+    }
+    try {
+      await setDoc(doc(db, "board_invites", invite.id), updatedInvite, { merge: true });
+    } catch (error) {
+      console.warn("Firebase board invite cancel update failed:", error);
+    }
+    return updatedInvite;
+  },
+
+  async resendBoardInvite(invite: BoardInvite, actor: { id: string; username: string }) {
+    const updatedInvite = { ...invite, status: "pending" as const, updatedAt: new Date().toISOString() };
+    localStorage.setItem(`cognapse_board_invite_${invite.id}`, JSON.stringify(updatedInvite));
+    const board = await this.getBoard(invite.boardId);
+    if (board) {
+      await this.saveBoard(withActivity(board, "invite_sent", actor, `Resent invitation to ${invite.invitee}`));
+    }
+    try {
+      await setDoc(doc(db, "board_invites", invite.id), updatedInvite, { merge: true });
+    } catch (error) {
+      console.warn("Firebase board invite resend update failed:", error);
+    }
+    return updatedInvite;
+  },
+
+  async updateBoardMode(board: IntelligenceBoard, mode: BoardMode, actor?: { id: string; username: string }) {
+    const next = { ...board, mode, updatedAt: new Date().toISOString() };
+    return this.saveBoard(actor ? withActivity(next, "mode_changed", actor, `Board visibility changed to ${mode}`) : next);
+  },
+
+  async updateBoardDetails(board: IntelligenceBoard, updates: { title: string; description: string }, actor: { id: string; username: string }) {
+    return this.saveBoard(withActivity({
+      ...board,
+      title: updates.title.trim() || board.title,
+      description: updates.description.trim(),
+      updatedAt: new Date().toISOString()
+    }, "updated", actor, "Board settings updated"));
+  },
+
+  async archiveBoard(board: IntelligenceBoard, actor: { id: string; username: string }) {
+    return this.saveBoard(withActivity({
+      ...board,
+      archived: true,
+      archivedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }, "updated", actor, "Board archived"));
+  },
+
+  async duplicateBoard(board: IntelligenceBoard, actor: { id: string; username: string }) {
+    const now = new Date().toISOString();
+    const duplicate: IntelligenceBoard = {
+      ...board,
+      id: `board_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      ownerId: actor.id,
+      ownerName: actor.username,
+      title: `${board.title} Copy`,
+      mode: "private",
+      collaborators: [],
+      activity: [activityEntry("duplicated", actor, `Duplicated from ${board.title}`)],
+      archived: false,
+      archivedAt: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    return this.saveBoard(duplicate);
+  },
+
+  async addResearchToBoard(board: IntelligenceBoard, report: COGNAPSE_Output, actor?: { id: string; username: string }) {
     const researchId = report.id || `research_${Date.now()}`;
     const existing = board.researches.filter(item => item.researchId !== researchId);
-    return this.saveBoard({
+    const next = {
       ...board,
       researches: [
         {
@@ -741,35 +923,46 @@ export const dbService = {
           title: getReportTitle(report),
           summary: getReportSummary(report),
           report: { ...report, id: researchId },
+          addedById: actor?.id,
+          addedByName: actor?.username,
           addedAt: new Date().toISOString()
         },
         ...existing
       ],
       updatedAt: new Date().toISOString()
-    });
+    };
+    return this.saveBoard(actor ? withActivity(next, "research_added", actor, `Added ${getReportTitle(report)}`) : next);
   },
 
-  async removeResearchFromBoard(board: IntelligenceBoard, researchId: string) {
-    return this.saveBoard({
+  async removeResearchFromBoard(board: IntelligenceBoard, researchId: string, actor?: { id: string; username: string }) {
+    const removed = board.researches.find(item => item.researchId === researchId);
+    const next = {
       ...board,
       researches: board.researches.filter(item => item.researchId !== researchId),
       updatedAt: new Date().toISOString()
-    });
+    };
+    return this.saveBoard(actor ? withActivity(next, "research_removed", actor, `Removed ${removed?.title || "research"}`) : next);
   },
 
-  async updateBoardCollaborators(board: IntelligenceBoard, collaborators: string[]) {
-    return this.saveBoard({
+  async updateBoardCollaborators(board: IntelligenceBoard, collaborators: string[], actor?: { id: string; username: string }, detail = "Collaborator access updated") {
+    const next = {
       ...board,
       collaborators,
       updatedAt: new Date().toISOString()
-    });
+    };
+    return this.saveBoard(actor ? withActivity(next, "collaborator_removed", actor, detail) : next);
   },
 
-  async updateBoardNodeNote(board: IntelligenceBoard, noteKey: string, content: string) {
+  async updateBoardNodeNote(board: IntelligenceBoard, noteKey: string, content: string, actor?: { id: string; username: string }) {
     const nodeNotes = { ...board.nodeNotes };
-    if (content.trim()) nodeNotes[noteKey] = content;
+    if (content.trim()) {
+      nodeNotes[noteKey] = actor
+        ? { content, authorId: actor.id, authorName: actor.username, updatedAt: new Date().toISOString() }
+        : content;
+    }
     else delete nodeNotes[noteKey];
-    return this.saveBoard({ ...board, nodeNotes, updatedAt: new Date().toISOString() });
+    const next = { ...board, nodeNotes, updatedAt: new Date().toISOString() };
+    return this.saveBoard(actor ? withActivity(next, "note_updated", actor, "Updated a research node note") : next);
   },
 
   // Premium Access Models
