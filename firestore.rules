@@ -10,10 +10,6 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == ownerId;
     }
 
-    function hasCollaboratorAccess(collaborators) {
-      return signedIn() && request.auth.uid in collaborators;
-    }
-
     match /shared_research/{shareId} {
       allow read: if resource.data.active != false
         && (
@@ -24,30 +20,5 @@ service cloud.firestore {
       allow update, delete: if isOwner(resource.data.ownerId);
     }
 
-    match /intelligence_boards/{boardId} {
-      allow read: if resource.data.mode == 'public'
-        || isOwner(resource.data.ownerId)
-        || hasCollaboratorAccess(resource.data.collaborators);
-      allow create: if isOwner(request.resource.data.ownerId);
-      allow update: if isOwner(resource.data.ownerId)
-        || (
-          resource.data.mode == 'shared'
-          && hasCollaboratorAccess(resource.data.collaborators)
-          && request.resource.data.ownerId == resource.data.ownerId
-          && request.resource.data.mode == resource.data.mode
-        );
-      allow delete: if isOwner(resource.data.ownerId);
-    }
-
-    match /board_invites/{inviteId} {
-      allow read: if signedIn();
-      allow create: if isOwner(request.resource.data.invitedById);
-      allow update: if signedIn()
-        && (
-          request.auth.uid == resource.data.invitedById
-          || request.auth.uid in resource.data.inviteeKeys
-        );
-      allow delete: if isOwner(resource.data.invitedById);
-    }
   }
 }

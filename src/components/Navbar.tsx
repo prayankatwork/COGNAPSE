@@ -2,14 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { 
   User, X, Moon, Sun, Search,
-  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown, Network
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import CommandPalette from './CommandPalette';
 import PremiumExportModal from './PremiumExportModal';
-import { dbService } from '../services/dbService';
 
 export default function Navbar() {
   const { 
@@ -21,7 +20,6 @@ export default function Navbar() {
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
-  const [pendingInviteCount, setPendingInviteCount] = useState(0);
   const handleCommandClose = useCallback(() => setIsCommandOpen(false), []);
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -30,28 +28,9 @@ export default function Navbar() {
     { id: 'landing', label: 'Home', icon: <Search size={14} /> },
     { id: 'news', label: 'Intelligence Hub', icon: <GlobeIcon size={14} /> },
     { id: 'research', label: 'Research', icon: <Activity size={14} /> },
-    { id: 'boards', label: 'Boards', icon: <Network size={14} /> },
     { id: 'documentation', label: 'Manual', icon: <BookOpen size={14} /> },
     { id: 'creator', label: 'Architect', icon: <User size={14} /> },
   ];
-
-  useEffect(() => {
-    let mounted = true;
-    const loadInviteCount = async () => {
-      if (!user) {
-        setPendingInviteCount(0);
-        return;
-      }
-      const invites = await dbService.getUserBoardInvites(user.id, user.username);
-      if (mounted) setPendingInviteCount(invites.length);
-    };
-    loadInviteCount();
-    const timer = setInterval(loadInviteCount, 60000);
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-    };
-  }, [user?.id, user?.username]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 2);
@@ -139,11 +118,6 @@ export default function Navbar() {
                     <span className={clsx("text-[11px] font-bold tracking-wide", currentView === mod.id ? "text-my-accent" : "group-hover:text-my-ink")}>
                       {mod.label}
                     </span>
-                    {mod.id === 'boards' && pendingInviteCount > 0 && (
-                      <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-my-accent text-white dark:text-black text-[9px] font-black flex items-center justify-center">
-                        {pendingInviteCount}
-                      </span>
-                    )}
                   </button>
                 ))}
               </motion.div>

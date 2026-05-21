@@ -126,7 +126,6 @@ export interface COGNAPSE_Output {
 }
 
 export type ResearchVisibility = "private" | "unlisted" | "public";
-export type BoardMode = "private" | "shared" | "public";
 
 export interface SharedResearchRecord {
   id: string;
@@ -141,75 +140,6 @@ export interface SharedResearchRecord {
   graphNodeCount: number;
   active?: boolean;
   disabledAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BoardResearchItem {
-  researchId: string;
-  title: string;
-  summary: string;
-  report: COGNAPSE_Output;
-  addedById?: string;
-  addedByName?: string;
-  addedAt: string;
-}
-
-export interface BoardNodeNote {
-  content: string;
-  authorId: string;
-  authorName: string;
-  updatedAt: string;
-}
-
-export interface BoardActivity {
-  id: string;
-  type:
-    | "created"
-    | "updated"
-    | "mode_changed"
-    | "research_added"
-    | "research_removed"
-    | "invite_sent"
-    | "invite_accepted"
-    | "invite_declined"
-    | "invite_cancelled"
-    | "collaborator_removed"
-    | "note_updated"
-    | "duplicated";
-  actorId: string;
-  actorName: string;
-  detail: string;
-  timestamp: string;
-}
-
-export interface IntelligenceBoard {
-  id: string;
-  ownerId: string;
-  ownerName: string;
-  title: string;
-  description: string;
-  mode: BoardMode;
-  collaborators: string[];
-  researches: BoardResearchItem[];
-  nodeNotes: Record<string, string | BoardNodeNote>;
-  activity?: BoardActivity[];
-  archived?: boolean;
-  archivedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BoardInvite {
-  id: string;
-  boardId: string;
-  boardTitle: string;
-  boardDescription: string;
-  invitedById: string;
-  invitedByName: string;
-  invitee: string;
-  inviteeKeys: string[];
-  status: "pending" | "accepted" | "declined";
   createdAt: string;
   updatedAt: string;
 }

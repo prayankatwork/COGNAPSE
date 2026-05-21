@@ -6,7 +6,7 @@ import {
   Cpu, FileText, LayoutGrid, Activity, 
   BookOpen, ChevronLeft, ChevronRight, 
   ArrowUpRight, ShieldCheck, Terminal,
-  Library, Box, Fingerprint, Lock, Shield, Workflow
+  Library, Box, Fingerprint, Lock, Shield
 } from 'lucide-react';
 import { useStore } from '../store';
 import clsx from 'clsx';
@@ -125,17 +125,6 @@ export default function Sidebar() {
                )}
              >
                <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Investigation
-             </button>
-
-             <button
-               onClick={() => walkthroughCompleted && setView('boards')}
-               disabled={!walkthroughCompleted}
-               className={clsx(
-                 "w-full py-3 border border-my-border text-my-ink font-bold uppercase tracking-[0.25em] text-[9px] flex items-center justify-center gap-3 hover:border-orange-500 hover:text-orange-500 transition-all mb-6",
-                 !walkthroughCompleted && "opacity-30 cursor-not-allowed"
-               )}
-             >
-               <Workflow size={13} /> Intelligence Boards
              </button>
 
               <div className="flex items-center justify-between">

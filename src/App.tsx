@@ -23,7 +23,6 @@ import IntelligenceFeed from './components/IntelligenceFeed';
 import CreatorProfile from './components/CreatorProfile';
 import NeuralWalkthrough from './components/NeuralWalkthrough';
 import SharedResearchPage from './components/SharedResearchPage';
-import IntelligenceBoards from './components/IntelligenceBoards';
 import { lazy, Suspense } from 'react';
 
 import { audioService } from './services/audioService';
@@ -31,10 +30,6 @@ import { audioService } from './services/audioService';
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
     const match = window.location.pathname.match(/^\/share\/([^/]+)/);
-    return match?.[1] || null;
-  });
-  const [boardRoute, setBoardRoute] = useState<string | null>(() => {
-    const match = window.location.pathname.match(/^\/board\/([^/]+)/);
     return match?.[1] || null;
   });
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
@@ -129,9 +124,7 @@ export default function App() {
   useEffect(() => {
     const handleRoute = () => {
       const shareMatch = window.location.pathname.match(/^\/share\/([^/]+)/);
-      const boardMatch = window.location.pathname.match(/^\/board\/([^/]+)/);
       setShareRoute(shareMatch?.[1] || null);
-      setBoardRoute(boardMatch?.[1] || null);
     };
     window.addEventListener('popstate', handleRoute);
     return () => window.removeEventListener('popstate', handleRoute);
@@ -231,8 +224,6 @@ export default function App() {
         return <LandingPage />;
       case 'documentation':
         return <Documentation />;
-      case 'boards':
-        return <IntelligenceBoards />;
       case 'creator':
         return <CreatorProfile />;
       case 'news':
@@ -278,10 +269,10 @@ export default function App() {
       "min-h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16",
       theme === 'dark' ? 'dark' : ''
     )}>
-      {!shareRoute && !boardRoute && <Navbar />}
+      {!shareRoute && <Navbar />}
 
       <div className="h-[calc(100vh-64px)] relative">
-        {shareRoute ? <SharedResearchPage shareId={shareRoute} /> : boardRoute ? <IntelligenceBoards routeBoardId={boardRoute} /> : renderContent()}
+        {shareRoute ? <SharedResearchPage shareId={shareRoute} /> : renderContent()}
       </div>
 
       <AnimatePresence>
@@ -289,8 +280,8 @@ export default function App() {
         {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
         {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
       </AnimatePresence>
-      {!shareRoute && !boardRoute && <NeuralWalkthrough />}
-      {!shareRoute && !boardRoute && <SelectionCapture />}
+      {!shareRoute && <NeuralWalkthrough />}
+      {!shareRoute && <SelectionCapture />}
       <NeuralBackground />
     </div>
   );

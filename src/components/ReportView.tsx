@@ -242,7 +242,7 @@ export default function ReportView({
           <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
             <FlaskConical size={13} className="text-my-accent mt-0.5 shrink-0" />
             <p className="text-[11px] leading-relaxed">
-              Sharing, board saving, and research forking are preview features. They are available for testing and may receive UX and permissions refinements before final release.
+              Sharing and research forking are preview features. They are available for testing and may receive UX and permissions refinements before final release.
             </p>
           </div>
         )}

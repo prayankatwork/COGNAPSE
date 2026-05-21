@@ -104,8 +104,8 @@ interface AppState {
   isStatusOpen: boolean;
   setStatusOpen: (open: boolean) => void;
 
-  currentView: 'onboarding' | 'landing' | 'research' | 'boards' | 'documentation' | 'dev' | 'news' | 'games' | 'creator';
-  setView: (view: 'onboarding' | 'landing' | 'research' | 'boards' | 'documentation' | 'dev' | 'news' | 'games' | 'creator') => void;
+  currentView: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news' | 'games' | 'creator';
+  setView: (view: 'onboarding' | 'landing' | 'research' | 'documentation' | 'dev' | 'news' | 'games' | 'creator') => void;
 
   xp: number;
   searchCount: number;
