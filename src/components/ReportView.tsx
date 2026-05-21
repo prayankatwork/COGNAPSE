@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { COGNAPSE_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, GitFork, Copy, Eye, Globe2, FlaskConical } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FlaskConical } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
 import PhysicsMap from './PhysicsMap';
@@ -17,14 +17,12 @@ export default function ReportView({
   report,
   onSubSearch,
   onChatFollowUp,
-  readOnly = false,
-  onFork
+  readOnly = false
 }: {
   report: COGNAPSE_Output,
   onSubSearch: (q: string) => void,
   onChatFollowUp?: (q: string) => void,
-  readOnly?: boolean,
-  onFork?: () => void
+  readOnly?: boolean
 }) {
   
   const safeText = (val: any) => {
@@ -156,19 +154,6 @@ export default function ReportView({
           </h1>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 pt-1">
-            {report.fork_lineage && (
-              <div className="px-3 py-2 border border-my-accent/30 bg-my-accent/5 text-my-accent text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                <GitFork size={12} /> Forked Research
-              </div>
-            )}
-            {readOnly && onFork && (
-              <button
-                onClick={onFork}
-                className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 bg-my-ink text-white dark:bg-my-accent dark:text-black hover:scale-105"
-              >
-                <GitFork size={12} /> Fork Research
-              </button>
-            )}
             {!readOnly && (
               <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout">
                 <select
@@ -223,26 +208,11 @@ export default function ReportView({
         <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-4 italic font-serif text-base text-my-ink">
           {safeText(report.summary?.bottom_line) || "No summary provided."}
         </div>
-        {report.fork_lineage && (
-          <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-my-muted">
-            <div className="flex items-start gap-2">
-              <GitFork size={13} className="text-my-accent mt-0.5 shrink-0" />
-              <p className="text-[11px] leading-relaxed">
-                Forked from {safeText(report.fork_lineage.forkedFromTitle)} on {new Date(report.fork_lineage.forkedAt).toLocaleString()}.
-              </p>
-            </div>
-            {report.fork_lineage.originalShareId && (
-              <a href={`/share/${report.fork_lineage.originalShareId}`} className="text-[9px] font-black uppercase tracking-widest text-my-accent">
-                Open Original
-              </a>
-            )}
-          </div>
-        )}
         {!readOnly && (
           <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
             <FlaskConical size={13} className="text-my-accent mt-0.5 shrink-0" />
             <p className="text-[11px] leading-relaxed">
-              Sharing and research forking are preview features. They are available for testing and may receive UX and permissions refinements before final release.
+              Research sharing is a preview feature. Public links are read-only and may receive UX refinements before final release.
             </p>
           </div>
         )}
@@ -369,8 +339,12 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Forensic Reasoning Replay */}
-          <ThoughtReplayEngine />
+          {!readOnly && (
+            <>
+              {/* Forensic Reasoning Replay */}
+              <ThoughtReplayEngine />
+            </>
+          )}
 
 
 
@@ -452,7 +426,7 @@ export default function ReportView({
       </div>
 
       {/* Follow-ups */}
-      {normalizedSuggestions && normalizedSuggestions.length > 0 && (
+      {!readOnly && normalizedSuggestions && normalizedSuggestions.length > 0 && (
         <div className="pt-6 mt-8 border-t border-my-border">
           <SectionTitle>Investigate Further</SectionTitle>
           <div className="flex flex-wrap gap-2 mt-3">

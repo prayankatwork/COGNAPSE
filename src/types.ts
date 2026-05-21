@@ -89,12 +89,6 @@ export interface COGNAPSE_Output {
   deep_scores?: any;
   id?: string;
   provider?: string;
-  fork_lineage?: {
-    originalResearchId: string;
-    originalShareId?: string;
-    forkedAt: string;
-    forkedFromTitle: string;
-  };
   premium_export_data?: {
     executive_summary: {
       key_findings: string[];

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, Calendar, FlaskConical, GitFork, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Calendar, FlaskConical, Loader2, ShieldCheck } from 'lucide-react';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
 import type { SharedResearchRecord } from '../types';
@@ -9,7 +9,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
   const [shared, setShared] = useState<SharedResearchRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, addToArchive, setCurrentReport, setView, pushToStack, clearStack, setAuthOpen } = useStore();
+  const { user } = useStore();
 
   useEffect(() => {
     let mounted = true;
@@ -32,46 +32,6 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
     load();
     return () => { mounted = false; };
   }, [shareId, user?.id]);
-
-  const handleFork = async () => {
-    if (!shared) return;
-    if (!user) {
-      setAuthOpen(true);
-      return;
-    }
-    const forkId = crypto.randomUUID();
-    const forkedAt = new Date().toISOString();
-    const forkedReport = {
-      ...shared.report,
-      id: forkId,
-      fork_lineage: {
-        originalResearchId: shared.researchId,
-        originalShareId: shared.id,
-        forkedAt,
-        forkedFromTitle: shared.title
-      }
-    };
-
-    addToArchive({
-      id: forkId,
-      query: `${shared.title} (Fork)`,
-      timestamp: forkedAt,
-      topic_cluster: shared.report.archive_entry?.topic_cluster || "Forked Intelligence",
-      tags: Array.from(new Set([...(shared.report.archive_entry?.tags || []), "fork"])),
-      summary_snippet: shared.summary,
-      report: forkedReport
-    });
-
-    if (user) {
-      await dbService.saveReport(forkId, user.id, `${shared.title} (Fork)`, forkedReport);
-    }
-
-    setCurrentReport(forkedReport);
-    clearStack();
-    pushToStack(forkedReport);
-    setView('research');
-    window.history.pushState({}, '', '/');
-  };
 
   if (loading) {
     return (
@@ -103,7 +63,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
         <div className="mb-4 border border-my-border bg-my-callout/70 px-4 py-3 flex items-start gap-3 text-my-muted">
           <FlaskConical size={14} className="text-my-accent mt-0.5 shrink-0" />
           <p className="text-[11px] leading-relaxed">
-            Shared Research and Fork Research are currently in preview testing. Links and read-only rendering are functional, but this workflow may be refined before final release.
+            Shared Research is currently in preview testing. Links and read-only rendering are functional, but this workflow may be refined before final release.
           </p>
         </div>
 
@@ -120,15 +80,9 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
               <span>{shared.graphNodeCount} graph nodes</span>
             </div>
           </div>
-          <button
-            onClick={handleFork}
-            className="px-5 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
-          >
-            <GitFork size={14} /> Fork Research
-          </button>
         </div>
 
-        <ReportView report={shared.report} onSubSearch={() => {}} readOnly onFork={handleFork} />
+        <ReportView report={shared.report} onSubSearch={() => {}} readOnly />
 
         {thesis && (
           <div className="mt-8 border-t border-my-border pt-8">
