@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Archive, Calendar, CheckCircle2, Copy, ExternalLink, FilePlus2, FlaskConical, GitBranch, History, Loader2, Lock, MailCheck, Network, Plus, RotateCcw, Search, Settings, Share2, Trash2, Users, X } from 'lucide-react';
+import { AlertCircle, Archive, Calendar, CheckCircle2, Copy, FilePlus2, FlaskConical, History, Loader2, Lock, MailCheck, Network, Plus, RotateCcw, Search, Settings, Share2, Trash2, Users, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
@@ -53,6 +53,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
   const [collaborator, setCollaborator] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [selectedNodeNotes, setSelectedNodeNotes] = useState<Record<string, string>>({});
   const [boardSearch, setBoardSearch] = useState("");
   const [archiveSearch, setArchiveSearch] = useState("");
   const [settingsTitle, setSettingsTitle] = useState("");
@@ -209,7 +210,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
 
   const saveNodeNote = async (board: IntelligenceBoard, key: string) => {
     if (!canManageBoard) return;
-    replaceBoard(await dbService.updateBoardNodeNote(board, key, noteDrafts[key] || "", user ? { id: user.id, username: user.username } : undefined));
+    replaceBoard(await dbService.updateBoardNodeNote(board, key, noteDrafts[key] ?? noteContent(board.nodeNotes[key]), user ? { id: user.id, username: user.username } : undefined));
   };
 
   const acceptInvite = async (invite: BoardInvite) => {
@@ -260,15 +261,6 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
     setConfirmArchive(false);
   };
 
-  const duplicateActiveBoard = async () => {
-    if (!activeBoard) return;
-    if (!user) {
-      setAuthOpen(true);
-      return;
-    }
-    replaceBoard(await dbService.duplicateBoard(activeBoard, { id: user.id, username: user.username }));
-  };
-
   const updateShareVisibility = async (share: SharedResearchRecord, visibility: ResearchVisibility) => {
     const updated = await dbService.updateSharedResearch(share, visibility);
     setSharedResearch(prev => prev.map(item => item.id === updated.id ? updated : item));
@@ -308,7 +300,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
 
   return (
     <div className="h-full overflow-y-auto bg-my-bg">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-6">
         <div className="mb-5 border border-my-border bg-my-callout/70 px-4 py-3 flex items-start gap-3 text-my-muted">
           <FlaskConical size={14} className="text-my-accent mt-0.5 shrink-0" />
           <p className="text-[11px] leading-relaxed">
@@ -316,26 +308,31 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-          <div>
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8 border-b border-my-border pb-6">
+          <div className="max-w-3xl">
             <div className="flex items-center gap-2 text-my-accent mb-2">
               <Network size={16} />
               <span className="text-[10px] font-black uppercase tracking-[0.3em]">Persistent Knowledge Spaces</span>
             </div>
-            <h1 className="font-serif text-4xl text-my-ink">Intelligence Boards</h1>
+            <h1 className="font-serif text-4xl md:text-5xl text-my-ink">Intelligence Boards</h1>
+            <p className="mt-3 text-sm leading-relaxed text-my-muted">
+              Organize research into durable workspaces, manage board access, and annotate the exact graph nodes that matter.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto] gap-2 bg-my-callout border border-my-border p-2">
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Board title" className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
-            <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
-            <select value={mode} onChange={e => setMode(e.target.value as BoardMode)} className="bg-my-bg border border-my-border px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-my-ink">
-              <option value="private">Private</option>
-              <option value="shared">Shared</option>
-              <option value="public">Public</option>
-            </select>
-            <button onClick={createBoard} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 justify-center">
-              <Plus size={13} /> Create
-            </button>
+          <div className="grid grid-cols-3 border border-my-border bg-my-callout/80 min-w-full xl:min-w-[360px]">
+            <div className="px-4 py-3">
+              <div className="text-2xl font-black text-my-ink">{boards.length}</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-my-muted">Boards</div>
+            </div>
+            <div className="px-4 py-3 border-x border-my-border">
+              <div className="text-2xl font-black text-my-ink">{activeBoard?.researches.length || 0}</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-my-muted">Saved</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-2xl font-black text-my-ink">{pendingInvites.length}</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-my-muted">Invites</div>
+            </div>
           </div>
         </div>
 
@@ -457,8 +454,30 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
             <Loader2 size={16} className="animate-spin text-my-accent" /> Loading Boards
           </div>
         ) : (
-          <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-            <aside className="border border-my-border bg-my-callout p-3 h-fit">
+          <div className="grid lg:grid-cols-[340px_minmax(0,1fr)] gap-6">
+            <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+              <section className="border border-my-border bg-my-callout/90 p-4">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted">New Board</h2>
+                  <Plus size={14} className="text-my-accent" />
+                </div>
+                <div className="grid gap-2">
+                  <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Board title" className="bg-my-bg border border-my-border px-3 py-2.5 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                  <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className="bg-my-bg border border-my-border px-3 py-2.5 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <select value={mode} onChange={e => setMode(e.target.value as BoardMode)} className="bg-my-bg border border-my-border px-3 py-2.5 text-[10px] uppercase tracking-widest font-bold text-my-ink">
+                      <option value="private">Private</option>
+                      <option value="shared">Shared</option>
+                      <option value="public">Public</option>
+                    </select>
+                    <button onClick={createBoard} className="px-4 py-2.5 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">
+                      Create
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="border border-my-border bg-my-callout/90 p-3">
               <div className="relative mb-3">
                 <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-my-muted" />
                 <input
@@ -468,6 +487,7 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                   className="w-full bg-my-bg border border-my-border pl-8 pr-3 py-2 text-xs text-my-ink focus:outline-none focus:border-my-accent"
                 />
               </div>
+              <div className="max-h-[430px] overflow-y-auto pr-1">
               {boards.length === 0 ? (
                 <div className="text-xs text-my-muted p-4 space-y-3">
                   <p>Create your first board to collect research over time.</p>
@@ -479,12 +499,20 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                 <button
                   key={board.id}
                   onClick={() => setActiveId(board.id)}
-                  className={clsx("w-full text-left p-4 border-b border-my-border last:border-b-0 transition-colors", activeBoard?.id === board.id ? "bg-my-accent/10" : "hover:bg-my-bg")}
+                  className={clsx("w-full text-left p-4 mb-2 last:mb-0 border transition-colors", activeBoard?.id === board.id ? "border-my-accent bg-my-accent/10" : "border-my-border bg-my-bg/70 hover:border-my-accent/50")}
                 >
-                  <div className="text-sm font-bold text-my-ink mb-1">{board.title}</div>
-                  <div className="text-[9px] font-black uppercase tracking-widest text-my-muted">{board.mode} · {board.researches.length} researches</div>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="text-sm font-bold text-my-ink truncate">{board.title}</div>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-my-accent">{board.mode}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-[9px] font-black uppercase tracking-widest text-my-muted">
+                    <span>{board.researches.length} researches</span>
+                    <span>{new Date(board.updatedAt).toLocaleDateString()}</span>
+                  </div>
                 </button>
               ))}
+              </div>
+              </section>
             </aside>
 
             {accessError && (
@@ -501,41 +529,34 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
             )}
 
             {activeBoard && canViewBoard && (
-              <main className="space-y-6">
-                <section className="border border-my-border bg-my-callout p-5">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div>
-                      <h2 className="font-serif text-3xl text-my-ink mb-2">{activeBoard.title}</h2>
-                      <p className="text-sm text-my-muted max-w-2xl">{activeBoard.description || "No description yet."}</p>
-                      <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] uppercase tracking-widest font-bold text-my-muted">
+              <main className="min-w-0 space-y-5">
+                <section className="border border-my-border bg-my-callout/90 p-5">
+                  <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <span className="border border-my-accent/40 bg-my-accent/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-my-accent">{activeBoard.mode}</span>
+                        {!isOwner && isCollaborator && <span className="border border-my-border px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-my-muted">Collaborator</span>}
+                        {!canManageBoard && activeBoard.mode === 'public' && <span className="border border-my-border px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-my-muted">Read Only</span>}
+                      </div>
+                      <h2 className="font-serif text-3xl md:text-4xl text-my-ink mb-2">{activeBoard.title}</h2>
+                      <p className="text-sm text-my-muted max-w-3xl leading-relaxed">{activeBoard.description || "No description yet."}</p>
+                      <div className="grid sm:grid-cols-3 gap-3 mt-5 text-[10px] uppercase tracking-widest font-bold text-my-muted">
                         <span className="flex items-center gap-1.5"><Calendar size={12} /> {new Date(activeBoard.updatedAt).toLocaleString()}</span>
-                        <span className="flex items-center gap-1.5"><GitBranch size={12} /> {activeBoard.researches.length} saved</span>
-                        {!isOwner && isCollaborator && <span className="flex items-center gap-1.5"><Users size={12} /> Collaborator</span>}
-                        {!canManageBoard && activeBoard.mode === 'public' && <span>Read-only public board</span>}
+                        <span className="flex items-center gap-1.5"><Network size={12} /> {activeBoard.researches.length} saved</span>
+                        <span className="flex items-center gap-1.5"><Users size={12} /> {displayCollaborators(activeBoard, activeBoard.ownerId).length} collaborators</span>
                       </div>
                       <p className="text-[11px] text-my-muted mt-3">{explainVisibility(activeBoard.mode)}</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={() => copyBoardLink(activeBoard)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      <button onClick={() => copyBoardLink(activeBoard)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted hover:border-my-accent hover:text-my-ink flex items-center gap-2">
                         {copiedBoardId === activeBoard.id ? <Copy size={12} /> : <Share2 size={12} />}
                         {copiedBoardId === activeBoard.id ? "Copied" : "Board Link"}
                       </button>
-                      <button onClick={duplicateActiveBoard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
-                        <GitBranch size={12} /> Duplicate
-                      </button>
-                      <a href={`/board/${activeBoard.id}`} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
-                        <ExternalLink size={12} /> Open
-                      </a>
                       {isOwner && (
-                        <button onClick={() => setShowSettings(v => !v)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest border border-my-border text-my-muted flex items-center gap-2">
+                        <button onClick={() => setShowSettings(v => !v)} className={clsx("px-3 py-2 text-[9px] font-black uppercase tracking-widest border flex items-center gap-2", showSettings ? "border-my-accent bg-my-accent/10 text-my-accent" : "border-my-border text-my-muted hover:border-my-accent hover:text-my-ink")}>
                           <Settings size={12} /> Settings
                         </button>
                       )}
-                      {(['private', 'shared', 'public'] as BoardMode[]).map(item => (
-                        <button key={item} disabled={!isOwner} onClick={() => updateMode(activeBoard, item)} className={clsx("px-3 py-2 text-[9px] font-black uppercase tracking-widest border disabled:opacity-40", activeBoard.mode === item ? "bg-my-accent text-white dark:text-black border-my-accent" : "border-my-border text-my-muted")}>
-                          {item}
-                        </button>
-                      ))}
                       {inviteStatus && (
                         <span className="w-full text-[10px] text-my-muted leading-relaxed">
                           {inviteStatus}
@@ -546,30 +567,44 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                 </section>
 
                 {showSettings && isOwner && (
-                  <section className="border border-my-border bg-my-callout p-5">
+                  <section className="grid xl:grid-cols-[1fr_320px] gap-4 border border-my-border bg-my-callout/90 p-5">
+                    <div>
                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2">
                       <Settings size={13} /> Board Settings
                     </h3>
                     <div className="grid md:grid-cols-2 gap-3 mb-4">
-                      <input value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
-                      <input value={settingsDescription} onChange={e => setSettingsDescription(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                      <input value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2.5 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
+                      <input value={settingsDescription} onChange={e => setSettingsDescription(e.target.value)} className="bg-my-bg border border-my-border px-3 py-2.5 text-sm text-my-ink focus:outline-none focus:border-my-accent" />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <button onClick={saveSettings} className="px-4 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">
+                      <button onClick={saveSettings} className="px-4 py-2.5 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">
                         Save Settings
                       </button>
-                      <button onClick={archiveActiveBoard} className="px-4 py-2 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <button onClick={archiveActiveBoard} className="px-4 py-2.5 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                         <Archive size={12} /> {confirmArchive ? "Confirm Archive" : "Archive Board"}
                       </button>
-                      <span className="text-[10px] text-my-muted">Archiving hides this board without deleting its saved research.</span>
+                    </div>
+                    <p className="text-[10px] text-my-muted mt-3">Archiving hides this board without deleting its saved research.</p>
+                    </div>
+                    <div className="border border-my-border bg-my-bg p-4">
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-2">Visibility</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['private', 'shared', 'public'] as BoardMode[]).map(item => (
+                          <button key={item} onClick={() => updateMode(activeBoard, item)} className={clsx("px-3 py-2 text-[9px] font-black uppercase tracking-widest border", activeBoard.mode === item ? "bg-my-accent text-white dark:text-black border-my-accent" : "border-my-border text-my-muted")}>
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-my-muted mt-2">{explainVisibility(activeBoard.mode)}</p>
                     </div>
                   </section>
                 )}
 
                 {canManageBoard && (
-                <section className="border border-my-border bg-my-callout p-5">
+                <section className="grid xl:grid-cols-[minmax(0,1fr)_360px] gap-4">
+                <div className="border border-my-border bg-my-callout/90 p-5">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4">Add Research</h3>
-                  <div className="flex flex-col md:flex-row gap-2 mb-3">
+                  <div className="grid md:grid-cols-[auto_1fr] gap-2 mb-3">
                     <button disabled={!currentReport} onClick={() => addCurrentResearch(activeBoard)} className="px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black disabled:opacity-40 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 justify-center">
                       <FilePlus2 size={13} /> Current Research
                     </button>
@@ -589,11 +624,36 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                   {archive.length === 0 && (
                     <p className="text-[11px] text-my-muted mt-3">Your archive is empty. Run or fork a research session first, then return here to save it to a board.</p>
                   )}
+                </div>
+                {activeBoard.mode === 'shared' && isOwner && (
+                  <div className="border border-my-border bg-my-callout/90 p-5">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2"><Users size={13} /> Collaborators</h3>
+                    <div className="grid gap-2 mb-3">
+                      <input value={collaborator} onChange={e => setCollaborator(e.target.value)} placeholder="Username or email" className="bg-my-bg border border-my-border px-3 py-2.5 text-sm text-my-ink" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <button onClick={() => addCollaborator(activeBoard)} className="px-4 py-2.5 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-widest">Invite</button>
+                        <button
+                          onClick={() => navigator.clipboard?.writeText(`You have been invited to collaborate on "${activeBoard.title}" in Cognapse. Sign in with the invited username and open Intelligence Boards to accept. Board link: ${window.location.origin}/board/${activeBoard.id}`)}
+                          className="px-4 py-2.5 border border-my-border text-my-muted text-[10px] font-black uppercase tracking-widest"
+                        >
+                          Copy Text
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {displayCollaborators(activeBoard, activeBoard.ownerId).map(item => (
+                        <button key={item} onClick={() => removeCollaborator(activeBoard, item)} className="px-3 py-1.5 border border-my-border text-[10px] text-my-muted hover:text-red-500">
+                          {item} x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 </section>
                 )}
 
                 {activeBoard.mode === 'shared' && isOwner && (
-                  <section className="border border-my-border bg-my-callout p-5">
+                  <section className="hidden border border-my-border bg-my-callout p-5">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4 flex items-center gap-2"><Users size={13} /> Collaborators</h3>
                     <p className="text-[11px] text-my-muted mb-3">
                       Role: Editor. Accepted collaborators can add or remove saved research and edit node notes. Owners control visibility, settings, and access.
@@ -637,10 +697,25 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                 )}
 
                 <section className="grid gap-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted">Saved Research</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-my-muted">{activeBoard.researches.length} items</span>
+                  </div>
+                  {activeBoard.researches.length === 0 && (
+                    <div className="border border-dashed border-my-border bg-my-callout/70 p-8 text-center">
+                      <Network size={22} className="mx-auto mb-3 text-my-accent" />
+                      <h3 className="font-serif text-2xl text-my-ink">No research saved yet</h3>
+                      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-my-muted">Add current research or choose an archive item to turn this board into a persistent knowledge space.</p>
+                    </div>
+                  )}
                   {activeBoard.researches.map(item => {
                     const nodes = item.report.intelligence_map?.nodes || [];
+                    const selectedNodeKey = selectedNodeNotes[item.researchId];
+                    const selectedNode = nodes.find((node: any) => `${item.researchId}:${node.id}` === selectedNodeKey);
+                    const selectedNote = selectedNodeKey ? noteContent(activeBoard.nodeNotes[selectedNodeKey]) : "";
+                    const canShowSelectedNote = !!selectedNodeKey && !!selectedNode && (canManageBoard || !!selectedNote);
                     return (
-                      <article key={item.researchId} className="border border-my-border bg-my-callout p-5">
+                      <article key={item.researchId} className="border border-my-border bg-my-callout/90 p-5">
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                           <button onClick={() => { setCurrentReport(item.report); setView('research'); }} className="text-left">
                             <h3 className="font-serif text-2xl text-my-ink hover:text-my-accent transition-colors">{item.title}</h3>
@@ -652,38 +727,60 @@ export default function IntelligenceBoards({ routeBoardId }: { routeBoardId?: st
                           </button>
                           )}
                         </div>
+                        <div className="grid xl:grid-cols-[minmax(0,1fr)_320px] gap-4">
                         {item.report.intelligence_map && (
-                          <div className="mb-4">
-                            <PhysicsMap mapData={item.report.intelligence_map} onSubSearch={() => {}} readOnly />
+                          <div>
+                            <PhysicsMap
+                              mapData={item.report.intelligence_map}
+                              onSubSearch={() => {}}
+                              readOnly
+                              onNodeSelect={(node) => setSelectedNodeNotes(prev => ({ ...prev, [item.researchId]: `${item.researchId}:${node.id}` }))}
+                            />
                           </div>
                         )}
-                        {activeBoard.mode === 'shared' && nodes.length > 0 && canManageBoard && (
-                          <div className="border-t border-my-border pt-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-3">Node Notes</h4>
-                            <div className="grid md:grid-cols-2 gap-3">
-                              {nodes.slice(0, 4).map((node: any) => {
-                                const key = `${item.researchId}:${node.id}`;
-                                return (
-                                  <div key={key} className="bg-my-bg border border-my-border p-3">
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-my-accent mb-2">{node.label}</div>
-                                    <textarea
-                                      value={noteDrafts[key] ?? noteContent(activeBoard.nodeNotes[key])}
-                                      onChange={e => setNoteDrafts(prev => ({ ...prev, [key]: e.target.value }))}
-                                      className="w-full min-h-20 bg-transparent text-xs text-my-ink focus:outline-none"
-                                      placeholder="Add a knowledge note..."
-                                    />
-                                    {noteMeta(activeBoard.nodeNotes[key]) && (
-                                      <div className="mt-1 text-[9px] text-my-muted uppercase tracking-widest">
-                                        Last updated by {noteMeta(activeBoard.nodeNotes[key])}
-                                      </div>
-                                    )}
-                                    <button onClick={() => saveNodeNote(activeBoard, key)} className="mt-2 text-[9px] font-black uppercase tracking-widest text-my-accent">Save Note</button>
-                                  </div>
-                                );
-                              })}
+                        {nodes.length > 0 && (
+                          <aside className="border border-my-border bg-my-bg p-4">
+                            <div className="flex items-center justify-between gap-3 mb-3">
+                              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted">Node Note</h4>
+                              {!canManageBoard && (
+                                <span className="text-[9px] font-black uppercase tracking-widest text-my-muted">Read Only</span>
+                              )}
                             </div>
-                          </div>
+                            {!selectedNodeKey ? (
+                              <div className="border border-dashed border-my-border p-4 text-[11px] text-my-muted leading-relaxed">
+                                Click a graph node to open its note.
+                              </div>
+                            ) : canShowSelectedNote ? (
+                              <div>
+                                <div className="text-sm font-bold text-my-accent mb-3">{selectedNode.label}</div>
+                                {canManageBoard ? (
+                                  <textarea
+                                    value={noteDrafts[selectedNodeKey] ?? selectedNote}
+                                    onChange={e => setNoteDrafts(prev => ({ ...prev, [selectedNodeKey]: e.target.value }))}
+                                    className="w-full min-h-40 bg-my-callout border border-my-border px-3 py-3 text-xs text-my-ink focus:outline-none focus:border-my-accent leading-relaxed"
+                                    placeholder="Add a knowledge note..."
+                                  />
+                                ) : (
+                                  <p className="min-h-32 text-xs text-my-ink leading-relaxed whitespace-pre-wrap">{selectedNote}</p>
+                                )}
+                                {noteMeta(activeBoard.nodeNotes[selectedNodeKey]) && (
+                                  <div className="mt-1 text-[9px] text-my-muted uppercase tracking-widest">
+                                    Last updated by {noteMeta(activeBoard.nodeNotes[selectedNodeKey])}
+                                  </div>
+                                )}
+                                {canManageBoard && (
+                                  <button onClick={() => saveNodeNote(activeBoard, selectedNodeKey)} className="mt-3 bg-my-accent px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white dark:text-black">Save Note</button>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="text-sm font-bold text-my-accent mb-2">{selectedNode?.label || "Selected Node"}</div>
+                                <p className="text-[11px] text-my-muted leading-relaxed">No note has been added to this node yet.</p>
+                              </div>
+                            )}
+                          </aside>
                         )}
+                        </div>
                       </article>
                     );
                   })}

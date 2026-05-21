@@ -26,7 +26,17 @@ interface LinkData {
   strength?: number;
 }
 
-export default function PhysicsMap({ mapData, onSubSearch, readOnly = false }: { mapData: any, onSubSearch: (q: string) => void, readOnly?: boolean }) {
+export default function PhysicsMap({
+  mapData,
+  onSubSearch,
+  readOnly = false,
+  onNodeSelect
+}: {
+  mapData: any,
+  onSubSearch: (q: string) => void,
+  readOnly?: boolean,
+  onNodeSelect?: (node: any) => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>(null);
   const theme = useStore((state) => state.theme);
@@ -153,6 +163,13 @@ export default function PhysicsMap({ mapData, onSubSearch, readOnly = false }: {
       
       // Single click: Focus camera and open Intelligence Snapshot
       fgRef.current?.centerAt(node.x, node.y, 400);
+
+      if (onNodeSelect) {
+        setSelectedNode(null);
+        setIsFirstView(false);
+        onNodeSelect(node);
+        return;
+      }
       
       // Open modal for single-click forensic inspection
       setSelectedNode(node);
@@ -163,7 +180,7 @@ export default function PhysicsMap({ mapData, onSubSearch, readOnly = false }: {
       setMiniInfo(info);
       setLoadingInfo(false);
     }
-  }, [clickedNode, onSubSearch]);
+  }, [clickedNode, onSubSearch, onNodeSelect]);
 
   return (
     <div 
