@@ -16,8 +16,19 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const LandingPage = React.lazy(() => import('./components/LandingPage'));
-const IntelligenceFeed = React.lazy(() => import('./components/IntelligenceFeed'));
+const lazyWithReload = (componentImport: () => Promise<any>) =>
+  React.lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.warn('Chunk loading failed, reloading page to fetch latest version...', error);
+      window.location.reload();
+      throw error;
+    }
+  });
+
+const LandingPage = lazyWithReload(() => import('./components/LandingPage'));
+const IntelligenceFeed = lazyWithReload(() => import('./components/IntelligenceFeed'));
 import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
