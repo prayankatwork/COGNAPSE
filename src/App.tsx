@@ -289,14 +289,20 @@ export default function App() {
     window.history.pushState({}, '', `/${page}`);
   };
 
+  const isDashboard = currentView === 'research' || currentView === 'news';
+
   return (
     <div className={clsx(
-      "min-h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16",
-      theme === 'dark' ? 'dark' : ''
+      "bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16 flex flex-col",
+      theme === 'dark' ? 'dark' : '',
+      isDashboard && !legalPage && !shareRoute ? "h-screen overflow-hidden" : "min-h-screen"
     )}>
       {!shareRoute && !legalPage && <Navbar />}
 
-      <div className="h-[calc(100vh-64px)] relative">
+      <div className={clsx(
+        "relative",
+        isDashboard && !legalPage && !shareRoute ? "flex-1 overflow-hidden" : "flex-1"
+      )}>
         {legalPage ? (
           <LegalPages
             page={legalPage}
