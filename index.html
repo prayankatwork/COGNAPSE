@@ -41,11 +41,44 @@
 
     <!-- Aura SDK -->
     <script>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://aura.example.com/track.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','AURA-PRJ-XXXXXX');
+      (function() {
+        var pId = 'NaYhC1VHm1akwOWQ0hXR';
+        var sId = 'sess_' + Math.random().toString(36).substring(2, 9);
+        var d = new Date().toISOString();
+        var db = 'https://firestore.googleapis.com/v1/projects/evident-block-5sjh2/databases/ai-studio-277e637f-ab13-4039-9990-b85f9fe2c3ba/documents';
+        var k = 'AIzaSyBUZoskVfIc7ZkJqFxx21r4Fb-XkahNaWQ';
+        
+        // Create simple session
+        fetch(db + '/sessions?documentId=' + sId + '&key=' + k, {
+          method: 'POST',
+          body: JSON.stringify({
+            fields: {
+              projectId: { stringValue: pId },
+              time: { stringValue: d },
+              duration: { stringValue: '1m 20s' },
+              events: { integerValue: '1' },
+              country: { stringValue: 'US' },
+              score: { stringValue: 'Good' },
+              device: { stringValue: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop' },
+              browser: { stringValue: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Safari' }
+            }
+          })
+        });
+        
+        // Log page view event
+        fetch(db + '/events?key=' + k, {
+          method: 'POST',
+          body: JSON.stringify({
+            fields: {
+              projectId: { stringValue: pId },
+              sessionId: { stringValue: sId },
+              createdAt: { stringValue: d },
+              type: { stringValue: 'page_view' },
+              path: { stringValue: window.location.pathname }
+            }
+          })
+        });
+      })();
     </script>
   </head>
   <body>
