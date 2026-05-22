@@ -313,9 +313,7 @@ export default function App() {
       <DevDashboard />
       {!shareRoute && !legalPage && <NeuralWalkthrough />}
       {!shareRoute && !legalPage && <SelectionCapture />}
-      {!shareRoute && !legalPage && (currentView === 'landing' || currentView === 'research') && (
-        <NeuralBackground />
-      )}
+      <NeuralBackground />
     </div>
   );
 }
