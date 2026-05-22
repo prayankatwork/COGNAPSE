@@ -33,58 +33,30 @@ export default function NeuralBackground() {
     let animationFrameId: number;
     let width: number;
     let height: number;
-    const particles: Particle[] = [];
     
-    const particleCount = 100;
-    const gridSize = 50;
+    const dots: { x: number, y: number, isSignal: boolean }[] = [];
+    const rings: { x: number, y: number, radius: number, maxRadius: number, speed: number, isSignal: boolean }[] = [];
     const mouse = { x: -1000, y: -1000, active: false };
-
-    class Particle {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      isSignal: boolean;
-
-      constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.size = Math.random() * 1.5 + 0.5;
-        this.isSignal = Math.random() > 0.92;
-      }
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
-      }
-
-      draw() {
-        if (!ctx) return;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        if (this.isSignal) {
-          ctx.fillStyle = getSignalColor();
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = getSignalColor();
-        } else {
-          ctx.fillStyle = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(42,67,101,0.08)';
-          ctx.shadowBlur = 0;
-        }
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
+    
+    // Spacing for the scanner grid
+    const spacing = 40;
 
     const resize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      if (particles.length === 0) {
-        for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+      dots.length = 0;
+      // Offset by half spacing to perfectly center grid
+      const offsetX = (width % spacing) / 2;
+      const offsetY = (height % spacing) / 2;
+      
+      for (let x = offsetX; x < width; x += spacing) {
+        for (let y = offsetY; y < height; y += spacing) {
+           dots.push({ 
+              x, y, 
+              // 4% of dots are "Targets" / Signals
+              isSignal: Math.random() > 0.96
+           });
+        }
       }
     };
 
@@ -92,6 +64,10 @@ export default function NeuralBackground() {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
       mouse.active = true;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.active = false;
     };
 
     const render = () => {
@@ -102,68 +78,116 @@ export default function NeuralBackground() {
 
       ctx.clearRect(0, 0, width, height);
 
-      const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(42,67,101,0.03)';
-      ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x < width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
+      // Randomly spawn sonar rings
+      if (Math.random() > 0.985 && rings.length < 6) {
+         rings.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: 0,
+            maxRadius: Math.random() * 400 + 200,
+            speed: Math.random() * 1.5 + 1.0, // Slow, sweeping expansion
+            isSignal: Math.random() > 0.8
+         });
       }
 
-      particles.forEach((p) => {
-        p.update();
-        p.draw();
-      });
+      // Update and Draw Sonar Rings
+      for (let i = rings.length - 1; i >= 0; i--) {
+         const ring = rings[i];
+         ring.radius += ring.speed;
+         
+         if (ring.radius > ring.maxRadius) {
+            rings.splice(i, 1);
+            continue;
+         }
 
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
+         ctx.beginPath();
+         const ringAlpha = Math.max(0, 1 - (ring.radius / ring.maxRadius));
+         ctx.strokeStyle = ring.isSignal ? getSignalColor() : (theme === 'dark' ? '#ffffff' : '#2A4365');
+         ctx.globalAlpha = ringAlpha * (ring.isSignal ? 0.15 : 0.05); // Extremely faint ring stroke
+         ctx.lineWidth = 1;
+         ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+         ctx.stroke();
+         ctx.globalAlpha = 1.0;
+      }
+
+      // Draw Grid
+      dots.forEach(dot => {
+         let intensity = 0;
+         
+         // Scanner interaction from mouse (Flashlight effect)
+         if (mouse.active) {
+            const dx = mouse.x - dot.x;
+            const dy = mouse.y - dot.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            // 250px scan radius
+            if (dist < 250) {
+               intensity += (250 - dist) / 250 * 0.9; 
+            }
+         }
+
+         // Scanner interactions from expanding sonar rings
+         rings.forEach(ring => {
+            const dx = ring.x - dot.x;
+            const dy = ring.y - dot.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // The distance from the dot to the ring's expanding circumference
+            const ringDist = Math.abs(dist - ring.radius);
+            
+            // 60px thick illumination wave
+            if (ringDist < 60) {
+               const ringIllumination = (1 - ringDist / 60) * (1 - ring.radius / ring.maxRadius);
+               intensity += ringIllumination * (ring.isSignal ? 1.5 : 1.0);
+            }
+         });
+
+         const baseAlpha = theme === 'dark' ? 0.04 : 0.03; // Almost invisible base state
+         const finalAlpha = Math.min(1, baseAlpha + intensity);
+
+         if (dot.isSignal) {
+            ctx.globalAlpha = finalAlpha;
+            ctx.strokeStyle = getSignalColor();
+            ctx.lineWidth = 1.5;
+            
+            if (intensity > 0.1) {
+               ctx.shadowBlur = 15 * intensity;
+               ctx.shadowColor = getSignalColor();
+            } else {
+               ctx.shadowBlur = 0;
+            }
+            
+            // Draw a tiny target "crosshair/plus" for signals instead of a dot
             ctx.beginPath();
-            ctx.strokeStyle =
-              theme === 'dark'
-                ? `rgba(255,255,255,${0.08 * (1 - dist / 120)})`
-                : `rgba(42,67,101,${0.06 * (1 - dist / 120)})`;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.moveTo(dot.x - 4, dot.y);
+            ctx.lineTo(dot.x + 4, dot.y);
+            ctx.moveTo(dot.x, dot.y - 4);
+            ctx.lineTo(dot.x, dot.y + 4);
             ctx.stroke();
-          }
-        }
-      }
-
-      if (mouse.active) {
-        particles.forEach((p) => {
-          const dx = mouse.x - p.x;
-          const dy = mouse.y - p.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            p.x -= dx * 0.02;
-            p.y -= dy * 0.02;
-          }
-        });
-      }
+            
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+         } else {
+            // Standard data node (small dot)
+            ctx.beginPath();
+            ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = theme === 'dark' ? `rgba(255,255,255,${finalAlpha})` : `rgba(42,67,101,${finalAlpha})`;
+            ctx.fill();
+         }
+      });
 
       animationFrameId = requestAnimationFrame(render);
     };
 
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
     resize();
     render();
 
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
       cancelAnimationFrame(animationFrameId);
     };
   }, [theme, isMobile]);
