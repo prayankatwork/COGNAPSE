@@ -272,6 +272,12 @@ export default function App() {
     }
   };
 
+  const handleLegalNav = (e: React.MouseEvent<HTMLAnchorElement>, page: 'privacy' | 'terms' | 'ai-disclaimer') => {
+    e.preventDefault();
+    setLegalPage(page);
+    window.history.pushState({}, '', `/${page}`);
+  };
+
   return (
     <div className={clsx(
       "min-h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16",
@@ -299,9 +305,9 @@ export default function App() {
 
       {!shareRoute && !legalPage && (
         <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
-          <a href="/privacy" className="hover:text-my-accent">Privacy</a>
-          <a href="/terms" className="hover:text-my-accent">Terms</a>
-          <a href="/ai-disclaimer" className="hover:text-my-accent">AI Disclaimer</a>
+          <a href="/privacy" onClick={(e) => handleLegalNav(e, 'privacy')} className="hover:text-my-accent">Privacy</a>
+          <a href="/terms" onClick={(e) => handleLegalNav(e, 'terms')} className="hover:text-my-accent">Terms</a>
+          <a href="/ai-disclaimer" onClick={(e) => handleLegalNav(e, 'ai-disclaimer')} className="hover:text-my-accent">AI Disclaimer</a>
         </footer>
       )}
 
