@@ -1,0 +1,121 @@
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
+
+export interface CognapseSession {
+  id: string;
+  username: string;
+  idToken?: string;
+  tokenExpiresAt?: number;
+}
+
+/** Resolve a fresh Firebase ID token for API calls. */
+export async function getBearerToken(): Promise<string | null> {
+  let firebaseUser = auth.currentUser;
+
+  if (!firebaseUser) {
+    await new Promise<void>((resolve) => {
+      const timeout = setTimeout(() => resolve(), 3000);
+      const unsub = onAuthStateChanged(auth, (u) => {
+        if (u) {
+          firebaseUser = u;
+          clearTimeout(timeout);
+          unsub();
+          resolve();
+        }
+      });
+    });
+  }
+
+  if (firebaseUser && !firebaseUser.isAnonymous) {
+    return firebaseUser.getIdToken(true);
+  }
+
+  try {
+    const raw = localStorage.getItem('cognapse_session');
+    if (!raw) return null;
+    const session = JSON.parse(raw) as CognapseSession;
+    return session.idToken || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function syncAuthSession(user: { id: string; username: string } | null) {
+  if (!user) {
+    localStorage.removeItem('cognapse_session');
+    return;
+  }
+
+  let idToken: string | undefined;
+  let tokenExpiresAt: number | undefined;
+
+  if (!user.id.startsWith('local_')) {
+    const token = await getBearerToken();
+    if (token) {
+      idToken = token;
+      tokenExpiresAt = Date.now() + 55 * 60 * 1000;
+    }
+  }
+
+  const session: CognapseSession = {
+    id: user.id,
+    username: user.username,
+    idToken,
+    tokenExpiresAt,
+  };
+  localStorage.setItem('cognapse_session', JSON.stringify(session));
+}
+
+/** Refresh Firebase ID token before payment / protected API calls */
+export async function ensurePaymentAuth(user: {
+  id: string;
+  username: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (user.id.startsWith('local_')) {
+    return {
+      ok: false,
+      message:
+        'Payments require a cloud account. Please sign out, register again, and sign in (not offline/local mode).',
+    };
+  }
+
+  const token = await getBearerToken();
+  if (!token) {
+    return {
+      ok: false,
+      message: 'Session expired. Please sign out and sign in again, then retry payment.',
+    };
+  }
+
+  if (auth.currentUser?.uid === user.id) {
+    await syncAuthSession(user);
+    return { ok: true };
+  }
+
+  const sessionRaw = localStorage.getItem('cognapse_session');
+  if (sessionRaw) {
+    try {
+      const session = JSON.parse(sessionRaw) as CognapseSession;
+      if (session.id === user.id && session.idToken) {
+        return { ok: true };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return {
+    ok: false,
+    message: 'Session expired. Please sign out and sign in again, then retry payment.',
+  };
+}
+
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = await getBearerToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+

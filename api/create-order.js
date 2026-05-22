@@ -1,37 +1,87 @@
 import Razorpay from 'razorpay';
-// Force Vercel function rebuild for new environment variables
+import { applyCors, handleOptions } from './lib/cors.js';
+import { sendSafeError } from './lib/errors.js';
+import { rateLimit } from './lib/rateLimit.js';
+import { requireUser } from './lib/auth.js';
+
+function parseBody(req) {
+  const raw = req.body;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  return raw;
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { amount, currency = 'INR', receipt = 'receipt_1' } = req.body;
-
-  if (!amount || amount < 100) {
-    return res.status(400).json({ error: 'Amount must be at least 100 paise (INR 1.00)' });
-  }
-
   try {
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    applyCors(req, res);
+    if (handleOptions(req, res)) return;
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const decoded = await requireUser(req, res);
+    if (decoded === false) return;
+
+    const rl = rateLimit(req, { key: 'create-order', limit: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return res.status(429).json({ error: 'Too many payment attempts. Please wait and retry.' });
+    }
+
+    const body = parseBody(req);
+    const amount = Number(body.amount);
+    const currency = body.currency || 'INR';
+    const receipt = body.receipt;
+
+    if (!Number.isFinite(amount) || amount < 100) {
+      return res.status(400).json({ error: 'Amount must be at least 100 paise (INR 1.00)' });
+    }
+
+    const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+    const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+    if (!keyId || !keySecret) {
+      return res.status(503).json({
+        error: 'Payment service is not configured on the server. Contact support.',
+      });
+    }
+    if (!keyId.startsWith('rzp_')) {
+      return res.status(503).json({ error: 'Invalid Razorpay key configuration.' });
+    }
+
+    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const safeReceipt =
+      receipt && String(receipt).length <= 40
+        ? String(receipt)
+        : `cg_${Date.now().toString(36)}`.slice(0, 40);
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount),
+      currency,
+      receipt: safeReceipt,
     });
 
-    const options = {
-      amount,
-      currency,
-      receipt,
-    };
-
-    const order = await razorpay.orders.create(options);
-    
-    res.status(200).json({
+    return res.status(200).json({
       order_id: order.id,
       amount: order.amount,
       currency: order.currency,
+      key_id: keyId,
     });
   } catch (error) {
-    console.error('Razorpay Create Order Error:', error);
-    res.status(500).json({ error: 'Failed to create order', details: error.message || error });
+    const razorpayMsg =
+      error?.error?.description ||
+      error?.error?.reason ||
+      error?.error?.code ||
+      error?.description ||
+      error?.message;
+    const message = razorpayMsg
+      ? `Failed to create order: ${razorpayMsg}`
+      : 'Failed to create order on server. Use https://cognapse.vercel.app (not a preview deploy URL).';
+    return sendSafeError(res, 500, message, error);
   }
-};
+}

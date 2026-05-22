@@ -12,3 +12,8 @@ scratch/
 
 .vercel
 .env*.local
+.env.vercel.pulled
+.tmp-*
+.tmp-service-account.json
+*firebase-adminsdk*.json
+*serviceAccount*.json

@@ -4,6 +4,8 @@ import { useStore } from '../store';
 import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award, Chrome, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { dbService } from '../services/dbService';
+import { apiFetch } from '../services/apiClient';
+import { ensurePaymentAuth } from '../services/authSession';
 
 interface PremiumExportModalProps {
   isOpen: boolean;
@@ -21,6 +23,11 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
   if (!isOpen) return null;
 
+  const isPreviewDeploy =
+    typeof window !== 'undefined' &&
+    window.location.hostname.endsWith('.vercel.app') &&
+    window.location.hostname !== 'cognapse.vercel.app';
+
   const planDetails = {
     monthly: {
       amount: 9900, // paise
@@ -36,23 +43,30 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     }
   };
 
-  const loadRazorpayScript = () => {
+  const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if ((window as any).Razorpay) {
         resolve(true);
         return;
       }
-      const existingScript = document.getElementById('razorpay-checkout-js');
-      if (existingScript) {
-        resolve(true);
+
+      const finish = () => resolve(!!(window as any).Razorpay);
+      let script = document.getElementById('razorpay-checkout-js') as HTMLScriptElement | null;
+
+      if (!script) {
+        script = document.createElement('script');
+        script.id = 'razorpay-checkout-js';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = finish;
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
         return;
       }
-      const script = document.createElement('script');
-      script.id = 'razorpay-checkout-js';
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
+
+      script.addEventListener('load', finish, { once: true });
+      script.addEventListener('error', () => resolve(false), { once: true });
+      setTimeout(finish, 4000);
     });
   };
 
@@ -65,6 +79,21 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
 
     setLoading(true);
     const plan = planDetails[selectedPlan];
+
+    if (isPreviewDeploy) {
+      alert(
+        'Payments only work on the production site.\n\nOpen https://cognapse.vercel.app, sign in, then try again.\n\nPreview deploy URLs do not have payment server configuration.'
+      );
+      setLoading(false);
+      return;
+    }
+
+    const authReady = await ensurePaymentAuth(user);
+    if (!authReady.ok) {
+      alert('message' in authReady ? authReady.message : 'Please sign in again before paying.');
+      setLoading(false);
+      return;
+    }
     
     try {
       // 1. Create order on backend (with sandbox mode fallback)
@@ -73,22 +102,28 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       let isLocalFallback = false;
 
       try {
-        orderResponse = await fetch('/api/create-order', {
+        orderResponse = await apiFetch('/api/create-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: plan.amount })
+          body: JSON.stringify({ amount: plan.amount }),
         });
 
         if (!orderResponse.ok) {
-          throw new Error('Failed to create order on server');
+          const errBody = await orderResponse.json().catch(() => ({}));
+          throw new Error(
+            errBody.error || `Payment server error (${orderResponse.status})`
+          );
         }
         orderData = await orderResponse.json();
       } catch (fetchErr) {
-        console.warn('Backend payment service (/api/create-order) unavailable. Activating Developer Sandbox simulation...', fetchErr);
-        isLocalFallback = true;
+        if (import.meta.env.DEV) {
+          console.warn('Backend payment unavailable. Developer sandbox only runs in local dev.', fetchErr);
+          isLocalFallback = true;
+        } else {
+          throw fetchErr;
+        }
       }
 
-      if (isLocalFallback) {
+      if (isLocalFallback && import.meta.env.DEV) {
         // Developer Sandbox Mode simulation
         setTimeout(async () => {
           try {
@@ -128,9 +163,17 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
         return;
       }
 
-      // 3. Configure and open Razorpay
+      // 3. Configure and open Razorpay (key from server so it always matches the order)
+      const razorpayKey =
+        orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKey || !String(razorpayKey).startsWith('rzp_')) {
+        alert('Payments are not configured. Please contact support.');
+        setLoading(false);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SqyJIkTreVJaiA', 
+        key: razorpayKey, 
         amount: orderData.amount.toString(), 
         currency: orderData.currency,
         name: 'COGNAPSE',
@@ -139,9 +182,8 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
         handler: async function (response: any) {
           try {
             // 4. Verify signature on backend
-            const verifyResponse = await fetch('/api/verify-payment', {
+            const verifyResponse = await apiFetch('/api/verify-payment', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
@@ -154,12 +196,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             const verifyData = await verifyResponse.json();
             
             if (verifyData.success && verifyData.premiumData) {
-              // Write premium activation to Firestore from the authenticated client side
-              try {
-                await dbService.activatePremium(user.id, selectedPlan);
-              } catch (dbErr) {
-                console.warn('Client-side premium activation write failed, using local storage:', dbErr);
-              }
+              await dbService.activatePremium(user.id, selectedPlan);
 
               // Update in-memory user store
               setUser({
@@ -201,7 +238,8 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       paymentObject.open();
     } catch (error) {
       console.error('Payment Error:', error);
-      alert('Failed to initialize payment. Please try again.');
+      const msg = error instanceof Error ? error.message : 'Failed to initialize payment.';
+      alert(msg);
       setLoading(false);
     }
   };
@@ -261,6 +299,21 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   <h2 className="text-xl font-serif font-bold text-my-ink italic">COGNAPSE Premium Required</h2>
                   <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Unlock Advanced Research Tools</p>
                 </div>
+
+                {isPreviewDeploy && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-[10px] text-my-ink leading-relaxed">
+                    <strong>Preview deploy detected.</strong> Payments only work on{' '}
+                    <a
+                      href="https://cognapse.vercel.app"
+                      className="text-my-accent font-bold underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      cognapse.vercel.app
+                    </a>
+                    . Open that link, sign in, then activate premium.
+                  </div>
+                )}
 
                 {/* Premium Benefits List */}
                 <div className="border border-my-border bg-slate-50 dark:bg-black/30 p-4 rounded-md space-y-4">

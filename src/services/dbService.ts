@@ -29,6 +29,8 @@ const getReportTitle = (report: COGNAPSE_Output) =>
 const getReportSummary = (report: COGNAPSE_Output) =>
   report.summary?.bottom_line || report.summary?.full_synthesis || report.deep_research?.abstract || "";
 
+const allowLocalVault =
+  import.meta.env.DEV || import.meta.env.VITE_ALLOW_LOCAL_VAULT === 'true';
 
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
@@ -57,6 +59,7 @@ export const dbService = {
 
       return { success: true, user };
     } catch (error: any) {
+      if (!allowLocalVault) throw error;
       console.warn("Firebase Auth registration failed, falling back to local vault:", error);
       const localUsers = JSON.parse(localStorage.getItem('cognapse_local_users') || '{}');
       const lowerName = username.toLowerCase().replace(/\s/g, '');
@@ -87,6 +90,7 @@ export const dbService = {
         user: { id: userCredential.user.uid, username } 
       };
     } catch (error: any) {
+      if (!allowLocalVault) throw error;
       console.warn("Firebase Auth login failed, checking local vault:", error);
       const localUsers = JSON.parse(localStorage.getItem('cognapse_local_users') || '{}');
       const lowerName = username.toLowerCase().replace(/\s/g, '');
@@ -598,54 +602,80 @@ export const dbService = {
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
     localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(premiumData));
+  },
 
-    try {
-      await setDoc(doc(db, "user_premium", userId), premiumData);
-    } catch (error) {
-      console.warn("Firebase activate premium failed, local storage premium activated:", error);
+  clearLocalUserData(userId: string) {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (
+        key.includes(userId) ||
+        key === 'cognapse_session' ||
+        key === 'cognapse-storage'
+      ) {
+        keys.push(key);
+      }
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+
+    if (userId.startsWith('local_')) {
+      const localUsers = safeParse<Record<string, { id: string }>>(
+        localStorage.getItem('cognapse_local_users'),
+        {}
+      );
+      const next = Object.fromEntries(
+        Object.entries(localUsers).filter(([, u]) => u.id !== userId)
+      );
+      localStorage.setItem('cognapse_local_users', JSON.stringify(next));
     }
   },
 
   async deleteUserAccount(userId: string) {
+    this.clearLocalUserData(userId);
+
+    if (userId.startsWith('local_')) {
+      try {
+        await signOut(auth);
+      } catch {
+        /* ignore */
+      }
+      return { success: true };
+    }
+
     try {
-      localStorage.removeItem(`cognapse_reports_${userId}`);
-      localStorage.removeItem(`cognapse_stats_${userId}`);
-      localStorage.removeItem(`cognapse_notebook_${userId}`);
-      localStorage.removeItem(`cognapse_settings_${userId}`);
-      localStorage.removeItem(`cognapse_exports_${userId}`);
-      localStorage.removeItem(`cognapse_premium_${userId}`);
+      await this.clearHistory(userId);
+      await this.clearNotebook(userId);
+
+      const sharedQ = query(
+        collection(db, 'shared_research'),
+        where('ownerId', '==', userId)
+      );
+      const sharedSnap = await getDocs(sharedQ);
+      for (const d of sharedSnap.docs) {
+        await deleteDoc(d.ref);
+      }
 
       const batch = writeBatch(db);
-      
-      // 1. Delete Reports
-      const reportsQ = query(collection(db, "intelligence_reports"), where("user_id", "==", userId));
-      const reportsSnap = await getDocs(reportsQ);
-      reportsSnap.forEach(doc => batch.delete(doc.ref));
-
-      // 2. Delete Notebook
-      const notesQ = query(collection(db, "notebook"), where("user_id", "==", userId));
-      const notesSnap = await getDocs(notesQ);
-      notesSnap.forEach(doc => batch.delete(doc.ref));
-
-      // 3. Delete Stats
-      batch.delete(doc(db, "user_stats", userId));
-
-      // 4. Delete Settings
-      batch.delete(doc(db, "user_settings", userId));
-
-      // 5. Delete Premium
-      batch.delete(doc(db, "user_premium", userId));
-
+      batch.delete(doc(db, 'user_stats', userId));
+      batch.delete(doc(db, 'user_settings', userId));
+      batch.delete(doc(db, 'user_premium', userId));
       await batch.commit();
 
-      // 6. Delete Auth User
-      if (auth.currentUser) {
+      if (auth.currentUser?.uid === userId) {
         await auth.currentUser.delete();
       }
-      
+
       return { success: true };
-    } catch (error: any) {
-      console.error("Account excision failed:", error);
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error('Account excision failed:', err);
+      this.clearLocalUserData(userId);
+      if (err?.code === 'auth/requires-recent-login') {
+        const e = new Error('REAUTH_REQUIRED');
+        (e as Error & { code: string }).code = 'auth/requires-recent-login';
+        throw e;
+      }
       throw error;
     }
   }

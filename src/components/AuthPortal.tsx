@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
+import { syncAuthSession } from '../services/authSession';
 import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
@@ -43,6 +44,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         ...(premiumStatus || {})
       };
       setUser(fullUser);
+      await syncAuthSession(fullUser);
 
       if (notes) {
         useStore.getState().setNotes(notes as any[]);

@@ -3,44 +3,39 @@ function syncSession() {
   if (session) {
     try {
       const parsed = JSON.parse(session);
-      chrome.storage.local.set({ cognapse_user: parsed }, () => {
-        console.log("COGNAPSE Extension: Synchronized user session: ", parsed);
+      chrome.storage.local.set({
+        cognapse_session: parsed,
+        cognapse_user: { id: parsed.id, username: parsed.username },
+      }, () => {
+        console.log('COGNAPSE Extension: Synchronized session for', parsed.username);
       });
 
-      // Synchronize premium state
       const premiumKey = `cognapse_premium_${parsed.id}`;
       const premium = localStorage.getItem(premiumKey);
       if (premium) {
         try {
           const parsedPremium = JSON.parse(premium);
-          chrome.storage.local.set({ cognapse_premium: parsedPremium }, () => {
-            console.log("COGNAPSE Extension: Synchronized premium state: ", parsedPremium);
-          });
+          chrome.storage.local.set({ cognapse_premium: parsedPremium });
         } catch (pe) {
-          console.error("COGNAPSE Extension: Error parsing premium data:", pe);
+          console.error('COGNAPSE Extension: Error parsing premium data:', pe);
         }
       } else {
         chrome.storage.local.remove('cognapse_premium');
       }
     } catch (e) {
-      console.error("COGNAPSE Extension: Error parsing session:", e);
+      console.error('COGNAPSE Extension: Error parsing session:', e);
     }
   } else {
-    chrome.storage.local.remove('cognapse_user', () => {
-      console.log("COGNAPSE Extension: Cleared user session.");
-    });
-    chrome.storage.local.remove('cognapse_premium', () => {
-      console.log("COGNAPSE Extension: Cleared premium state.");
+    chrome.storage.local.remove(['cognapse_user', 'cognapse_session', 'cognapse_premium'], () => {
+      console.log('COGNAPSE Extension: Cleared session.');
     });
   }
 }
 
-// Initial Sync on DOM Loaded
 syncSession();
 
-// Monitor local storage session switches or logout events
 window.addEventListener('storage', (e) => {
-  if (e.key === 'cognapse_session' || e.key.startsWith('cognapse_premium_')) {
+  if (e.key === 'cognapse_session' || e.key?.startsWith('cognapse_premium_')) {
     syncSession();
   }
 });

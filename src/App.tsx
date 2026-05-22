@@ -23,7 +23,10 @@ import IntelligenceFeed from './components/IntelligenceFeed';
 import CreatorProfile from './components/CreatorProfile';
 import NeuralWalkthrough from './components/NeuralWalkthrough';
 import SharedResearchPage from './components/SharedResearchPage';
-import { lazy, Suspense } from 'react';
+import LegalPages from './components/LegalPages';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './services/firebase';
+import { syncAuthSession } from './services/authSession';
 
 import { audioService } from './services/audioService';
 
@@ -31,6 +34,13 @@ export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
     const match = window.location.pathname.match(/^\/share\/([^/]+)/);
     return match?.[1] || null;
+  });
+  const [legalPage, setLegalPage] = useState<'privacy' | 'terms' | 'ai-disclaimer' | null>(() => {
+    const path = window.location.pathname.replace(/\/$/, '');
+    if (path === '/privacy') return 'privacy';
+    if (path === '/terms') return 'terms';
+    if (path === '/ai-disclaimer') return 'ai-disclaimer';
+    return null;
   });
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const toggleSidebar = useStore((state) => state.toggleSidebar);
@@ -64,9 +74,37 @@ export default function App() {
   }, [deepResearch.status]);
 
   useEffect(() => {
-    // Purge any persistent emojis from old sessions
     const state = useStore.getState() as any;
     if (state._hydrateCleanup) state._hydrateCleanup();
+  }, []);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) return;
+      const current = useStore.getState().user;
+      if (current?.id === firebaseUser.uid) {
+        await syncAuthSession(current);
+        return;
+      }
+      const username =
+        firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative';
+      await syncAuthSession({ id: firebaseUser.uid, username });
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      const path = window.location.pathname.replace(/\/$/, '');
+      if (path === '/privacy') setLegalPage('privacy');
+      else if (path === '/terms') setLegalPage('terms');
+      else if (path === '/ai-disclaimer') setLegalPage('ai-disclaimer');
+      else setLegalPage(null);
+      const shareMatch = path.match(/^\/share\/([^/]+)/);
+      setShareRoute(shareMatch?.[1] || null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   const setAuthOpen = useStore((state) => state.setAuthOpen);
@@ -269,11 +307,31 @@ export default function App() {
       "min-h-screen bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16",
       theme === 'dark' ? 'dark' : ''
     )}>
-      {!shareRoute && <Navbar />}
+      {!shareRoute && !legalPage && <Navbar />}
 
       <div className="h-[calc(100vh-64px)] relative">
-        {shareRoute ? <SharedResearchPage shareId={shareRoute} /> : renderContent()}
+        {legalPage ? (
+          <LegalPages
+            page={legalPage}
+            onBack={() => {
+              setLegalPage(null);
+              window.history.pushState({}, '', '/');
+            }}
+          />
+        ) : shareRoute ? (
+          <SharedResearchPage shareId={shareRoute} />
+        ) : (
+          renderContent()
+        )}
       </div>
+
+      {!shareRoute && !legalPage && (
+        <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
+          <a href="/privacy" className="hover:text-my-accent">Privacy</a>
+          <a href="/terms" className="hover:text-my-accent">Terms</a>
+          <a href="/ai-disclaimer" className="hover:text-my-accent">AI Disclaimer</a>
+        </footer>
+      )}
 
       <AnimatePresence>
         {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}

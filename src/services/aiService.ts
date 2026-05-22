@@ -50,6 +50,9 @@ const getLocalOllamaModel = async () => {
   }
 };
 
+import { apiFetch } from './apiClient';
+import { auth } from './firebase';
+
 /**
  * PRODUCTION-READY INTELLIGENCE SWARM
  * Relies on Vercel Serverless Endpoint (/api/research) to hide API Keys
@@ -90,28 +93,34 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
   // 2. Call Vercel Serverless Backend (Secure API Keys)
   if (isStable("cloud-swarm")) {
     try {
-      const baseUrl = isLocalHost ? 'http://localhost:5173' : '';
-      const response = await fetch(`${baseUrl}/api/research`, {
+      if (import.meta.env.PROD && !auth.currentUser) {
+        throw new Error(
+          'Sign in required to use cloud intelligence. Create a free account, or run COGNAPSE locally with Ollama for private offline research.'
+        );
+      }
+
+      const response = await apiFetch('/api/research', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, isJson, estTokens })
+        body: JSON.stringify({ prompt, isJson, estTokens }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || "Serverless backend failed");
+        throw new Error(data.error || 'Serverless backend failed');
       }
 
       return data.result;
-
     } catch (e: any) {
-      console.warn("Secure Cloud Swarm failed:", e);
-      markUnstable("cloud-swarm");
+      console.warn('Secure Cloud Swarm failed:', e);
+      markUnstable('cloud-swarm');
+      if (e?.message?.includes('Sign in required')) throw e;
     }
   }
 
-  throw new Error("INTELLIGENCE OVERLOAD: All secure cloud nodes are currently saturated. For unlimited research, we recommend enabling 'Local Acceleration' via Ollama on your machine.");
+  throw new Error(
+    'INTELLIGENCE OVERLOAD: Cloud nodes are unavailable. Sign in for cloud research, or enable Local Acceleration via Ollama on your machine.'
+  );
 };
 
 export const getSwarmHealth = () => healthRegistry;

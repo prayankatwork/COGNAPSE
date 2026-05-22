@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { dbService } from './services/dbService';
+import { syncAuthSession } from './services/authSession';
 import type { COGNAPSE_Output, DeepResearchThesis, ResearchScore } from './types';
 
 export interface UserBadge {
@@ -236,15 +237,11 @@ export const useStore = create<AppState>()(
       user: null,
       setUser: (user) => {
         set({ user });
-        if (user) {
-          localStorage.setItem('cognapse_session', JSON.stringify({ id: user.id, username: user.username }));
-        } else {
-          localStorage.removeItem('cognapse_session');
-        }
+        void syncAuthSession(user);
       },
       logout: async () => {
         try { await dbService.logout(); } catch(e) {}
-        localStorage.removeItem('cognapse_session');
+        await syncAuthSession(null);
         set({ 
           user: null, 
           xp: 0, 
@@ -259,24 +256,22 @@ export const useStore = create<AppState>()(
       deleteAccount: async () => {
         const user = get().user;
         if (!user) return;
-        
-        try {
-          await dbService.deleteUserAccount(user.id);
-          set({ 
-            user: null, 
-            xp: 0, 
-            searchCount: 0, 
-            rank: 'ANALYST',
-            archive: [],
-            currentReport: null,
-            notes: [],
-            currentView: 'landing',
-            isStatusOpen: false
-          });
-        } catch (error) {
-          console.error("Account deletion failed:", error);
-          throw error;
-        }
+
+        await dbService.deleteUserAccount(user.id);
+        set({
+          user: null,
+          xp: 0,
+          searchCount: 0,
+          rank: 'ANALYST',
+          archive: [],
+          currentReport: null,
+          notes: [],
+          pdfExports: [],
+          unlockedReports: {},
+          currentView: 'landing',
+          isStatusOpen: false,
+          subscribedCategories: ['TECH', 'FINANCE', 'GEOPOLITICS'],
+        });
       },
 
       isAuthOpen: false,

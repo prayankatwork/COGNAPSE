@@ -10,6 +10,8 @@ import {
 import clsx from 'clsx';
 import { dbService } from '../services/dbService';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
+import { buildActivityHeatmap } from '../utils/activityHeatmap';
+import { syncAuthSession } from '../services/authSession';
 
 // ─── Analytics Components ─────────────────────────────────────────────────────
 
@@ -176,9 +178,10 @@ function TacticalGauge({ label, value, icon, colorClass = "text-my-accent" }: { 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function OperativeStatus({ onClose }: OperativeStatusProps) {
-  const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user } = useStore();
+  const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user, deleteAccount, logout } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'exports'>('overview');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [purging, setPurging] = useState(false);
 
   useEffect(() => {
     fetchExports();
@@ -261,6 +264,8 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
     // Generates a mock "growth" curve based on your actual stats
     return [10, 25, 18, 45, 32, 60, 48, searchCount % 100];
   }, [searchCount]);
+
+  const activityHeatmap = useMemo(() => buildActivityHeatmap(archive), [archive]);
 
   // Top Investigative Clusters
   const topClusters = useMemo(() => {
@@ -498,20 +503,26 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                       </div>
                    </div>
                    <div className="flex flex-wrap gap-1.5 justify-between">
-                      {Array.from({ length: 42 }).map((_, i) => (
+                      {activityHeatmap.map((cell, i) => (
                         <motion.div 
                           key={i}
+                          title={`${cell.dayLabel}: ${cell.count} research ${cell.count === 1 ? 'session' : 'sessions'}`}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: i * 0.01 }}
                           className={clsx(
                             "w-4 h-4 border border-my-border/20 transition-all",
-                            i % 7 === 0 ? "bg-my-accent" : i % 5 === 0 ? "bg-my-accent/40" : "bg-my-border/40"
+                            cell.intensity === 0 && "bg-my-border/40",
+                            cell.intensity === 1 && "bg-my-accent/30",
+                            cell.intensity === 2 && "bg-my-accent/60",
+                            cell.intensity === 3 && "bg-my-accent"
                           )}
                         />
                       ))}
                    </div>
-                   <p className="text-[7px] text-my-muted uppercase tracking-[0.2em] mt-4 font-bold text-center">Historical research frequency over the trailing 42-day cycle</p>
+                   <p className="text-[7px] text-my-muted uppercase tracking-[0.2em] mt-4 font-bold text-center">
+                     Your research frequency — last 42 days ({archive.length} dossiers in archive)
+                   </p>
                 </div>
               </motion.div>
             ) : activeTab === 'exports' ? (
@@ -592,14 +603,38 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
               <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-50">Secure Data Protocol: AES-256 Encrypted</span>
            </div>
            <button 
-             onClick={() => {
-               if (window.confirm("WARNING: This will permanently and irreversibly delete your research history, saved reports, and account credentials from our servers. \n\nProceed with data deletion?")) {
-                  useStore.getState().deleteAccount();
+             disabled={purging || !user}
+             onClick={async () => {
+               if (!user) {
+                 alert('Sign in to purge your vault data.');
+                 return;
+               }
+               if (!window.confirm(
+                 'WARNING: This permanently deletes your research history, notes, settings, exports, and account credentials.\n\nProceed with data deletion?'
+               )) return;
+
+               setPurging(true);
+               try {
+                 await deleteAccount();
+                 await logout();
+                 await syncAuthSession(null);
+                 onClose();
+                 alert('Personal data purged. Your vault has been reset.');
+               } catch (err: unknown) {
+                 const code = (err as { code?: string })?.code;
+                 const message = err instanceof Error ? err.message : '';
+                 if (code === 'auth/requires-recent-login' || message === 'REAUTH_REQUIRED') {
+                   alert('For security, sign out, sign in again, then run Purge Personal Data.');
+                 } else {
+                   alert(message || 'Purge could not complete on the server. Local data was cleared — sign out and contact support if needed.');
+                 }
+               } finally {
+                 setPurging(false);
                }
              }}
-             className="text-[8px] font-black uppercase tracking-[0.3em] text-red-500/60 hover:text-red-500 transition-colors"
+             className="text-[8px] font-black uppercase tracking-[0.3em] text-red-500/60 hover:text-red-500 transition-colors disabled:opacity-40"
            >
-              Purge Personal Data
+              {purging ? 'Purging…' : 'Purge Personal Data'}
            </button>
         </div>
       </motion.div>

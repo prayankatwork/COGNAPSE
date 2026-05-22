@@ -6,6 +6,11 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev:vercel": "vercel dev --listen 3000",
+    "deploy:env": "node scripts/sync-all-server-env.mjs",
+    "deploy:env:preview": "node scripts/sync-preview-env.mjs",
+    "deploy:prod": "vercel deploy --prod --yes",
+    "deploy:rules": "firebase deploy --only firestore:rules --project cognapse-93cdf",
     "build": "vite build",
     "build:desktop": "vite build && electron-builder",
     "preview": "vite preview",

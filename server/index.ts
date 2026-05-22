@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import db from './database';
 import { v4 as uuidv4 } from 'uuid';
+import { hashPassword, verifyPassword } from './password';
 
 const app = express();
 const port = 3001;
@@ -29,7 +30,7 @@ app.post('/api/auth/register', (req, res) => {
   try {
     const trimmedName = username.trim();
     const stmt = db.prepare('INSERT INTO users (id, username, password) VALUES (?, ?, ?)');
-    stmt.run(id, trimmedName.toLowerCase(), password);
+    stmt.run(id, trimmedName.toLowerCase(), hashPassword(password));
     
     // Initialize stats for new user
     const statsStmt = db.prepare('INSERT INTO user_stats (user_id) VALUES (?)');
@@ -55,10 +56,15 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ error: "Operative not found in registry." });
     }
 
-    const user = db.prepare('SELECT id, username FROM users WHERE LOWER(username) = ? AND password = ?').get(lowerUser, password);
-    if (user) {
+    const row = db.prepare('SELECT id, username, password FROM users WHERE LOWER(username) = ?').get(lowerUser) as
+      | { id: string; username: string; password: string }
+      | undefined;
+    if (row && verifyPassword(password, row.password)) {
+      if (!row.password.startsWith('scrypt:')) {
+        db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashPassword(password), row.id);
+      }
       console.log(`[VAULT] Identification Successful: Operative '${username}' authorized.`);
-      res.json({ success: true, user });
+      res.json({ success: true, user: { id: row.id, username: row.username } });
     } else {
       console.warn(`[VAULT] Identification Failure: Incorrect security key for operative '${username}'.`);
       res.status(401).json({ error: "Incorrect security key for this operative." });

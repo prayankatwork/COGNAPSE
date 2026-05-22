@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Globe, Zap, ArrowRight, Check, Plus, 
@@ -32,37 +32,15 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'feed' | 'subscriptions'>('feed');
-  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
 
-  // Trigger update when categories change OR on interval
-  useEffect(() => {
-    if (subscribedCategories.length > 0) {
-      fetchNews();
-    } else {
-      setNews([]);
-      setLoading(false);
-    }
-  }, [subscribedCategories]);
-
-  // Auto-refresh interval (10 minutes) with visibility check
-  useEffect(() => {
-    if (subscribedCategories.length === 0) return;
-
-    const interval = setInterval(() => {
-      // Only refresh if the user is actually looking at the page
-      if (document.visibilityState === 'visible') {
-        console.log("[Knowledge Hub] Auto-refreshing signals...");
-        fetchNews(true); // silent refresh
-      }
-    }, 10 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [subscribedCategories]);
-
-  const fetchNews = async (isSilent = false) => {
+  const fetchNews = useCallback(async (isSilent = false) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     if (!isSilent) setLoading(true);
-    if (isManualRefreshing) return;
+    setSyncError(null);
 
     try {
       const currentDate = new Date().toLocaleDateString('en-US', { 
@@ -121,24 +99,67 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
       setLastRefreshed(new Date());
     } catch (error) {
       console.error("Failed to fetch intelligence feed:", error);
-      // Fallback data if needed
-      if (!Array.isArray(news) || news.length === 0) {
-        setNews([
+      const msg = error instanceof Error ? error.message : 'Sync failed';
+      setSyncError(msg.includes('Sign in') ? msg : 'Could not refresh feed. Try again.');
+      setNews((prev) => {
+        if (Array.isArray(prev) && prev.length > 0) return prev;
+        return [
           { id: '1', category: 'TECH', headline: 'Quantum Supremacy Breakout in Silicon Photonics', summary: 'New experimental data suggests a breakthrough in room-temperature quantum computing.', timestamp: '1h ago', impact: 'high' },
           { id: '2', category: 'FINANCE', headline: 'Global Liquidity Crisis Looming in Tier-2 Banking', summary: 'Multiple mid-sized institutions reporting unexpected capital shortfalls.', timestamp: '3h ago', impact: 'medium' },
           { id: '3', category: 'GEOPOLITICS', headline: 'Subsurface Mineral Rights Conflict in Arctic Circle', summary: 'Diplomatic tensions rise as new seismic surveys reveal massive rare-earth deposits.', timestamp: '5h ago', impact: 'high' }
-        ]);
-      }
+        ];
+      });
     } finally {
       setLoading(false);
-      setIsManualRefreshing(false);
+      fetchingRef.current = false;
     }
-  };
+  }, [subscribedCategories]);
+
+  // Load feed when categories change
+  useEffect(() => {
+    if (subscribedCategories.length > 0) {
+      fetchNews();
+    } else {
+      setNews([]);
+      setLoading(false);
+      setLastRefreshed(null);
+      setSyncError(null);
+    }
+  }, [subscribedCategories, fetchNews]);
+
+  // Auto-refresh every 10 minutes + when tab becomes visible
+  useEffect(() => {
+    if (subscribedCategories.length === 0) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchNews(true);
+      }
+    }, 10 * 60 * 1000);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNews(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [subscribedCategories, fetchNews]);
 
   const handleManualRefresh = () => {
-    setIsManualRefreshing(true);
-    fetchNews();
+    fetchNews(false);
   };
+
+  const lastSyncLabel = useMemo(() => {
+    if (loading && !lastRefreshed) return 'Syncing…';
+    if (syncError) return syncError;
+    if (!lastRefreshed) return 'Not synced yet';
+    return `Last Sync: ${lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }, [loading, lastRefreshed, syncError]);
 
   // Group news by category
   const groupedNews = useMemo(() => {
@@ -206,9 +227,15 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                   <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] font-black">Global Event Tracking</p>
                   <div className="w-1 h-1 rounded-full bg-my-border" />
                   <div className="flex items-center gap-2">
-                     <div className={clsx("w-1.5 h-1.5 rounded-full", loading ? "bg-my-accent animate-pulse" : "bg-green-500")} />
-                     <span className="text-[9px] text-my-muted font-bold uppercase tracking-widest">
-                        Last Sync: {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                     <div className={clsx(
+                       "w-1.5 h-1.5 rounded-full shrink-0",
+                       loading ? "bg-my-accent animate-pulse" : syncError ? "bg-red-500" : "bg-green-500"
+                     )} />
+                     <span className={clsx(
+                       "text-[9px] font-bold uppercase tracking-widest max-w-[200px] truncate",
+                       syncError ? "text-red-500/80" : "text-my-muted"
+                     )}>
+                        {lastSyncLabel}
                      </span>
                   </div>
                </div>
