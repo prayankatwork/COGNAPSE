@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
@@ -40,8 +41,30 @@ export default function MainContent() {
     toggleSidebar, initialQuery, setInitialQuery, currentReport,
     setCurrentReport, xp, searchCount, rank, updateGamification,
     addToArchive, currentChat, addChatMessage, deepResearch, setDeepResearch, resetDeepResearch,
-    investigationStack, pushToStack, popFromStack, clearStack, walkthroughCompleted
-  } = useStore();
+    investigationStack, pushToStack, popFromStack, clearStack, walkthroughCompleted, setIsLoading
+  } = useStore(useShallow((state) => ({
+    toggleSidebar: state.toggleSidebar,
+    initialQuery: state.initialQuery,
+    setInitialQuery: state.setInitialQuery,
+    currentReport: state.currentReport,
+    setCurrentReport: state.setCurrentReport,
+    xp: state.xp,
+    searchCount: state.searchCount,
+    rank: state.rank,
+    updateGamification: state.updateGamification,
+    addToArchive: state.addToArchive,
+    currentChat: state.currentChat,
+    addChatMessage: state.addChatMessage,
+    deepResearch: state.deepResearch,
+    setDeepResearch: state.setDeepResearch,
+    resetDeepResearch: state.resetDeepResearch,
+    investigationStack: state.investigationStack,
+    pushToStack: state.pushToStack,
+    popFromStack: state.popFromStack,
+    clearStack: state.clearStack,
+    walkthroughCompleted: state.walkthroughCompleted,
+    setIsLoading: state.setIsLoading
+  })));
 
   const [query, setQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -53,35 +76,22 @@ export default function MainContent() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const user = useStore(state => state.user);
-  const archive = useStore(state => state.archive);
-  const setArchive = useStore(state => state.setArchive);
+  const loadingPhaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Archive Synchronization Logic
+  const clearLoadingPhaseTimers = () => {
+    loadingPhaseTimers.current.forEach(clearTimeout);
+    loadingPhaseTimers.current = [];
+  };
+
   useEffect(() => {
-    // Only sync if user is logged in and archive is truly empty
-    if (user && archive.length === 0) {
-      const syncArchive = async () => {
-        try {
-          const reports = await dbService.getAllReports(user.id);
-          if (reports && reports.length > 0) {
-            const syncedArchive = (reports as any[]).map(r => ({
-              id: r.id,
-              query: r.query,
-              timestamp: r.timestamp,
-              topic_cluster: r.data.archive_entry?.topic_cluster || "Cloud Intelligence",
-              tags: r.data.archive_entry?.tags || [],
-              summary_snippet: r.data.archive_entry?.summary_snippet || r.data.summary?.bottom_line || "",
-              report: r.data
-            }));
-            setArchive(syncedArchive);
-          }
-        } catch (e) {
-          console.error("Archive sync error:", e);
-        }
-      };
-      syncArchive();
-    }
-  }, [user?.id, archive.length, setArchive]);
+    return () => {
+      clearLoadingPhaseTimers();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initialQuery) {
@@ -93,7 +103,13 @@ export default function MainContent() {
   const handleSearch = async (targetQuery: string) => {
     if (!targetQuery.trim()) return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
+    setIsLoading(true);
     setError(null);
     setQuery(""); // Clear input
     useStore.setState({ currentChat: [] });
@@ -102,15 +118,17 @@ export default function MainContent() {
     useStore.getState().resetDeepResearch();
 
     setLoadingPhase("Analyzing research query...");
+    clearLoadingPhaseTimers();
+    loadingPhaseTimers.current = [
+      setTimeout(() => setLoadingPhase('Reviewing available data...'), 1500),
+      setTimeout(() => setLoadingPhase('Synthesizing primary sources...'), 3500),
+      setTimeout(() => setLoadingPhase('Identifying data conflicts...'), 5000),
+      setTimeout(() => setLoadingPhase('Structuring report...'), 6500),
+    ];
 
     try {
-      // update phrases purely for UX
-      setTimeout(() => setLoadingPhase("Reviewing available data..."), 1500);
-      setTimeout(() => setLoadingPhase("Synthesizing primary sources..."), 3500);
-      setTimeout(() => setLoadingPhase("Identifying data conflicts..."), 5000);
-      setTimeout(() => setLoadingPhase("Structuring report..."), 6500);
 
-      const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank });
+      const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank }, abortControllerRef.current.signal);
 
       if (!report || !report.summary) {
         throw new Error("Data synthesis yielded incomplete results. Retrying may resolve this.");
@@ -232,14 +250,24 @@ export default function MainContent() {
       contentAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message || "An unexpected error occurred during research.");
     } finally {
+      clearLoadingPhaseTimers();
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSubSearch = async (targetQuery: string, retryCount = 0) => {
     if (!targetQuery.trim()) return;
+
+    if (retryCount === 0 && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    if (retryCount === 0) {
+      abortControllerRef.current = new AbortController();
+    }
 
     setLoading(true);
     setError(null);
@@ -247,7 +275,7 @@ export default function MainContent() {
     setLoadingPhase(retryCount > 0 ? `Retrying synthesis (Attempt ${retryCount + 1})...` : "Expanding investigation umbrella...");
 
     try {
-      const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank });
+      const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank }, abortControllerRef.current?.signal);
 
       // Strict Validation Layer
       if (!report || !report.summary || !report.summary.full_synthesis) {
@@ -265,6 +293,7 @@ export default function MainContent() {
       contentAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message || "Failed to expand investigation.");
     } finally {
       setLoading(false);
@@ -276,17 +305,20 @@ export default function MainContent() {
 
     setQuery("");
     setLoading(true);
+    setIsLoading(true);
     setError(null);
     setLoadingPhase("Analyzing context...");
 
-    addChatMessage({
+    const userMsg = {
       id: uuidv4(),
-      role: 'user',
-      content: userQuery
-    });
+      role: 'user' as const,
+      content: userQuery,
+    };
+    const chatWithUser = [...currentChat, userMsg];
+    addChatMessage(userMsg);
 
     try {
-      const reply = await executeCognapseChat(userQuery, currentReport, currentChat);
+      const reply = await executeCognapseChat(userQuery, currentReport, chatWithUser);
       addChatMessage({
         id: uuidv4(),
         role: 'model',
@@ -299,6 +331,7 @@ export default function MainContent() {
       setError(err.message || "Failed to process follow-up question.");
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -377,7 +410,9 @@ export default function MainContent() {
         <header className="h-16 flex items-center justify-between px-8 border-b border-my-border z-10 shrink-0 bg-my-bg/40 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={toggleSidebar}
+              aria-label="Open research archive"
               className="p-2 -ml-2 text-my-muted hover:text-my-ink md:hidden"
             >
               <Menu size={20} />
@@ -404,7 +439,7 @@ export default function MainContent() {
                 className={clsx(
                   "flex items-center gap-2 px-4 py-1.5 border text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
                   query.trim() && !currentReport 
-                    ? "bg-my-accent text-white dark:text-black border-my-accent animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
+                    ? "bg-my-accent text-white dark:text-black border-my-accent animate-pulse shadow-signal" 
                     : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white",
                   (!walkthroughCompleted && !currentReport) && "opacity-25 cursor-not-allowed hover:bg-transparent"
                 )}
@@ -623,9 +658,9 @@ export default function MainContent() {
                 {/* Follow-up Chat UI */}
                 <div className="mt-8 border-t border-my-border pt-8 pb-16">
                   <h4 className="text-xs uppercase tracking-widest font-bold text-my-muted mb-6">Analysis Thread</h4>
-                  {useStore.getState().currentChat?.length > 0 ? (
+                  {currentChat?.length > 0 ? (
                     <div className="space-y-6 mb-6">
-                      {useStore.getState().currentChat.map(msg => (
+                      {currentChat.map(msg => (
                         <div key={msg.id} className={clsx("flex flex-col", msg.role === 'user' ? "items-end" : "items-start")}>
                           <div className={clsx(
                             "max-w-[85%] px-4 py-3 rounded-[4px] text-[13px] leading-relaxed relative",

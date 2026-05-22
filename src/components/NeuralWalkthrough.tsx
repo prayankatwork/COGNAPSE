@@ -280,7 +280,7 @@ export default function NeuralWalkthrough() {
             initial={{ opacity: 0, scale: 0.9, filter: "brightness(2) blur(10px)" }}
             animate={{ opacity: 1, scale: 1, filter: "brightness(1) blur(0px)" }}
             exit={{ opacity: 0, scale: 1.1, filter: "brightness(0) blur(20px)" }}
-            className="absolute border-2 border-my-accent rounded-xl shadow-[0_0_50px_rgba(249,115,22,0.4)] pointer-events-none z-[1001]"
+            className="absolute border-2 border-my-accent rounded-[4px] shadow-signal pointer-events-none z-[1001]"
             style={{
               top: spotlightRect.top,
               left: spotlightRect.left,
@@ -291,7 +291,7 @@ export default function NeuralWalkthrough() {
              <motion.div 
                animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.05, 1] }}
                transition={{ duration: 2, repeat: Infinity }}
-               className="absolute -inset-4 bg-my-accent/5 rounded-xl border border-my-accent/10"
+               className="absolute -inset-4 bg-my-accent/5 rounded-[4px] border border-my-accent/10"
              />
           </motion.div>
         )}
@@ -309,7 +309,7 @@ export default function NeuralWalkthrough() {
            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
            transition={{ type: "spring", damping: 20 }}
            className={clsx(
-             "pointer-events-auto w-full max-w-md bg-my-bg/95 backdrop-blur-3xl border border-my-border rounded-2xl p-8 shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative overflow-hidden",
+             "pointer-events-auto w-full max-w-md bg-my-bg/95 backdrop-blur-3xl border border-my-border rounded-[4px] p-8 shadow-2xl relative overflow-hidden",
              spotlightRect && spotlightRect.left < 500 ? "md:ml-[300px]" : ""
            )}
          >
@@ -318,7 +318,7 @@ export default function NeuralWalkthrough() {
             </div>
 
             <div className="flex items-center gap-4 mb-6">
-               <div className="p-3 bg-my-accent/10 rounded-xl">
+               <div className="p-3 bg-my-accent/10 rounded-[4px]">
                   {currentStep?.icon}
                </div>
                <div>

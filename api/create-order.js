@@ -3,6 +3,13 @@ import { applyCors, handleOptions } from './lib/cors.js';
 import { sendSafeError } from './lib/errors.js';
 import { rateLimit } from './lib/rateLimit.js';
 import { requireUser } from './lib/auth.js';
+import { isProduction } from './lib/env.js';
+
+/** Server-authoritative plan prices (paise). Client amounts are ignored in production. */
+const PLAN_AMOUNTS = {
+  monthly: 9900,
+  yearly: 79900,
+};
 
 function parseBody(req) {
   const raw = req.body;
@@ -35,12 +42,22 @@ export default async function handler(req, res) {
     }
 
     const body = parseBody(req);
-    const amount = Number(body.amount);
+    const plan = body.plan === 'yearly' ? 'yearly' : body.plan === 'monthly' ? 'monthly' : null;
     const currency = body.currency || 'INR';
     const receipt = body.receipt;
 
-    if (!Number.isFinite(amount) || amount < 100) {
-      return res.status(400).json({ error: 'Amount must be at least 100 paise (INR 1.00)' });
+    let amount;
+    if (plan && PLAN_AMOUNTS[plan]) {
+      amount = PLAN_AMOUNTS[plan];
+    } else if (isProduction) {
+      return res.status(400).json({
+        error: 'Invalid or missing plan. Use plan: "monthly" or "yearly".',
+      });
+    } else {
+      amount = Number(body.amount);
+      if (!Number.isFinite(amount) || amount < 100) {
+        return res.status(400).json({ error: 'Amount must be at least 100 paise (INR 1.00)' });
+      }
     }
 
     const keyId = process.env.RAZORPAY_KEY_ID?.trim();

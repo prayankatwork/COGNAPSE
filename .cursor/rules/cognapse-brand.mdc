@@ -1,0 +1,37 @@
+---
+description: COGNAPSE brand kit — tokens, UI primitives, voice (intelligence OS)
+globs: src/**/*.tsx,src/**/*.css,brand/**/*
+alwaysApply: false
+---
+
+# COGNAPSE brand (required for UI work)
+
+Read `brand/README.md` before changing interface code.
+
+## Tokens (no drift)
+
+- **UI accent:** `my-accent` — navy (light) / cyber yellow (dark). Buttons, tabs, nav.
+- **Signal:** `my-signal` — orange `#F27D26`. Maps, pulses, premium bar, graph roots.
+- **Surfaces:** `my-bg`, `my-sidebar`, `my-callout`, `my-border`, `my-ink`, `my-muted`, `my-syn`
+- Never use `orange-500`, `amber-500`, `#F27D26`, or `rgba(249,115,22,…)` in components. Use `my-signal` / `shadow-signal`.
+
+## Primitives
+
+Prefer `src/components/ui`: `Panel`, `SectionLabel`, `MetaLabel`, `Button`, `PageHeader`, `StatusDot`.
+
+Recipes: `src/styles/brand.ts` (`brandClasses`, `buttonVariants`).
+
+## Layout & type
+
+- Radius: `rounded-[2px]` or `rounded-[4px]` max on operational UI.
+- Section labels: `text-[10px] font-black uppercase tracking-[0.3em] text-my-muted`
+- Titles: `font-serif` italic for reports/heroes
+- Copy: see `brand/COPY-VOICE.md` — no social/feed/board language
+
+## Themes
+
+Every new surface must work in **light and dark** using CSS variables in `src/index.css`.
+
+## Final check
+
+If it looks like generic SaaS or a social app, redo it.

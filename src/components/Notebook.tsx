@@ -26,7 +26,7 @@ export default function Notebook({ onClose }: { onClose: () => void }) {
 
       <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
         {!user && (
-          <div className="mb-8 p-4 bg-orange-500/10 border border-orange-500/20 rounded-[4px] text-[10px] font-bold uppercase tracking-widest text-orange-600 dark:text-orange-400">
+          <div className="mb-8 p-4 bg-my-signal/10 border border-my-signal/20 rounded-[4px] text-[10px] font-bold uppercase tracking-widest text-my-signal">
             Guest Session: Notes are temporary and not synced to the vault.
           </div>
         )}

@@ -17,6 +17,7 @@ import {
   writeBatch
 } from "firebase/firestore";
 import type { COGNAPSE_Output, ResearchVisibility, SharedResearchRecord } from '../types';
+import { apiFetch } from './apiClient';
 
 const safeParse = <T>(value: string | null, fallback: T): T => {
   if (!value) return fallback;
@@ -29,8 +30,10 @@ const getReportTitle = (report: COGNAPSE_Output) =>
 const getReportSummary = (report: COGNAPSE_Output) =>
   report.summary?.bottom_line || report.summary?.full_synthesis || report.deep_research?.abstract || "";
 
+/** Local vault (plaintext passwords) — dev-only; never in production builds. */
 const allowLocalVault =
-  import.meta.env.DEV || import.meta.env.VITE_ALLOW_LOCAL_VAULT === 'true';
+  !import.meta.env.PROD &&
+  (import.meta.env.DEV || import.meta.env.VITE_ALLOW_LOCAL_VAULT === 'true');
 
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
@@ -573,6 +576,21 @@ export const dbService = {
 
   // Premium Access Models
   async loadPremium(userId: string) {
+    try {
+      if (import.meta.env.PROD) {
+        const response = await apiFetch('/api/check-premium', { method: 'POST', body: JSON.stringify({ userId }) });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.premiumData) {
+            localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(data.premiumData));
+            return data.premiumData;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("API check-premium failed, falling back to Firebase:", e);
+    }
+
     try {
       const docRef = doc(db, "user_premium", userId);
       const docSnap = await getDoc(docRef);

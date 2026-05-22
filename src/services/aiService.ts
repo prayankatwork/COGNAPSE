@@ -57,7 +57,7 @@ import { auth } from './firebase';
  * PRODUCTION-READY INTELLIGENCE SWARM
  * Relies on Vercel Serverless Endpoint (/api/research) to hide API Keys
  */
-export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "gemini-1.5-flash") => {
+export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "gemini-1.5-flash", abortSignal?: AbortSignal) => {
   const estTokens = Math.ceil(prompt.length / 4);
 
   // Auto-revive unstable nodes
@@ -78,7 +78,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
       const ollamaRes = await fetch("http://127.0.0.1:11434/api/generate", {
         method: "POST",
         body: JSON.stringify({ model: localModel, prompt, stream: false, format: isJson ? "json" : undefined }),
-        signal: AbortSignal.timeout(90000)
+        signal: abortSignal || AbortSignal.timeout(90000)
       });
       if (ollamaRes.ok) {
         const data = await ollamaRes.json();
@@ -102,6 +102,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
       const response = await apiFetch('/api/research', {
         method: 'POST',
         body: JSON.stringify({ prompt, isJson, estTokens }),
+        signal: abortSignal,
       });
 
       const data = await response.json();

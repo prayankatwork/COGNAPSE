@@ -8,18 +8,19 @@ import { useStore } from './store';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import NeuralBackground from './components/NeuralBackground';
-import LandingPage from './components/LandingPage';
 import Documentation from './components/Documentation';
 import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const LandingPage = React.lazy(() => import('./components/LandingPage'));
+const IntelligenceFeed = React.lazy(() => import('./components/IntelligenceFeed'));
 import Notebook from './components/Notebook';
 import SelectionCapture from './components/SelectionCapture';
 import { dbService } from './services/dbService';
-import IntelligenceFeed from './components/IntelligenceFeed';
 import CreatorProfile from './components/CreatorProfile';
 import NeuralWalkthrough from './components/NeuralWalkthrough';
 import SharedResearchPage from './components/SharedResearchPage';
@@ -27,6 +28,8 @@ import LegalPages from './components/LegalPages';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebase';
 import { syncAuthSession } from './services/authSession';
+import { reportsToArchiveEntries } from './utils/archiveEntries';
+import DevDashboard from './components/DevDashboard';
 
 import { audioService } from './services/audioService';
 
@@ -42,8 +45,6 @@ export default function App() {
     if (path === '/ai-disclaimer') return 'ai-disclaimer';
     return null;
   });
-  const isSidebarOpen = useStore((state) => state.isSidebarOpen);
-  const toggleSidebar = useStore((state) => state.toggleSidebar);
   const currentView = useStore((state) => state.currentView);
   const theme = useStore((state) => state.theme);
   const isAuthOpen = useStore((state) => state.isAuthOpen);
@@ -159,15 +160,6 @@ export default function App() {
     }
   }, [theme]);
 
-  useEffect(() => {
-    const handleRoute = () => {
-      const shareMatch = window.location.pathname.match(/^\/share\/([^/]+)/);
-      setShareRoute(shareMatch?.[1] || null);
-    };
-    window.addEventListener('popstate', handleRoute);
-    return () => window.removeEventListener('popstate', handleRoute);
-  }, []);
-
   const user = useStore(state => state.user);
   const setStats = useStore(state => state.setStats);
   const setArchive = useStore(state => state.setArchive);
@@ -175,84 +167,62 @@ export default function App() {
 
   const userId = user?.id;
 
+  const vaultSyncGen = useRef(0);
+
   useEffect(() => {
-    if (userId) {
-      const syncUser = async () => {
-        try {
-          console.log('[Vault] Syncing for user:', userId);
-          const [reports, stats, notes, settings, premiumStatus] = await Promise.all([
-            dbService.getAllReports(userId),
-            dbService.loadStats(userId),
-            dbService.getNotes(userId),
-            dbService.loadSettings(userId),
-            dbService.loadPremium(userId)
-          ]);
-          console.log('[Vault] Reports fetched:', reports.length);
+    if (!userId) return;
+    const syncId = ++vaultSyncGen.current;
 
-          if (premiumStatus) {
-            const currentUser = useStore.getState().user;
-            if (currentUser) {
-              useStore.setState({
-                user: {
-                  ...currentUser,
-                  ...premiumStatus
-                }
-              });
-            }
+    const syncUser = async () => {
+      try {
+        const [reports, stats, notes, settings, premiumStatus] = await Promise.all([
+          dbService.getAllReports(userId),
+          dbService.loadStats(userId),
+          dbService.getNotes(userId),
+          dbService.loadSettings(userId),
+          dbService.loadPremium(userId),
+        ]);
+        if (syncId !== vaultSyncGen.current) return;
+
+        if (premiumStatus) {
+          const currentUser = useStore.getState().user;
+          if (currentUser) {
+            useStore.setState({ user: { ...currentUser, ...premiumStatus } });
           }
-
-          if (settings && settings.subscribedCategories) {
-            useStore.getState().setSubscribedCategories(settings.subscribedCategories);
-          }
-
-          if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
-            useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
-          } else {
-            // New user, trigger walkthrough
-            useStore.getState().setWalkthroughCompleted(false);
-          }
-
-          if (stats) {
-            setStats({
-              xp: stats.xp,
-              searchCount: stats.search_count,
-              rank: stats.rank
-            });
-          }
-
-          if (notes) {
-            const sortedNotes = (notes as any[]).sort((a: any, b: any) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-            );
-            setNotes(sortedNotes);
-          }
-
-          // Restore Intel Archive
-          const dbArchiveEntries = (reports || [])
-            .filter((r: any) => r && r.id && r.query)
-            .map((r: any) => {
-              const reportData = r.data || {};
-              return {
-                id: r.id,
-                query: r.query,
-                timestamp: r.timestamp || new Date().toISOString(),
-                topic_cluster: reportData?.archive_entry?.topic_cluster || "General",
-                tags: reportData?.archive_entry?.tags || [],
-                summary_snippet: reportData?.archive_entry?.summary_snippet || reportData?.summary?.bottom_line || "",
-                report: reportData
-              };
-            });
-          const sorted = dbArchiveEntries.sort((a: any, b: any) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          );
-          setArchive(sorted);
-          console.log('[Vault] Archive restored with', sorted.length, 'entries');
-        } catch (err) {
-          console.error("[Vault] Sync failed:", err);
         }
-      };
-      syncUser();
-    }
+
+        if (settings?.subscribedCategories) {
+          useStore.getState().setSubscribedCategories(settings.subscribedCategories);
+        }
+
+        if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
+          useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
+        } else {
+          useStore.getState().setWalkthroughCompleted(false);
+        }
+
+        if (stats) {
+          setStats({
+            xp: stats.xp,
+            searchCount: stats.search_count,
+            rank: stats.rank,
+          });
+        }
+
+        if (notes) {
+          const sortedNotes = (notes as any[]).sort(
+            (a: any, b: any) =>
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+          setNotes(sortedNotes);
+        }
+
+        setArchive(reportsToArchiveEntries(reports || []));
+      } catch (err) {
+        console.error('[Vault] Sync failed:', err);
+      }
+    };
+    syncUser();
   }, [userId, setStats, setNotes, setArchive]);
 
   // Determine Content Based on View
@@ -269,7 +239,7 @@ export default function App() {
           return (
             <div className="flex flex-col items-center justify-center text-center p-8 h-full">
               <div className="relative z-10 max-w-md">
-                <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+                <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
                   <LockIcon size={32} />
                 </div>
                 <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
@@ -321,7 +291,9 @@ export default function App() {
         ) : shareRoute ? (
           <SharedResearchPage shareId={shareRoute} />
         ) : (
-          renderContent()
+          <Suspense fallback={<div className="h-full flex items-center justify-center bg-my-bg text-my-muted text-[10px] tracking-[0.3em] uppercase animate-pulse">Loading Subsystems...</div>}>
+            {renderContent()}
+          </Suspense>
         )}
       </div>
 
@@ -338,9 +310,12 @@ export default function App() {
         {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
         {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
       </AnimatePresence>
-      {!shareRoute && <NeuralWalkthrough />}
-      {!shareRoute && <SelectionCapture />}
-      <NeuralBackground />
+      <DevDashboard />
+      {!shareRoute && !legalPage && <NeuralWalkthrough />}
+      {!shareRoute && !legalPage && <SelectionCapture />}
+      {!shareRoute && !legalPage && (currentView === 'landing' || currentView === 'research') && (
+        <NeuralBackground />
+      )}
     </div>
   );
 }

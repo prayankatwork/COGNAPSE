@@ -33,7 +33,7 @@ export default function DevDashboard() {
         <motion.div
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
-          className="w-full max-w-4xl bg-[#0A0A0A] border border-my-accent/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] overflow-hidden flex flex-col h-[80vh]"
+          className="w-full max-w-4xl bg-my-bg dark:bg-[#0A0A0A] border border-my-border shadow-signal overflow-hidden flex flex-col h-[80vh] rounded-[4px]"
         >
           {/* Header */}
           <div className="p-6 border-b border-my-accent/20 bg-my-accent/5 flex items-center justify-between">
@@ -142,7 +142,7 @@ export default function DevDashboard() {
           <div className="p-6 bg-my-accent/5 border-t border-my-accent/10 flex items-center justify-between">
             <div className="text-[9px] text-white/40 uppercase tracking-widest flex items-center gap-3">
               <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Operational</span>
-              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-orange-500" /> Degraded</span>
+              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-my-signal" /> Degraded</span>
               <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> Locked Out</span>
             </div>
             <div className="text-[9px] text-white/40 uppercase tracking-widest font-mono">

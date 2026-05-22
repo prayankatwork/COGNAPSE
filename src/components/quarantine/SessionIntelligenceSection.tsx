@@ -6,15 +6,15 @@ import {
   GitBranch, Maximize2, X, ChevronDown, ChevronUp, SquareCheck, Square, Copy, Bookmark
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useStore } from '../store';
-import { executeSessionSynthesis, type SessionSynthesisResult } from '../services/geminiService';
+import { useStore } from '../../store';
+import { executeSessionSynthesis, type SessionSynthesisResult } from '../../services/geminiService';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function MomentumBadge({ m }: { m: SessionSynthesisResult['researchMomentum'] }) {
   const cfg = {
     converging: { icon: <GitMerge size={11} />, label: 'CONVERGING',  cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', tip: 'Evidence aligns toward one conclusion' },
-    diverging:  { icon: <GitBranch size={11} />, label: 'DIVERGING',   cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20',   tip: 'Growing complexity, no clear answer' },
+    diverging:  { icon: <GitBranch size={11} />, label: 'DIVERGING',   cls: 'text-my-conflict-text bg-my-conflict-bg border-my-conflict-border',   tip: 'Growing complexity, no clear answer' },
     expanding:  { icon: <Maximize2 size={11} />,  label: 'EXPANDING',   cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20',     tip: 'Each search opened more questions' },
   }[m];
   return (
@@ -99,8 +99,8 @@ function SynthesisResult({
           <p className="text-[9px] uppercase tracking-widest font-bold text-purple-300/60 mb-2">Cross-Report Contradictions</p>
           <div className="flex flex-col gap-1.5">
             {result.contradictions.map((c, i) => (
-              <div key={i} className="flex items-start gap-2 text-[11px] text-my-syn bg-amber-500/5 border border-amber-500/20 px-3 py-2 rounded-[2px]">
-                <AlertTriangle size={11} className="text-amber-500 shrink-0 mt-0.5" />
+              <div key={i} className="flex items-start gap-2 text-[11px] text-my-syn bg-my-conflict-bg border border-my-conflict-border px-3 py-2 rounded-[2px]">
+                <AlertTriangle size={11} className="text-my-conflict-text shrink-0 mt-0.5" />
                 <span>{c}</span>
               </div>
             ))}

@@ -6,8 +6,8 @@ import {
   FlaskConical, SearchX, ArrowRight, CheckCircle2, Search
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useStore } from '../store';
-import { executeSessionSynthesis, type SessionSynthesisResult } from '../services/geminiService';
+import { useStore } from '../../store';
+import { executeSessionSynthesis, type SessionSynthesisResult } from '../../services/geminiService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,27 +40,27 @@ export interface SessionMemoryState {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function LinkIcon({ type }: { type: SessionCrossLink['type'] }) {
-  if (type === 'conflict') return <AlertTriangle size={11} className="text-amber-500 shrink-0 mt-0.5" />;
+  if (type === 'conflict') return <AlertTriangle size={11} className="text-my-conflict-text shrink-0 mt-0.5" />;
   if (type === 'reinforcement') return <Lightbulb size={11} className="text-emerald-500 shrink-0 mt-0.5" />;
   return <Link2 size={11} className="text-blue-400 shrink-0 mt-0.5" />;
 }
 
 function linkLabel(type: SessionCrossLink['type']) {
-  if (type === 'conflict') return { label: 'CONFLICT', cls: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+  if (type === 'conflict') return { label: 'CONFLICT', cls: 'text-my-conflict-text bg-my-conflict-bg border-my-conflict-border' };
   if (type === 'reinforcement') return { label: 'REINFORCED', cls: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
   return { label: 'EXPANSION', cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20' };
 }
 
 function MomentumIcon({ momentum }: { momentum: SessionSynthesisResult['researchMomentum'] }) {
   if (momentum === 'converging') return <GitMerge size={13} className="text-emerald-400" />;
-  if (momentum === 'diverging') return <GitBranch size={13} className="text-amber-400" />;
+  if (momentum === 'diverging') return <GitBranch size={13} className="text-my-conflict-text" />;
   return <Maximize2 size={13} className="text-blue-400" />;
 }
 
 function MomentumBadge({ momentum }: { momentum: SessionSynthesisResult['researchMomentum'] }) {
   const config = {
     converging: { label: 'CONVERGING', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', desc: 'Evidence is aligning toward a conclusion' },
-    diverging:  { label: 'DIVERGING',  cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20',  desc: 'Growing complexity, no clear answer yet' },
+    diverging:  { label: 'DIVERGING',  cls: 'text-my-conflict-text bg-my-conflict-bg border-my-conflict-border',  desc: 'Growing complexity, no clear answer yet' },
     expanding:  { label: 'EXPANDING',  cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20',    desc: 'Each search opened more questions' },
   }[momentum];
   return (
@@ -135,8 +135,8 @@ function SynthesisView({
           </p>
           <div className="flex flex-col gap-1.5">
             {result.contradictions.map((c, i) => (
-              <div key={i} className="flex items-start gap-2 text-[11px] text-my-syn bg-amber-500/5 border border-amber-500/20 px-3 py-2 rounded-[2px]">
-                <AlertTriangle size={11} className="text-amber-500 shrink-0 mt-0.5" />
+              <div key={i} className="flex items-start gap-2 text-[11px] text-my-syn bg-my-conflict-bg border border-my-conflict-border px-3 py-2 rounded-[2px]">
+                <AlertTriangle size={11} className="text-my-conflict-text shrink-0 mt-0.5" />
                 <span>{c}</span>
               </div>
             ))}
@@ -262,7 +262,7 @@ export default function SessionMemoryPanel() {
 
           <div className="ml-auto flex items-center gap-1.5 mr-3">
             {conflicts.length > 0 && (
-              <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-sm">
+              <span className="text-[9px] font-bold text-my-conflict-text bg-my-conflict-text/10 border border-my-conflict-text/20 px-1.5 py-0.5 rounded-sm">
                 {conflicts.length} conflict{conflicts.length !== 1 ? 's' : ''}
               </span>
             )}
@@ -302,7 +302,7 @@ export default function SessionMemoryPanel() {
 
               {/* Researcher Bias */}
               {researcherBias && (
-                <div className="flex items-start gap-2 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-[2px]">
+                <div className="flex items-start gap-2 text-[10px] text-my-conflict-text bg-my-conflict-text/10 border border-my-conflict-text/20 px-3 py-2 rounded-[2px]">
                   <AlertTriangle size={11} className="shrink-0 mt-0.5" />
                   <span>
                     <span className="font-black">Pattern Detected:</span> Your research leans toward{' '}

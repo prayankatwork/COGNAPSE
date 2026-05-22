@@ -50,7 +50,7 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
           initial={{ opacity: 0, scale: 0.95, y: -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
-          className="relative w-full max-w-2xl bg-my-bg border border-my-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-2xl bg-my-bg border border-my-border rounded-[4px] shadow-2xl overflow-hidden flex flex-col"
         >
           <div className="flex items-center px-4 py-3 border-b border-my-border gap-3">
             <Search size={18} className="text-my-muted" />
@@ -82,7 +82,7 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
                   <button
                     key={entry.id}
                     onClick={() => handleArchiveClick(entry)}
-                    className="w-full flex flex-col gap-1 px-3 py-3 rounded-xl hover:bg-my-callout/40 transition-colors text-left group border border-transparent hover:border-my-border/50"
+                    className="w-full flex flex-col gap-1 px-3 py-3 rounded-[2px] hover:bg-my-callout/40 transition-colors text-left group border border-transparent hover:border-my-border/50"
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div className="text-my-muted group-hover:text-my-accent transition-colors">

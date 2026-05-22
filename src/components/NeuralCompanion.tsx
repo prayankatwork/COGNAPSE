@@ -116,7 +116,7 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
           'flex flex-col items-center relative group transition-all duration-700 pointer-events-none select-none',
           compact ? 'overflow-visible' : 'overflow-hidden gap-3 p-8 bg-my-bg/80 backdrop-blur-3xl border border-my-border rounded-[4px] mx-4 my-2 mb-6 shadow-2xl',
           isDeep && !compact && 'border-purple-500/40 shadow-[0_0_50px_rgba(168,85,247,0.15)]',
-          isScanning && !compact && 'border-my-accent/50 shadow-[0_0_40px_rgba(249,115,22,0.15)]'
+          isScanning && !compact && 'border-my-accent/50 shadow-signal'
         )}
       >
         {/* Background Neural Web */}
@@ -180,7 +180,7 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
               'relative rounded-full border-[3px] flex items-center justify-center overflow-hidden bg-black shadow-2xl',
               irisSize,
               isScanning ? 'border-my-accent shadow-[0_0_20px_var(--my-accent)]' :
-              isDeep ? 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'border-my-accent shadow-[0_0_15px_rgba(249,115,22,0.4)]'
+              isDeep ? 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'border-my-accent shadow-signal'
             )}
           >
             {/* Conic Pattern */}

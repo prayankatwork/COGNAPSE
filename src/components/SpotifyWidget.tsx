@@ -60,7 +60,7 @@ export default function SpotifyWidget() {
         touchAction: 'none'
       }}
       className={clsx(
-        "z-[200] overflow-hidden flex flex-col shadow-2xl bottom-0 left-0 md:bottom-6 md:left-6 rounded-tr-3xl md:rounded-2xl",
+        "z-[200] overflow-hidden flex flex-col shadow-2xl bottom-0 left-0 md:bottom-6 md:left-6 rounded-tr-[4px] md:rounded-[4px]",
         isMini ? "bg-[#1DB954] text-black shadow-[0_8px_30px_rgba(29,185,84,0.4)]" : "bg-black/80 backdrop-blur-2xl border border-white/10"
       )}
     >
@@ -104,7 +104,7 @@ export default function SpotifyWidget() {
                   onClick={() => setVibe(vibe === 'focus' ? 'energy' : 'focus')}
                   className={clsx(
                     "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all border",
-                    vibe === 'focus' ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                    vibe === 'focus' ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-my-signal/20 text-my-signal border-my-signal/30"
                   )}
                   title="Toggle Visual Vibe"
                 >
@@ -138,7 +138,7 @@ export default function SpotifyWidget() {
                       value={playlistUri}
                       onChange={e => setPlaylistUri(e.target.value)}
                       placeholder="https://open.spotify.com/..."
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#1DB954]/50 focus:bg-white/10 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-[4px] py-3 pl-4 pr-12 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#1DB954]/50 focus:bg-white/10 transition-all"
                     />
                     <button type="submit" disabled={!playlistUri} className="absolute right-2 top-2 bottom-2 aspect-square bg-[#1DB954] disabled:opacity-50 text-black rounded-lg flex items-center justify-center hover:bg-[#1ed760] transition-colors active:scale-95">
                       <PlayCircle size={18} className="fill-black text-[#1DB954]" />
@@ -154,7 +154,7 @@ export default function SpotifyWidget() {
                      frameBorder="0" 
                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                      loading="lazy"
-                     className="rounded-xl"
+                     className="rounded-[4px]"
                    ></iframe>
                 </div>
              )}

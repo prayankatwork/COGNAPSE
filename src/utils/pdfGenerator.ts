@@ -2,6 +2,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { COGNAPSE_Output, DeepResearchThesis } from '../types';
 import { useStore } from '../store';
+import { escapeHtml } from './escapeHtml';
 
 interface PDFGeneratorInput {
   query: string;
@@ -23,15 +24,15 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
   // Pull reasoning timeline from store
   const reasoningTimeline = useStore.getState().deepResearch?.reasoningTimeline || [];
 
-  // Helper safely format strings
-  const safeText = (val: any) => {
-    if (typeof val === 'string') return val;
-    if (val === null || val === undefined) return "";
-    return JSON.stringify(val);
-  };
+  const safeText = (val: unknown) => escapeHtml(
+    typeof val === 'string'
+      ? val
+      : val === null || val === undefined
+        ? ''
+        : JSON.stringify(val)
+  );
 
-  // Helper format HTML lists
-  const formatList = (items: any) => {
+  const formatList = (items: unknown) => {
     if (!items || !Array.isArray(items)) return '<li style="margin-bottom: 8px;">N/A</li>';
     return items.map(item => `<li style="margin-bottom: 10px; line-height: 1.6;">${safeText(item)}</li>`).join('');
   };

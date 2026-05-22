@@ -1,4 +1,3 @@
-import { useStore } from '../store';
 import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
 import type { COGNAPSE_Output } from '../types';
 import { callCloudAI } from './aiService';
@@ -33,7 +32,8 @@ USER: ${query}`;
 
 export async function executeCognapseResearch(
   query: string,
-  userStats: { xp: number; count: number; rank: string }
+  userStats: { xp: number; count: number; rank: string },
+  abortSignal?: AbortSignal
 ): Promise<COGNAPSE_Output> {
   const prompt = `${COGNAPSE_SYSTEM_PROMPT}
 
@@ -46,7 +46,7 @@ Missions Completed: ${userStats.count}
 
 Remember: Your output must be VALID JSON matching the provided schema. Structure your intelligence perfectly.`;
 
-  const rawResponse = await callCloudAI(prompt, true, RESEARCH_MODEL);
+  const rawResponse = await callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
   
   try {
     // callCloudAI already returns JSON.stringify output — parse once

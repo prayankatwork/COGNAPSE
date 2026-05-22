@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import { 
   User, X, Moon, Sun, Search,
   BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown
@@ -16,7 +17,19 @@ export default function Navbar() {
     isNotebookOpen, setNotebookOpen,
     theme, toggleTheme, setStatusOpen,
     walkthroughCompleted
-  } = useStore();
+  } = useStore(useShallow((state) => ({
+    currentView: state.currentView,
+    setView: state.setView,
+    user: state.user,
+    logout: state.logout,
+    setAuthOpen: state.setAuthOpen,
+    isNotebookOpen: state.isNotebookOpen,
+    setNotebookOpen: state.setNotebookOpen,
+    theme: state.theme,
+    toggleTheme: state.toggleTheme,
+    setStatusOpen: state.setStatusOpen,
+    walkthroughCompleted: state.walkthroughCompleted
+  })));
 
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
@@ -82,7 +95,7 @@ export default function Navbar() {
                 {walkthroughCompleted ? (
                   <span className={clsx("text-[6px] font-bold uppercase tracking-widest px-1 py-0.5 rounded transition-all duration-300", isHoveringLogo ? "opacity-0" : "text-my-accent/70 border border-my-accent/30 animate-pulse")}>Hover</span>
                 ) : (
-                  <span className="text-[6px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded text-orange-500 border border-orange-500/20 bg-orange-500/5">Training</span>
+                  <span className="text-[6px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-[2px] text-my-signal border border-my-signal/20 bg-my-signal/5">Training</span>
                 )}
               </div>
             </div>
@@ -95,7 +108,7 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0, scaleY: 1 }}
                 exit={{ opacity: 0, y: -10, scaleY: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-3 bg-my-bg/95 backdrop-blur-xl border border-my-border rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] p-2 min-w-[180px] flex flex-col gap-1 origin-top z-50"
+                className="absolute top-full left-0 mt-3 bg-my-bg/95 backdrop-blur-xl border border-my-border rounded-[4px] shadow-2xl p-2 min-w-[180px] flex flex-col gap-1 origin-top z-50"
               >
                 <div className="px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.3em] text-my-muted opacity-60">
                   System Modules
@@ -108,7 +121,7 @@ export default function Navbar() {
                       setIsHoveringLogo(false);
                     }}
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors group",
+                      "flex items-center gap-3 px-3 py-2 rounded-[2px] text-left transition-colors group",
                       currentView === mod.id ? "bg-my-accent/10 text-my-accent" : "hover:bg-my-callout/50 text-my-muted"
                     )}
                   >
@@ -132,7 +145,7 @@ export default function Navbar() {
             onClick={() => walkthroughCompleted && setIsCommandOpen(true)}
             disabled={!walkthroughCompleted}
             className={clsx(
-              "group flex items-center justify-between w-full max-w-md px-4 py-1.5 rounded-full transition-all border border-my-border/50",
+              "group flex items-center justify-between w-full max-w-md px-4 py-1.5 rounded-[4px] transition-all border border-my-border/50",
               walkthroughCompleted 
                 ? "bg-my-callout/20 hover:bg-my-callout/40 hover:border-my-accent/30 cursor-pointer" 
                 : "bg-my-callout/5 opacity-40 cursor-not-allowed"
@@ -182,12 +195,12 @@ export default function Navbar() {
                   <span className={clsx(
                     "text-[7px] font-bold uppercase tracking-[0.3em] flex items-center gap-1 transition-opacity",
                     user.premium 
-                      ? "text-amber-500 dark:text-my-accent opacity-100 animate-pulse font-black" 
+                      ? "text-my-signal dark:text-my-accent opacity-100 font-black" 
                       : "text-my-accent opacity-80 group-hover:opacity-100"
                   )}>
                     {user.premium ? (
                       <>
-                        <Crown size={8} className="text-amber-500 dark:text-my-accent animate-bounce-slow" /> Premium
+                        <Crown size={8} className="text-my-signal dark:text-my-accent" /> Premium
                       </>
                     ) : (
                       <>
@@ -223,12 +236,12 @@ export default function Navbar() {
             </button>
           )}
 
-          <div className="flex items-center bg-my-bg rounded-full border border-my-border p-1 gap-1 shadow-sm">
+          <div className="flex items-center bg-my-bg rounded-[4px] border border-my-border p-1 gap-1 shadow-sm">
             <button 
               onClick={() => walkthroughCompleted && toggleTheme()}
               disabled={!walkthroughCompleted}
               className={clsx(
-                "w-8 h-8 rounded-full flex items-center justify-center text-my-muted transition-colors",
+                "w-8 h-8 rounded-[2px] flex items-center justify-center text-my-muted transition-colors",
                 walkthroughCompleted ? "hover:text-my-ink cursor-pointer" : "opacity-30 cursor-not-allowed"
               )}
               title="Toggle Neural Mode"
@@ -240,7 +253,7 @@ export default function Navbar() {
               onClick={() => walkthroughCompleted && setNotebookOpen(!isNotebookOpen)}
               disabled={!walkthroughCompleted}
               className={clsx(
-                "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                "w-8 h-8 rounded-[2px] flex items-center justify-center transition-all",
                 walkthroughCompleted 
                   ? (isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)] cursor-pointer" : "text-my-muted hover:text-my-ink cursor-pointer")
                   : "text-my-muted opacity-30 cursor-not-allowed"

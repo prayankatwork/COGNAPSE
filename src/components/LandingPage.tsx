@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import {
@@ -134,7 +135,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-60">
-            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-my-accent text-white dark:text-my-bg text-[10px] font-bold uppercase tracking-[0.5em] mb-12 shadow-[0_0_40px_rgba(242,125,38,0.3)]">
+            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-6 py-2 rounded-[2px] bg-my-accent text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.5em] mb-12 shadow-accent">
               <Workflow size={14} className="animate-spin-slow" /> Research Protocol Walkthrough
             </motion.div>
             <h2 className="text-8xl md:text-[10rem] font-serif font-bold italic leading-tight tracking-tighter">The Analysis <br /> Flow.</h2>
@@ -207,7 +208,7 @@ export default function LandingPage() {
 function FeatureBox({ icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
     <div className="bg-my-bg p-12 group hover:bg-my-sidebar transition-all cursor-default">
-      <div className="w-12 h-12 bg-my-accent/10 flex items-center justify-center text-my-accent mb-8 group-hover:scale-110 group-hover:bg-my-accent group-hover:text-white transition-all">
+      <div className="w-12 h-12 rounded-[4px] bg-my-accent/10 flex items-center justify-center text-my-accent mb-8 group-hover:scale-110 group-hover:bg-my-accent group-hover:text-white dark:group-hover:text-black transition-all">
         {icon}
       </div>
       <h4 className="font-bold text-xl mb-4 tracking-tight uppercase">{title}</h4>
@@ -227,10 +228,10 @@ function FlowStep({ title, desc, icon, accent }: { title: string, desc: string, 
       <div className="mb-12 flex items-center justify-center relative">
         <motion.div
           whileHover={{ scale: 1.1, rotate: 5 }}
-          className={clsx("w-32 h-32 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-xl relative overflow-hidden transition-all group-hover:border-white/20", accent)}
+          className={clsx("w-32 h-32 rounded-[4px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all group-hover:border-white/20", accent)}
         >
           <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity" />
-          <div className="absolute inset-0 rounded-[2rem] border-2 border-current opacity-0 group-hover:opacity-100 animate-pulse-slow" />
+          <div className="absolute inset-0 rounded-[4px] border-2 border-current opacity-0 group-hover:opacity-100 animate-pulse-slow" />
           {icon}
         </motion.div>
       </div>
@@ -241,5 +242,3 @@ function FlowStep({ title, desc, icon, accent }: { title: string, desc: string, 
     </motion.div>
   );
 }
-
-import clsx from 'clsx';

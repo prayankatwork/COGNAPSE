@@ -1,0 +1,69 @@
+[33m849ecf3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: reset: moving to 849ecf3
+[33m4be0946[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: commit: fix: resolve TypeError forEach is not a function across multiple components with robust Array.isArray guards
+[33mcad5508[m HEAD@{2}: commit: style(premium): improve PremiumExportModal visibility and contrast in light mode
+[33mcb2e58b[m HEAD@{3}: commit: feat: add secure serverless research backend handler and system favicon
+[33m67f34e1[m HEAD@{4}: commit: feat: implement secure API swarm routing, Vercel analytics integration, Firestore export telemetry, and navbar premium indicator badge
+[33mb6fd03a[m HEAD@{5}: commit: Enforce global contrast accessibility overrides for ink and accent buttons across all themes
+[33m20545e9[m HEAD@{6}: commit: \Force white text contrast above dark ink buttons in light mode"
+[33m45a6dab[m HEAD@{7}: commit: Implement Analyst Onboarding Lockouts to prevent manual walkthrough interruption
+[33mfd8c6b5[m HEAD@{8}: commit: Fix walkthrough protocol bugs: correct TTS pronunciation of COGNAPSE and fix Knowledge Hub navigation step
+[33m849ecf3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{9}: commit: Enhance Intelligence Feed prompt with dynamic datetime and randomized scenario vectors to ensure live dynamic news updates
+[33mcd5cf3a[m HEAD@{10}: commit: Update sidebar title to Archive and optimize alignment
+[33mbb919d2[m HEAD@{11}: commit: Fix Research Analytics tab radar chart data parsing
+[33md1bab4f[m HEAD@{12}: commit: Log PDF exports to history on download
+[33maebac93[m HEAD@{13}: commit: Optimize firestore limits by storing pdf_exports strictly on client localStorage
+[33m528dff6[m HEAD@{14}: pull origin main: Fast-forward
+[33m34e2926[m HEAD@{15}: reset: moving to 34e2926
+[33m528dff6[m HEAD@{16}: commit: Remove playground message and launch button from MainContent loader
+[33m0d2f7c7[m HEAD@{17}: commit: Close premium modal when opening auth modal
+[33m85312c4[m HEAD@{18}: commit: Refactor premium trigger to Navbar for a minimal and elegant UI as requested
+[33mc9e5ae4[m HEAD@{19}: commit: Replace intelligence loader with Three.js 3D implementation
+[33m397dcd3[m HEAD@{20}: commit: Implement unified premium loading animation system across dashboard and extension
+[33m3d98fca[m HEAD@{21}: commit: Remove process env debug line from check-premium
+[33mf0017c9[m HEAD@{22}: commit: Exempt cognapse-extension.zip from Vercel ignore
+[33m80484b2[m HEAD@{23}: commit: Fix syntax error inside extension popup.js by properly wrapping blocks in outer try-catch
+[33mbb2a5dd[m HEAD@{24}: commit: Update chrome extension files and repackage zip with local session fallback logic
+[33m7435250[m HEAD@{25}: commit: temp debug process env
+[33m34e2926[m HEAD@{26}: commit: Use firebase-admin SDK inside serverless functions if credentials exist to bypass Firestore client-side security rules
+[33m1bd2355[m HEAD@{27}: commit: Fix Firebase missing environment variable fallback bug that caused 500 server error in serverless functions
+[33m5064ed4[m HEAD@{28}: commit: UI Polish: Improve dark mode typography contrast on accent components and refine navbar blur threshold
+[33me137d09[m HEAD@{29}: commit: Expose detailed serverless error stack in verify-payment to enable instant diagnostic insights in browser console.
+[33m708a9bd[m HEAD@{30}: commit: Trigger premium status write from client side after server-side cryptographic payment verification to resolve Firestore PERMISSION_DENIED on Vercel Node env.
+[33mf306499[m HEAD@{31}: commit: Implement extremely resilient payment signature verification that doesn't fail on database downtime or credentials mismatch.
+[33mfde9be3[m HEAD@{32}: commit: Fix Firestore quota exhaustion with robust hybrid localStorage fallbacks and resolve Razorpay payment 404 with local Sandbox simulator.
+[33m3946071[m HEAD@{33}: commit: Fix critical React useEffect infinite loop in App.tsx that exhausted Firestore daily quota
+[33mc1c963d[m HEAD@{34}: commit: Refactor PremiumExportModal success state to focus entirely on 100% free direct Zip installation
+[33maafefcf[m HEAD@{35}: commit: Optimize manifest.json and PremiumExportModal for official Chrome Web Store production release
+[33me2ec10b[m HEAD@{36}: commit: Generate branded Neural Companion eye icons and implement visual layman Chrome Extension setup modal
+[33m377f82e[m HEAD@{37}: commit: Auto-clear selectedText from storage on popup retrieve to prevent repeated analysis triggers
+[33m1711c88[m HEAD@{38}: commit: Limit maximum output tokens to 150 and optimize prompt for high-efficiency, credit-conserving summaries
+[33m4e2bd30[m HEAD@{39}: commit: Refactor Chrome extension to match COGNAPSE app Cyber Yellow and Solid Black branding, and cap summary size to 4-6 lines
+[33mb7c3afe[m HEAD@{40}: commit: Refine prompt for comprehensive premium branding and customize popup scrollbars
+[33mbc053e9[m HEAD@{41}: commit: Integrate premium multi-node AI Swarm (Llama 3.3, Gemini 1.5, Llama 3.1) in serverless analyze gateway
+[33m279767d[m HEAD@{42}: commit: Expose detailed serverless error message to client popup
+[33m96382e4[m HEAD@{43}: commit: Fix duplicate Firebase App initialization in check-premium and analyze serverless endpoints
+[33m8ac9053[m HEAD@{44}: commit: Build Chrome Extension Manifest V3 for COGNAPSE with highlight analysis, session syncing, and secure Vercel gateway
+[33m75c5905[m HEAD@{45}: commit: Implement Unified Premium Access layer with plans, Firebase integration, and API validation checker
+[33medc3005[m HEAD@{46}: commit: fix: force vercel to rebuild functions with new test keys
+[33me28541c[m HEAD@{47}: commit: chore: switch back to test razorpay keys for testing
+[33m5d65d46[m HEAD@{48}: commit: feat: complete overhaul of pdf export to professional academic report structure
+[33m9868892[m HEAD@{49}: commit: style: simplify payment modal terminology to clear saas language
+[33m9ede89f[m HEAD@{50}: commit: chore: switch to live razorpay keys for production
+[33m3c97a0a[m HEAD@{51}: commit: chore: revert back to correct razorpay test keys
+[33m971114d[m HEAD@{52}: commit: fix: add cdn.razorpay.com to csp script-src for risk detection script
+[33m9b3fd67[m HEAD@{53}: commit: chore: update razorpay keys to live environment
+[33m830d6ff[m HEAD@{54}: commit: style: refine payment modal with analyst grade terminology and responsive layout
+[33m6c7503d[m HEAD@{55}: commit: style: use professional analyst terminology for payment modal and unify button wording
+[33m6d5e8a9[m HEAD@{56}: commit: fix: resolve es module require errors in api endpoints and fix media CSP
+[33m4084f7b[m HEAD@{57}: commit: fix: update Content Security Policy to allow razorpay checkout script
+[33m509559d[m HEAD@{58}: commit: fix: remove crossOrigin attribute from razorpay script loader to prevent CORS issues
+[33m01db900[m HEAD@{59}: commit: fix: make razorpay script loader robust against re-injection and adblockers
+[33m86f82ac[m HEAD@{60}: commit: chore: add real razorpay test API key
+[33mb8f54b1[m HEAD@{61}: commit: feat: replace mock QR payment with razorpay integration and refine export copy
+[33ma17b5a7[m HEAD@{62}: commit: feat: transform PDF export into premium analyst-grade intelligence dossier with psychological UX
+[33m59ece5a[m HEAD@{63}: commit: fix: resolve PDF page-break split text/title cuts with auto-pagination engine
+[33m4388bf9[m HEAD@{64}: commit: fix: resolve PDF deep research column layout vertical stacking bug
+[33m86e8ad9[m HEAD@{65}: commit: style: upgrade PDF generator design to ultra-premium Cognapse dossier
+[33md5fcd14[m HEAD@{66}: commit: feat: integrate premium PDF dossier export, Paytm checkout system, and My Exports history logger
+[33m3d2883e[m HEAD@{67}: commit: feat: implement high-fidelity premium PDF export system with UPI scan-to-pay QR, local SQLite & Firestore logs, and dynamic A4 vector PDF compiler
+[33mb641c01[m HEAD@{68}: commit: perf: completely deactivate visualizer & particle canvases on mobile and optimize sidebar g

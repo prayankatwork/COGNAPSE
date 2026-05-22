@@ -6,7 +6,7 @@ import {
   Link2, ArrowUpDown, Filter
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { COGNAPSE_Output } from '../types';
+import type { COGNAPSE_Output } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ function credibilityColor(score: number) {
 }
 
 function confidenceColor(score: number, isOrphan: boolean) {
-  if (isOrphan) return { border: 'border-l-amber-400/70', bg: 'bg-amber-500/[0.04]', badge: 'bg-amber-500/10 text-amber-500 border-amber-500/30' };
+  if (isOrphan) return { border: 'border-l-my-conflict-border', bg: 'bg-my-conflict-bg/40', badge: 'bg-my-conflict-bg text-my-conflict-text border-my-conflict-border' };
   if (score >= 80) return { border: 'border-l-emerald-400/70', bg: '', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' };
   if (score >= 60) return { border: 'border-l-blue-400/60',    bg: '', badge: 'bg-blue-500/10 text-blue-400 border-blue-500/30'         };
   return                   { border: 'border-l-red-400/60',     bg: 'bg-red-500/[0.03]', badge: 'bg-red-500/10 text-red-400 border-red-500/30' };
@@ -170,7 +170,7 @@ function SourceCard({ src }: { src: NonNullable<COGNAPSE_Output['sources']>[numb
 
       {/* Bias flag */}
       {src.bias_flag && (
-        <div className="flex items-center gap-1 text-[9px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-[2px]">
+        <div className="flex items-center gap-1 text-[9px] text-my-conflict-text bg-my-conflict-bg border border-my-conflict-border px-2 py-1 rounded-[2px]">
           <AlertCircle size={9} />
           <span>Bias flagged: {src.bias_flag}</span>
         </div>
@@ -280,7 +280,7 @@ function ClaimRow({
             className="overflow-hidden mt-2 ml-6"
           >
             {claim.isOrphan ? (
-              <div className="flex items-start gap-2 text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-[2px]">
+              <div className="flex items-start gap-2 text-[10px] text-my-conflict-text bg-my-conflict-bg border border-my-conflict-border px-3 py-2 rounded-[2px]">
                 <AlertCircle size={10} className="shrink-0 mt-0.5" />
                 <div>
                   <span className="font-black">Orphan Claim</span>
@@ -362,7 +362,7 @@ export default function ClaimVerifier({ report }: { report: COGNAPSE_Output }) {
   const auditGrade =
     avgConfidence >= 80 && orphanPct <= 20 ? { label: 'A', cls: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30' } :
     avgConfidence >= 65 && orphanPct <= 40 ? { label: 'B', cls: 'text-blue-400 bg-blue-500/10 border-blue-500/30'          } :
-    avgConfidence >= 50                     ? { label: 'C', cls: 'text-amber-500 bg-amber-500/10 border-amber-500/30'       } :
+    avgConfidence >= 50                     ? { label: 'C', cls: 'text-my-conflict-text bg-my-conflict-bg border-my-conflict-border'       } :
                                              { label: 'D', cls: 'text-red-400 bg-red-500/10 border-red-500/30'             };
 
   return (
@@ -387,7 +387,7 @@ export default function ClaimVerifier({ report }: { report: COGNAPSE_Output }) {
               <CheckCircle2 size={8} /> {citedCount} cited
             </span>
             {orphanCount > 0 && (
-              <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-sm border border-amber-500/20">
+              <span className="flex items-center gap-1 text-[9px] font-bold text-my-conflict-text bg-my-conflict-bg px-1.5 py-0.5 rounded-sm border border-my-conflict-border">
                 <XCircle size={8} /> {orphanCount} unverified
               </span>
             )}
@@ -424,7 +424,7 @@ export default function ClaimVerifier({ report }: { report: COGNAPSE_Output }) {
                       'px-2.5 py-1.5 border-b-2 transition-colors',
                       filter === f
                         ? f === 'orphan'
-                          ? 'text-amber-500 border-amber-400'
+                          ? 'text-my-conflict-text border-my-conflict-text'
                           : 'text-my-accent border-my-accent'
                         : 'text-my-muted border-transparent hover:text-my-ink'
                     )}
@@ -461,7 +461,7 @@ export default function ClaimVerifier({ report }: { report: COGNAPSE_Output }) {
                   { col: 'bg-emerald-400/60', label: '≥80% High' },
                   { col: 'bg-blue-400/60',    label: '≥60% Med'  },
                   { col: 'bg-red-400/60',     label: '<60% Low'  },
-                  { col: 'bg-amber-400/60',   label: 'Unverified'},
+                  { col: 'bg-my-conflict-text/60', label: 'Unverified'},
                 ].map(({ col, label }) => (
                   <span key={label} className="flex items-center gap-1 text-[8px] text-my-muted">
                     <span className={clsx('w-2 h-2 rounded-full shrink-0', col)} />

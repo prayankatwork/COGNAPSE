@@ -104,7 +104,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       try {
         orderResponse = await apiFetch('/api/create-order', {
           method: 'POST',
-          body: JSON.stringify({ amount: plan.amount }),
+          body: JSON.stringify({ plan: selectedPlan }),
         });
 
         if (!orderResponse.ok) {
@@ -219,7 +219,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
           email: `${user.username.toLowerCase()}@cognapse.vault`,
         },
         theme: {
-          color: '#F27D26',
+          color: '#F27D26', /* Razorpay brand — keep literal */
         },
         modal: {
           ondismiss: function() {
@@ -275,12 +275,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
         />
 
         <motion.div
+          role="dialog"
+          aria-modal="true"
           initial={{ scale: 0.95, y: 30, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.95, y: 30, opacity: 0 }}
           className="relative w-full max-w-lg bg-white dark:bg-[#0A0F1A] border border-my-border shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[90vh]"
         >
-          <div className="h-1 w-full bg-gradient-to-r from-my-accent via-amber-500 to-my-accent" />
+          <div className="h-1 w-full bg-gradient-to-r from-my-accent via-my-signal to-my-accent" />
 
           <button 
             onClick={onClose}
@@ -301,7 +303,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 </div>
 
                 {isPreviewDeploy && (
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-[10px] text-my-ink leading-relaxed">
+                  <div className="p-3 bg-my-signal/10 border border-my-signal/30 text-[10px] text-my-ink leading-relaxed rounded-[2px]">
                     <strong>Preview deploy detected.</strong> Payments only work on{' '}
                     <a
                       href="https://cognapse.vercel.app"

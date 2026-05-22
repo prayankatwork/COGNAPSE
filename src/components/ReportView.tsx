@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { COGNAPSE_Output } from '../types';
 import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FlaskConical } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
-import PhysicsMap from './PhysicsMap';
+const PhysicsMap = React.lazy(() => import('./PhysicsMap'));
 import { useStore } from '../store';
 import confetti from 'canvas-confetti';
 import ThoughtReplayEngine from './ThoughtReplayEngine';
@@ -138,7 +138,7 @@ export default function ReportView({
       
       {/* Header & Badges */}
       {report.gamification?.badge_unlocked && (
-         <div className="mb-4 inline-flex items-center gap-3 px-4 py-2 bg-my-score border border-my-accent/20 rounded-full text-my-accent animate-bounce w-fit">
+         <div className="mb-4 inline-flex items-center gap-3 px-4 py-2 bg-my-score border border-my-accent/20 rounded-[2px] text-my-accent animate-bounce w-fit">
            <span className="text-xl">{report.gamification.badge_unlocked.icon}</span>
            <div>
              <p className="text-xs font-bold uppercase tracking-widest leading-none">Badge Unlocked: {report.gamification.badge_unlocked.name}</p>
@@ -334,7 +334,9 @@ export default function ReportView({
             <div className="mt-6 lg:mt-0">
               <SectionTitle>Intelligence Map</SectionTitle>
               <div className="mt-3">
-                 <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
+                 <Suspense fallback={<div className="h-48 flex items-center justify-center text-my-muted animate-pulse text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Loading Physics Engine...</div>}>
+                   <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
+                 </Suspense>
               </div>
             </div>
           )}
@@ -370,7 +372,7 @@ export default function ReportView({
                        <a 
                          href={`https://www.google.com/search?q=${encodeURIComponent((typeof s.title === 'string' ? s.title : '') + ' ' + (typeof s.domain === 'string' ? s.domain : ''))}`} 
                          target="_blank" 
-                         rel="noreferrer" 
+                         rel="noopener noreferrer" 
                          className="px-3 py-1 bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all rounded-[2px] flex items-center gap-1.5 shadow-sm"
                        >
                           <Search size={10} /> Verify on Google
@@ -379,7 +381,7 @@ export default function ReportView({
                          <a 
                            href={typeof s.url === 'string' ? s.url : '#'} 
                            target="_blank" 
-                           rel="noreferrer" 
+                           rel="noopener noreferrer" 
                            className="text-[9px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wider border border-my-border px-3 py-1 rounded-[2px]"
                          >
                             <Link2 size={10} /> Direct Access

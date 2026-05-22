@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2, Cpu, Zap, Maximize2, Minimize2, Anchor, Filter, Target, Share2, Layers } from 'lucide-react';
 import { executeQuickInfo } from '../services/geminiService';
 import { useStore } from '../store';
+import { getSignalColor } from '../utils/brandColors';
 
 interface NodeData {
   id: string;
@@ -40,6 +41,7 @@ export default function PhysicsMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>(null);
   const theme = useStore((state) => state.theme);
+  const signalColor = getSignalColor();
 
   const safeText = (val: any) => {
     if (typeof val === 'string') return val;
@@ -96,7 +98,7 @@ export default function PhysicsMap({
         name: mapData.central_node.label,
         val: 10,
         importance: 1,
-        color: '#F27D26', // Always Brand Orange for Root
+        color: signalColor,
         type: 'discovery'
       });
     }
@@ -269,7 +271,7 @@ export default function PhysicsMap({
             linkDirectionalParticles={2}
             linkDirectionalParticleSpeed={0.012}
             linkDirectionalParticleWidth={1.5}
-            linkDirectionalParticleColor={() => '#F27D26'}
+            linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={setHoverNode}
@@ -291,7 +293,7 @@ export default function PhysicsMap({
               // Node Body
               ctx.beginPath();
               ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
-              ctx.fillStyle = isHovered ? '#F27D26' : node.color;
+              ctx.fillStyle = isHovered ? signalColor : node.color;
               ctx.fill();
               
               ctx.shadowBlur = 0;
@@ -305,7 +307,7 @@ export default function PhysicsMap({
 
               // Smart Labeling (Only show if important or hovered or zoomed)
               if (isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8) {
-                const labelColor = isHovered ? '#F27D26' : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
+                const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
                 ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
@@ -396,7 +398,7 @@ export default function PhysicsMap({
       {/* Cluster Footer Info */}
       <div className="h-8 bg-my-sidebar/30 border-t border-my-border flex items-center px-4 shrink-0">
         <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
-           <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#F27D26] rounded-full" /> Root</div>
+           <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
            <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
            <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#EF4444] rounded-full" /> Conflict</div>
            <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>

@@ -6,6 +6,8 @@ import { syncAuthSession } from '../services/authSession';
 import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
+import { Button } from './ui';
+import { reportsToArchiveEntries } from '../utils/archiveEntries';
 
 export default function AuthPortal({ onClose }: { onClose: () => void }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -58,17 +60,8 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         });
       }
 
-      if (reports && reports.length > 0) {
-        const archiveEntries = reports.map((r: any) => ({
-          id: r.id,
-          query: r.query,
-          timestamp: r.timestamp,
-          topic_cluster: r.data.archive_entry?.topic_cluster || "General",
-          tags: r.data.archive_entry?.tags || [],
-          summary_snippet: r.data.archive_entry?.summary_snippet || "",
-          report: r.data
-        }));
-        setArchive(archiveEntries);
+      if (reports?.length) {
+        setArchive(reportsToArchiveEntries(reports));
       }
 
       onClose();
@@ -99,7 +92,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="w-full max-w-md bg-white dark:bg-[#0A0F1A] border border-my-border shadow-2xl relative overflow-hidden"
+        className="w-full max-w-md bg-my-bg border border-my-border shadow-2xl relative overflow-hidden rounded-[4px]"
       >
         {/* Close Button */}
         <button 
@@ -117,16 +110,16 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
             <BrandLogo size={32} />
           </div>
 
-          <h2 className="text-5xl font-serif font-bold italic mb-2 text-white">
+          <h2 className="text-5xl font-serif font-bold italic mb-2 text-my-ink">
             {isRegister ? 'Registration.' : 'Login.'}
           </h2>
-          <p className="text-[11px] text-white/40 uppercase tracking-widest mb-10 leading-relaxed">
+          <p className="text-[11px] text-my-muted uppercase tracking-widest mb-10 leading-relaxed">
             {isRegister ? 'Create your user account to secure your research.' : 'Authorize access to your archived research reports.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
              <div className="space-y-2">
-                <label className="text-[9px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-my-muted flex items-center gap-2">
                    <User size={12} /> Username
                 </label>
                 <input 
@@ -134,13 +127,13 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white focus:border-my-accent outline-none transition-colors placeholder:text-white/20"
+                  className="w-full bg-my-callout border border-my-border p-4 text-sm text-my-ink focus:border-my-accent outline-none transition-colors placeholder:text-my-muted/50 rounded-[2px]"
                   placeholder="USERNAME"
                 />
              </div>
 
              <div className="space-y-2">
-                <label className="text-[9px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-my-muted flex items-center gap-2">
                    <Lock size={12} /> Password
                 </label>
                 <input 
@@ -148,7 +141,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white focus:border-my-accent outline-none transition-colors placeholder:text-white/20"
+                  className="w-full bg-my-callout border border-my-border p-4 text-sm text-my-ink focus:border-my-accent outline-none transition-colors placeholder:text-my-muted/50 rounded-[2px]"
                   placeholder="••••••••"
                 />
              </div>
@@ -159,18 +152,15 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                 </div>
              )}
 
-             <button 
+             <Button
+               variant="primary"
                disabled={loading}
                type="submit"
-               className="w-full bg-my-ink text-my-bg dark:bg-my-accent dark:text-black p-5 text-[11px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-my-accent hover:text-white transition-all group"
+               className="w-full p-5 tracking-[0.3em] group"
+               icon={loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
              >
-                {loading ? <Loader2 className="animate-spin" size={16} /> : (
-                   <>
-                      {isRegister ? 'Create Account' : 'Sign In'}
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                   </>
-                )}
-             </button>
+                {loading ? 'Authorizing…' : isRegister ? 'Create Account' : 'Sign In'}
+             </Button>
           </form>
 
           <div className="mt-10 pt-10 border-t border-my-border text-center">

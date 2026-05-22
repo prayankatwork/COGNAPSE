@@ -32,5 +32,7 @@ Set these in the Vercel project (Production + Preview). **Do not** use `VITE_` f
 
 - [ ] All `VITE_GEMINI` / `VITE_GROQ` removed from Vercel (use server-only keys).
 - [ ] `COGNAPSE_REQUIRE_AUTH` not set to `false` in production.
+- [ ] `create-order` uses server plan prices (`monthly` / `yearly`); do not rely on client `amount` in production.
+- [ ] `VITE_ALLOW_LOCAL_VAULT` is **not** set in production builds (local plaintext auth is dev-only).
 - [ ] Razorpay live keys in production, test keys in preview only.
 - [ ] Firestore rules deployed.

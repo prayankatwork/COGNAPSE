@@ -12,6 +12,7 @@ import { dbService } from '../services/dbService';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { buildActivityHeatmap } from '../utils/activityHeatmap';
 import { syncAuthSession } from '../services/authSession';
+import { Panel, SectionLabel } from './ui';
 
 // ─── Analytics Components ─────────────────────────────────────────────────────
 
@@ -376,7 +377,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
 
                    <div className="w-full space-y-3">
                       <StatRow label="Research Reports" value={searchCount} icon={<Target size={14} />} />
-                      <StatRow label="Activity Streak" value={`${streak || 0} Days`} icon={<Flame size={14} className="text-orange-500" />} />
+                      <StatRow label="Activity Streak" value={`${streak || 0} Days`} icon={<Flame size={14} className="text-my-signal" />} />
                       <StatRow label="Account Standing" value={xp} icon={<Star size={14} className="text-yellow-500" />} />
                    </div>
                 </div>
@@ -495,11 +496,11 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                 </div>
 
                 {/* Heatmap Section */}
-                <div className="p-6 bg-my-callout/30 border border-my-border">
+                <Panel padding className="bg-my-callout/30">
                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-[9px] font-black text-my-accent uppercase tracking-[0.3em]">Research Activity Map</h4>
+                      <SectionLabel className="!text-my-accent !tracking-[0.3em]">Research Activity Map</SectionLabel>
                       <div className="flex gap-1">
-                         {[1,2,3,4].map(v => <div key={v} className={clsx("w-2 h-2", v === 1 ? "bg-my-border" : v === 2 ? "bg-my-accent/30" : v === 3 ? "bg-my-accent/60" : "bg-my-accent")} />)}
+                         {[1,2,3,4].map(v => <div key={v} className={clsx("w-2 h-2", v === 1 ? "bg-my-border" : v === 2 ? "bg-my-signal/30" : v === 3 ? "bg-my-signal/60" : "bg-my-signal")} />)}
                       </div>
                    </div>
                    <div className="flex flex-wrap gap-1.5 justify-between">
@@ -513,9 +514,9 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                           className={clsx(
                             "w-4 h-4 border border-my-border/20 transition-all",
                             cell.intensity === 0 && "bg-my-border/40",
-                            cell.intensity === 1 && "bg-my-accent/30",
-                            cell.intensity === 2 && "bg-my-accent/60",
-                            cell.intensity === 3 && "bg-my-accent"
+                            cell.intensity === 1 && "bg-my-signal/30",
+                            cell.intensity === 2 && "bg-my-signal/60",
+                            cell.intensity === 3 && "bg-my-signal"
                           )}
                         />
                       ))}
@@ -523,7 +524,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                    <p className="text-[7px] text-my-muted uppercase tracking-[0.2em] mt-4 font-bold text-center">
                      Your research frequency — last 42 days ({archive.length} dossiers in archive)
                    </p>
-                </div>
+                </Panel>
               </motion.div>
             ) : activeTab === 'exports' ? (
               <motion.div

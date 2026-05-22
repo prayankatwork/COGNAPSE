@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store';
 import { callCloudAI } from '../services/aiService';
+import { PageHeader, StatusDot, Card } from './ui';
 import clsx from 'clsx';
 
 interface NewsItem {
@@ -154,11 +155,14 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
     fetchNews(false);
   };
 
-  const lastSyncLabel = useMemo(() => {
-    if (loading && !lastRefreshed) return 'Syncing…';
-    if (syncError) return syncError;
-    if (!lastRefreshed) return 'Not synced yet';
-    return `Last Sync: ${lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  const syncStatus = useMemo((): { state: 'syncing' | 'live' | 'error' | 'idle'; label: string } => {
+    if (loading && !lastRefreshed) return { state: 'syncing', label: 'Syncing…' };
+    if (syncError) return { state: 'error', label: syncError };
+    if (!lastRefreshed) return { state: 'idle', label: 'Not synced yet' };
+    return {
+      state: 'live',
+      label: `Last Sync: ${lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+    };
   }, [loading, lastRefreshed, syncError]);
 
   // Group news by category
@@ -211,69 +215,52 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
         )}
       </AnimatePresence>
 
-      <header 
+      <PageHeader
         id="walkthrough-hub-anchor"
-        className="px-6 py-6 md:px-12 md:py-10 border-b border-my-border bg-my-sidebar/50 backdrop-blur-md md:backdrop-blur-xl"
-      >
-         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-               <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-my-accent/10 rounded-lg text-my-accent">
-                    <Newspaper size={20} />
-                  </div>
-                  <h1 className="text-2xl font-serif font-bold italic text-my-ink tracking-tight">Knowledge Hub</h1>
-               </div>
-               <div className="flex items-center gap-4">
-                  <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] font-black">Global Event Tracking</p>
-                  <div className="w-1 h-1 rounded-full bg-my-border" />
-                  <div className="flex items-center gap-2">
-                     <div className={clsx(
-                       "w-1.5 h-1.5 rounded-full shrink-0",
-                       loading ? "bg-my-accent animate-pulse" : syncError ? "bg-red-500" : "bg-green-500"
-                     )} />
-                     <span className={clsx(
-                       "text-[9px] font-bold uppercase tracking-widest max-w-[200px] truncate",
-                       syncError ? "text-red-500/80" : "text-my-muted"
-                     )}>
-                        {lastSyncLabel}
-                     </span>
-                  </div>
-               </div>
+        icon={<Newspaper size={20} />}
+        title="Knowledge Hub"
+        subtitle="Global Event Tracking"
+        status={<StatusDot state={syncStatus.state} label={syncStatus.label} />}
+        actions={
+          <>
+            <button
+              onClick={handleManualRefresh}
+              disabled={loading}
+              className="p-3 border border-my-border rounded-[4px] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
+              title="Refresh Signals"
+              type="button"
+            >
+              <RefreshCw size={16} className={clsx(loading && 'animate-spin')} />
+            </button>
+            <div className="flex items-center gap-2 p-1 bg-my-border/30 rounded-[4px]">
+              <button
+                type="button"
+                onClick={() => setActiveTab('feed')}
+                className={clsx(
+                  'px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  activeTab === 'feed'
+                    ? 'bg-my-accent text-white dark:text-black shadow-accent'
+                    : 'text-my-muted hover:text-my-ink'
+                )}
+              >
+                <ListIcon size={14} /> Live Feed
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('subscriptions')}
+                className={clsx(
+                  'px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  activeTab === 'subscriptions'
+                    ? 'bg-my-accent text-white dark:text-black shadow-accent'
+                    : 'text-my-muted hover:text-my-ink'
+                )}
+              >
+                <LayoutGrid size={14} /> Subscriptions
+              </button>
             </div>
-
-            <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
-               <button 
-                 onClick={handleManualRefresh}
-                 disabled={loading}
-                 className="p-3 border border-my-border rounded-full text-my-muted hover:text-my-accent hover:border-my-accent transition-all group"
-                 title="Refresh Signals"
-               >
-                  <RefreshCw size={16} className={clsx(loading && "animate-spin")} />
-               </button>
-
-               <div className="flex items-center gap-2 p-1 bg-my-border/30 rounded-full">
-                  <button 
-                    onClick={() => setActiveTab('feed')}
-                    className={clsx(
-                      "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                      activeTab === 'feed' ? "bg-my-accent text-white dark:text-black shadow-lg" : "text-my-muted hover:text-my-ink"
-                    )}
-                  >
-                    <ListIcon size={14} /> Live Feed
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('subscriptions')}
-                    className={clsx(
-                      "px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full flex items-center gap-2",
-                      activeTab === 'subscriptions' ? "bg-my-accent text-white dark:text-black shadow-lg" : "text-my-muted hover:text-my-ink"
-                    )}
-                  >
-                    <LayoutGrid size={14} /> Subscriptions
-                  </button>
-               </div>
-            </div>
-         </div>
-      </header>
+          </>
+        }
+      />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar">
@@ -291,7 +278,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                     {loading ? (
                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {[...Array(6)].map((_, i) => (
-                             <div key={i} className="h-64 bg-my-sidebar/50 border border-my-border animate-pulse rounded-xl" />
+                             <div key={i} className="h-64 bg-my-sidebar/50 border border-my-border animate-pulse rounded-[4px]" />
                           ))}
                        </div>
                     ) : subscribedCategories.length === 0 ? (
@@ -301,7 +288,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                           <p className="text-sm text-my-muted mb-8">Subscribe to categories to begin global forensic monitoring.</p>
                           <button 
                             onClick={() => setActiveTab('subscriptions')}
-                            className="px-8 py-3 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl"
+                            className="px-8 py-3 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-[2px] hover:scale-105 transition-all shadow-accent"
                           >
                             Set Subscriptions
                           </button>
@@ -355,15 +342,15 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                                key={cat.id}
                                onClick={() => toggleCategory(cat.id)}
                                className={clsx(
-                                 "flex items-center justify-between p-6 border transition-all group rounded-xl",
+                                 "flex items-center justify-between p-6 border transition-all group rounded-[4px]",
                                  isSubscribed 
-                                   ? "bg-my-accent/5 border-my-accent shadow-[0_0_20px_rgba(249,115,22,0.1)]" 
+                                   ? "bg-my-accent/5 border-my-accent shadow-signal" 
                                    : "bg-my-sidebar/50 border-my-border hover:border-my-accent/30"
                                )}
                              >
                                 <div className="flex items-center gap-6">
                                    <div className={clsx(
-                                     "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+                                     "w-12 h-12 rounded-[4px] flex items-center justify-center transition-all",
                                      isSubscribed ? "bg-my-accent text-white dark:text-black" : "bg-my-border text-my-muted group-hover:text-my-accent"
                                    )}>
                                       {cat.icon}
@@ -398,11 +385,16 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
 
 function NewsCard({ item, idx, onResearch }: { item: NewsItem, idx: number, onResearch: () => void }) {
   return (
+    <Card
+      interactive
+      className="group relative flex flex-col p-8 hover:shadow-accent"
+      onClick={onResearch}
+    >
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.1 }}
-      className="group relative flex flex-col bg-my-sidebar/30 border border-my-border rounded-xl p-8 hover:border-my-accent/50 transition-all hover:shadow-2xl hover:shadow-my-accent/5"
+      className="flex flex-col h-full"
     >
        <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-2 text-[9px] text-my-muted font-bold uppercase tracking-widest">
@@ -422,18 +414,17 @@ function NewsCard({ item, idx, onResearch }: { item: NewsItem, idx: number, onRe
           {item.summary}
        </p>
 
-       <button 
-         onClick={onResearch}
-         className="w-full py-4 bg-my-border/30 text-my-ink text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group-hover:bg-my-accent group-hover:text-white transition-all rounded-lg"
+       <div 
+         className="w-full py-4 bg-my-border/30 text-my-ink text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group-hover:bg-my-accent group-hover:text-white dark:group-hover:text-black transition-all rounded-[2px] mt-auto"
        >
           <Search size={14} /> Begin Detailed Analysis <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-       </button>
+       </div>
 
-       {/* Decorative Impact Line */}
        <div className={clsx(
          "absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-1/2 transition-all",
-         item.impact === 'high' ? "bg-red-500/50" : "bg-my-accent/30"
+         item.impact === 'high' ? "bg-my-conflict-text/50" : "bg-my-accent/30"
        )} />
     </motion.div>
+    </Card>
   );
 }

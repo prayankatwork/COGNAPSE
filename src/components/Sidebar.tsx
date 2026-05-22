@@ -9,14 +9,32 @@ import {
   Library, Box, Fingerprint, Lock, Shield
 } from 'lucide-react';
 import { useStore } from '../store';
+import { Button } from './ui';
 import clsx from 'clsx';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function Sidebar() {
   const { 
     isSidebarOpen, toggleSidebar, setView, archive, currentReport, 
     setCurrentReport, xp, rank, searchCount, user, setAuthOpen, setStatusOpen,
     resetDeepResearch, setWalkthroughCompleted, walkthroughCompleted
-  } = useStore();
+  } = useStore(useShallow((state) => ({
+    isSidebarOpen: state.isSidebarOpen,
+    toggleSidebar: state.toggleSidebar,
+    setView: state.setView,
+    archive: state.archive,
+    currentReport: state.currentReport,
+    setCurrentReport: state.setCurrentReport,
+    xp: state.xp,
+    rank: state.rank,
+    searchCount: state.searchCount,
+    user: state.user,
+    setAuthOpen: state.setAuthOpen,
+    setStatusOpen: state.setStatusOpen,
+    resetDeepResearch: state.resetDeepResearch,
+    setWalkthroughCompleted: state.setWalkthroughCompleted,
+    walkthroughCompleted: state.walkthroughCompleted
+  })));
   
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'chronological' | 'topic'>('chronological');
@@ -93,7 +111,7 @@ export default function Sidebar() {
           <div className="p-8 pb-6 border-b border-my-border">
               <div className="flex items-center justify-between gap-4 mb-8">
                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shrink-0" />
+                    <div className="w-1.5 h-1.5 bg-my-signal rounded-full animate-pulse shrink-0" />
                     <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em] truncate">Archive</h2>
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
@@ -103,7 +121,7 @@ export default function Sidebar() {
                       disabled={!walkthroughCompleted}
                       className={clsx(
                         "p-1 transition-colors shrink-0",
-                        walkthroughCompleted ? "text-[#CBD5E1] hover:text-black dark:hover:text-white cursor-pointer" : "text-[#CBD5E1]/30 cursor-not-allowed"
+                        walkthroughCompleted ? "text-my-muted hover:text-my-ink cursor-pointer" : "text-my-muted/30 cursor-not-allowed"
                       )}
                     >
                        <ChevronLeft size={18} />
@@ -111,34 +129,33 @@ export default function Sidebar() {
                  </div>
               </div>
 
-             <button 
-               onClick={() => { 
+             <Button
+               variant="primary"
+               disabled={!walkthroughCompleted}
+               className={clsx('w-full py-4 tracking-[0.3em] shadow-accent mb-8 group', !walkthroughCompleted && 'opacity-30')}
+               onClick={() => {
                  if (!walkthroughCompleted) return;
-                 setView('research'); 
-                 setCurrentReport(null); 
+                 setView('research');
+                 setCurrentReport(null);
                  resetDeepResearch();
                }}
-               disabled={!walkthroughCompleted}
-               className={clsx(
-                 "w-full py-4 bg-black text-white font-bold uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-orange-500 transition-all shadow-xl group mb-8",
-                 !walkthroughCompleted && "opacity-30 cursor-not-allowed"
-               )}
+               icon={<Plus size={14} className="group-hover:rotate-90 transition-transform" />}
              >
-               <Plus size={14} className="group-hover:rotate-90 transition-transform" /> New Investigation
-             </button>
+               New Investigation
+             </Button>
 
               <div className="flex items-center justify-between">
                   <div className="flex gap-4 shrink-0">
-                     <button onClick={() => setViewMode('chronological')} className={clsx("transition-colors p-1", viewMode === 'chronological' ? "text-orange-500" : "text-[#CBD5E1] hover:text-black dark:hover:text-white")}>
+                     <button onClick={() => setViewMode('chronological')} className={clsx("transition-colors p-1", viewMode === 'chronological' ? "text-my-accent" : "text-my-muted hover:text-my-ink")}>
                         <History size={16} />
                      </button>
-                     <button onClick={() => setViewMode('topic')} className={clsx("transition-colors p-1", viewMode === 'topic' ? "text-orange-500" : "text-[#CBD5E1] hover:text-black dark:hover:text-white")}>
+                     <button onClick={() => setViewMode('topic')} className={clsx("transition-colors p-1", viewMode === 'topic' ? "text-my-accent" : "text-my-muted hover:text-my-ink")}>
                         <LayoutGrid size={16} />
                      </button>
                   </div>
                   
                   <div className="relative flex-1 max-w-[160px]">
-                     <Search size={12} className="absolute left-0 top-1/2 -translate-y-1/2 text-[#CBD5E1]" />
+                     <Search size={12} className="absolute left-0 top-1/2 -translate-y-1/2 text-my-muted" />
                      <input 
                        type="text"
                        placeholder="Filter History..."
@@ -154,7 +171,7 @@ export default function Sidebar() {
           <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
               {filteredArchive.length === 0 ? (
                  <div className="h-60 flex flex-col items-center justify-center text-center px-4">
-                    <div className="opacity-20 text-[#64748B] flex flex-col items-center mb-6">
+                    <div className="opacity-20 text-my-muted flex flex-col items-center mb-6">
                        <Library size={48} className="mb-4" />
                        <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Archive Empty</span>
                     </div>
@@ -164,13 +181,13 @@ export default function Sidebar() {
                          initial={{ opacity: 0, y: 10 }}
                          animate={{ opacity: 1, y: 0 }}
                          onClick={() => setAuthOpen(true)}
-                         className="p-4 bg-black/5 border border-dashed border-[#E2E8F0] hover:border-orange-500/50 transition-all group"
+                         className="p-4 bg-my-callout/50 border border-dashed border-my-border hover:border-my-signal/50 transition-all group rounded-[4px]"
                        >
-                          <div className="flex items-center gap-2 text-orange-500 mb-1 justify-center">
+                          <div className="flex items-center gap-2 text-my-signal mb-1 justify-center">
                              <Lock size={12} />
                              <span className="text-[10px] font-bold uppercase tracking-widest">Restricted Access</span>
                           </div>
-                          <p className="text-[9px] text-[#718096] uppercase tracking-widest leading-relaxed">
+                          <p className="text-[9px] text-my-muted uppercase tracking-widest leading-relaxed">
                              Authorize access to your <br /> analyst profile to <br /> archive research.
                           </p>
                        </motion.button>
@@ -278,7 +295,11 @@ export default function Sidebar() {
 }
 
 function ClearAllButton() {
-  const { clearArchive, archive, walkthroughCompleted } = useStore();
+  const { clearArchive, archive, walkthroughCompleted } = useStore(useShallow((state) => ({
+    clearArchive: state.clearArchive,
+    archive: state.archive,
+    walkthroughCompleted: state.walkthroughCompleted
+  })));
   const [confirming, setConfirming] = useState(false);
 
   if (archive.length === 0) return null;
@@ -311,7 +332,15 @@ function ClearAllButton() {
 }
 
 function ArchiveItem({ item }: { item: any }) {
-  const { setView, setCurrentReport, currentReport, setDeepResearch, resetDeepResearch, removeFromArchive, walkthroughCompleted } = useStore();
+  const { setView, setCurrentReport, currentReport, setDeepResearch, resetDeepResearch, removeFromArchive, walkthroughCompleted } = useStore(useShallow((state) => ({
+    setView: state.setView,
+    setCurrentReport: state.setCurrentReport,
+    currentReport: state.currentReport,
+    setDeepResearch: state.setDeepResearch,
+    resetDeepResearch: state.resetDeepResearch,
+    removeFromArchive: state.removeFromArchive,
+    walkthroughCompleted: state.walkthroughCompleted
+  })));
   const isActive = currentReport?.id === item.id || currentReport?.id === item.report?.id;
 
   const safeText = (val: any) => {
@@ -396,7 +425,7 @@ function ArchiveItem({ item }: { item: any }) {
          {isActive && (
            <motion.div 
              layoutId="activeIndicator"
-             className="w-1.5 h-1.5 bg-my-accent rounded-full shadow-[0_0_8px_rgba(249,115,22,0.6)]" 
+             className="w-1.5 h-1.5 bg-my-signal rounded-full shadow-signal" 
            />
          )}
       </div>
