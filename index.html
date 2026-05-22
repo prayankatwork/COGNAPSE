@@ -37,7 +37,16 @@
     <meta property="twitter:image" content="https://cognapse.vercel.app/favicon.svg" />
 
     <!-- HARDENED CONTENT SECURITY POLICY -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://cdn.razorpay.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* https://* wss://*; img-src 'self' data: https://* blob:; media-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com https://*; frame-src 'self' https://*;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://cdn.razorpay.com https://va.vercel-scripts.com https://www.googletagmanager.com https://aura.example.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* https://* wss://*; img-src 'self' data: https://* blob:; media-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com https://*; frame-src 'self' https://*;" />
+
+    <!-- Aura SDK -->
+    <script>
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://aura.example.com/track.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','AURA-PRJ-XXXXXX');
+    </script>
   </head>
   <body>
     <div id="root"></div>
