@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
 import { syncAuthSession } from '../services/authSession';
-import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X } from 'lucide-react';
+import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X, Check } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
 import { Button } from './ui';
@@ -15,6 +15,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tosAccepted, setTosAccepted] = useState(false);
   
   const setUser = useStore(state => state.setUser);
   const setArchive = useStore(state => state.setArchive);
@@ -22,6 +23,12 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isRegister && !tosAccepted) {
+      setError("You must accept the Terms of Service and Privacy Policy to register.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -146,6 +153,36 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                 />
              </div>
 
+             {isRegister && (
+               <label className="flex items-start gap-3 cursor-pointer group">
+                 <div className="relative flex items-start pt-0.5">
+                   <input
+                     type="checkbox"
+                     checked={tosAccepted}
+                     onChange={(e) => setTosAccepted(e.target.value === "true" || e.target.checked)}
+                     className="peer sr-only"
+                   />
+                   <div className="w-4 h-4 border border-my-border bg-my-callout peer-checked:bg-my-accent peer-checked:border-my-accent transition-colors flex items-center justify-center rounded-sm group-hover:border-my-accent/50">
+                     {tosAccepted && <Check size={12} className="text-white dark:text-black" />}
+                   </div>
+                 </div>
+                 <span className="text-[10px] text-my-muted leading-relaxed">
+                   I have read and agree to the{' '}
+                   <button 
+                     type="button"
+                     onClick={(e) => {
+                       e.preventDefault();
+                       onClose();
+                       useStore.getState().setView('documentation');
+                     }}
+                     className="text-my-accent font-bold hover:underline"
+                   >
+                     Terms of Service & Privacy Policy
+                   </button>.
+                 </span>
+               </label>
+             )}
+
              {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest">
                    {error}
@@ -154,9 +191,9 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
              <Button
                variant="primary"
-               disabled={loading}
+               disabled={loading || (isRegister && !tosAccepted)}
                type="submit"
-               className="w-full p-5 tracking-[0.3em] group"
+               className={clsx("w-full p-5 tracking-[0.3em] group", (isRegister && !tosAccepted) && "opacity-50 cursor-not-allowed")}
                icon={loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
              >
                 {loading ? 'Authorizing…' : isRegister ? 'Create Account' : 'Sign In'}

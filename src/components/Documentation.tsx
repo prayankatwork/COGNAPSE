@@ -1,299 +1,247 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore } from '../store';
-import { 
-  Search, Brain, Database, Shield, Zap, 
-  BarChart3, Globe2, Cpu, ArrowRight,
-  Layers, Network, Sparkles, Activity,
-  Lock, MousePointer2, Terminal as TerminalIcon,
-  ChevronRight, Fingerprint, Radio,
-  MessageSquare, History, Trophy, Gauge,
-  Box, Eye, HardDrive, Share, Compass, 
-  Workflow, ArrowLeft, BookOpen, Key,
-  FileText, Settings, HelpCircle, AlertCircle, Waves, Headphones,
-  Users, Info, List
+import {
+  Search, Terminal, Database, Shield, Globe2, Code2,
+  ChevronRight, Scale, BookOpen, AlertCircle, Fingerprint, Lock
 } from 'lucide-react';
 import clsx from 'clsx';
+import PlatformDocs from './archive/PlatformDocs';
+import TechnicalDocs from './archive/TechnicalDocs';
+import LegalDocs from './archive/LegalDocs';
+import TrustDocs from './archive/TrustDocs';
 
-const DOC_SECTIONS = [
-  {
-    id: 'overview',
-    title: 'Overview',
-    icon: <TerminalIcon size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-xl font-light leading-relaxed">
-          COGNAPSE is a sovereign intelligence terminal designed to extract high-fidelity truth from 
-          global knowledge indexes and simulate parallel decision realities.
-        </p>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Research Core</h4>
-             <p className="text-sm opacity-80 leading-relaxed">Deep intelligence synthesis and evidence-based investigation of any complex topic.</p>
-          </div>
-          <div className="p-6 border border-my-border bg-my-callout">
-             <h4 className="font-bold uppercase tracking-widest text-xs text-my-accent mb-4">Decision Matrix</h4>
-             <p className="text-sm opacity-80 leading-relaxed">Multiverse simulation engine for exploring second-order consequences of life choices.</p>
-          </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'core-concepts',
-    title: 'Core Concepts',
-    icon: <Brain size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light">The foundational pillars of the COGNAPSE architecture.</p>
-        <div className="space-y-6">
-           <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
-              <h5 className="font-bold uppercase tracking-widest mb-2">Synthetic Intelligence</h5>
-              <p className="text-sm opacity-70 italic">Beyond search engines. We use multi-agent analysis logic to cross-reference conflicting data points and synthesize objective insights.</p>
-           </div>
-           <div className="p-6 border-l-2 border-my-accent bg-my-callout/50">
-              <h5 className="font-bold uppercase tracking-widest mb-2">Detailed Investigation</h5>
-              <p className="text-sm opacity-70 italic">Every claim is backed by a source. The Research Archive allows you to audit the "why" behind every system output.</p>
-           </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'getting-started',
-    title: 'Getting Started',
-    icon: <Zap size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">Set up your analyst profile and begin your first research project.</p>
-        <div className="space-y-4">
-           <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-my-accent text-white dark:text-black flex items-center justify-center shrink-0 text-xs font-bold">1</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Register your username and password to enable the **Research Archive**.</p>
-           </div>
-           <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-my-ink text-white flex items-center justify-center shrink-0 text-xs font-bold">2</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Select your **Workspace** (Research or Decision) from the main application hub.</p>
-           </div>
-           <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-my-muted text-white flex items-center justify-center shrink-0 text-xs font-bold">3</div>
-              <p className="text-sm opacity-80 leading-relaxed pt-1">Submit your first query. The analysis engine will adapt to your research style.</p>
-           </div>
-        </div>
+type SectionKey = 'platform' | 'technical' | 'trust' | 'legal';
 
-        <div className="pt-8 border-t border-my-border">
-           <button 
-             onClick={() => useStore.getState().setWalkthroughCompleted(false)}
-             className="px-8 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-4 hover:scale-105 transition-all shadow-xl rounded-sm group"
-           >
-              <Workflow size={14} className="group-hover:rotate-180 transition-transform duration-1000" /> Restart System Introduction
-           </button>
-           <p className="mt-4 text-[9px] text-my-muted italic opacity-60">
-             Note: Restarting will trigger the initial onboarding flow. Your established settings will be preserved but the introductory sequence will reset.
-           </p>
-        </div>
-      </div>
-    )
+const ARCHIVE_MAP = [
+  {
+    key: 'platform' as SectionKey,
+    title: 'Platform Infrastructure',
+    icon: <Terminal size={16} />,
+    component: <PlatformDocs />,
+    subsections: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'product-systems', label: 'Product Systems' },
+      { id: 'workflow', label: 'Research Workflow' },
+      { id: 'onboarding', label: 'Analyst Onboarding' },
+    ]
   },
   {
-    id: 'research-guide',
-    title: 'Research Guide',
-    icon: <Search size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">Optimizing the Research Core for deep synthesis.</p>
-        <div className="p-8 bg-my-callout text-my-ink space-y-6">
-           <h4 className="text-2xl font-serif italic border-b border-my-border pb-4">Query Optimization</h4>
-           <p className="text-sm opacity-80 italic mb-4">Be specific. Instead of "Artificial Intelligence," try "The impact of LMMs on academic research integrity 2024-2025."</p>
-           <ul className="grid md:grid-cols-2 gap-4 text-sm opacity-80">
-              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Semantic Node Graphing</li>
-              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Deep Research Thesis (5-Stage)</li>
-              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Source Credibility Scoring</li>
-              <li className="flex items-center gap-2"><ArrowRight size={14} className="text-my-accent" /> Logical Conflict Detection</li>
-           </ul>
-        </div>
-      </div>
-    )
+    key: 'technical' as SectionKey,
+    title: 'Technical Architecture',
+    icon: <Code2 size={16} />,
+    component: <TechnicalDocs />,
+    subsections: [
+      { id: 'tech-overview', label: 'Stack Overview' },
+      { id: 'stack', label: 'Infrastructure Diagram' },
+      { id: 'orchestration', label: 'AI Swarm Logic' },
+      { id: 'state', label: 'Zustand State' },
+    ]
   },
   {
-    id: 'decision-guide',
-    title: 'Decision Guide',
-    icon: <Network size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">Navigating the Multiverse with the Decision Matrix.</p>
-        <div className="p-8 bg-my-callout text-my-ink space-y-6">
-           <h4 className="text-2xl font-serif italic border-b border-my-border pb-4">Personal Context Engine</h4>
-           <p className="text-sm opacity-80 leading-relaxed mb-4">Use the **Identity Profile** to ground simulations in your personality (Big Five traits) and specific life constraints for 100% personalized pathways.</p>
-           <div className="grid md:grid-cols-2 gap-4 text-sm opacity-80">
-              <div className="p-4 border border-my-border">
-                 <h5 className="font-bold mb-2">Timeline Fracturing</h5>
-                 <p className="text-xs opacity-70">Splits choices into Optimistic, Realistic, and Pessimistic outcomes.</p>
-              </div>
-              <div className="p-4 border border-my-border">
-                 <h5 className="font-bold mb-2">Second-Order Logic</h5>
-                 <p className="text-xs opacity-70">Simulate further into the future to see long-term compounding effects.</p>
-              </div>
-           </div>
-        </div>
-      </div>
-    )
+    key: 'trust' as SectionKey,
+    title: 'Trust & Security',
+    icon: <Shield size={16} />,
+    component: <TrustDocs />,
+    subsections: [
+      { id: 'trust-overview', label: 'Security Center' },
+      { id: 'security-model', label: 'Identity Management' },
+      { id: 'data-isolation', label: 'Tenant Isolation' },
+      { id: 'reliability', label: 'Infrastructure Uptime' },
+    ]
   },
   {
-    id: 'ai-system',
-    title: 'AI System',
-    icon: <Cpu size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light leading-relaxed">The architecture behind the intelligence.</p>
-        <div className="space-y-6">
-           <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/20">
-              <Zap className="text-my-accent shrink-0" size={24} />
-              <div>
-                 <h5 className="font-bold uppercase tracking-widest text-xs mb-2">Cloud-Hybrid Engine</h5>
-                 <p className="text-sm opacity-70">Utilizes Groq LPU™ for millisecond-latency synthesis and Gemini 1.5 Pro for deep multi-modal reasoning and massive context handling.</p>
-              </div>
-           </div>
-           <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/20">
-              <Activity className="text-blue-500 shrink-0" size={24} />
-              <div>
-                 <h5 className="font-bold uppercase tracking-widest text-xs mb-2">Swarm Calibration</h5>
-                 <p className="text-sm opacity-70">Parallel processing of multiple LLM nodes to ensure no single bias dominates the final intelligence output.</p>
-              </div>
-           </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'use-cases',
-    title: 'Use Cases',
-    icon: <Globe2 size={18} />,
-    content: (
-      <div className="space-y-8">
-        <p className="text-lg font-light">Practical applications for high-stakes intelligence.</p>
-        <div className="grid md:grid-cols-2 gap-4 text-sm">
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2">Competitive Intelligence</h5>
-              <p className="opacity-70">Mapping market movements and competitor pivots before they go public.</p>
-           </div>
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2">Career Pivot Simulation</h5>
-              <p className="opacity-70">Testing the second-order financial and emotional impact of changing industries.</p>
-           </div>
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2">Crisis Response</h5>
-              <p className="opacity-70">Rapid synthesis of evolving events during information blackouts.</p>
-           </div>
-           <div className="p-6 border border-my-border">
-              <h5 className="font-bold mb-2">Academic Synthesis</h5>
-              <p className="opacity-70">Generating comprehensive literature reviews and problem statements for research papers.</p>
-           </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'data-privacy',
-    title: 'Data & Privacy',
-    icon: <Shield size={18} />,
-    content: (
-      <div className="space-y-8">
-        <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-           <Lock size={20} />
-           <span className="font-bold uppercase tracking-widest text-xs">Security Protocol: Active</span>
-        </div>
-        <p className="text-lg leading-relaxed">Your research history belongs only to you.</p>
-        <div className="space-y-4">
-           <div className="p-6 border border-my-border bg-my-callout">
-              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Fingerprint size={16} className="text-my-accent" /> Analyst Isolation</h5>
-              <p className="text-sm opacity-70 leading-relaxed">Data is partitioned using secure architecture. Your username ensures that your private archive cannot be accessed by other system users.</p>
-           </div>
-           <div className="p-6 border border-my-border bg-my-callout">
-              <h5 className="font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-widest"><Database size={16} className="text-my-accent" /> Encrypted Archive</h5>
-              <p className="text-sm opacity-70 leading-relaxed">All research reports and simulations are encrypted at rest. We do not use your personal data to train global AI models.</p>
-           </div>
-        </div>
-      </div>
-    )
+    key: 'legal' as SectionKey,
+    title: 'Legal & Compliance',
+    icon: <Scale size={16} />,
+    component: <LegalDocs />,
+    subsections: [
+      { id: 'legal-overview', label: 'Compliance Overview' },
+      { id: 'ai-disclaimer', label: 'AI Liability Disclaimer' },
+      { id: 'terms', label: 'Terms of Service' },
+      { id: 'privacy', label: 'Privacy Policy' },
+    ]
   }
 ];
 
 export default function Documentation() {
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeTab, setActiveTab] = useState<SectionKey>('platform');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredArchiveMap = useMemo(() => {
+    if (!searchQuery.trim()) return ARCHIVE_MAP;
+    const lowerQuery = searchQuery.toLowerCase();
+
+    return ARCHIVE_MAP.map(section => {
+      // Check if the section title matches
+      const sectionMatches = section.title.toLowerCase().includes(lowerQuery);
+
+      // Filter subsections
+      const matchingSubsections = section.subsections.filter(sub =>
+        sub.label.toLowerCase().includes(lowerQuery)
+      );
+
+      if (sectionMatches) {
+        // If the main section matches, show it with all its original subsections
+        return section;
+      } else if (matchingSubsections.length > 0) {
+        // If only subsections match, show the section but only with matching subsections
+        return { ...section, subsections: matchingSubsections };
+      }
+      return null;
+    }).filter(Boolean) as typeof ARCHIVE_MAP;
+  }, [searchQuery]);
+
+  // Handle incoming deep links on mount and hash changes
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'privacy' || hash === 'terms' || hash === 'ai-disclaimer' || hash === 'legal-overview') {
+        setActiveTab('legal');
+        // Small delay to allow render before scrolling
+        setTimeout(() => {
+          const el = document.getElementById(hash);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    handleHash(); // Run on mount
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  // Smooth scroll to subsection
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const activeContent = ARCHIVE_MAP.find(s => s.key === activeTab)?.component;
 
   return (
-    <div className="min-h-screen text-my-ink selection:bg-my-accent selection:text-white flex flex-col">
+    <div className="min-h-screen bg-my-bg text-my-ink selection:bg-my-accent selection:text-black flex flex-col font-sans">
+
+      {/* Top Banner */}
+      <header className="h-16 border-b border-my-border flex items-center justify-between px-8 bg-my-bg/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-4">
+          <Globe2 className="text-my-accent" size={20} />
+          <span className="font-serif font-bold text-lg tracking-widest text-my-ink italic uppercase">
+            Cognapse <span className="text-my-muted font-sans font-normal text-sm not-italic ml-2">/ Documentation Center</span>
+          </span>
+        </div>
+        <div className="hidden md:flex items-center gap-4 border border-my-border bg-my-callout/50 px-4 py-2 w-96 rounded-sm">
+          <Search size={16} className="text-my-muted" />
+          <input
+            type="text"
+            placeholder="Search documentation..."
+            className="bg-transparent outline-none text-xs w-full font-mono placeholder:text-my-muted/50"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="text-[10px] font-bold text-my-muted border border-my-border px-1.5 py-0.5 rounded-sm"></div>
+        </div>
+      </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Navigation */}
-        <aside className="w-80 border-r border-my-border overflow-y-auto no-scrollbar p-8 hidden md:block bg-my-sidebar/20">
-           <div className="space-y-2">
-              {DOC_SECTIONS.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={clsx(
-                    "w-full text-left px-5 py-4 flex items-center gap-4 transition-all group",
-                    activeSection === section.id 
-                      ? "bg-my-ink text-my-bg dark:bg-my-accent dark:text-black shadow-xl translate-x-2" 
-                      : "hover:bg-my-sidebar/50 text-my-muted"
-                  )}
-                >
-                  <span className={clsx("transition-transform group-hover:scale-110", activeSection === section.id ? "text-my-accent" : "opacity-50")}>
-                     {section.icon}
-                  </span>
-                  <span className="text-[11px] font-bold uppercase tracking-widest">{section.title}</span>
-                </button>
-              ))}
-           </div>
 
-           <div className="mt-12 p-6 border border-dashed border-my-border bg-my-callout/30">
-              <div className="flex items-center gap-2 mb-2 text-my-accent">
-                 <AlertCircle size={14} />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Analyst Note</span>
+        {/* Nested Sidebar */}
+        <aside className="w-80 border-r border-my-border overflow-y-auto no-scrollbar p-6 hidden lg:block bg-my-sidebar/10">
+          <div className="space-y-8">
+            {filteredArchiveMap.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-my-border">
+                <Search className="mx-auto text-my-muted mb-2" size={24} />
+                <p className="text-xs text-my-muted uppercase tracking-widest font-bold">No results found</p>
               </div>
-              <p className="text-[10px] text-my-ink italic font-semibold leading-relaxed">
-                 Use the search function in the Archive to query your archived reports once indexes are enabled.
+            ) : (
+              filteredArchiveMap.map((section) => (
+                <div key={section.key} className="space-y-3">
+                  {/* Parent Category */}
+                  <button
+                    onClick={() => setActiveTab(section.key)}
+                    className={clsx(
+                      "w-full text-left flex items-center gap-3 transition-colors group",
+                      (activeTab === section.key || searchQuery) ? "text-my-ink" : "text-my-muted hover:text-my-ink"
+                    )}
+                  >
+                    <span className={clsx("transition-transform", (activeTab === section.key || searchQuery) ? "text-my-accent" : "opacity-50")}>
+                      {section.icon}
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-widest">{section.title}</span>
+                  </button>
+
+                  {/* Subsections (Nested) */}
+                  <AnimatePresence>
+                    {(activeTab === section.key || searchQuery.length > 0) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="pl-7 space-y-2 overflow-hidden border-l border-my-border ml-2"
+                      >
+                        {section.subsections.map(sub => (
+                          <button
+                            key={sub.id}
+                            onClick={() => scrollTo(sub.id)}
+                            className="block text-left text-[11px] text-my-muted hover:text-my-accent transition-colors py-1 hover:translate-x-1 duration-300"
+                          >
+                            {sub.label}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-my-border">
+            <div className="p-5 border border-dashed border-my-accent/30 bg-my-accent/5 rounded-sm">
+              <div className="flex items-center gap-2 mb-2 text-my-accent">
+                <AlertCircle size={14} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Documentation Status</span>
+              </div>
+              <p className="text-[10px] text-my-muted leading-relaxed">
+                This documentation is actively maintained and updated by the COGNAPSE team.
               </p>
-           </div>
+            </div>
+          </div>
         </aside>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-10 md:p-20 relative scroll-smooth">
-           {/* Background Grid */}
-           <div className="absolute inset-0 opacity-[0.02] pointer-events-none -z-10" 
-                style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        {/* Dynamic Content Area */}
+        <main className="flex-1 overflow-y-auto p-10 md:p-20 relative scroll-smooth bg-my-bg">
 
-           <AnimatePresence mode="wait">
-             <motion.div
-               key={activeSection}
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -20 }}
-               transition={{ duration: 0.4 }}
-               className="max-w-3xl"
-             >
-                <div className="mb-14">
-                   <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
-                      <div className="w-10 h-px bg-my-accent" /> Section_{activeSection.toUpperCase()}
-                   </div>
-                   <h2 className="text-6xl font-serif font-bold italic text-my-ink">{DOC_SECTIONS.find(s => s.id === activeSection)?.title}</h2>
-                </div>
+          {/* Cinematic Background */}
+          <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-my-accent/5 to-transparent pointer-events-none -z-10" />
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none -z-10"
+            style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-                <div className="prose dark:prose-invert max-w-none text-my-ink">
-                   {DOC_SECTIONS.find(s => s.id === activeSection)?.content}
-                </div>
+          <div className="max-w-4xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                {activeContent}
+              </motion.div>
+            </AnimatePresence>
 
-                <div className="mt-40 pt-10 border-t border-my-border flex items-center justify-between text-[10px] font-bold text-my-muted uppercase tracking-widest">
-                   <span>COGNAPSE v2.5 // ARCHITECT_LEVEL_CLEARANCE</span>
-                   <div className="flex gap-4">
-                      <button className="hover:text-my-accent transition-colors">Privacy Protocol</button>
-                      <button className="hover:text-my-accent transition-colors">Privacy Policy</button>
-                   </div>
-                </div>
-             </motion.div>
-           </AnimatePresence>
+            {/* Footer */}
+            <footer className="mt-40 pt-10 pb-20 border-t border-my-border flex flex-col md:flex-row items-center justify-between text-[10px] font-bold text-my-muted uppercase tracking-widest gap-6">
+              <span>COGNAPSE // DOCUMENTATION CENTER</span>
+              <div className="flex items-center gap-6">
+                <button onClick={() => setActiveTab('legal')} className="hover:text-my-accent transition-colors">Privacy Policy</button>
+                <button onClick={() => setActiveTab('legal')} className="hover:text-my-accent transition-colors">Terms of Service</button>
+                <button onClick={() => setActiveTab('trust')} className="hover:text-my-accent transition-colors">Security Center</button>
+              </div>
+            </footer>
+          </div>
+
         </main>
       </div>
     </div>

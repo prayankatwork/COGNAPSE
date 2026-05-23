@@ -283,10 +283,11 @@ export default function App() {
     }
   };
 
-  const handleLegalNav = (e: React.MouseEvent<HTMLAnchorElement>, page: 'privacy' | 'terms' | 'ai-disclaimer') => {
+  const handleLegalNav = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
     e.preventDefault();
-    setLegalPage(page);
-    window.history.pushState({}, '', `/${page}`);
+    setLegalPage(null); // Clear standalone legal page if open
+    useStore.getState().setView('documentation');
+    window.location.hash = hash;
   };
 
   const isDashboard = currentView === 'research' || currentView === 'news';
@@ -322,9 +323,7 @@ export default function App() {
 
       {!shareRoute && !legalPage && (
         <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
-          <a href="/privacy" onClick={(e) => handleLegalNav(e, 'privacy')} className="hover:text-my-accent">Privacy</a>
-          <a href="/terms" onClick={(e) => handleLegalNav(e, 'terms')} className="hover:text-my-accent">Terms</a>
-          <a href="/ai-disclaimer" onClick={(e) => handleLegalNav(e, 'ai-disclaimer')} className="hover:text-my-accent">AI Disclaimer</a>
+          <a href="/policies" onClick={(e) => handleLegalNav(e, 'legal-overview')} className="hover:text-my-accent">Privacy & Policies</a>
         </footer>
       )}
 

@@ -34,4 +34,7 @@ export default defineConfig({
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
   },
+  optimizeDeps: {
+    exclude: ['@xenova/transformers'],
+  },
 });

@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import { COGNAPSE_Output } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FlaskConical } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2 } from 'lucide-react';
 import clsx from 'clsx';
 // Map rendering removed per request
 const PhysicsMap = React.lazy(() => import('./PhysicsMap'));
@@ -9,6 +9,7 @@ import confetti from 'canvas-confetti';
 import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
+
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
 import type { ResearchVisibility } from '../types';
@@ -210,7 +211,7 @@ export default function ReportView({
         </div>
         {!readOnly && (
           <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
-            <FlaskConical size={13} className="text-my-accent mt-0.5 shrink-0" />
+            <Info size={13} className="text-my-accent mt-0.5 shrink-0" />
             <p className="text-[11px] leading-relaxed">
               Research sharing is a preview feature. Public links are read-only and may receive UX refinements before final release.
             </p>
@@ -253,19 +254,28 @@ export default function ReportView({
                 </div>
               )}
               {report.summary?.full_synthesis && (
-                 <p className="whitespace-pre-line">{safeText(report.summary.full_synthesis)}</p>
+                <div className="leading-relaxed text-[14px] text-my-syn">
+                  {report.summary.full_synthesis.split('\n').map((para: string, i: number) =>
+                    para.trim() ? <p key={i} className="mb-4">{para.replace(/\[\d+\]/g, '').trim()}</p> : <br key={i} />
+                  )}
+                </div>
               )}
               {report.summary?.confidence_narrative && (
-                 <p className="italic text-my-muted mt-2">{safeText(report.summary.confidence_narrative)}</p>
+                 <div className="flex items-start gap-2 p-3 bg-my-callout border border-my-border rounded mt-2">
+                   <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest shrink-0 mt-0.5">AI Self-Assessment</span>
+                   <p className="italic text-my-muted text-[12px] leading-relaxed">{safeText(report.summary.confidence_narrative)}</p>
+                 </div>
               )}
               
-              <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-3 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
-                <div className="text-xl">🧠</div>
-                <div>
-                  <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent">Export-Only Advanced Analysis</span>
-                  <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, and hidden reasoning layers are preserved exclusively in the Premium Analyst Dossier.</p>
+              {!isUnlocked && (
+                <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-3 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
+                  <div className="text-xl">🧠</div>
+                  <div>
+                    <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent">Export-Only Advanced Analysis</span>
+                    <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, and hidden reasoning layers are preserved exclusively in the Premium Analyst Dossier.</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
