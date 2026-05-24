@@ -135,24 +135,32 @@ function aggregateDaily(events) {
 /* ─── Lazy Firebase Admin init ─── */
 
 let adminInstance = null;
-let adminInitFailed = false;
 
 async function getFirebaseAdmin() {
-  if (adminInitFailed) return null;
-  if (adminInstance) return adminInstance;
+  // Re-check env vars every time (no permanent failure flag)
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const privateKey = normalizePrivateKey(rawPrivateKey);
+
+  if (!projectId || !clientEmail || !privateKey) {
+    const missing = [
+      !projectId && 'FIREBASE_PROJECT_ID',
+      !clientEmail && 'FIREBASE_CLIENT_EMAIL',
+      !privateKey && 'FIREBASE_PRIVATE_KEY',
+    ].filter(Boolean).join(', ');
+    console.error('[OpsTelemetry API] Missing env vars:', missing);
+    return null;
+  }
 
   try {
-    const admin = await import('firebase-admin');
-
-    const projectId =
-      process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
-
-    if (!projectId || !clientEmail || !privateKey) {
-      adminInitFailed = true;
-      return null;
+    if (adminInstance && adminInstance.apps.length) {
+      return adminInstance;
     }
+
+    const mod = await import('firebase-admin');
+    const admin = mod.default || mod;
 
     if (!admin.apps.length) {
       admin.initializeApp({
@@ -167,9 +175,9 @@ async function getFirebaseAdmin() {
     adminInstance = admin;
     return admin;
   } catch (err) {
-    adminInitFailed = true;
     console.error('[OpsTelemetry API] Firebase Admin init failed:', err?.message || err);
-    return null;
+    // Expose error safely for debugging (server-side, not client-sensitive)
+    throw err;
   }
 }
 
