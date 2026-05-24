@@ -85,32 +85,6 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- COGNAPSE Ops Telemetry (passive, non-invasive, non-blocking, zero console output) -->
-    <script>
-      (function(){
-        var sid = 's_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-        var lastLog = 0;
-        function log(t,p){
-          var now = Date.now();
-          if(t==='session_minimize' && now-lastLog<30000) return; // throttle
-          lastLog = now;
-          try{
-            var d = new Date().toISOString();
-            var f = 'https://firestore.googleapis.com/v1/projects/'+encodeURIComponent('cognapse-93cdf')+'/databases/(default)/documents/ops_telemetry?key=AIzaSyBUZoskVfIc7ZkJqFxx21r4Fb-XkahNaWQ';
-            var b = JSON.stringify({fields:{
-              sessionId:{stringValue:sid},
-              type:{stringValue:t},
-              path:{stringValue:p||window.location.pathname},
-              ts:{stringValue:d},
-              epoch:{integerValue:String(now)}
-            }});
-            navigator.sendBeacon(f, new Blob([b], {type: 'application/json'}));
-          }catch(e){}
-        }
-        log('page_view');
-        window.addEventListener('beforeunload',function(){log('session_end');});
-        document.addEventListener('visibilitychange',function(){if(document.hidden)log('session_minimize');});
-      })();
-    </script>
+    <!-- Telemetry is now managed by the compiled TypeScript module at src/services/opsTelemetry.ts -->
   </body>
 </html>

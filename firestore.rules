@@ -46,5 +46,11 @@ service cloud.firestore {
       allow create, update: if false;
       allow delete: if isOwner(userId);
     }
+
+    // Ops Telemetry — authenticated users can write; reads/updates/deletes restricted to server
+    match /ops_telemetry/{eventId} {
+      allow create: if signedIn();
+      allow read, update, delete: if false;
+    }
   }
 }
