@@ -83,10 +83,12 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
         if (node.model.includes('8b') && estTokens > 5500) {
           finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
         }
+        // Higher temperature for 8b model encourages more detailed output
+        const temperature = node.model.includes('8b') ? 0.4 : 0.1;
         const response = await groq.chat.completions.create({
           messages: [{ role: 'user', content: finalPrompt }],
           model: node.model,
-          temperature: 0.1,
+          temperature,
           response_format: isJson ? { type: 'json_object' } : undefined,
         });
         const content = response.choices[0]?.message?.content || '';
