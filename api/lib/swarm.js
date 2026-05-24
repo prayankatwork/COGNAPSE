@@ -71,7 +71,10 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
         });
         const textResponse = (await result.response).text();
         if (textResponse) {
-          return isJson ? JSON.stringify(extractJson(textResponse)) : textResponse;
+          return {
+            result: isJson ? JSON.stringify(extractJson(textResponse)) : textResponse,
+            usage: null,
+          };
         }
       }
 
@@ -88,7 +91,15 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
         });
         const content = response.choices[0]?.message?.content || '';
         if (content) {
-          return isJson ? JSON.stringify(extractJson(content)) : content;
+          return {
+            result: isJson ? JSON.stringify(extractJson(content)) : content,
+            usage: {
+              prompt_tokens: response.usage?.prompt_tokens || 0,
+              completion_tokens: response.usage?.completion_tokens || 0,
+              total_tokens: response.usage?.total_tokens || 0,
+              model: node.model,
+            },
+          };
         }
       }
     } catch (e) {

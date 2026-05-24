@@ -37,13 +37,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const result = await runSwarm({
+    const { result, usage } = await runSwarm({
       prompt,
       isJson: !!isJson,
       estTokens: estTokens || Math.ceil(prompt.length / 4),
       requestedModel: requestedModel || 'gemini-1.5-flash',
     });
-    return res.status(200).json({ result });
+    return res.status(200).json({ result, usage: usage || null });
   } catch (error) {
     return sendSafeError(res, 500, error.message || 'Failed to process AI research.', error);
   }

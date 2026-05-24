@@ -101,6 +101,28 @@ function aggregateMetrics(events) {
   const sessions = events.filter((e) => e.type === 'session_start');
   const uniqueUsers = new Set(events.filter((e) => e.userId).map((e) => e.userId));
 
+  // ─── Token usage aggregation ───
+  const tokenEvents = events.filter((e) => e.type === 'tokens_consumed');
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let todayTokens = 0;
+  let model70bTokens = 0;
+  let model8bTokens = 0;
+  let totalTokensAllTime = 0;
+
+  for (const e of tokenEvents) {
+    const m = e.metadata || {};
+    const total = m.total_tokens || 0;
+    totalTokensAllTime += total;
+
+    if (m.model && m.model.includes('70b')) model70bTokens += total;
+    else model8bTokens += total;
+
+    // Check if event is from today
+    if (e.createdAt && e.createdAt.slice(0, 10) === todayStr) {
+      todayTokens += total;
+    }
+  }
+
   return {
     totalEvents: events.length,
     uniqueUsers: uniqueUsers.size,
@@ -115,6 +137,11 @@ function aggregateMetrics(events) {
     authLogouts: events.filter((e) => e.type === 'auth_logout').length,
     exports: events.filter((e) => e.type === 'report_exported').length,
     errors: events.filter((e) => e.type === 'error_encountered' || e.type === 'research_failed').length,
+    // Token usage
+    tokensUsedToday: todayTokens,
+    tokens70b: model70bTokens,
+    tokens8b: model8bTokens,
+    totalTokens: totalTokensAllTime,
   };
 }
 

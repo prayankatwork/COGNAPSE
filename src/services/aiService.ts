@@ -52,6 +52,7 @@ const getLocalOllamaModel = async () => {
 
 import { apiFetch } from './apiClient';
 import { auth } from './firebase';
+import { trackOperationalEvent } from './opsTelemetry';
 
 /**
  * PRODUCTION-READY INTELLIGENCE SWARM
@@ -109,6 +110,19 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
       if (!response.ok) {
         throw new Error(data.error || 'Serverless backend failed');
+      }
+
+      // Track token consumption from Groq for ops dashboard
+      if (data.usage && data.usage.total_tokens > 0) {
+        try {
+          trackOperationalEvent('tokens_consumed', {
+            prompt_tokens: data.usage.prompt_tokens,
+            completion_tokens: data.usage.completion_tokens,
+            total_tokens: data.usage.total_tokens,
+            model: data.usage.model,
+            research_type: requestedModel === 'ollama' ? 'deep' : 'standard',
+          });
+        } catch {}
       }
 
       return data.result;

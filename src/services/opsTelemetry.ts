@@ -61,7 +61,8 @@ export type TelemetryEventType =
   | 'electron_crash'
   | 'error_encountered'
   | 'feature_used'
-  | 'behavior_snapshot';
+  | 'behavior_snapshot'
+  | 'tokens_consumed';
 
 export interface TelemetryPayload {
   type: TelemetryEventType;
