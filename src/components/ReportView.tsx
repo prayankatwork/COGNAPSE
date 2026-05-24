@@ -387,16 +387,21 @@ export default function ReportView({
                        >
                           <Search size={10} /> Verify on Google
                        </a>
-                       {s.url && s.url !== "URL unavailable" && !s.url.includes("unavailable") && (
-                         <a 
-                           href={typeof s.url === 'string' ? s.url : '#'} 
-                           target="_blank" 
-                           rel="noopener noreferrer" 
-                           className="text-[9px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wider border border-my-border px-3 py-1 rounded-[2px]"
-                         >
-                            <Link2 size={10} /> Direct Access
-                         </a>
-                       )}
+                       {/* URL sanitization: only http/https protocols allowed */}
+                       {(() => {
+                         const rawUrl = typeof s.url === 'string' ? s.url : '';
+                         const safeUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : null;
+                         return safeUrl && rawUrl !== "URL unavailable" && !rawUrl.includes("unavailable") ? (
+                           <a 
+                             href={safeUrl}
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="text-[9px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wider border border-my-border px-3 py-1 rounded-[2px]"
+                           >
+                              <Link2 size={10} /> Direct Access
+                           </a>
+                         ) : null;
+                       })()}
                     </div>
                   </div>
                 ))}

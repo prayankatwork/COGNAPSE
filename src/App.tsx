@@ -15,6 +15,7 @@ import OperativeStatus from './components/OperativeStatus';
 import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
 
 const lazyWithReload = (componentImport: () => Promise<any>) =>
   React.lazy(async () => {
@@ -56,13 +57,21 @@ export default function App() {
     if (path === '/ai-disclaimer') return 'ai-disclaimer';
     return null;
   });
-  const currentView = useStore((state) => state.currentView);
-  const theme = useStore((state) => state.theme);
-  const isAuthOpen = useStore((state) => state.isAuthOpen);
-
-  const isLoading = useStore((state) => state.isLoading);
-  const currentReport = useStore((state) => state.currentReport);
-  const deepResearch = useStore((state) => state.deepResearch);
+  const {
+    currentView,
+    theme,
+    isAuthOpen,
+    isLoading,
+    currentReport,
+    deepResearch,
+  } = useStore(useShallow((state) => ({
+    currentView: state.currentView,
+    theme: state.theme,
+    isAuthOpen: state.isAuthOpen,
+    isLoading: state.isLoading,
+    currentReport: state.currentReport,
+    deepResearch: state.deepResearch,
+  })));
 
   // Sound Trigger: Normal Research
   const lastPlayedReportId = useRef<string | null>(null);
@@ -119,13 +128,23 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  const setAuthOpen = useStore((state) => state.setAuthOpen);
-  const isNotebookOpen = useStore((state) => state.isNotebookOpen);
-  const setNotebookOpen = useStore((state) => state.setNotebookOpen);
-  const isStatusOpen = useStore((state) => state.isStatusOpen);
-  const setStatusOpen = useStore((state) => state.setStatusOpen);
-  const isDevOpen = useStore((state) => state.isDevOpen);
-  const setDevOpen = useStore((state) => state.setDevOpen);
+  const {
+    setAuthOpen,
+    isNotebookOpen,
+    setNotebookOpen,
+    isStatusOpen,
+    setStatusOpen,
+    isDevOpen,
+    setDevOpen,
+  } = useStore(useShallow((state) => ({
+    setAuthOpen: state.setAuthOpen,
+    isNotebookOpen: state.isNotebookOpen,
+    setNotebookOpen: state.setNotebookOpen,
+    isStatusOpen: state.isStatusOpen,
+    setStatusOpen: state.setStatusOpen,
+    isDevOpen: state.isDevOpen,
+    setDevOpen: state.setDevOpen,
+  })));
 
   // Global Dev Command
   useEffect(() => {
@@ -171,10 +190,12 @@ export default function App() {
     }
   }, [theme]);
 
-  const user = useStore(state => state.user);
-  const setStats = useStore(state => state.setStats);
-  const setArchive = useStore(state => state.setArchive);
-  const setNotes = useStore(state => state.setNotes);
+  const { user, setStats, setArchive, setNotes } = useStore(useShallow((state) => ({
+    user: state.user,
+    setStats: state.setStats,
+    setArchive: state.setArchive,
+    setNotes: state.setNotes,
+  })));
 
   const userId = user?.id;
 

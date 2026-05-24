@@ -38,13 +38,15 @@ export async function getBearerToken(): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-export async function syncAuthSession(user: { id: string; username: string } | null) {
-  if (!user) {
-    localStorage.removeItem('cognapse_session');
-    return;
-  }
+}export async function syncAuthSession(user: { id: string; username: string } | null) {
+  if (!user) {
+    localStorage.removeItem('cognapse_session');
+    localStorage.setItem('cognapse_logged_out', Date.now().toString());
+    return;
+  }
+
+  // Clear any stale logout sentinel on re-login
+  localStorage.removeItem('cognapse_logged_out');
 
   let idToken: string | undefined;
   let tokenExpiresAt: number | undefined;

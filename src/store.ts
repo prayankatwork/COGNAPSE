@@ -583,7 +583,7 @@ export const useStore = create<AppState>()(
       setIsResearching: (val: boolean) => set({ isResearching: val }),
 
       sessionMemory: {
-        sessionId: Math.random().toString(36).substring(7),
+        sessionId: crypto.randomUUID(),
         entries: [],
         crossLinks: [],
         dominantTopics: [],
@@ -592,7 +592,7 @@ export const useStore = create<AppState>()(
       },
       clearSessionMemory: () => set({ 
         sessionMemory: {
-          sessionId: Math.random().toString(36).substring(7),
+          sessionId: crypto.randomUUID(),
           entries: [],
           crossLinks: [],
           dominantTopics: [],

@@ -34,7 +34,8 @@ function bootOllamaSilently() {
     
     // Start Ollama with the CORS environment variable applied
     ollamaProcess = spawn('ollama', ['serve'], {
-      env: { ...process.env, OLLAMA_ORIGINS: "*" },
+      // Restrict Ollama CORS to localhost only — prevents external sites from accessing the local AI service
+      env: { ...process.env, OLLAMA_ORIGINS: "http://localhost:5173,http://localhost:3000,http://127.0.0.1:3000,https://cognapse.vercel.app" },
       detached: false, // Attached to main process
       shell: true,
     });

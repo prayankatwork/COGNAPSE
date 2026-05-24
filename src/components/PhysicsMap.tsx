@@ -64,17 +64,24 @@ export default function PhysicsMap({
   const [isFirstView, setIsFirstView] = useState(true);
 
   useEffect(() => {
+    let frameId: number | null = null;
     const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setDimensions({
-          width: entries[0].contentRect.width,
-          height: entries[0].contentRect.height
+      if (entries[0] && frameId === null) {
+        frameId = requestAnimationFrame(() => {
+          frameId = null;
+          setDimensions({
+            width: entries[0].contentRect.width,
+            height: entries[0].contentRect.height
+          });
         });
       }
     });
 
     if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (frameId !== null) cancelAnimationFrame(frameId);
+    };
   }, []);
 
   const graphData = useMemo(() => {

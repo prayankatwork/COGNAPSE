@@ -510,6 +510,29 @@ h3 {
   text-transform: uppercase;
 }
 
+/* Retry Button */
+.retry-btn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background-color: transparent;
+  color: #FACC15;
+  border: 1px solid #FACC15;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.retry-btn:hover {
+  background-color: rgba(250, 204, 21, 0.1);
+  color: #FFFFFF;
+  border-color: #FFFFFF;
+}
+
 /* Animations */
 @keyframes pulse {
   0% { transform: scale(0.9); opacity: 0.6; }

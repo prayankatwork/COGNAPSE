@@ -17,3 +17,11 @@ scratch/
 .tmp-service-account.json
 *firebase-adminsdk*.json
 *serviceAccount*.json
+
+# Exclude the internal Command Centre / Ops platform from public deployment
+ops/
+ops/node_modules/
+api/admin-auth.js
+api/admin-track.js
+scripts/set-admin-claims.mjs
+ops.env.example

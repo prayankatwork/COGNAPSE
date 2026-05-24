@@ -6,7 +6,7 @@ export function applyCors(req, res) {
 
   if (!origin) {
     res.setHeader('Access-Control-Allow-Origin', allowed[0]);
-  } else if (allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+  } else if (allowed.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 

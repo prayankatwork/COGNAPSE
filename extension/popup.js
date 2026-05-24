@@ -49,6 +49,33 @@ function authHeaders(session) {
   return headers;
 }
 
+/** Check if the stored idToken has expired (grace period of 2 min). */
+function isTokenExpired(session) {
+  if (!session?.tokenExpiresAt) return false;
+  // tokenExpiresAt is a timestamp. Give 2 min grace period.
+  return Date.now() > session.tokenExpiresAt + 2 * 60 * 1000;
+}
+
+/** Clear cached session from chrome.storage and show the auth-required panel. */
+function clearSessionAndShowAuth() {
+  chrome.storage.local.remove(['cognapse_user', 'cognapse_session', 'cognapse_premium', 'cognapse_logged_out'], () => {
+    console.log('COGNAPSE Extension: Cleared stale session.');
+  });
+  premiumBadge.textContent = 'AUTH REQ';
+  premiumBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+  premiumBadge.style.color = '#ef4444';
+  showPanel(authPanel);
+}
+
+/** Set badge to AUTH REQ state. */
+function setBadgeAuthReq() {
+  premiumBadge.textContent = 'AUTH REQ';
+  premiumBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+  premiumBadge.style.color = '#ef4444';
+}
+
+const btnRetry = document.getElementById('btn-retry');
+
 btnLoginRedirect.addEventListener('click', () => {
   chrome.tabs.create({ url: `${BASE_URL}?action=login` });
 });
@@ -57,8 +84,25 @@ btnPremiumUpgrade.addEventListener('click', () => {
   chrome.tabs.create({ url: `${BASE_URL}?action=premium` });
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-  chrome.storage.local.get(['cognapse_session', 'cognapse_user', 'selectedText'], async (store) => {
+let _isRunning = false;
+
+async function runAnalysis() {
+  if (_isRunning) return;
+  _isRunning = true;
+
+  try {
+    const store = await new Promise(resolve =>
+      chrome.storage.local.get(['cognapse_session', 'cognapse_user', 'selectedText', 'cognapse_logged_out'], resolve)
+    );
+
+    // If a logout sentinel exists, immediately force re-auth
+    if (store.cognapse_logged_out) {
+      chrome.storage.local.remove(['cognapse_logged_out', 'cognapse_user', 'cognapse_session', 'cognapse_premium']);
+      setBadgeAuthReq();
+      showPanel(authPanel);
+      return;
+    }
+
     const session = store.cognapse_session;
     const user = store.cognapse_user || session;
     const selectedText = store.selectedText;
@@ -68,16 +112,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!user?.id) {
-      premiumBadge.textContent = 'AUTH REQ';
-      premiumBadge.style.background = 'rgba(239, 68, 68, 0.2)';
-      premiumBadge.style.color = '#ef4444';
+      setBadgeAuthReq();
       showPanel(authPanel);
       return;
     }
 
     if (!session?.idToken) {
+      setBadgeAuthReq();
       errorMessageText.textContent =
-        'Session expired. Open COGNAPSE in your browser, sign in again, then retry.';
+        'No session found. Open COGNAPSE in your browser and sign in, then retry.';
+      showPanel(analysisPanel);
+      showState(stateError);
+      return;
+    }
+
+    if (isTokenExpired(session)) {
+      setBadgeAuthReq();
+      errorMessageText.textContent =
+        'Session token expired. Open COGNAPSE in your browser to refresh your session, then retry.';
       showPanel(analysisPanel);
       showState(stateError);
       return;
@@ -93,8 +145,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         { headers: authHeaders(session) }
       );
 
+      if (verifyRes.status === 401) {
+        clearSessionAndShowAuth();
+        return;
+      }
+
       if (!verifyRes.ok) {
-        throw new Error('Failed to verify premium status');
+        let detail = 'Failed to verify premium status';
+        try {
+          const errJson = await verifyRes.json();
+          detail = errJson.error || detail;
+        } catch (_) {}
+        throw new Error(detail);
       }
 
       const verifyData = await verifyRes.json();
@@ -119,6 +181,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           headers: authHeaders(session),
           body: JSON.stringify({ userId: user.id, text: selectedText }),
         });
+
+        if (analyzeRes.status === 401) {
+          clearSessionAndShowAuth();
+          return;
+        }
 
         if (!analyzeRes.ok) {
           if (analyzeRes.status === 403) {
@@ -147,8 +214,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         showState(stateIdle);
       }
     } catch (err) {
-      errorMessageText.textContent = err.message || 'Secure connection failed.';
+      const isNetworkError = err instanceof TypeError && (
+        err.message.includes('Failed to fetch') || err.message.includes('NetworkError')
+      );
+      errorMessageText.textContent = isNetworkError
+        ? 'Network error. Check your internet connection and try again.'
+        : (err.message || 'Secure connection failed.');
       showState(stateError);
     }
-  });
+  } finally {
+    _isRunning = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  runAnalysis();
+});
+
+btnRetry.addEventListener('click', () => {
+  runAnalysis();
 });

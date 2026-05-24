@@ -5,11 +5,12 @@ import type { DeepResearchThesis, ResearchScore } from '../types';
 const RESEARCH_MODEL = "ollama";      
 
 const THESIS_PROMPT = (query: string) => `
-You are the COGNAPSE Deep Research Engine. 
 Create a massive, professional-grade, academic-style thesis on: "${query}"
 
+You are analyzing this external topic, not yourself. Write about the subject matter only — never about COGNAPSE, the research system, query interpretation, or the platform itself.
+
 Structure your response as a valid JSON object with the following fields:
-1. title: Professional title
+1. title: Professional title focused on the actual topic
 2. abstract: High-level summary (150 words)
 3. introduction: Context and background (300 words)
 4. problemStatement: What critical gap are we investigating?

@@ -7,3 +7,9 @@ build/
 !public/cognapse-extension.zip
 *.asar
 *.exe
+
+# Exclude internal Command Centre / Ops platform from production deployment
+ops/
+api/admin-auth.js
+api/admin-track.js
+scripts/set-admin-claims.mjs

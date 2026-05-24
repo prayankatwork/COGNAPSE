@@ -357,7 +357,12 @@ export default function MainContent() {
   };
 
   const startDeepResearch = async () => {
-    const targetQuery = query.trim() || currentReport?.query_understood || "";
+    // Use the original user query from the archive (not the AI-interpreted query_understood)
+    // to prevent deep research from going off-topic on self-referential AI output
+    const archiveEntry = currentReport?.id
+      ? useStore.getState().archive.find(e => e.id === currentReport.id)
+      : null;
+    const targetQuery = query.trim() || archiveEntry?.query || currentReport?.query_understood || "";
     if (!targetQuery) return;
 
     console.log("Starting Deep Research Protocol for:", targetQuery);
