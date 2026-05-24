@@ -25,3 +25,4 @@ api/admin-auth.js
 api/admin-track.js
 scripts/set-admin-claims.mjs
 ops.env.example
+NUL
