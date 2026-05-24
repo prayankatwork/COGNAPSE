@@ -30,8 +30,14 @@ export function getSwarmClients() {
   };
 }
 
-export async function runSwarm({ prompt, isJson, estTokens = 0 }) {
+export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'gemini-1.5-flash' }) {
   const { genAI, groq } = getSwarmClients();
+
+  // Smart model routing:
+  // - Deep research (requestedModel === 'ollama'): prioritize 70b for quality
+  // - Everything else (standard research, chat, synthesis): prioritize 8b for capacity
+  const isDeepResearch = requestedModel === 'ollama';
+
   const swarmNodes =
     estTokens > 15000
       ? [
@@ -39,12 +45,19 @@ export async function runSwarm({ prompt, isJson, estTokens = 0 }) {
           { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
           { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
         ]
-      : [
-          { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
-          { name: 'groq-llama-3.3', type: 'groq', model: 'llama-3.3-70b-versatile' },
-          { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
-          { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
-        ];
+      : isDeepResearch
+        ? [  // Deep research: quality first — 70b before 8b
+            { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
+            { name: 'groq-llama-3.3', type: 'groq', model: 'llama-3.3-70b-versatile' },
+            { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
+            { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
+          ]
+        : [  // Standard research: capacity first — 8b before 70b
+            { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
+            { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
+            { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
+            { name: 'groq-llama-3.3', type: 'groq', model: 'llama-3.3-70b-versatile' },
+          ];
 
   let lastError = null;
 

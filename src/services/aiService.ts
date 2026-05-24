@@ -101,7 +101,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
 
       const response = await apiFetch('/api/research', {
         method: 'POST',
-        body: JSON.stringify({ prompt, isJson, estTokens }),
+        body: JSON.stringify({ prompt, isJson, estTokens, requestedModel }),
         signal: abortSignal,
       });
 

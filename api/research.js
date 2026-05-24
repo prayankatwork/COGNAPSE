@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Rate limit exceeded. Please try again shortly.' });
   }
 
-  const { prompt, isJson, estTokens } = req.body || {};
+  const { prompt, isJson, estTokens, requestedModel } = req.body || {};
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Missing prompt parameter' });
   }
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
       prompt,
       isJson: !!isJson,
       estTokens: estTokens || Math.ceil(prompt.length / 4),
+      requestedModel: requestedModel || 'gemini-1.5-flash',
     });
     return res.status(200).json({ result });
   } catch (error) {
