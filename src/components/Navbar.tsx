@@ -152,6 +152,7 @@ export default function Navbar() {
             )}
           </AnimatePresence>
         </div>
+        </div>
 
         {/* Center: Command Bar */}
         <div className="hidden md:flex items-center justify-center w-1/3">

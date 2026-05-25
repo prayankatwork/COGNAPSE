@@ -417,14 +417,14 @@ export default function PhysicsMap({
       {/* Cluster Footer Info */}
       <div className="h-8 bg-my-sidebar/30 border-t border-my-border hidden md:flex items-center px-4 shrink-0">
         {!isMobile && (
-        <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
-           <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
-           <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
-           <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#EF4444] rounded-full" /> Conflict</div>
-           <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>
-        </div>
+          <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#EF4444] rounded-full" /> Conflict</div>
+             <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>
+          </div>
+        )}
       </div>
-      )}
     </div>
   );
 }
