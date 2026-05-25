@@ -83,6 +83,7 @@ export interface User {
   premiumPlan?: string;
   premiumActivatedAt?: string;
   premiumExpiresAt?: string;
+  suspended?: boolean;
 }
 
 interface AppState {
@@ -251,8 +252,29 @@ export const useStore = create<AppState>()(
         void syncAuthSession(user);
       },
       logout: async () => {
+        // Capture ID token before sign out so we can revoke it server-side
+        let idToken: string | null = null;
+        try {
+          const { auth } = await import('./services/firebase');
+          const user = auth.currentUser;
+          if (user) {
+            idToken = await user.getIdToken(false);
+          }
+        } catch {}
+
         try { await dbService.logout(); } catch(e) {}
         await syncAuthSession(null);
+
+        // Revoke the session server-side so stale tokens (e.g. in Chrome extension)
+        // are immediately invalidated instead of lingering for up to 1 hour.
+        if (idToken) {
+          fetch('/api/revoke-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          }).catch(() => {});
+        }
+
         set({ 
           user: null, 
           xp: 0, 

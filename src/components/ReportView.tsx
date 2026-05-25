@@ -1,10 +1,11 @@
 import React, { useState, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { COGNAPSE_Output, ResearchVisibility } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2 } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash } from 'lucide-react';
 import { toast } from '../utils/toast';
 import { ErrorBoundary } from './ui';
 import clsx from 'clsx';
+import { formatAllCitations, getDomainBadge, getDaysSincePublished, getDaysLabel, type CitationFormat } from '../utils/citations';
 
 /** Download helper for generated text-based exports */
 function downloadAsFile(content: string, filename: string, mimeType: string) {
@@ -68,8 +69,8 @@ function generateMarkdown(report: COGNAPSE_Output): string {
 }
 
 /** Generate a JSON export from the report */
-function generateJSON(report: COGNAPSE_Output): string {
-  const exportObj = {
+function generateJSON(report: COGNAPSE_Output, citations?: string): string {
+  const exportObj: Record<string, unknown> = {
     title: report.query_understood || 'Research Report',
     generated_at: new Date().toISOString(),
     provider: report.provider || 'unknown',
@@ -84,6 +85,9 @@ function generateJSON(report: COGNAPSE_Output): string {
     follow_up_suggestions: report.follow_up_suggestions,
     intelligence_map: report.intelligence_map,
   };
+  if (citations) {
+    exportObj.references_formatted = citations;
+  }
   return JSON.stringify(exportObj, null, 2);
 }
 // Map rendering removed per request
@@ -123,6 +127,8 @@ export default function ReportView({
   const [shareVisibility, setShareVisibility] = useState<ResearchVisibility>('unlisted');
   const [shareLink, setShareLink] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
+  const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
 
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
@@ -230,106 +236,119 @@ export default function ReportView({
          </div>
       )}
 
-      {/* Query Title & Bottom Line */}
+      {/* Query Title & Brand */}
       <div className="mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-6">
+        <div className="flex items-start justify-between gap-8 mb-6">
           <h1 className="font-serif text-[32px] leading-[1.1] text-my-ink flex-1">
             {safeText(report.query_understood)}
           </h1>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 pt-1">
-            {!readOnly && (
-              <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout min-touch-h">
-                <select
-                  value={shareVisibility}
-                  onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
-                  className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
-                >
-                  <option value="private">Private</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="public">Public</option>
-                </select>
-                <button
-                  onClick={handleCreateShare}
-                  disabled={sharing}
-                  className="px-3 py-2 md:px-3 md:py-2 px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
-                >
-                  {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
-                  Share
-                </button>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              {/* #6: Premium Markdown & JSON Export */}
-              {isUnlocked && (
-                <>
-                  <button
-                    onClick={() => {
-                      const md = generateMarkdown(report);
-                      downloadAsFile(md, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.md`, 'text/markdown');
-                      toast.success('Markdown report downloaded.');
-                    }}
-                    className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
-                    title="Export as Markdown"
-                  >
-                    <FileText size={11} /> .md
-                  </button>
-                  <button
-                    onClick={() => {
-                      const json = generateJSON(report);
-                      downloadAsFile(json, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.json`, 'application/json');
-                      toast.success('JSON export downloaded.');
-                    }}
-                    className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
-                    title="Export as JSON"
-                  >
-                    <Code2 size={11} /> .json
-                  </button>
-                </>
-              )}
-              <button
-                onClick={handleDownloadPDF}
-                disabled={generatingPDF}
-                className={clsx(
-                  "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
-                  isUnlocked 
-                    ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
-                    : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
-                )}
+          <BrandLogo size={44} />
+        </div>
+
+        {/* Unified Action Bar */}
+        <div className="flex flex-wrap items-center gap-3 mb-6 pb-4 border-b border-my-border">
+          {!readOnly && (
+            <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout min-touch-h">
+              <select
+                value={shareVisibility}
+                onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
+                className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
               >
-                {generatingPDF ? (
-                  <>
-                    <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
-                  </>
-                ) : isUnlocked ? (
-                  <>
-                    <Download size={12} /> Premium Report
-                  </>
-                ) : (
-                  <>
-                    <Lock size={12} /> Unlock Full Report
-                  </>
-                )}
+                <option value="private">Private</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="public">Public</option>
+              </select>
+              <button
+                onClick={handleCreateShare}
+                disabled={sharing}
+                className="px-3 py-2 md:px-3 md:py-2 px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+              >
+                {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+                Share
               </button>
             </div>
-            <div className="hidden md:flex flex-col items-end text-right">
+          )}
+
+          {!readOnly && (
+            <div className="flex items-center gap-1.5 text-[8px] text-my-muted font-mono">
+              <Info size={10} />
+              <span>Preview feature</span>
             </div>
-            <BrandLogo size={44} />
+          )}
+
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-2">
+            {isUnlocked && (
+              <>
+                <button
+                  onClick={() => {
+                    const md = generateMarkdown(report) + '\n\n---\n\n## References (' + citationFormat.toUpperCase() + ')\n\n' + (report.sources ? formatAllCitations(report.sources, citationFormat) : 'No sources available.');
+                    downloadAsFile(md, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.md`, 'text/markdown');
+                    toast.success('Markdown report downloaded.');
+                  }}
+                  className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
+                  title="Export as Markdown"
+                >
+                  <FileText size={11} /> .md
+                </button>
+                <button
+                  onClick={() => {
+                    const citations = report.sources ? formatAllCitations(report.sources, citationFormat) : '';
+                    const json = generateJSON(report, citations);
+                    downloadAsFile(json, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.json`, 'application/json');
+                    toast.success('JSON export downloaded.');
+                  }}
+                  className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
+                  title="Export as JSON"
+                >
+                  <Code2 size={11} /> .json
+                </button>
+                {/* Citation format selector */}
+                <div className="flex items-center gap-1 px-2 py-2 border border-my-border bg-my-callout">
+                  <BookOpen size={10} className="text-my-muted" />
+                  <select
+                    value={citationFormat}
+                    onChange={(e) => setCitationFormat(e.target.value as CitationFormat)}
+                    className="bg-transparent text-[8px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
+                  >
+                    <option value="apa">APA</option>
+                    <option value="mla">MLA</option>
+                    <option value="chicago">Chicago</option>
+                  </select>
+                </div>
+              </>
+            )}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={generatingPDF}
+              className={clsx(
+                "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
+                isUnlocked 
+                  ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+                  : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
+              )}
+            >
+              {generatingPDF ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
+                </>
+              ) : isUnlocked ? (
+                <>
+                  <Download size={12} /> Premium Report
+                </>
+              ) : (
+                <>
+                  <Lock size={12} /> Unlock Full Report
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-5 italic font-serif text-[15px] leading-[1.6] text-my-ink">
-          {safeText(report.summary?.bottom_line) || "Summary not available for this report."}
-        </div>          {!readOnly && (
-            <div className="mt-4 p-3 border border-my-border bg-my-callout/70 flex items-start gap-2 text-my-muted">
-              <Info size={13} className="text-my-accent mt-0.5 shrink-0" />
-              <p className="text-[11px] leading-[1.6]">
-              Research sharing is a preview feature. Public links are read-only and may receive UX refinements before final release.
-            </p>
-          </div>
-        )}
+        {/* Share link — appears right after the action bar when generated */}
         {shareLink && (
-          <div className="mt-4 p-3 border border-my-border bg-my-bg flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="mb-4 p-3 border border-my-border bg-my-bg flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <div className="flex items-center gap-2 min-w-0">
               <Eye size={14} className="text-my-accent shrink-0" />
               <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest shrink-0">Read-only link copied</span>
@@ -343,10 +362,22 @@ export default function ReportView({
             </button>
           </div>
         )}
+
         {readOnly && (
-          <div className="mt-4 p-3 border border-my-border bg-my-callout flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted">
+          <div className="mb-4 p-3 border border-my-border bg-my-callout flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted">
             <Globe2 size={13} className="text-my-accent" /> Public read-only research view
           </div>
+        )}
+
+        {/* Bottom Line */}
+        <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-5 italic font-serif text-[15px] leading-[1.6] text-my-ink">
+          {safeText(report.summary?.bottom_line) || "Summary not available for this report."}
+        </div>
+
+        {!isUnlocked && (
+          <p className="text-[9px] text-my-muted font-mono text-center border-t border-my-border pt-3 mt-1">
+            What did the other AI models find? Consensus scores, reasoning layers &amp; strategic intel — <strong>locked in Premium</strong>
+          </p>
         )}
       </div>
 
@@ -386,58 +417,6 @@ export default function ReportView({
                  </div>
               )}
               
-              {!isUnlocked && (
-                <div className="mt-4 p-3 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-3 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
-                  <div className="text-xl">🧠</div>
-                  <div>
-                    <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent">Export-Only Advanced Analysis</span>
-                    <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, and hidden reasoning layers are preserved exclusively in the Premium Analyst Dossier.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Actionable Takeaways */}
-          {report.actionable_takeaways && (
-            <div className="mt-4">
-              <SectionTitle>Takeaways</SectionTitle>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-1 bg-my-border border border-my-border mt-3">
-                 <TakeawayCard title="Key Insight" content={safeText(report.actionable_takeaways.key_insight)} />
-                 <TakeawayCard title="Watch Out" content={safeText(report.actionable_takeaways.watch_out_for)} />
-                 <TakeawayCard title="Next Step" content={safeText(report.actionable_takeaways.next_step)} />
-              </div>
-            </div>
-          )}
-
-          {/* SWOT Analysis */}
-          {report.swot && (
-            <div className="mt-4">
-              <SectionTitle>Decision Matrix (SWOT)</SectionTitle>
-              <p className="text-[10px] text-my-muted font-mono mb-2">Perspective: {report.swot.perspective}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-my-border border border-my-border">
-                <SwotQuadrant title="Strengths" items={report.swot.strengths || []} />
-                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses || []} />
-                <SwotQuadrant title="Opportunities" items={report.swot.opportunities || []} />
-                <SwotQuadrant title="Threats" items={report.swot.threats || []} />
-              </div>
-            </div>
-          )}
-
-          {/* Timeline */}
-          {report.timeline_triggered && report.timeline_events && Array.isArray(report.timeline_events) && report.timeline_events.length > 0 && (
-            <div className="mt-4">
-              <SectionTitle>Timeline</SectionTitle>
-              <div className="relative border-l border-my-border ml-2 space-y-4 pt-2">
-                {report.timeline_events.map((t, i) => (
-                  <div key={i} className="pl-6 relative">
-                    <div className={clsx("absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white", t.significance >= 4 ? "bg-my-accent" : "bg-my-muted")} />
-                    <div className="text-[10px] font-bold text-my-accent mb-0.5">{safeText(t.date)}</div>
-                    <h5 className="font-bold text-my-ink text-[12px] leading-tight mb-0.5">{safeText(t.title)}</h5>
-                    <p className="text-[12px] leading-[1.5] text-my-syn">{safeText(t.description)}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </motion.div>
@@ -479,88 +458,6 @@ export default function ReportView({
               {/* Forensic Reasoning Replay */}
               <ThoughtReplayEngine />
             </>
-          )}
-
-
-
-          {/* Sources */}
-          {report.sources && Array.isArray(report.sources) && report.sources.length > 0 && (
-            <div>
-              <SectionTitle>References (Click to Verify)</SectionTitle>
-              <div className="flex flex-col mt-3">
-                {report.sources.map((s) => (
-                  <div key={s.id} className="mb-3 p-3 bg-my-callout border border-my-border rounded-[4px]">
-                    <div className="flex items-start gap-2.5 mb-2">
-                      <span className="font-bold text-my-accent bg-my-score px-1.5 py-0.5 rounded-[4px] text-[10px] shrink-0 mt-0.5">
-                        {safeText(s.credibility_score)}
-                      </span>
-                      <div>
-                        <span className="text-[13px] text-my-ink font-semibold leading-[1.4] block mb-0.5">
-                          {safeText(s.title)}
-                        </span>
-                        {s.domain && <span className="text-[9px] text-my-muted uppercase tracking-wider">{safeText(s.domain)}</span>}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 pl-9">
-                       <a 
-                         href={`https://www.google.com/search?q=${encodeURIComponent((typeof s.title === 'string' ? s.title : '') + ' ' + (typeof s.domain === 'string' ? s.domain : ''))}`} 
-                         target="_blank" 
-                         rel="noopener noreferrer" 
-                         className="px-3 py-1 bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all rounded-[2px] flex items-center gap-1.5 shadow-sm"
-                       >
-                          <Search size={10} /> Verify on Google
-                       </a>
-                       {/* URL sanitization: only http/https protocols allowed */}
-                       {(() => {
-                         const rawUrl = typeof s.url === 'string' ? s.url : '';
-                         const safeUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : null;
-                         return safeUrl && rawUrl !== "URL unavailable" && !rawUrl.includes("unavailable") ? (
-                           <a 
-                             href={safeUrl}
-                             target="_blank" 
-                             rel="noopener noreferrer" 
-                             className="text-[9px] font-bold flex items-center gap-1.5 text-my-muted hover:text-my-ink transition-colors uppercase tracking-wider border border-my-border px-3 py-1 rounded-[2px]"
-                           >
-                              <Link2 size={10} /> Direct Access
-                           </a>
-                         ) : null;
-                       })()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-
-
-          {/* Warnings & Conflicts */}
-          {hasConflicts && Array.isArray(report.conflicts) && (
-            <div>
-              <SectionTitle>Conflicts Detected</SectionTitle>
-              <div className="space-y-2 mt-3">
-                {report.conflicts.map((c, i) => (
-                   <div key={i} className="p-3 bg-my-conflict-bg border border-my-conflict-border text-my-ink text-[12px] leading-[1.6]">
-                      <div className="font-bold text-my-conflict-text mb-2 uppercase tracking-wide flex items-center gap-1.5">
-                        <ShieldAlert size={12} /> Conflict Note
-                      </div>
-                      <div className="mb-1"><span className="font-bold">Source A:</span> {safeText(c.claim_a)} <span className="opacity-60">({safeText(c.source_a)})</span></div>
-                      <div className="mb-2"><span className="font-bold">Source B:</span> {safeText(c.claim_b)} <span className="opacity-60">({safeText(c.source_b)})</span></div>
-                      <div className="pt-2 border-t border-my-conflict-border text-my-conflict-text">
-                        {safeText(c.explanation)}
-                      </div>
-                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {hasBias && (
-            <div className="p-3 bg-my-conflict-bg border border-my-conflict-border text-my-ink text-[12px] leading-[1.6] mt-4">
-              <span className="font-bold text-my-conflict-text mb-1 uppercase tracking-wide flex items-center gap-1.5"><AlertTriangle size={12}/> Bias Alert</span>
-              <p className="mb-1">{safeText(report.bias_alert!.direction)}</p>
-              <p className="text-my-conflict-text font-medium">Rec: {safeText(report.bias_alert!.recommendation)}</p>
-            </div>
           )}
         </motion.div>
       </motion.div>
@@ -624,6 +521,60 @@ export default function ReportView({
         query={report.query_understood}
         onUnlockSuccess={handleDownloadPDF}
       />
+
+      {/* Live Source Panel */}
+      <AnimatePresence>
+        {liveSource && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-16 right-0 bottom-0 w-full sm:w-[480px] bg-my-bg border-l border-my-border shadow-2xl z-40 flex flex-col"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-my-border">
+              <div className="flex items-center gap-2 min-w-0">
+                <ExternalLink size={12} className="text-my-accent shrink-0" />
+                <span className="text-[10px] font-bold uppercase tracking-widest truncate">{liveSource.title}</span>
+              </div>
+              <button
+                onClick={() => setLiveSource(null)}
+                className="p-1 hover:bg-my-callout rounded-sm transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="flex-1 flex flex-col">
+              <div className="px-4 py-2 bg-my-callout border-b border-my-border flex items-center gap-2 text-[9px] text-my-muted font-mono">
+                <AlertTriangle size={9} className="text-amber-500 shrink-0" />
+                <span>If the page doesn't load, many sites block iframe embedding. Use the button below.</span>
+              </div>
+              <iframe
+                src={liveSource.url}
+                className="flex-1 w-full border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                title={liveSource.title}
+              />
+              <div className="px-4 py-3 border-t border-my-border bg-my-callout flex items-center gap-3">
+                <a
+                  href={liveSource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 px-3 py-2 bg-my-accent text-white dark:text-black text-[9px] font-black uppercase tracking-widest text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={10} /> Open in New Tab
+                </a>
+                <button
+                  onClick={() => setLiveSource(null)}
+                  className="px-3 py-2 border border-my-border text-[9px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

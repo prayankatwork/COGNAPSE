@@ -41,7 +41,23 @@ export async function getBearerToken(): Promise<string | null> {
 }export async function syncAuthSession(user: { id: string; username: string } | null) {
   if (!user) {
     localStorage.removeItem('cognapse_session');
-    localStorage.setItem('cognapse_logged_out', Date.now().toString());
+
+    // Clean up all premium keys from localStorage so extension can't re-sync stale data
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('cognapse_premium_')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    const ts = Date.now().toString();
+    localStorage.setItem('cognapse_logged_out', ts);
+
+    // Immediately notify the Chrome extension (if content script is active)
+    try {
+      window.postMessage({ source: 'cognapse', type: 'logout', timestamp: ts }, '*');
+    } catch { /* extension may not be installed */ }
+
     return;
   }
 

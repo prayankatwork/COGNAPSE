@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { useShallow } from 'zustand/react/shallow';
 import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight } from 'lucide-react';
@@ -14,25 +14,7 @@ import { executeDeepResearch } from '../services/deepResearchService';
 import { dbService } from '../services/dbService';
 import DeepResearchView from './DeepResearchView';
 import BrandLogo from './BrandLogo';
-
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return <div style={{ color: 'red', padding: '20px' }}><h1>Crash!</h1><pre>{this.state.error?.toString()}</pre><pre>{this.state.error?.stack}</pre></div>;
-    }
-    return this.props.children;
-  }
-}
+import ErrorBoundary from './ErrorBoundary';
 
 
 export default function MainContent() {

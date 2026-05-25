@@ -29,6 +29,8 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
             metadata: {
               reason: abuseReason.slice(0, 500),
               shareId,
+              targetUserId: shared?.ownerId || null,
+              targetUsername: shared?.ownerName || null,
             },
           }],
         }),

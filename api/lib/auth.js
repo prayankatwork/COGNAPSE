@@ -34,8 +34,11 @@ export async function verifyBearerToken(req) {
   const admin = getFirebaseAdmin();
   if (admin) {
     try {
-      return await admin.auth().verifyIdToken(token);
-    } catch {
+      // checkRevoked=true ensures tokens revoked via revokeRefreshTokens() are rejected
+      return await admin.auth().verifyIdToken(token, true);
+    } catch (err) {
+      // Token revoked or invalid — do not fall back to REST (which can't detect revocation)
+      if (err?.code === 'auth/id-token-revoked') return null;
       // try REST fallback below
     }
   }

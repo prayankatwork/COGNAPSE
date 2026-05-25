@@ -76,5 +76,13 @@ window.addEventListener('storage', (e) => {
   }
 });
 
+// Immediately sync when the SPA dispatches a logout event
+window.addEventListener('message', (event) => {
+  if (event.data?.source === 'cognapse' && event.data?.type === 'logout') {
+    syncSession();
+  }
+});
+
 // Poll every 5s to catch SPA auth changes (storage event doesn't fire in the same tab)
-setInterval(syncSession, 5000);
+const syncInterval = setInterval(syncSession, 5000);
+window.addEventListener('beforeunload', () => clearInterval(syncInterval));

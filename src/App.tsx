@@ -13,7 +13,7 @@ import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
 import React, { useEffect, useRef, useState, Suspense } from 'react';
-import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon } from 'lucide-react';
+import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon, Ban } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -46,6 +46,7 @@ import CommandPalette from './components/CommandPalette';
 import ToastContainer from './components/ui/ToastContainer';
 
 import { audioService } from './services/audioService';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
@@ -101,9 +102,26 @@ export default function App() {
     if (state._hydrateCleanup) state._hydrateCleanup();
   }, []);
 
+  const [suspendedUser, setSuspendedUser] = useState<{ username: string } | null>(null);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) return;
+
+      // Check if user is suspended via custom claims
+      try {
+        const idTokenResult = await firebaseUser.getIdTokenResult();
+        if (idTokenResult.claims.suspended === true) {
+          setSuspendedUser({ username: firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative' });
+          const state = useStore.getState();
+          state.setUser({ id: firebaseUser.uid, username: '', suspended: true });
+          await dbService.logout();
+          return;
+        }
+      } catch {
+        // If claims check fails, continue normally
+      }
+
       const current = useStore.getState().user;
       if (current?.id === firebaseUser.uid) {
         await syncAuthSession(current);
@@ -278,11 +296,11 @@ export default function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'landing':
-        return <LandingPage />;
+        return <ErrorBoundary name="LandingPage"><LandingPage /></ErrorBoundary>;
       case 'documentation':
-        return <Documentation />;
+        return <ErrorBoundary name="Documentation"><Documentation /></ErrorBoundary>;
       case 'creator':
-        return <CreatorProfile />;
+        return <ErrorBoundary name="CreatorProfile"><CreatorProfile /></ErrorBoundary>;
       case 'news':
         if (!user) {
           return (
@@ -307,16 +325,18 @@ export default function App() {
             </div>
           );
         }
-        return <IntelligenceFeed onTriggerResearch={(q) => useStore.setState({ initialQuery: q })} />;
+        return <ErrorBoundary name="IntelligenceFeed"><IntelligenceFeed onTriggerResearch={(q) => useStore.setState({ initialQuery: q })} /></ErrorBoundary>;
       case 'research':
       default:
         return (
-          <div className="flex h-full overflow-hidden relative">
-            <Sidebar />
-            <main className="flex-1 flex flex-col h-full relative">
-              <MainContent />
-            </main>
-          </div>
+          <ErrorBoundary name="ResearchWorkspace">
+            <div className="flex h-full overflow-hidden relative">
+              <Sidebar />
+              <main className="flex-1 flex flex-col h-full relative">
+                <MainContent />
+              </main>
+            </div>
+          </ErrorBoundary>
         );
     }
   };
@@ -343,15 +363,19 @@ export default function App() {
         isDashboard && !legalPage && !shareRoute ? "flex-1 overflow-hidden" : "flex-1"
       )}>
         {legalPage ? (
-          <LegalPages
-            page={legalPage}
-            onBack={() => {
-              setLegalPage(null);
-              window.history.pushState({}, '', '/');
-            }}
-          />
+          <ErrorBoundary name="LegalPages">
+            <LegalPages
+              page={legalPage}
+              onBack={() => {
+                setLegalPage(null);
+                window.history.pushState({}, '', '/');
+              }}
+            />
+          </ErrorBoundary>
         ) : shareRoute ? (
-          <SharedResearchPage shareId={shareRoute} />
+          <ErrorBoundary name="SharedResearchPage">
+            <SharedResearchPage shareId={shareRoute} />
+          </ErrorBoundary>
         ) : (
           <Suspense fallback={<div className="h-full flex items-center justify-center bg-my-bg text-my-muted text-[10px] tracking-[0.3em] uppercase animate-pulse">Loading Subsystems...</div>}>
             {renderContent()}
@@ -368,9 +392,9 @@ export default function App() {
       )}
 
       <AnimatePresence>
-        {isAuthOpen && <AuthPortal onClose={() => setAuthOpen(false)} />}
-        {isNotebookOpen && <Notebook onClose={() => setNotebookOpen(false)} />}
-        {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
+        {isAuthOpen && <ErrorBoundary name="AuthPortal"><AuthPortal onClose={() => setAuthOpen(false)} /></ErrorBoundary>}
+        {isNotebookOpen && <ErrorBoundary name="Notebook"><Notebook onClose={() => setNotebookOpen(false)} /></ErrorBoundary>}
+        {isStatusOpen && <ErrorBoundary name="OperativeStatus"><OperativeStatus onClose={() => setStatusOpen(false)} /></ErrorBoundary>}
       </AnimatePresence>
       <DevDashboard />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
@@ -378,6 +402,24 @@ export default function App() {
       {!shareRoute && !legalPage && <SelectionCapture />}
       <NeuralBackground />
       <ToastContainer />
+
+      {/* Suspended User Overlay */}
+      {suspendedUser && (
+        <div className="fixed inset-0 z-[100] bg-my-bg flex items-center justify-center p-8">
+          <div className="max-w-md text-center">
+            <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+              <Ban size={32} />
+            </div>
+            <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Account Terminated</h1>
+            <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-6">
+              Your access to COGNAPSE has been revoked.
+            </p>
+            <p className="text-[10px] text-my-muted/60 leading-relaxed mb-10">
+              If you believe this is in error, please contact the administrator.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

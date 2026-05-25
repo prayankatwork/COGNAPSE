@@ -91,7 +91,7 @@ export default function DeepResearchView() {
           </h1>
         </div>
 
-        <div className="flex flex-col gap-2 shrink-0 self-stretch md:self-auto">
+        <div className="flex flex-col gap-1 items-end shrink-0 self-stretch md:self-auto">
           <button
             onClick={handleDownloadPDF}
             disabled={generatingPDF}
@@ -150,14 +150,12 @@ export default function DeepResearchView() {
         {deepResearch.scores && (
           <ResearchScoreCard scores={deepResearch.scores} />
         )}
-        
-        <div className="mt-4 p-4 border border-my-accent/20 bg-my-accent/5 rounded flex items-center gap-4 cursor-pointer hover:bg-my-accent/10 transition-colors" onClick={handleDownloadPDF}>
-          <div className="text-2xl">🧠</div>
-          <div>
-            <span className="font-bold text-[10px] uppercase tracking-widest block text-my-accent mb-1">Export-Only Advanced Analysis Layer Hidden</span>
-            <p className="text-[11px] text-my-muted">Deeper synthesis, multi-AI consensus scoring, hidden reasoning layers, and strategic interpretations are preserved exclusively in the printed Premium Analyst Dossier.</p>
-          </div>
-        </div>
+
+        {!isUnlocked && (
+          <p className="text-[9px] text-my-muted font-mono text-center border-t border-my-border pt-3">
+            What did the other AI models find? Consensus scores, reasoning layers &amp; strategic intel — <strong>locked in Premium</strong>
+          </p>
+        )}
       </div>
 
       <div className="mt-12 flex justify-center">

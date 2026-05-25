@@ -270,21 +270,32 @@ class OpsTelemetryEngine {
     this.boundHandleClick = () => { this.lastActiveTime = Date.now(); };
     window.addEventListener('click', this.boundHandleClick, { passive: true });
 
-    // Error monitoring (passive)
+    // Error monitoring (passive) — enriched with context for beta debugging
     window.addEventListener('error', (e) => {
+      const appState = useStore.getState();
       this.enqueue('error_encountered', {
         metadata: {
-          message: e.message?.slice(0, 200),
-          filename: e.filename?.slice(0, 100),
+          message: e.message?.slice(0, 300),
+          filename: e.filename?.slice(0, 120),
           lineno: e.lineno,
+          colno: e.colno,
+          stack: (e.error?.stack as string)?.slice(0, 500),
+          userId: appState.user?.id,
+          url: window.location.href,
+          view: appState.currentView as string,
         },
       });
     }, { passive: true });
 
     window.addEventListener('unhandledrejection', (e) => {
+      const appState = useStore.getState();
       this.enqueue('error_encountered', {
         metadata: {
-          message: (e.reason?.message || String(e.reason))?.slice(0, 200),
+          message: (e.reason?.message || String(e.reason))?.slice(0, 300),
+          stack: (e.reason?.stack as string)?.slice(0, 500),
+          userId: appState.user?.id,
+          url: window.location.href,
+          view: appState.currentView as string,
         },
       });
     }, { passive: true });
