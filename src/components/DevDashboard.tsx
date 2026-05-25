@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
-import { 
-  X, Activity, Cpu, Zap, 
+import {
+  X, Activity, Cpu, Zap,
   Terminal, Shield, Database, RefreshCw,
-  HardDrive, Activity as ActivityIcon, AlertCircle
+  HardDrive, AlertCircle
 } from 'lucide-react';
 import { getSwarmHealth, resetSwarmHealth } from '../services/aiService';
 import clsx from 'clsx';
@@ -78,7 +78,7 @@ export default function DevDashboard() {
                 label="Stable Nodes" 
                 value={Object.values(health).filter(n => n.status === 'stable').length} 
                 sub="Active and Available" 
-                icon={<ActivityIcon size={24} />} 
+                icon={<Activity size={24} />} 
               />
               <MetricCard 
                 label="Uptime Index" 
