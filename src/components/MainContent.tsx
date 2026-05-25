@@ -5,7 +5,6 @@ import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Databa
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
-import LoadingGame from './LoadingGame';
 import SpotifyWidget from './SpotifyWidget';
 import MusicVisualizer from './MusicVisualizer';
 import clsx from 'clsx';
@@ -76,6 +75,7 @@ export default function MainContent() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const user = useStore(state => state.user);
+  const isPremium = !!user?.premium;
   const loadingPhaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -571,6 +571,34 @@ export default function MainContent() {
                     <div className="mb-20" />
                   </motion.div>
 
+                  {/* Premium Research Templates */}
+                  {isPremium && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="flex flex-wrap items-center justify-center gap-2 mb-6"
+                    >
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-my-muted mr-1">Templates:</span>
+                      {[
+                        { label: 'SWOT Analysis', query: 'Perform a comprehensive SWOT analysis of' },
+                        { label: 'Competitive Intel', query: 'Provide a competitive intelligence brief on' },
+                        { label: 'Deep Research', query: 'Conduct an exhaustive deep research analysis on' },
+                        { label: 'Timeline', query: 'Build a chronological timeline of key events in' },
+                      ].map((t) => (
+                        <button
+                          key={t.label}
+                          onClick={() => {
+                            setQuery(t.query + ' ');
+                          }}
+                          className="px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider border border-my-accent/20 text-my-accent hover:bg-my-accent/10 hover:border-my-accent/40 transition-all rounded-sm"
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -631,7 +659,7 @@ export default function MainContent() {
             )}
 
             {error && (
-              <div className="bg-[#FFF5F5] border border-[#FEB2B2] p-6 mx-8 rounded-[4px] flex items-start gap-4 text-[#C53030] mt-8">
+              <div className="bg-my-conflict-bg border border-my-conflict-border p-6 mx-8 rounded-[6px] flex items-start gap-4 text-my-conflict-text mt-8">
                 <AlertCircle className="shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold mb-1 tracking-wide text-xs uppercase">SYSTEM ERROR</h4>
@@ -641,7 +669,7 @@ export default function MainContent() {
             )}
 
             {deepResearch.error && (
-              <div className="bg-[#FFF5F5] border border-[#FEB2B2] p-6 mx-8 rounded-[4px] flex items-start gap-4 text-[#C53030] mt-8">
+              <div className="bg-my-conflict-bg border border-my-conflict-border p-6 mx-8 rounded-[6px] flex items-start gap-4 text-my-conflict-text mt-8">
                 <AlertCircle className="shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold mb-1 tracking-wide text-xs uppercase">DEEP RESEARCH ERROR</h4>
@@ -683,7 +711,7 @@ export default function MainContent() {
                     </div>
                   ) : (
                     <div className="text-center text-xs text-my-muted italic bg-black/5 py-4 rounded-[4px]">
-                      Ask a follow-up question. COGNAPSE retains full context of this report.
+                      Submit a follow-up query. The system retains the full context of this report.
                     </div>
                   )}
                   {loading && loadingPhase === "Analyzing context..." && (
@@ -694,7 +722,7 @@ export default function MainContent() {
                           <div className="w-1.5 h-1.5 rounded-full bg-my-accent animate-bounce" style={{ animationDelay: '150ms' }} />
                           <div className="w-1.5 h-1.5 rounded-full bg-my-accent animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
-                        <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest animate-pulse">Synthesizing Response...</span>
+                        <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest animate-pulse">Synthesizing response...</span>
                       </div>
                     </div>
                   )}
@@ -727,9 +755,23 @@ export default function MainContent() {
                 </div>
 
                 <div className="mt-12 flex flex-col items-center max-w-sm text-center">
-                  <div className="flex items-center gap-2 mb-3 text-my-accent">
-                    <Zap size={14} className="animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Processing Framework Active</span>
+                  <div className="flex items-center gap-2 mb-3" style={{ color: isPremium ? '#10B981' : 'var(--accent)' }}>
+                    {isPremium ? (
+                      <div className="relative">
+                        <Zap size={14} className="animate-pulse relative z-10" />
+                        <span className="absolute inset-0 bg-green-500/20 blur-md rounded-full animate-premium-glow" />
+                      </div>
+                    ) : (
+                      <Zap size={14} className="animate-pulse" />
+                    )}
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">
+                      {isPremium ? 'Priority Processing Active' : 'Processing Framework Active'}
+                    </span>
+                    {isPremium && (
+                      <span className="text-[7px] font-black uppercase tracking-widest px-1 py-0.5 bg-green-500/10 text-green-500 border border-green-500/30 rounded-sm">
+                        Premium Node
+                      </span>
+                    )}
                   </div>
                   <p className="text-[11px] text-my-muted leading-relaxed italic">
                     High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources and validating its findings.

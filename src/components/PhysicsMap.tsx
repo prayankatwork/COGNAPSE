@@ -245,10 +245,9 @@ export default function PhysicsMap({
               className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-my-sidebar/80 backdrop-blur-md border border-my-border px-4 py-2 pointer-events-none shadow-2xl"
             >
               <div className="flex items-center gap-2">
-                <Target size={12} className="text-my-accent animate-pulse" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-my-muted">
-                  Click a node to understand its significance
-                </span>
+                <Target size={12} className="text-my-accent animate-pulse" />                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-my-muted">
+                      Select a node to inspect its significance
+                    </span>
               </div>
             </motion.div>
           )}
@@ -261,9 +260,8 @@ export default function PhysicsMap({
               className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-my-accent text-white dark:text-black px-6 py-3 shadow-2xl border border-white/20"
             >
               <div className="flex items-center gap-3">
-                <Loader2 size={14} className="animate-spin" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                  Synthesizing Node Intelligence... Stand By
+                <Loader2 size={14} className="animate-spin" />                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                  Synthesizing node intelligence. Please stand by.
                 </span>
               </div>
             </motion.div>
@@ -296,7 +294,10 @@ export default function PhysicsMap({
               const isRoot = node.id === 'root' || node.val > 15;
 
               // Smart Glow — reduced on mobile
-              if (!isMobile && (isHovered || isRoot)) {
+              if (isRoot) {
+                ctx.shadowBlur = 15 / globalScale;
+                ctx.shadowColor = node.color;
+              } else if (!isMobile && isHovered) {
                 ctx.shadowBlur = 20 / globalScale;
                 ctx.shadowColor = node.color;
               }
@@ -381,7 +382,7 @@ export default function PhysicsMap({
                   {loadingInfo ? (
                     <div className="flex flex-col items-center gap-3 py-4">
                       <Loader2 size={24} className="animate-spin text-my-accent" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse text-my-muted">Processing Analysis Map...</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse text-my-muted">Processing analysis map...</span>
                     </div>
                   ) : (
                     <div className="p-5 bg-my-bg border border-my-border italic shadow-inner max-h-[200px] overflow-y-auto scrollbar-hide">

@@ -207,8 +207,8 @@ export default function LandingPage() {
 
 function FeatureBox({ icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
-    <div className="bg-my-bg p-12 group hover:bg-my-sidebar transition-all cursor-default">
-      <div className="w-12 h-12 rounded-[4px] bg-my-accent/10 flex items-center justify-center text-my-accent mb-8 group-hover:scale-110 group-hover:bg-my-accent group-hover:text-white dark:group-hover:text-black transition-all">
+    <div className="bg-my-bg p-12 group hover:bg-gradient-to-br hover:from-my-bg hover:via-my-bg hover:to-my-accent/5 hover:bg-my-sidebar transition-all cursor-default border-b border-r border-transparent hover:border-my-accent/10">
+      <div className="w-12 h-12 rounded-[6px] bg-my-accent/10 flex items-center justify-center text-my-accent mb-8 group-hover:scale-110 group-hover:bg-my-accent group-hover:text-white dark:group-hover:text-black transition-all shadow-sm group-hover:shadow-accent">
         {icon}
       </div>
       <h4 className="font-bold text-xl mb-4 tracking-tight uppercase">{title}</h4>

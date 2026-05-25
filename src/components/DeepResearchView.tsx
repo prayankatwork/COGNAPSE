@@ -86,7 +86,7 @@ export default function DeepResearchView() {
             <Shield size={14} className="text-my-accent" />
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-my-muted">Detailed Analysis Report</span>
           </div>
-          <h1 className="font-serif text-3xl md:text-4xl leading-tight text-my-ink max-w-2xl">
+          <h1 className="font-serif text-[28px] md:text-[36px] leading-[1.15] text-my-ink max-w-2xl">
             {safeText(thesis.title)}
           </h1>
         </div>
@@ -139,7 +139,7 @@ export default function DeepResearchView() {
             </button>
             {expandedSections[section.id] && (
               <div className="px-4 pb-6 pt-2 md:px-10 md:pb-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="prose prose-sm max-w-none text-my-syn leading-relaxed whitespace-pre-wrap">
+                <div className="text-[14px] leading-[1.7] text-my-syn whitespace-pre-wrap max-w-[65ch]">
                   {section.content}
                 </div>
               </div>

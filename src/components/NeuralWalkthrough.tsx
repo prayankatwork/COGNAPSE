@@ -6,7 +6,8 @@ import {
   ShieldCheck, ArrowRight, X, 
   ChevronRight, ChevronLeft, Sparkles,
   Command, Database, Target, Brain,
-  TrendingUp, Landmark, Shield, AlertTriangle
+  TrendingUp, Landmark, Shield, AlertTriangle,
+  BookOpen
 } from 'lucide-react';
 import clsx from 'clsx';
 import { audioService } from '../services/audioService';
@@ -82,6 +83,13 @@ export default function NeuralWalkthrough() {
         }
       },
       {
+        id: 'theme',
+        title: "Neural Mode",
+        description: "Toggle between Light and Dark themes using the switch in the top bar. Choose what's comfortable for your eyes.",
+        anchorId: "walkthrough-theme-anchor",
+        icon: <Zap className="text-amber-400" size={24} />
+      },
+      {
         id: 'command',
         title: "Command Center",
         description: "Activate the command bar (Ctrl+K) to navigate between analysis modules or recall archived reports instantly.",
@@ -124,6 +132,13 @@ export default function NeuralWalkthrough() {
             if (useStore.getState().currentView !== 'research') setView('research');
             if (!useStore.getState().isSidebarOpen) useStore.getState().toggleSidebar();
         }
+      },
+      {
+        id: 'notebook',
+        title: "Tactical Notebook",
+        description: "Open the notebook to jot down thoughts, findings, or questions while you research. Your notes are saved automatically.",
+        anchorId: "walkthrough-notebook-anchor",
+        icon: <BookOpen className="text-violet-400" size={24} />
       },
       {
         id: 'status',

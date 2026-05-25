@@ -173,7 +173,7 @@ export default function Sidebar() {
                  <div className="h-60 flex flex-col items-center justify-center text-center px-4">
                     <div className="opacity-20 text-my-muted flex flex-col items-center mb-6">
                        <Library size={48} className="mb-4" />
-                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Archive Empty</span>
+                       <span className="text-[9px] font-bold uppercase tracking-[0.3em]">No Reports Archived</span>
                     </div>
                     
                     {!user ? (
@@ -193,31 +193,60 @@ export default function Sidebar() {
                        </motion.button>
                     ) : (
                       <p className="text-[9px] text-my-muted uppercase tracking-widest leading-relaxed px-4">
-                        Build your permanent intelligence library by collecting Premium Dossiers over time.
+                        Research reports will appear here upon completion of an analysis session.
                       </p>
                     )}
                  </div>
               ) : (
                  <div className="flex flex-col gap-12">
                     {viewMode === 'chronological' ? (
-                       Object.entries(dateGroups).map(([group, items]) => (
-                          <div key={group} className="space-y-8">
-                              <div className="flex items-center gap-3">
-                                 <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{group}</span>
-                                 <div className="h-px flex-1 bg-my-border" />
-                              </div>
-                             {items.map(item => <ArchiveItem key={item.id} item={item} />)}
-                          </div>
+                       Object.entries(dateGroups).map(([group, items], idx) => (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                 <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{group}</span>
+                 <div className="h-px flex-1 bg-my-border" />
+              </div>
+             {items.map((item, idx) => (
+               <motion.div
+                 key={item.id}
+                 initial={{ opacity: 0, x: -8 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 transition={{ delay: 0.05 + idx * 0.03 }}
+               >
+                 <ArchiveItem item={item} />
+               </motion.div>
+             ))}
+            </motion.div>
                        ))
                     ) : (
-                      Object.entries(topicGroups).map(([topic, items]) => (
-                         <div key={topic} className="space-y-8">
-                             <div className="flex items-center gap-3">
-                                <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{topic}</span>
-                                <div className="h-px flex-1 bg-my-border" />
-                             </div>
-                            {items.map(item => <ArchiveItem key={item.id} item={item} />)}
-                         </div>
+                      Object.entries(topicGroups).map(([topic, items], groupIdx) => (
+                        <motion.div
+                          key={topic}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: groupIdx * 0.04 }}
+                          className="space-y-4"
+                        >
+                          <div className="flex items-center gap-3">
+                             <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{topic}</span>
+                             <div className="h-px flex-1 bg-my-border" />
+                          </div>
+                         {items.map((item, idx) => (
+                           <motion.div
+                             key={item.id}
+                             initial={{ opacity: 0, x: -8 }}
+                             animate={{ opacity: 1, x: 0 }}
+                             transition={{ delay: 0.05 + idx * 0.03 }}
+                           >
+                             <ArchiveItem item={item} />
+                           </motion.div>
+                         ))}
+                        </motion.div>
                       ))
                    )}
                 </div>
@@ -264,7 +293,7 @@ export default function Sidebar() {
 
 
               {/* Student Developer Disclaimer - Compact & Visible */}
-             <div className="mb-4 p-3 bg-my-bg/50 border border-my-border rounded-[2px] relative overflow-hidden">
+             <div className="mb-4 p-3 bg-my-bg/50 border border-my-border rounded-[4px] relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-1 text-my-accent">
                    <Fingerprint size={10} />
                    <span className="text-[8px] font-black uppercase tracking-widest">Dev Note</span>
@@ -274,6 +303,8 @@ export default function Sidebar() {
                   If limits are hit, results might be slower.
                 </p>
              </div>
+
+
 
 
           </div>

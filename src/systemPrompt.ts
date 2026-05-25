@@ -127,7 +127,7 @@ Return your COMPLETE response as a single valid JSON object. No markdown outside
 the JSON. No preamble. No explanation before or after. Pure JSON only.
 
 {
-  "query_understood": "The precise question COGNAPSE interpreted",
+  "query_understood": "How did Genghis Khan die?",
   "mode": "standard | eli5 | deep | quick",
   "geo_triggered": true | false,
   "timeline_triggered": true | false,

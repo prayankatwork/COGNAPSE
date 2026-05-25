@@ -17,7 +17,7 @@ export default function Navbar() {
   const { 
     currentView, setView, user, logout, setAuthOpen,
     isNotebookOpen, setNotebookOpen,
-    theme, toggleTheme, setStatusOpen,
+    theme, toggleTheme,    setStatusOpen,
     walkthroughCompleted
   } = useStore(useShallow((state) => ({
     currentView: state.currentView,
@@ -192,7 +192,10 @@ export default function Navbar() {
                   : "bg-my-border opacity-30 cursor-not-allowed"
               )}
             >
-               <Zap size={10} className="text-my-accent group-hover:scale-110 transition-transform" />
+               <div className="relative">
+                 <Zap size={10} className="text-my-accent group-hover:scale-110 transition-transform relative z-10" />
+                 <span className="absolute inset-0 rounded-full bg-my-accent/20 blur-sm animate-premium-glow" />
+               </div>
                <span className="text-[8px] font-black text-my-ink uppercase tracking-widest">COGNAPSE Premium</span>
             </button>
           )}
@@ -215,9 +218,11 @@ export default function Navbar() {
                       : "text-my-accent opacity-80 group-hover:opacity-100"
                   )}>
                     {user.premium ? (
-                      <>
-                        <Crown size={8} className="text-my-signal dark:text-my-accent" /> Premium
-                      </>
+                      <span className="relative inline-flex items-center gap-1">
+                        <span className="absolute -inset-1 bg-my-accent/10 blur-sm rounded-full animate-premium-glow" />
+                        <Crown size={8} className="text-my-signal dark:text-my-accent relative z-10 animate-premium-glow" /> 
+                        <span className="relative z-10">Premium</span>
+                      </span>
                     ) : (
                       <>
                         <ShieldCheck size={8} /> Authorized
@@ -254,25 +259,22 @@ export default function Navbar() {
 
           <div className="flex items-center bg-my-bg rounded-[4px] border border-my-border p-1 gap-1 shadow-sm">
             <button 
-              onClick={() => walkthroughCompleted && toggleTheme()}
-              disabled={!walkthroughCompleted}
-              className={clsx(
-                "w-8 h-8 rounded-[2px] flex items-center justify-center text-my-muted transition-colors",
-                walkthroughCompleted ? "hover:text-my-ink cursor-pointer" : "opacity-30 cursor-not-allowed"
-              )}
+              id="walkthrough-theme-anchor"
+              onClick={toggleTheme}
+              className="w-8 h-8 rounded-[2px] flex items-center justify-center text-my-muted hover:text-my-ink transition-colors cursor-pointer"
               title="Toggle Neural Mode"
             >
                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
             <button 
-              onClick={() => walkthroughCompleted && setNotebookOpen(!isNotebookOpen)}
-              disabled={!walkthroughCompleted}
+              id="walkthrough-notebook-anchor"
+              onClick={() => setNotebookOpen(!isNotebookOpen)}
               className={clsx(
-                "w-8 h-8 rounded-[2px] flex items-center justify-center transition-all",
-                walkthroughCompleted 
-                  ? (isNotebookOpen ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)] cursor-pointer" : "text-my-muted hover:text-my-ink cursor-pointer")
-                  : "text-my-muted opacity-30 cursor-not-allowed"
+                "w-8 h-8 rounded-[2px] flex items-center justify-center transition-all cursor-pointer",
+                isNotebookOpen 
+                  ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)]" 
+                  : "text-my-muted hover:text-my-ink"
               )}
               title="Tactical Notebook"
             >

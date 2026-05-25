@@ -158,7 +158,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
   const syncStatus = useMemo((): { state: 'syncing' | 'live' | 'error' | 'idle'; label: string } => {
     if (loading && !lastRefreshed) return { state: 'syncing', label: 'Syncing…' };
     if (syncError) return { state: 'error', label: syncError };
-    if (!lastRefreshed) return { state: 'idle', label: 'Not synced yet' };
+    if (!lastRefreshed) return { state: 'idle', label: 'Awaiting initial data synchronization' };
     return {
       state: 'live',
       label: `Last Sync: ${lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
@@ -285,7 +285,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                        <div className="py-20 text-center">
                           <Globe className="mx-auto text-my-muted opacity-20 mb-6" size={48} />
                           <h2 className="text-xl font-bold text-my-ink mb-2 uppercase tracking-widest">No Intelligence Vectors Active</h2>
-                          <p className="text-sm text-my-muted mb-8">Subscribe to categories to begin global forensic monitoring.</p>
+                          <p className="text-sm text-my-muted mb-8">Subscribe to intelligence categories to begin global monitoring.</p>
                           <button 
                             onClick={() => setActiveTab('subscriptions')}
                             className="px-8 py-3 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-[2px] hover:scale-105 transition-all shadow-accent"
@@ -410,7 +410,7 @@ function NewsCard({ item, idx, onResearch }: { item: NewsItem, idx: number, onRe
           {item.headline}
        </h3>
 
-       <p className="text-xs text-my-syn leading-relaxed mb-8 flex-1">
+       <p className="text-[13px] text-my-syn leading-[1.6] mb-8 flex-1">
           {item.summary}
        </p>
 

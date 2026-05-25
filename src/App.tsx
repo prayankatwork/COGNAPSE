@@ -42,6 +42,7 @@ import { auth } from './services/firebase';
 import { syncAuthSession } from './services/authSession';
 import { reportsToArchiveEntries } from './utils/archiveEntries';
 import DevDashboard from './components/DevDashboard';
+import CommandPalette from './components/CommandPalette';
 import ToastContainer from './components/ui/ToastContainer';
 
 import { audioService } from './services/audioService';
@@ -137,6 +138,9 @@ export default function App() {
     setStatusOpen,
     isDevOpen,
     setDevOpen,
+    isCommandPaletteOpen,
+    setCommandPaletteOpen,
+    restoreLastReport,
   } = useStore(useShallow((state) => ({
     setAuthOpen: state.setAuthOpen,
     isNotebookOpen: state.isNotebookOpen,
@@ -145,6 +149,9 @@ export default function App() {
     setStatusOpen: state.setStatusOpen,
     isDevOpen: state.isDevOpen,
     setDevOpen: state.setDevOpen,
+    isCommandPaletteOpen: state.isCommandPaletteOpen,
+    setCommandPaletteOpen: state.setCommandPaletteOpen,
+    restoreLastReport: state.restoreLastReport,
   })));
 
   // Global Dev Command
@@ -154,10 +161,15 @@ export default function App() {
         e.preventDefault();
         setDevOpen(!isDevOpen);
       }
+      // Cmd/Ctrl+K — Open Command Palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(!isCommandPaletteOpen);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDevOpen, setDevOpen]);
+  }, [isDevOpen, setDevOpen, isCommandPaletteOpen, setCommandPaletteOpen]);
 
   // Global Neural Blink Sync
   useEffect(() => {
@@ -184,10 +196,11 @@ export default function App() {
 
   // Apply dark mode class to html element
   useEffect(() => {
+    const root = document.documentElement;
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
   }, [theme]);
 
@@ -251,6 +264,9 @@ export default function App() {
         }
 
         setArchive(reportsToArchiveEntries(reports || []));
+
+        // Restore last active report after archive sync completes
+        restoreLastReport();
       } catch (err) {
         console.error('[Vault] Sync failed:', err);
       }
@@ -357,6 +373,7 @@ export default function App() {
         {isStatusOpen && <OperativeStatus onClose={() => setStatusOpen(false)} />}
       </AnimatePresence>
       <DevDashboard />
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       {!shareRoute && !legalPage && <NeuralWalkthrough />}
       {!shareRoute && !legalPage && <SelectionCapture />}
       <NeuralBackground />

@@ -51,6 +51,16 @@ Remember: Your output must be VALID JSON matching the provided schema. Structure
   try {
     // callCloudAI already returns JSON.stringify output — parse once
     const parsed = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+
+    // Strip verbose wrappers from query_understood (safety net for AI non-compliance)
+    // Only targets the known verbose pattern "... is: 'query'" — leaves clean queries untouched
+    if (typeof parsed.query_understood === 'string') {
+      const match = parsed.query_understood.match(/is: '(.+)'$/);
+      if (match) {
+        parsed.query_understood = match[1];
+      }
+    }
+
     return parsed;
   } catch (error) {
     throw new Error("Intelligence synthesis format error. Please retry — cloud nodes may have returned partial data.");

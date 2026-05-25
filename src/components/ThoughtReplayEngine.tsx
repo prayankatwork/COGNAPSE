@@ -29,7 +29,7 @@ export default function ThoughtReplayEngine() {
         <div className="flex items-center gap-3 opacity-50">
           <Cpu className="text-my-muted" size={18} />
           <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-my-muted">
-            Cognition Replay Engine: Standby
+            Cognition Replay Engine: Awaiting Data
           </h3>
         </div>
         <p className="mt-4 text-[10px] text-my-muted leading-relaxed uppercase tracking-widest">

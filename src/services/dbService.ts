@@ -622,6 +622,44 @@ export const dbService = {
     localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(premiumData));
   },
 
+  // #8: Premium chat history persistence
+  async saveChatHistory(userId: string, history: any[]) {
+    try {
+      localStorage.setItem(`cognapse_chat_${userId}`, JSON.stringify(history));
+    } catch (e) {
+      console.warn('Failed to save chat history to local storage:', e);
+    }
+    try {
+      await setDoc(doc(db, 'chat_history', userId), {
+        user_id: userId,
+        messages: JSON.stringify(history),
+        updated_at: new Date().toISOString()
+      }, { merge: true });
+    } catch (error) {
+      console.warn('Firebase chat history save failed, local storage fallback active:', error);
+    }
+  },
+
+  async loadChatHistory(userId: string) {
+    try {
+      const docRef = doc(db, 'chat_history', userId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const messages = safeParse<any[]>(data.messages || '[]', []);
+        localStorage.setItem(`cognapse_chat_${userId}`, JSON.stringify(messages));
+        return messages;
+      }
+    } catch (error) {
+      console.warn('Firebase load chat history failed, loading from local storage:', error);
+    }
+    const local = localStorage.getItem(`cognapse_chat_${userId}`);
+    if (local) {
+      try { return JSON.parse(local); } catch { return []; }
+    }
+    return [];
+  },
+
   clearLocalUserData(userId: string) {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {

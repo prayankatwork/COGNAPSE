@@ -99,6 +99,9 @@ interface AppState {
   isAuthOpen: boolean;
   setAuthOpen: (open: boolean) => void;
 
+  isCommandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
+
   isNotebookOpen: boolean;
   setNotebookOpen: (open: boolean) => void;
 
@@ -125,6 +128,8 @@ interface AppState {
   
   currentReport: COGNAPSE_Output | null;
   setCurrentReport: (report: COGNAPSE_Output | null) => void;
+  lastReportId: string | null;
+  restoreLastReport: () => void;
   currentChat: ChatMessage[];
   addChatMessage: (msg: ChatMessage) => void;
   clearChat: () => void;
@@ -205,6 +210,12 @@ interface AppState {
   unlockReport: (researchId: string) => void;
   addExport: (exportData: any) => Promise<void>;
   fetchExports: () => Promise<void>;
+
+  // #8: Premium chat history
+  premiumChatHistory: ChatMessage[];
+  setPremiumChatHistory: (history: ChatMessage[]) => void;
+  addPremiumChatMessage: (msg: ChatMessage) => void;
+  clearPremiumChatHistory: () => void;
 }
 
 const getRank = (xp: number) => {
@@ -277,6 +288,9 @@ export const useStore = create<AppState>()(
       isAuthOpen: false,
       setAuthOpen: (open) => set({ isAuthOpen: open }),
 
+      isCommandPaletteOpen: false,
+      setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
+
       isNotebookOpen: false,
       setNotebookOpen: (open) => set({ isNotebookOpen: open }),
 
@@ -316,7 +330,29 @@ export const useStore = create<AppState>()(
       streak: 0,
 
       currentReport: null,
-      setCurrentReport: (report) => set({ currentReport: report, currentChat: [] }),
+      setCurrentReport: (report) => set({ currentReport: report, currentChat: [], lastReportId: report?.id || null }),
+      lastReportId: null,
+      restoreLastReport: () => {
+        const state = get();
+        if (!state.lastReportId || state.archive.length === 0) return;
+        const entry = state.archive.find(e => e.id === state.lastReportId);
+        if (entry) {
+          set({ currentReport: entry.report });
+          if (entry.report.deep_research) {
+            set({
+              deepResearch: {
+                ...state.deepResearch,
+                status: 'completed',
+                thesis: entry.report.deep_research,
+                scores: entry.report.deep_scores || null,
+                stage: 4,
+                progress: 'Decrypted from Archive',
+                reasoningTimeline: []
+              }
+            });
+          }
+        }
+      },
       currentChat: [],
       addChatMessage: (msg) => set((state) => ({ currentChat: [...state.currentChat, msg] })),
       clearChat: () => set({ currentChat: [] }),
@@ -618,19 +654,36 @@ export const useStore = create<AppState>()(
         const exports = await dbService.getUserExports(user.id);
         set({ pdfExports: exports });
       },
+
+      // #8: Premium chat history
+      premiumChatHistory: [],
+      setPremiumChatHistory: (history) => set({ premiumChatHistory: history }),
+      addPremiumChatMessage: (msg) => set((state) => ({
+        premiumChatHistory: [...state.premiumChatHistory, msg]
+      })),
+      clearPremiumChatHistory: () => set({ premiumChatHistory: [] }),
     }),
     {
       name: 'cognapse-storage',
-      partialize: (state) => ({
-        xp: state.xp,
-        searchCount: state.searchCount,
-        rank: state.rank,
-        badges: state.badges,
-        streak: state.streak,
-        lastSearchDate: state.lastSearchDate,
-        theme: state.theme,
-        subscribedCategories: state.subscribedCategories
-      }),
+      partialize: (state) => {
+        const partial: Record<string, any> = {
+          xp: state.xp,
+          searchCount: state.searchCount,
+          rank: state.rank,
+          badges: state.badges,
+          streak: state.streak,
+          lastSearchDate: state.lastSearchDate,
+          theme: state.theme,
+subscribedCategories: state.subscribedCategories,
+          isSidebarOpen: state.isSidebarOpen,
+          lastReportId: state.lastReportId,
+        };
+        // Persist chat history only for premium users
+        if (state.user?.premium) {
+          partial.premiumChatHistory = state.premiumChatHistory;
+        }
+        return partial;
+      },
     }
   )
 );

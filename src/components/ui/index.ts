@@ -6,3 +6,4 @@ export { StatusDot, type StatusState } from './StatusDot';
 export { PageHeader } from './PageHeader';
 export { Card } from './Card';
 export { Badge } from './Badge';
+export { ErrorBoundary } from './ErrorBoundary';

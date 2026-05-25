@@ -50,8 +50,10 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
           initial={{ opacity: 0, scale: 0.95, y: -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
-          className="relative w-full max-w-2xl bg-my-bg border border-my-border rounded-[4px] shadow-2xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-2xl bg-my-bg border border-my-border rounded-[8px] shadow-2xl overflow-hidden flex flex-col"
         >
+          {/* Header with accent bar */}
+          <div className="h-[3px] w-full bg-gradient-to-r from-my-accent/40 via-my-accent to-my-accent/40" />
           <div className="flex items-center px-4 py-3 border-b border-my-border gap-3">
             <Search size={18} className="text-my-muted" />
             <input 
@@ -67,26 +69,31 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
                 <X size={14} />
               </button>
             )}
-            <button onClick={onClose} className="p-1 ml-2 text-my-muted hover:text-my-ink transition-colors bg-my-callout rounded-md">
-              <span className="text-[10px] font-bold px-1 text-my-muted">ESC</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <kbd className="hidden md:inline-flex px-1.5 py-0.5 text-[8px] font-bold text-my-muted bg-my-callout border border-my-border rounded-[2px] uppercase tracking-wider">Ctrl+K</kbd>
+              <button onClick={onClose} className="p-1 ml-1 text-my-muted hover:text-my-ink transition-colors bg-my-callout rounded-[4px]">
+                <span className="text-[10px] font-bold px-1 text-my-muted">ESC</span>
+              </button>
+            </div>
           </div>
           
-          <div className="p-2 max-h-[60vh] overflow-y-auto">
+          <div className="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
             {filteredArchive.length > 0 ? (
               <div>
                 <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-my-muted flex items-center gap-2">
                   <History size={12} /> Research Archives
                 </div>
                 {filteredArchive.map((entry) => (
-                  <button
+                  <motion.button
                     key={entry.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
                     onClick={() => handleArchiveClick(entry)}
-                    className="w-full flex flex-col gap-1 md:px-3 md:py-3 px-4 py-4 rounded-[2px] hover:bg-my-callout/40 transition-colors text-left group border border-transparent hover:border-my-border/50"
+                    className="w-full flex flex-col gap-1 md:px-3 md:py-3 px-4 py-4 rounded-[4px] hover:bg-my-accent/5 transition-colors text-left group border border-transparent hover:border-my-accent/20"
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <div className="text-my-muted group-hover:text-my-accent transition-colors">
-                        <FileText size={16} />
+                      <div className="text-my-muted group-hover:text-my-accent transition-colors p-1 bg-my-callout rounded-[4px] group-hover:bg-my-accent/10">
+                        <FileText size={14} />
                       </div>
                       <span className="flex-1 text-sm font-bold text-my-ink truncate">{entry.query}</span>
                       <div className="text-my-muted opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[10px] uppercase tracking-widest">
@@ -94,17 +101,17 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
                       </div>
                     </div>
                     {entry.summary_snippet && (
-                      <p className="text-[11px] text-my-muted line-clamp-1 pl-7 opacity-70">
+                      <p className="text-[11px] text-my-muted line-clamp-1 pl-9 opacity-60">
                         {entry.summary_snippet}
                       </p>
                     )}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             ) : (
               query && (
                 <div className="py-10 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 bg-my-callout rounded-full flex items-center justify-center text-my-muted mb-3">
+                  <div className="w-12 h-12 bg-my-callout rounded-[6px] flex items-center justify-center text-my-muted mb-3 border border-my-border">
                     <Search size={20} />
                   </div>
                   <h3 className="text-sm font-bold text-my-ink mb-1">No matches found</h3>
@@ -114,9 +121,12 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
             )}
             
             {!query && filteredArchive.length === 0 && (
-               <div className="py-10 flex flex-col items-center justify-center text-center opacity-50">
-                  <History size={24} className="mb-2 text-my-muted" />
-                  <p className="text-[11px] font-mono text-my-muted">Archive is empty.</p>
+               <div className="py-10 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-[6px] bg-my-callout/50 border border-my-border flex items-center justify-center text-my-muted opacity-40 mb-3">
+                    <History size={20} />
+                  </div>
+                  <p className="text-[11px] font-mono text-my-muted opacity-60">No research archive available.</p>
+                  <p className="text-[9px] text-my-muted opacity-30 mt-1">Completed research sessions will appear here.</p>
                </div>
             )}
           </div>

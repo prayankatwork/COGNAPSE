@@ -5,7 +5,8 @@ import {
   X, Shield, Fingerprint,
   Flame, Star, Target, Cpu,
   BarChart3, PieChart,
-  TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2
+  TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2,
+  Crown, Award, CheckCircle2, AlertCircle, CreditCard, Calendar, Chrome, FileJson, FileDown
 } from 'lucide-react';
 import { toast } from '../utils/toast';
 import clsx from 'clsx';
@@ -181,7 +182,7 @@ function TacticalGauge({ label, value, icon, colorClass = "text-my-accent" }: { 
 
 export default function OperativeStatus({ onClose }: OperativeStatusProps) {
   const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user, deleteAccount, logout } = useStore();
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'exports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'exports' | 'premium'>('overview');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [purging, setPurging] = useState(false);
 
@@ -333,6 +334,16 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             >
               03/ My Exports
               {activeTab === 'exports' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
+            </button>
+            <button 
+              onClick={() => setActiveTab('premium')}
+              className={clsx(
+                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                activeTab === 'premium' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
+              )}
+            >
+              04/ Premium
+              {activeTab === 'premium' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
             </button>
           </div>
           <button 
@@ -594,6 +605,94 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                   </div>
                 )}
               </motion.div>
+            ) : activeTab === 'premium' ? (
+              <motion.div
+                key="premium"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-8 md:p-10 flex flex-col gap-6"
+              >
+                {user?.premium ? (
+                  <>
+                    {/* Active Premium Status */}
+                    <div className="border border-my-signal/30 bg-my-signal/5 p-6 flex flex-col md:flex-row items-center gap-6">
+                      <div className="relative">
+                        <Crown size={40} className="text-my-signal dark:text-my-accent animate-premium-glow" />
+                        <span className="absolute inset-0 rounded-full bg-my-accent/10 blur-xl animate-premium-glow" />
+                      </div>
+                      <div className="text-center md:text-left">
+                        <h3 className="text-lg font-serif font-bold italic text-my-ink">COGNAPSE Premium Active</h3>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-my-signal mt-1">
+                          {user.premiumPlan === 'yearly' ? 'Annual Pass' : 'Monthly Pass'}
+                        </p>
+                        {user.premiumExpiresAt && (
+                          <p className="text-[9px] text-my-muted mt-2 flex items-center gap-1.5 justify-center md:justify-start">
+                            <Calendar size={10} />
+                            Expires: {new Date(user.premiumExpiresAt).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'long', day: 'numeric'
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Premium Features Checklist */}
+                    <div className="space-y-3">
+                      <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-my-muted">Unlocked Features</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <FeatureCheck label="Unlimited PDF Exports" />
+                        <FeatureCheck label="Markdown & JSON Export" />
+                        <FeatureCheck label="Chrome Research Extension" />
+                        <FeatureCheck label="Priority Processing" />
+                        <FeatureCheck label="Session Memory Synthesis" />
+                        <FeatureCheck label="Expanded Scoring Depth" />
+                        <FeatureCheck label="Research Templates" />
+                        <FeatureCheck label="Persistent Chat History" />
+                      </div>
+                    </div>
+
+                    {/* Export Count */}
+                    <div className="p-4 bg-my-callout/50 border border-my-border flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-my-muted">
+                        <FileDown size={14} className="text-my-accent" />
+                        Total Exports
+                      </div>
+                      <span className="text-base font-black text-my-ink">{pdfExports?.length || 0}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Upgrade CTA */}
+                    <div className="text-center py-8">
+                      <div className="relative inline-flex mb-6">
+                        <Award size={48} className="text-my-muted/30" />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold italic text-my-ink mb-2">Premium Tier Not Active</h3>
+                      <p className="text-[10px] text-my-muted max-w-sm mx-auto leading-relaxed mb-8">
+                        Upgrade to unlock unlimited PDF exports, session memory synthesis, priority processing, expanded scoring, and more.
+                      </p>
+                      <div className="space-y-2 max-w-xs mx-auto">
+                        <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Unlimited PDF Exports
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Session Memory Synthesis
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Priority Processing
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Expanded Scoring Depth
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Research Templates & More
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </motion.div>
             ) : null}
           </AnimatePresence>
         </div>
@@ -641,6 +740,15 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+function FeatureCheck({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-my-bg border border-my-border">
+      <CheckCircle2 size={12} className="text-green-500 shrink-0" />
+      <span className="text-[10px] font-bold text-my-ink tracking-wide">{label}</span>
+    </div>
   );
 }
 

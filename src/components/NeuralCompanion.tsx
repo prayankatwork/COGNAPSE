@@ -122,7 +122,7 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
         {/* Background Neural Web */}
         <motion.div
           animate={{ x: mousePos.x * 0.3, y: mousePos.y * 0.3 }}
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: 'radial-gradient(circle at 50% 50%, var(--my-accent) 1px, transparent 1px)',
             backgroundSize: '12px 12px'
@@ -147,7 +147,7 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
               className={clsx(
                 'w-full h-[2px] blur-[1px]',
                 isScanning ? 'opacity-80 bg-white shadow-[0_0_20px_white]' :
-                isDeep ? 'opacity-40 bg-purple-500 shadow-[0_0_15px_purple]' : 'opacity-40 bg-my-accent shadow-[0_0_15px_var(--my-accent)]'
+                isDeep ? 'opacity-40 bg-purple-500 shadow-[0_0_15px_purple]' : 'opacity-15 bg-my-accent shadow-[0_0_8px_var(--my-accent)]'
               )}
             />
           </div>
@@ -257,13 +257,13 @@ export default function NeuralCompanion({ compact = false }: { compact?: boolean
               className={clsx(
                 'absolute border-t-2 border-r border-dashed rounded-full transition-all duration-300',
                 isScanning ? 'border-white opacity-80 shadow-[0_0_15px_white]' :
-                isDeep ? 'border-purple-500 opacity-40 shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'border-my-accent opacity-20'
+                isDeep ? 'border-purple-500 opacity-40 shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'border-my-accent opacity-10'
               )}
             >
               <div className={clsx(
                 'absolute top-0 left-1/2 w-1.5 h-1.5 rounded-full -translate-x-1/2 -translate-y-1/2',
                 isScanning ? 'bg-white shadow-glow' :
-                isDeep ? 'bg-purple-400 shadow-glow' : 'bg-my-accent'
+                isDeep ? 'bg-purple-400 shadow-glow' : 'bg-my-accent/40'
               )} />
             </motion.div>
           ))}

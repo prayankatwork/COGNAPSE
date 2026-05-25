@@ -20,7 +20,7 @@ export function Card({
       onClick={onClick}
       className={clsx(
         surfaceCard,
-        interactive && 'hover:border-my-accent/50 hover:shadow-accent text-left w-full',
+        interactive && 'hover:border-my-accent/50 hover:shadow-accent hover:-translate-y-0.5 text-left w-full',
         className
       )}
     >
