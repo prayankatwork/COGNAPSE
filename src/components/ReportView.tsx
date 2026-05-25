@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { COGNAPSE_Output } from '../types';
+import type { COGNAPSE_Output, ResearchVisibility } from '../types';
 import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2 } from 'lucide-react';
 import { toast } from '../utils/toast';
 import clsx from 'clsx';
@@ -13,7 +13,6 @@ import PremiumExportModal from './PremiumExportModal';
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
-import type { ResearchVisibility } from '../types';
 
 export default function ReportView({
   report,

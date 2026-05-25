@@ -1,7 +1,5 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-
 import { initializeFirestore } from "firebase/firestore";
 
 // These should be set in your .env file
