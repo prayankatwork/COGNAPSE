@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Database, Cpu, Terminal, Zap, ShieldCheck, Globe, GitBranch, FileText, Brain, Activity } from 'lucide-react';
+import { Layers, Database, Cpu, Terminal, Zap, ShieldCheck, Globe, GitBranch, FileText, Brain, Activity, Lock } from 'lucide-react';
 
 export default function TechnicalDocs() {
   return (
