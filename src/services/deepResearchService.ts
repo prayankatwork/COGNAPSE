@@ -2,6 +2,56 @@ import { useStore } from '../store';
 import { callCloudAI } from './aiService';
 import type { DeepResearchThesis, ResearchScore } from '../types';
 
+function classifyDomain(domain: string): string {
+  const d = (domain || '').toLowerCase();
+  if (d.endsWith('.edu')) return 'edu';
+  if (d.endsWith('.gov')) return 'gov';
+  if (d.endsWith('.mil')) return 'mil';
+  if (d.endsWith('.org')) return 'org';
+  return 'other';
+}
+
+function computeScoresFromReport(): ResearchScore {
+  const { currentReport } = useStore.getState();
+  const sources = currentReport?.sources || [];
+  const reportScores = currentReport?.scores;
+
+  // accuracy: map overall_credibility (0-100) to 0-10
+  const overallCred = reportScores?.overall_credibility ?? 50;
+  const accuracy = Math.round((Math.min(Math.max(overallCred, 0), 100) / 10) * 10) / 10;
+
+  // sourceDiversity: unique domain type categories out of 5
+  const domainTypes = sources.map(s => classifyDomain(s.domain || ''));
+  const uniqueTypes = new Set(domainTypes).size;
+  const sourceDiversity = sources.length > 0
+    ? Math.round(Math.min(uniqueTypes / 5, 1) * 100) / 100
+    : 0.5;
+
+  // bias: from bias_alert or domain homogeneity as proxy
+  let bias: number;
+  if (currentReport?.bias_alert) {
+    const dirLen = currentReport.bias_alert.direction?.length || 0;
+    const severity = Math.min(dirLen / 200, 0.6);
+    bias = Math.round((0.2 + severity) * 100) / 100;
+  } else {
+    bias = uniqueTypes <= 1 ? 0.3 : uniqueTypes <= 2 ? 0.2 : 0.1;
+  }
+  bias = Math.round(Math.min(Math.max(bias, 0.05), 0.95) * 100) / 100;
+
+  // confidenceInterval: evidence_consensus base + source count bonus
+  const consensusMap: Record<string, number> = {
+    strong: 0.85,
+    mixed: 0.6,
+    contested: 0.4,
+    insufficient: 0.2
+  };
+  const baseConfidence = consensusMap[reportScores?.evidence_consensus || ''] ?? 0.5;
+  const sourceBonus = Math.min((sources.length || 0) * 0.03, 0.15);
+  const confidenceInterval = Math.round(Math.min(baseConfidence + sourceBonus, 0.99) * 100) / 100;
+
+  return { accuracy, bias, sourceDiversity, confidenceInterval };
+}
+
 const RESEARCH_MODEL = "ollama";      
 
 const THESIS_PROMPT = (query: string) => `
@@ -56,12 +106,7 @@ export async function executeDeepResearch(query: string) {
       throw new Error("Deep Research synthesis returned malformed intelligence. Please retry.");
     }
     
-    const scores: ResearchScore = {
-      accuracy: 9.8,
-      bias: 0.1,
-      sourceDiversity: 0.96,
-      confidenceInterval: 0.94
-    };
+    const scores: ResearchScore = computeScoresFromReport();
 
     setDeepResearch({ 
       status: 'completed', 
