@@ -1,8 +1,9 @@
 /**
  * COGNAPSE Ops Telemetry API
  *
- * Secure endpoint for the Command Centre to read operational telemetry data.
- * Protected by OPS_TELEMETRY_API_KEY shared secret.
+ * Dual-purpose endpoint:
+ *   GET  — Read telemetry data (Command Centre, requires OPS_TELEMETRY_API_KEY)
+ *   POST — Ingest client-side telemetry events (no auth — events are anonymized operational data only)
  *
  * GET /api/ops-telemetry
  *   ?days=7            — time range (default 7, max 90)
@@ -10,8 +11,12 @@
  *   &scope=metrics     — return aggregated dashboard metrics
  *   &scope=daily       — return daily event counts grouped by type
  *
- * Headers:
+ * Headers (GET only):
  *   Authorization: Bearer <OPS_TELEMETRY_API_KEY>
+ *
+ * POST /api/ops-telemetry
+ *   Body: { events: TelemetryPayload[] }
+ *   No auth required — payload is anonymized operational data only.
  */
 
 import { applyCors, handleOptions } from './lib/cors.js';
@@ -23,11 +28,15 @@ export default async function handler(req, res) {
   applyCors(req, res);
   if (handleOptions(req, res)) return;
 
+  if (req.method === 'POST') {
+    return handleIngest(req, res);
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Authenticate
+  // GET — Authenticate with API key
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token || token !== TELEMETRY_API_KEY) {
@@ -79,6 +88,55 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     return sendSafeError(res, 500, 'Failed to fetch telemetry data.', error);
+  }
+}
+
+/* ─── POST: Ingest telemetry events from client ─── */
+
+async function handleIngest(req, res) {
+  try {
+    let body;
+    if (typeof req.body === 'string') {
+      body = JSON.parse(req.body);
+    } else if (req.body) {
+      body = req.body;
+    } else {
+      return res.status(400).json({ error: 'Request body required.' });
+    }
+
+    const events = Array.isArray(body) ? body : body.events;
+    if (!events || !Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ error: 'events array required.' });
+    }
+
+    if (events.length > 50) {
+      events.length = 50; // limit batch size
+    }
+
+    const admin = await getFirebaseAdmin();
+    if (!admin) {
+      return res.status(503).json({ error: 'Firebase Admin SDK unavailable.' });
+    }
+
+    const firestore = admin.firestore();
+    const batch = firestore.batch();
+
+    for (const event of events) {
+      const docRef = firestore.collection('ops_telemetry').doc();
+      batch.set(docRef, {
+        sessionId: event.sessionId || '',
+        type: event.type || 'unknown',
+        userId: event.userId || null,
+        username: event.username || null,
+        metadata: event.metadata || {},
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+    return res.status(200).json({ ingested: events.length });
+  } catch (error) {
+    return sendSafeError(res, 500, 'Failed to ingest telemetry events.', error);
   }
 }
 

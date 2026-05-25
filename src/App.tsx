@@ -42,6 +42,7 @@ import { auth } from './services/firebase';
 import { syncAuthSession } from './services/authSession';
 import { reportsToArchiveEntries } from './utils/archiveEntries';
 import DevDashboard from './components/DevDashboard';
+import ToastContainer from './components/ui/ToastContainer';
 
 import { audioService } from './services/audioService';
 
@@ -343,8 +344,10 @@ export default function App() {
       </div>
 
       {!shareRoute && !legalPage && (
-        <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
+        <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 items-center justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
           <a href="/policies" onClick={(e) => handleLegalNav(e, 'legal-overview')} className="hover:text-my-accent">Privacy & Policies</a>
+          <span className="text-my-border/50">|</span>
+          <span className="tracking-[0.15em]">Telemetry: Operational only. No personal data collected.</span>
         </footer>
       )}
 
@@ -357,6 +360,7 @@ export default function App() {
       {!shareRoute && !legalPage && <NeuralWalkthrough />}
       {!shareRoute && !legalPage && <SelectionCapture />}
       <NeuralBackground />
+      <ToastContainer />
     </div>
   );
 }

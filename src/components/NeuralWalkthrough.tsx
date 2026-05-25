@@ -6,7 +6,7 @@ import {
   ShieldCheck, ArrowRight, X, 
   ChevronRight, ChevronLeft, Sparkles,
   Command, Database, Target, Brain,
-  TrendingUp, Landmark, Shield
+  TrendingUp, Landmark, Shield, AlertTriangle
 } from 'lucide-react';
 import clsx from 'clsx';
 import { audioService } from '../services/audioService';
@@ -56,6 +56,13 @@ export default function NeuralWalkthrough() {
         description: "Authorized Analyst detected. This protocol will introduce you to the COGNAPSE research engine.",
         icon: <Sparkles className="text-my-accent" size={32} />,
         actionLabel: "Initialize System"
+      },
+      {
+        id: 'ai-acknowledgement',
+        title: "AI Acknowledgment",
+        description: "Before we begin, please understand that COGNAPSE uses artificial intelligence to generate research. AI outputs may contain errors, hallucinations, or outdated information. Confidence, consensus, and credibility scores are model self-assessments, not guarantees of factual accuracy. You are responsible for independently verifying critical claims. Proceeding indicates your acceptance of these limitations.",
+        icon: <AlertTriangle className="text-amber-400" size={32} />,
+        actionLabel: "I Understand & Proceed"
       },
       {
         id: 'categories',

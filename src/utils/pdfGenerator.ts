@@ -602,6 +602,22 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       `;
       pageFrame.appendChild(footerDecal);
 
+      /* ─── AI-Generated Content Watermark ─── */
+      const watermark = document.createElement('div');
+      watermark.style.position = 'absolute';
+      watermark.style.bottom = '10px';
+      watermark.style.left = '0';
+      watermark.style.right = '0';
+      watermark.style.textAlign = 'center';
+      watermark.style.fontFamily = '"Inter", sans-serif';
+      watermark.style.fontSize = '7px';
+      watermark.style.color = '#CBD5E1';
+      watermark.style.letterSpacing = '0.1em';
+      watermark.style.fontWeight = '600';
+      watermark.style.textTransform = 'uppercase';
+      watermark.innerHTML = 'AI-Generated Research — Verify Critical Claims Independently';
+      pageFrame.appendChild(watermark);
+
       document.body.appendChild(pageFrame);
 
       // Convert page frame to high-resolution texture canvas

@@ -1,6 +1,7 @@
 import React, { useState, Suspense } from 'react';
 import { COGNAPSE_Output } from '../types';
 import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2 } from 'lucide-react';
+import { toast } from '../utils/toast';
 import clsx from 'clsx';
 // Map rendering removed per request
 const PhysicsMap = React.lazy(() => import('./PhysicsMap'));
@@ -64,7 +65,7 @@ export default function ReportView({
       await navigator.clipboard?.writeText(url);
     } catch (err) {
       console.error("Failed to create share link:", err);
-      alert("Unable to create share link. Please try again.");
+      toast.error("Unable to create share link. Please try again.");
     } finally {
       setSharing(false);
     }
@@ -97,7 +98,7 @@ export default function ReportView({
       }
     } catch (err) {
       console.error(err);
-      alert("Error packaging PDF. Please try again.");
+      toast.error("Error packaging PDF. Please try again.");
     } finally {
       setGeneratingPDF(false);
     }
@@ -156,7 +157,7 @@ export default function ReportView({
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 pt-1">
             {!readOnly && (
-              <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout">
+              <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout min-touch-h">
                 <select
                   value={shareVisibility}
                   onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
@@ -169,7 +170,7 @@ export default function ReportView({
                 <button
                   onClick={handleCreateShare}
                   disabled={sharing}
-                  className="px-3 py-2 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                  className="px-3 py-2 md:px-3 md:py-2 px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
                 >
                   {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
                   Share
@@ -452,7 +453,7 @@ export default function ReportView({
                 key={i} 
                 onClick={() => !readOnly && (onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f))}
                 disabled={readOnly}
-                className="bg-my-bg border border-my-border hover:border-my-accent text-[12px] text-my-ink py-1.5 px-3 transition-colors flex items-center gap-2"
+                className="bg-my-bg border border-my-border hover:border-my-accent text-[12px] text-my-ink py-2.5 md:py-1.5 px-3 transition-colors flex items-center gap-2"
               >
                 {safeText(f)} <ArrowRight size={12} className="opacity-50" />
               </button>
@@ -479,6 +480,20 @@ export default function ReportView({
            <CheckCircle2 size={16} /> Thank you for your feedback! Data logged.
         </div>
       )}
+
+      {/* AI Limitation Disclaimer */}
+      <div className="mt-12 pt-6 border-t border-my-border">
+        <div className="flex items-start gap-2 text-[9px] text-my-muted leading-relaxed">
+          <AlertTriangle size={10} className="text-amber-500 mt-0.5 shrink-0" />
+          <p>
+            <strong className="uppercase tracking-widest">AI-Generated Content:</strong> This report was produced by artificial intelligence systems. 
+            Confidence scores, credibility ratings, and consensus metrics are derived from model self-assessment, not ground-truth validation. 
+            <strong>Confidence does not equal certainty, and consensus does not equal factual truth.</strong> 
+            Always independently verify critical claims, statistics, and citations before relying on them. 
+            See the <a href="/policies" onClick={(e) => { e.preventDefault(); window.location.hash = 'ai-disclaimer'; }} className="underline hover:text-my-accent">AI Liability Disclaimer</a> for full details.
+          </p>
+        </div>
+      </div>
 
       <PremiumExportModal 
         isOpen={isExportModalOpen}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Terminal, Database, Shield, Globe2, Code2,
-  ChevronRight, Scale, BookOpen, AlertCircle, Fingerprint, Lock
+  ChevronRight, Scale, BookOpen, AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import PlatformDocs from './archive/PlatformDocs';
@@ -23,6 +23,9 @@ const ARCHIVE_MAP = [
       { id: 'product-systems', label: 'Product Systems' },
       { id: 'workflow', label: 'Research Workflow' },
       { id: 'onboarding', label: 'Analyst Onboarding' },
+      { id: 'collaboration', label: 'Collaboration & Governance' },
+      { id: 'enterprise-governance', label: 'Enterprise Governance' },
+      { id: 'responsible-ai', label: 'Responsible AI Usage' },
     ]
   },
   {
@@ -34,7 +37,10 @@ const ARCHIVE_MAP = [
       { id: 'tech-overview', label: 'Stack Overview' },
       { id: 'stack', label: 'Infrastructure Diagram' },
       { id: 'orchestration', label: 'AI Swarm Logic' },
-      { id: 'state', label: 'Zustand State' },
+      { id: 'deep-research', label: 'Deep Research Protocol' },
+      { id: 'state', label: 'State Mgmt & Data' },
+      { id: 'security-architecture', label: 'Security Architecture' },
+      { id: 'observability', label: 'Observability & Telemetry' },
     ]
   },
   {
@@ -45,8 +51,14 @@ const ARCHIVE_MAP = [
     subsections: [
       { id: 'trust-overview', label: 'Security Center' },
       { id: 'security-model', label: 'Identity Management' },
-      { id: 'data-isolation', label: 'Tenant Isolation' },
+      { id: 'data-isolation', label: 'Data Privacy & Storage' },
+      { id: 'ai-transparency', label: 'AI Transparency' },
+      { id: 'responsible-ai', label: 'Responsible AI' },
+      { id: 'collaboration-safety', label: 'Collaboration Safety' },
+      { id: 'premium-security', label: 'Premium Security' },
+      { id: 'incident-response', label: 'Incident Response' },
       { id: 'reliability', label: 'Infrastructure Uptime' },
+      { id: 'observability', label: 'Observability' },
     ]
   },
   {
@@ -56,9 +68,14 @@ const ARCHIVE_MAP = [
     component: <LegalDocs />,
     subsections: [
       { id: 'legal-overview', label: 'Compliance Overview' },
-      { id: 'ai-disclaimer', label: 'AI Liability Disclaimer' },
       { id: 'terms', label: 'Terms of Service' },
       { id: 'privacy', label: 'Privacy Policy' },
+      { id: 'cookie-policy', label: 'Cookie Policy' },
+      { id: 'ai-disclaimer', label: 'AI Liability Disclaimer' },
+      { id: 'ip-rights', label: 'IP & Copyright' },
+      { id: 'collaboration', label: 'Collaboration Governance' },
+      { id: 'export-policy', label: 'Export & Redistribution' },
+      { id: 'governing-law', label: 'Governing Law' },
     ]
   }
 ];

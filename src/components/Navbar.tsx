@@ -3,8 +3,10 @@ import { useStore } from '../store';
 import { useShallow } from 'zustand/react/shallow';
 import { 
   User, X, Moon, Sun, Search,
-  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown
+  BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown,
+  Menu
 } from 'lucide-react';
+import { useIsMobile } from '../hooks/useIsMobile';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
@@ -36,6 +38,8 @@ export default function Navbar() {
   const handleCommandClose = useCallback(() => setIsCommandOpen(false), []);
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const modules = [
     { id: 'landing', label: 'Home', icon: <Search size={14} /> },
@@ -73,13 +77,24 @@ export default function Navbar() {
         "fixed top-0 left-0 right-0 h-14 z-[100] px-6 flex items-center justify-between transition-all duration-300",
         scrolled ? "bg-my-bg/80 backdrop-blur-2xl border-b border-my-border/50 shadow-sm" : "bg-transparent"
       )}>
-        {/* Left: Brand & Rollup Modules */}
-        <div 
-          id="walkthrough-logo-anchor"
-          className="flex items-center w-1/3 relative"
-          onMouseEnter={() => walkthroughCompleted && setIsHoveringLogo(true)}
-          onMouseLeave={() => walkthroughCompleted && setIsHoveringLogo(false)}
-        >
+        {/* Left: Brand & Mobile Hamburger */}
+        <div className="flex items-center w-1/3 relative">
+          {/* Mobile hamburger — always visible on small screens */}
+          <button
+            onClick={() => walkthroughCompleted && setMobileMenuOpen(m => !m)}
+            disabled={!walkthroughCompleted}
+            className="mobile-only min-touch p-2 -ml-2 mr-2 text-my-muted hover:text-my-ink transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div
+            id="walkthrough-logo-anchor"
+            className="flex items-center relative"
+            onMouseEnter={() => walkthroughCompleted && setIsHoveringLogo(true)}
+            onMouseLeave={() => walkthroughCompleted && setIsHoveringLogo(false)}
+          >
           <button 
             onClick={() => walkthroughCompleted && setView('landing')}
             disabled={!walkthroughCompleted}
@@ -102,7 +117,7 @@ export default function Navbar() {
           </button>
 
           <AnimatePresence>
-            {isHoveringLogo && walkthroughCompleted && (
+            {isHoveringLogo && walkthroughCompleted && !isMobile && (
               <motion.div
                 initial={{ opacity: 0, y: -10, scaleY: 0.95 }}
                 animate={{ opacity: 1, y: 0, scaleY: 1 }}
@@ -274,6 +289,57 @@ export default function Navbar() {
         query="Premium Upgrade" 
         onUnlockSuccess={() => setIsPremiumModalOpen(false)} 
       />
+
+      {/* Mobile Navigation Bottom Sheet */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[300] bg-black/50"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-[301] bg-my-bg border-t border-my-border rounded-t-2xl shadow-2xl safe-area-bottom max-h-[70vh] overflow-y-auto"
+            >
+              <div className="px-6 pt-4 pb-2 flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-my-muted">Navigate</span>
+                <button onClick={() => setMobileMenuOpen(false)} className="min-touch p-2 text-my-muted hover:text-my-ink">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-1 px-4 pb-8">
+                {modules.map((mod) => (
+                  <button
+                    key={mod.id}
+                    onClick={() => {
+                      setView(mod.id as any);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={clsx(
+                      "flex items-center gap-4 px-4 py-4 rounded-lg text-left transition-colors min-touch-h",
+                      currentView === mod.id
+                        ? "bg-my-accent/10 text-my-accent"
+                        : "text-my-muted hover:bg-my-callout/50 hover:text-my-ink"
+                    )}
+                  >
+                    <div className={currentView === mod.id ? 'text-my-accent' : 'text-my-muted'}>
+                      {mod.icon}
+                    </div>
+                    <span className="text-sm font-bold">{mod.label}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -5,6 +5,7 @@ import { Search, X, Loader2, Cpu, Zap, Maximize2, Minimize2, Anchor, Filter, Tar
 import { executeQuickInfo } from '../services/geminiService';
 import { useStore } from '../store';
 import { getSignalColor } from '../utils/brandColors';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface NodeData {
   id: string;
@@ -42,6 +43,7 @@ export default function PhysicsMap({
   const fgRef = useRef<any>(null);
   const theme = useStore((state) => state.theme);
   const signalColor = getSignalColor();
+  const isMobile = useIsMobile();
 
   const safeText = (val: any) => {
     if (typeof val === 'string') return val;
@@ -198,21 +200,23 @@ export default function PhysicsMap({
       className="relative bg-my-bg border border-my-border transition-all duration-500 overflow-hidden group flex flex-col"
     >
       {/* Smart Control Header */}
-      <div className="h-10 bg-my-sidebar/50 backdrop-blur-md border-b border-my-border flex items-center justify-between px-4 z-20">
+        <div className="h-10 bg-my-sidebar/50 backdrop-blur-md border-b border-my-border flex items-center justify-between px-4 z-20">
         <div className="flex items-center gap-3">
           <Layers size={14} className="text-my-accent" />
           <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest">Topic Cluster Analyzer</span>
         </div>
         
         <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setFilterMode(f => f === 'all' ? 'high' : 'all')}
-            className={`flex items-center gap-1.5 px-2 py-1 text-[9px] font-bold uppercase transition-all border ${
-              filterMode === 'high' ? 'bg-my-accent text-white dark:text-black border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
-            }`}
-          >
-            <Filter size={10} /> {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
-          </button>
+          {!isMobile && (
+            <button 
+              onClick={() => setFilterMode(f => f === 'all' ? 'high' : 'all')}
+              className={`flex items-center gap-1.5 px-2 py-1 text-[9px] font-bold uppercase transition-all border ${
+                filterMode === 'high' ? 'bg-my-accent text-white dark:text-black border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
+              }`}
+            >
+              <Filter size={10} /> {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
+            </button>
+          )}
           <div className="w-px h-4 bg-my-border mx-1" />
           <button 
             onClick={() => fgRef.current?.zoomToFit(500)}
@@ -272,27 +276,27 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
-            nodeRelSize={4}
+            nodeRelSize={isMobile ? 3 : 4}
             linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
-            linkWidth={(link: any) => (link.strength || 1) * 1.5}
-            linkDirectionalParticles={2}
+            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1 : 1.5)}
+            linkDirectionalParticles={isMobile ? 0 : 2}
             linkDirectionalParticleSpeed={0.012}
             linkDirectionalParticleWidth={1.5}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
-            onNodeHover={setHoverNode}
-            d3VelocityDecay={0.25}
-            cooldownTicks={100}
+            onNodeHover={isMobile ? undefined : setHoverNode}
+            d3VelocityDecay={isMobile ? 0.35 : 0.25}
+            cooldownTicks={isMobile ? 50 : 100}
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.name;
-              const fontSize = 12 / globalScale;
-              const nodeRadius = Math.sqrt(node.val) * 1.2;
+              const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
+              const nodeRadius = Math.sqrt(node.val) * (isMobile ? 1 : 1.2);
               const isHovered = hoverNode === node;
               const isRoot = node.id === 'root' || node.val > 15;
 
-              // Smart Glow
-              if (isHovered || isRoot) {
+              // Smart Glow — reduced on mobile
+              if (!isMobile && (isHovered || isRoot)) {
                 ctx.shadowBlur = 20 / globalScale;
                 ctx.shadowColor = node.color;
               }
@@ -300,20 +304,28 @@ export default function PhysicsMap({
               // Node Body
               ctx.beginPath();
               ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
-              ctx.fillStyle = isHovered ? signalColor : node.color;
+              ctx.fillStyle = isHovered || isRoot ? signalColor : node.color;
               ctx.fill();
               
               ctx.shadowBlur = 0;
 
-              // Type Ring
-              if (node.type) {
+              // Type Ring — skip on mobile for perf
+              if (!isMobile && node.type) {
                 ctx.lineWidth = 1.5 / globalScale;
                 ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
                 ctx.stroke();
               }
 
-              // Smart Labeling (Only show if important or hovered or zoomed)
-              if (isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8) {
+              // Smart Labeling — only show root nodes on mobile
+              if (isMobile) {
+                if (isRoot) {
+                  ctx.font = `bold ${fontSize}px "Outfit", sans-serif`;
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'top';
+                  ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#1A1A1A';
+                  ctx.fillText(label, node.x, node.y + nodeRadius + 5);
+                }
+              } else if (isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8) {
                 const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
                 ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
                 ctx.textAlign = 'center';
@@ -403,7 +415,8 @@ export default function PhysicsMap({
       </div>
 
       {/* Cluster Footer Info */}
-      <div className="h-8 bg-my-sidebar/30 border-t border-my-border flex items-center px-4 shrink-0">
+      <div className="h-8 bg-my-sidebar/30 border-t border-my-border hidden md:flex items-center px-4 shrink-0">
+        {!isMobile && (
         <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
            <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
            <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
@@ -411,6 +424,7 @@ export default function PhysicsMap({
            <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>
         </div>
       </div>
+      )}
     </div>
   );
 }

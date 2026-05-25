@@ -82,7 +82,7 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
                   <button
                     key={entry.id}
                     onClick={() => handleArchiveClick(entry)}
-                    className="w-full flex flex-col gap-1 px-3 py-3 rounded-[2px] hover:bg-my-callout/40 transition-colors text-left group border border-transparent hover:border-my-border/50"
+                    className="w-full flex flex-col gap-1 md:px-3 md:py-3 px-4 py-4 rounded-[2px] hover:bg-my-callout/40 transition-colors text-left group border border-transparent hover:border-my-border/50"
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div className="text-my-muted group-hover:text-my-accent transition-colors">

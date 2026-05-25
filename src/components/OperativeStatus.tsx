@@ -7,6 +7,7 @@ import {
   BarChart3, PieChart, Activity as ActivityIcon,
   TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2
 } from 'lucide-react';
+import { toast } from '../utils/toast';
 import clsx from 'clsx';
 import { dbService } from '../services/dbService';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
@@ -210,11 +211,11 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
           aiProvider: exp.aiProvider
         });
       } else {
-        alert("Report context not found in archive. Please run a new research session.");
+        toast.error("Report context not found in archive. Please run a new research session.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error generating PDF. Please try again.");
+      toast.error("Error generating PDF. Please try again.");
     } finally {
       setDownloadingId(null);
     }
@@ -306,7 +307,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('overview')}
               className={clsx(
-                "pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'overview' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -316,7 +317,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('analytics')}
               className={clsx(
-                "pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'analytics' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -326,7 +327,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('exports')}
               className={clsx(
-                "pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'exports' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -607,7 +608,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
              disabled={purging || !user}
              onClick={async () => {
                if (!user) {
-                 alert('Sign in to purge your vault data.');
+                 toast.info('Sign in to purge your vault data.');
                  return;
                }
                if (!window.confirm(
@@ -620,14 +621,14 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                  await logout();
                  await syncAuthSession(null);
                  onClose();
-                 alert('Personal data purged. Your vault has been reset.');
+                 toast.success('Personal data purged. Your vault has been reset.');
                } catch (err: unknown) {
                  const code = (err as { code?: string })?.code;
                  const message = err instanceof Error ? err.message : '';
                  if (code === 'auth/requires-recent-login' || message === 'REAUTH_REQUIRED') {
-                   alert('For security, sign out, sign in again, then run Purge Personal Data.');
+                   toast.error('For security, sign out, sign in again, then run Purge Personal Data.');
                  } else {
-                   alert(message || 'Purge could not complete on the server. Local data was cleared — sign out and contact support if needed.');
+                   toast.error(message || 'Purge could not complete on the server. Local data was cleared — sign out and contact support if needed.');
                  }
                } finally {
                  setPurging(false);

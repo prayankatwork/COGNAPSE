@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import { ChevronDown, ChevronRight, CheckCircle2, Shield, Lock, Download, Loader2 } from 'lucide-react';
+import { toast } from '../utils/toast';
 import ResearchScoreCard from './ResearchScoreCard';
 import PremiumExportModal from './PremiumExportModal';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
@@ -48,7 +49,7 @@ export default function DeepResearchView() {
       }
     } catch (err) {
       console.error(err);
-      alert("Error packaging PDF. Please try again.");
+      toast.error("Error packaging PDF. Please try again.");
     } finally {
       setGeneratingPDF(false);
     }

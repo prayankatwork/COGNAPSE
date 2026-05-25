@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award, Chrome, Check } from 'lucide-react';
+import { toast } from '../utils/toast';
 import confetti from 'canvas-confetti';
 import { dbService } from '../services/dbService';
 import { apiFetch } from '../services/apiClient';
@@ -81,16 +82,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     const plan = planDetails[selectedPlan];
 
     if (isPreviewDeploy) {
-      alert(
-        'Payments only work on the production site.\n\nOpen https://cognapse.vercel.app, sign in, then try again.\n\nPreview deploy URLs do not have payment server configuration.'
-      );
+      toast.info('Payments only work on the production site. Open cognapse.vercel.app, sign in, then try again.');
       setLoading(false);
       return;
     }
 
     const authReady = await ensurePaymentAuth(user);
     if (!authReady.ok) {
-      alert('message' in authReady ? authReady.message : 'Please sign in again before paying.');
+      toast.error('message' in authReady ? authReady.message : 'Please sign in again before paying.');
       setLoading(false);
       return;
     }
@@ -147,7 +146,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             handleConfirmPayment();
           } catch (e) {
             console.error('Sandbox Local Activation Error:', e);
-            alert('Failed to simulate premium activation.');
+            toast.error('Failed to simulate premium activation.');
             setLoading(false);
           }
         }, 1500);
@@ -158,7 +157,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       const res = await loadRazorpayScript();
       
       if (!res) {
-        alert('Razorpay SDK failed to load. Please disable your adblocker or check your internet connection.');
+        toast.error('Razorpay SDK failed to load. Please disable your adblocker or check your internet connection.');
         setLoading(false);
         return;
       }
@@ -167,7 +166,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       const razorpayKey =
         orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
       if (!razorpayKey || !String(razorpayKey).startsWith('rzp_')) {
-        alert('Payments are not configured. Please contact support.');
+        toast.error('Payments are not configured. Please contact support.');
         setLoading(false);
         return;
       }
@@ -205,12 +204,12 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
               });
               handleConfirmPayment();
             } else {
-              alert('Payment verification failed. Please contact support.');
+              toast.error('Payment verification failed. Please contact support.');
               setLoading(false);
             }
           } catch (err) {
             console.error('Verification Error:', err);
-            alert('Payment verification failed.');
+            toast.error('Payment verification failed.');
             setLoading(false);
           }
         },
@@ -231,7 +230,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
       const paymentObject = new (window as any).Razorpay(options);
       
       paymentObject.on('payment.failed', function (response: any) {
-        alert(`Payment failed: ${response.error.description}`);
+        toast.error(`Payment failed: ${response.error.description}`);
         setLoading(false);
       });
       
@@ -239,7 +238,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
     } catch (error) {
       console.error('Payment Error:', error);
       const msg = error instanceof Error ? error.message : 'Failed to initialize payment.';
-      alert(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };

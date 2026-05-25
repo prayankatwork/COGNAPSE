@@ -30,8 +30,6 @@
  * use: import { trackOperationalEvent } from './services/opsTelemetry'
  */
 
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
 import { useStore } from '../store';
 
 /* ─── Types ─── */
@@ -62,7 +60,8 @@ export type TelemetryEventType =
   | 'error_encountered'
   | 'feature_used'
   | 'behavior_snapshot'
-  | 'tokens_consumed';
+  | 'tokens_consumed'
+  | 'abuse_report';
 
 export interface TelemetryPayload {
   type: TelemetryEventType;
@@ -566,15 +565,15 @@ class OpsTelemetryEngine {
     // Use sendBeacon for session_end (most reliable during page unload)
     try {
       const body = JSON.stringify({
-        fields: {
-          sessionId: { stringValue: this.sessionId },
-          type: { stringValue: 'session_end' },
-          ts: { stringValue: new Date().toISOString() },
-        },
+        events: [{
+          sessionId: this.sessionId,
+          type: 'session_end',
+          userId: null,
+          username: null,
+          metadata: {},
+        }],
       });
-      const url =
-        `https://firestore.googleapis.com/v1/projects/${encodeURIComponent('cognapse-93cdf')}/databases/(default)/documents/ops_telemetry?key=AIzaSyBUZoskVfIc7ZkJqFxx21r4Fb-XkahNaWQ`;
-      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+      navigator.sendBeacon('/api/ops-telemetry', new Blob([body], { type: 'application/json' }));
     } catch {
       // Best-effort
     }
@@ -639,46 +638,41 @@ class OpsTelemetryEngine {
 
     if (forceBeacon) {
       // Use sendBeacon for page unload (most reliable)
-      for (const event of events) {
-        try {
-          const body = JSON.stringify({
-            fields: {
-              sessionId: { stringValue: event.sessionId },
-              type: { stringValue: event.type },
-              userId: { stringValue: event.userId ?? '' },
-              username: { stringValue: event.username ?? '' },
-              metadata: { stringValue: JSON.stringify(event.metadata ?? {}) },
-              ts: { stringValue: new Date().toISOString() },
-            },
-          });
-          const url =
-            `https://firestore.googleapis.com/v1/projects/${encodeURIComponent('cognapse-93cdf')}/databases/(default)/documents/ops_telemetry?key=AIzaSyBUZoskVfIc7ZkJqFxx21r4Fb-XkahNaWQ`;
-          navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
-        } catch {
-          // Best-effort
-        }
+      try {
+        const body = JSON.stringify({ events });
+        navigator.sendBeacon('/api/ops-telemetry', new Blob([body], { type: 'application/json' }));
+      } catch {
+        // Best-effort
       }
       return;
     }
 
-    // Normal flush: write via Firestore SDK
-    for (const event of events) {
-      this.writeEvent(event).catch(() => {
-        // Silent fail
-      });
+    // Normal flush: batch write via Vercel API proxy
+    try {
+      fetch('/api/ops-telemetry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events }),
+      }).catch(() => {});
+    } catch {
+      // Silent fail
     }
   }
 
   private async writeEvent(event: TelemetryPayload): Promise<void> {
     try {
-      const col = collection(db, 'ops_telemetry');
-      await addDoc(col, {
-        sessionId: event.sessionId,
-        type: event.type,
-        userId: event.userId ?? null,
-        username: event.username ?? null,
-        metadata: event.metadata ?? {},
-        createdAt: serverTimestamp(),
+      await fetch('/api/ops-telemetry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          events: [{
+            sessionId: event.sessionId,
+            type: event.type,
+            userId: event.userId ?? null,
+            username: event.username ?? null,
+            metadata: event.metadata ?? {},
+          }],
+        }),
       });
     } catch {
       // Silent fail — telemetry must never throw
