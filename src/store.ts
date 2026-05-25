@@ -282,7 +282,17 @@ export const useStore = create<AppState>()(
           rank: 'ANALYST',
           archive: [],
           currentReport: null,
-          notes: []
+          notes: [],
+          deepResearch: {
+            status: 'idle',
+            stage: 0,
+            progress: '',
+            thesis: null,
+            error: null,
+            scores: null,
+            reasoningTimeline: []
+          },
+          currentView: 'landing'
         });
       },
 
