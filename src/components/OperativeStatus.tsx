@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
-import { 
+import {
   X, Shield, Fingerprint,
-  Activity, Flame, Star, Target, Cpu,
-  BarChart3, PieChart, Activity as ActivityIcon,
+  Flame, Star, Target, Cpu,
+  BarChart3, PieChart,
   TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2
 } from 'lucide-react';
 import { toast } from '../utils/toast';
