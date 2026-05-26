@@ -1,5 +1,38 @@
 import { apiFetch } from './apiClient';
-import type { RagAnswer, ChunkSearchResult } from '../types';
+import type { RagAnswer, ChunkSearchResult, COGNAPSE_Output } from '../types';
+
+/**
+ * Analyze a document and return a full COGNAPSE research report.
+ * Supports direct text or base64-encoded file data (PDF/DOCX/PPTX/TXT).
+ *
+ * @param userId - User's UID
+ * @param params - Either { text } for plain text, or { fileData, mimeType, fileName } for file upload
+ * @param query - Optional analysis focus question
+ * @returns COGNAPSE_Output research report
+ */
+export async function analyzeDocument(
+  userId: string,
+  params: { text?: string; fileData?: string; mimeType?: string; fileName?: string },
+  query?: string
+): Promise<{ report: COGNAPSE_Output; usage: any }> {
+  if (!params.text && !params.fileData) {
+    throw new Error('Either text or fileData is required.');
+  }
+
+  const response = await apiFetch('/api/analyze-document', {
+    method: 'POST',
+    body: JSON.stringify({ userId, ...params, query }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: 'Analysis failed' }));
+    if (err.premiumRequired) throw new Error('Premium subscription required.');
+    throw new Error(err.error || 'Failed to analyze document');
+  }
+
+  const data = await response.json();
+  return { report: data.report, usage: data.usage };
+}
 
 /**
  * Process a document: chunk text and store in Firestore.

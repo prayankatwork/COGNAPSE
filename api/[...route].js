@@ -44,6 +44,7 @@ const routes = {
   'query-document-chunks':   documents.handleQueryDocumentChunks,
   'rag-answer':              documents.handleRagAnswer,
   'extract-document-text':   documents.handleExtractDocumentText,
+  'analyze-document':        documents.handleAnalyzeDocument,
 };
 
 export default async function handler(req, res) {

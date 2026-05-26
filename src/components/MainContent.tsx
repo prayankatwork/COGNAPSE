@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { useShallow } from 'zustand/react/shallow';
-import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight } from 'lucide-react';
+import { Search, Menu, Send, AlertCircle, Loader2, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight, Upload, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import confetti from 'canvas-confetti';
 import { v4 as uuidv4 } from 'uuid';
 import { executeDeepResearch } from '../services/deepResearchService';
+import { analyzeDocument } from '../services/documentRagService';
 import { dbService } from '../services/dbService';
 import DeepResearchView from './DeepResearchView';
 import BrandLogo from './BrandLogo';
@@ -52,9 +53,11 @@ export default function MainContent() {
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState("Initializing...");
   const [error, setError] = useState<string | null>(null);
+  const [docFileName, setDocFileName] = useState<string | null>(null);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const user = useStore(state => state.user);
   const isPremium = !!user?.premium;
@@ -296,6 +299,76 @@ export default function MainContent() {
     } finally {
       setLoading(false);
       setIsLoading(false);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setDocFileName(file.name);
+    setError(null);
+    setLoading(true);
+    setIsLoading(true);
+    useStore.getState().resetDeepResearch();
+
+    setLoadingPhase("Reading document...");
+    clearLoadingPhaseTimers();
+    loadingPhaseTimers.current = [
+      setTimeout(() => setLoadingPhase('Extracting document text...'), 1000),
+      setTimeout(() => setLoadingPhase('Analyzing document content...'), 3000),
+      setTimeout(() => setLoadingPhase('Structuring intelligence report...'), 5500),
+    ];
+
+    try {
+      let fileData: string | undefined;
+      let text: string | undefined;
+      const mimeType = file.type || 'application/octet-stream';
+
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        text = await file.text();
+      } else {
+        // Read as base64 for server-side extraction
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        fileData = btoa(binary);
+      }
+
+      const { report } = await analyzeDocument(
+        user.id,
+        fileData ? { fileData, mimeType, fileName: file.name } : { text: text! },
+        undefined
+      );
+
+      if (!report || !report.summary) {
+        throw new Error("Document analysis yielded incomplete results.");
+      }
+
+      const reportId = uuidv4();
+      report.id = reportId;
+
+      setLoadingPhase("Finalizing report...");
+      setCurrentReport(report);
+
+      updateGamification({ xpAcquired: 10, searchCountIncrease: 1 });
+      addToArchive({
+        id: reportId,
+        query: report.archive_entry?.query || `Document: ${file.name}`,
+        timestamp: new Date().toISOString(),
+        topic_cluster: "Document Analysis",
+        tags: ["document", "analysis"],
+        summary_snippet: report.summary?.bottom_line || "",
+        report
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to analyze document.");
+      setDocFileName(null);
+    } finally {
+      setLoading(false);
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -758,6 +831,13 @@ export default function MainContent() {
 
               <div className="relative">
                 <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".txt,.pdf,.docx,.doc,.pptx,.ppt"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <input
                   id="walkthrough-search-anchor"
                   type="text"
                   value={query}
@@ -772,6 +852,16 @@ export default function MainContent() {
                   disabled={loading || (!walkthroughCompleted && !!currentReport)}
                   className="w-full bg-white/70 dark:bg-my-bg/70 backdrop-blur-md md:backdrop-blur-2xl border border-my-border rounded-none py-4 pl-4 pr-14 md:py-6 md:pl-8 md:pr-16 text-my-ink focus:outline-none focus:border-my-accent transition-all disabled:opacity-50 shadow-2xl text-base md:text-lg font-light tracking-tight placeholder:text-my-muted/40"
                 />
+                {isPremium && !currentReport && !loading && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute right-16 top-3 bottom-3 aspect-square flex items-center justify-center text-my-muted hover:text-my-accent transition-colors"
+                    title="Upload document for analysis"
+                  >
+                    <Upload size={16} />
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={!query.trim() || loading || (!walkthroughCompleted && !!currentReport)}

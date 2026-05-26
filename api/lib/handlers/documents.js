@@ -12,7 +12,7 @@ import { getPremiumStatus } from '../premium.js';
 import { getFirestoreAdmin } from '../firebaseAdmin.js';
 import { chunkText } from '../documentChunker.js';
 import { scoreChunks } from '../embedding.js';
-import { generateRag } from '../swarm.js';
+import { runSwarm } from '../swarm.js';
 import {
   generateUploadUrl,
   saveDocumentMetadata,
@@ -507,5 +507,141 @@ export async function handleExtractDocumentText(req, res) {
     return res.status(200).json({ success: true, text: result.text, format: result.format, pageCount: result.pageCount, slideCount: result.slideCount, cached: false });
   } catch (error) {
     return sendSafeError(res, 500, 'Failed to extract document text.', error);
+  }
+}
+
+/* ─── POST /api/analyze-document ─── */
+
+const DOCUMENT_SYSTEM_PROMPT = (text, query) => `You are COGNAPSE Document Analyst. Analyze the provided document content below. This document is your ONLY source material — base every claim strictly on it.
+
+DOCUMENT CONTENT:
+"""
+${(text || '').slice(0, 50000)}
+"""
+
+${query ? `USER QUESTION: ${query}` : 'USER QUESTION: Summarize and analyze this document comprehensively.'}
+
+Return a strictly valid JSON object with the following schema — no markdown, no preamble:
+{
+  "query_understood": "Descriptive title of this document analysis",
+  "mode": "standard",
+  "summary": {
+    "bottom_line": "1-2 sentence plain-English conclusion about this document",
+    "full_synthesis": "Comprehensive 400-800 word analysis of the document. Structure it with narrative flow — not bullet points. Reference sections of the document using [DOC] notation.",
+    "eli5_version": "Same analysis explained simply, as if to a curious 12-year-old",
+    "confidence_narrative": "One sentence explaining confidence level based on document completeness and clarity"
+  },
+  "scores": {
+    "overall_credibility": 0-100,
+    "overall_relevance": 0-100,
+    "evidence_consensus": "strong | mixed | contested | insufficient",
+    "confidence_label": "High | Medium | Low"
+  },
+  "sources": [
+    {
+      "id": 1,
+      "title": "Uploaded Document",
+      "url": "(this uploaded document)",
+      "domain": "(user document)",
+      "type": "Document",
+      "credibility_score": 0-100,
+      "relevance_score": 0-100,
+      "key_finding": "Key finding from this document section",
+      "published_date": "(from document or 'unknown')",
+      "bias_flag": null
+    }
+  ],
+  "conflicts": [],
+  "bias_alert": null,
+  "intelligence_map": {
+    "central_node": { "id": "root", "label": "Main topic", "type": "CONCEPT" },
+    "nodes": [
+      { "id": "node_1", "label": "Key concept 1", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }
+    ],
+    "edges": [{ "from": "root", "to": "node_1", "label": "related" }]
+  },
+  "geo_points": [],
+  "swot": {
+    "perspective": "Document analysis perspective",
+    "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+    "weaknesses": ["Weakness 1", "Weakness 2", "Weakness 3"],
+    "opportunities": ["Opportunity 1", "Opportunity 2"],
+    "threats": ["Threat 1", "Threat 2"]
+  },
+  "timeline_events": [],
+  "actionable_takeaways": {
+    "key_insight": "Single most important takeaway from this document",
+    "watch_out_for": "Key limitation or caveat",
+    "next_step": "What to do with this information"
+  },
+  "follow_up_suggestions": ["Follow-up question 1", "Follow-up question 2", "Follow-up question 3"],
+  "archive_entry": {
+    "query": "Document Analysis: ${(query || text || '').slice(0, 80)}",
+    "timestamp": "ISO timestamp",
+    "topic_cluster": "Document Analysis",
+    "tags": ["document", "analysis"],
+    "summary_snippet": "35-word preview"
+  }
+}
+
+CRITICAL RULES:
+- Base ALL claims on the document content above. Do NOT use external knowledge.
+- If the document is unclear or incomplete, say so explicitly.
+- Never invent URLs, statistics, or quotes not found in the document.
+- The "sources" array should reference the uploaded document itself.`;
+
+export async function handleAnalyzeDocument(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const decoded = await requireUser(req, res);
+  if (decoded === false) return;
+
+  const { userId, text, query, fileData, mimeType, fileName } = req.body || {};
+  const uid = decoded?.uid || userId;
+
+  try {
+    await enforcePremium(uid);
+  } catch (e) {
+    if (e.status === 403) return res.status(403).json({ error: e.message, premiumRequired: true });
+    return sendSafeError(res, 500, 'Failed to verify premium status.', e);
+  }
+
+  try {
+    // Extract text from file if fileData provided, otherwise use provided text
+    let documentText = text || '';
+    if (fileData && mimeType && !documentText) {
+      const buffer = Buffer.from(fileData, 'base64');
+      const result = await extractDocumentText(buffer, mimeType, fileName || 'document');
+      documentText = result.text || '';
+      if (!documentText) {
+        return res.status(400).json({ error: 'No extractable text found. This file may contain only images.' });
+      }
+    }
+
+    if (!documentText || documentText.trim().length < 50) {
+      return res.status(400).json({ error: 'Document text too short. Minimum 50 characters required.' });
+    }
+
+    const prompt = DOCUMENT_SYSTEM_PROMPT(documentText, query);
+    const raw = await runSwarm({
+      prompt,
+      isJson: true,
+      estTokens: Math.ceil(prompt.length / 4),
+      requestedModel: 'groq-llama-3.3-70b-versatile',
+    });
+
+    let result;
+    try {
+      result = typeof raw.result === 'string' ? JSON.parse(raw.result) : raw.result;
+    } catch {
+      const { extractJson } = await import('../swarm.js');
+      result = extractJson(raw.result);
+    }
+
+    return res.status(200).json({ success: true, report: result, usage: raw.usage });
+  } catch (error) {
+    return sendSafeError(res, 500, 'Failed to analyze document.', error);
   }
 }
