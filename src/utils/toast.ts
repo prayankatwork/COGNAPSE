@@ -30,23 +30,37 @@ function remove(id: number) {
   notify();
 }
 
+/**
+ * Safely convert a value to a string for display.
+ * Prevents [object Object] rendering errors.
+ */
+function safeString(v: unknown): string {
+  if (typeof v === 'string') return v;
+  if (v instanceof Error) return v.message;
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') {
+    try { return JSON.stringify(v); } catch { return String(v); }
+  }
+  return String(v);
+}
+
 export const toast = {
-  show(message: string, type: ToastType = 'info', duration = 4000) {
+  show(message: unknown, type: ToastType = 'info', duration = 4000) {
     const id = nextId++;
-    toasts = [...toasts, { id, message, type }];
+    toasts = [...toasts, { id, message: safeString(message), type }];
     notify();
     setTimeout(() => remove(id), duration);
   },
 
-  success(message: string) {
+  success(message: unknown) {
     this.show(message, 'success');
   },
 
-  error(message: string) {
+  error(message: unknown) {
     this.show(message, 'error', 6000);
   },
 
-  info(message: string) {
+  info(message: unknown) {
     this.show(message, 'info');
   },
 

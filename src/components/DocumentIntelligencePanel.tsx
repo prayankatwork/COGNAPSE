@@ -30,6 +30,16 @@ import {
 import type { DocumentRecord } from '../types';
 import { toast } from '../utils/toast';
 
+/** Safely convert an unknown error to a displayable string */
+function errMsg(err: unknown, fallback = 'An unknown error occurred.'): string {
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object') {
+    try { return JSON.stringify(err); } catch { return String(err); }
+  }
+  return fallback;
+}
+
 type Tab = 'upload' | 'query';
 
 export default function DocumentIntelligencePanel() {
@@ -126,7 +136,7 @@ export default function DocumentIntelligencePanel() {
         // Auto-switch to query tab after upload so user can process
         setActiveTab('query');
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Upload failed';
+        const message = errMsg(err, 'Upload failed');
         setUploadError(message);
         toast.error(message);
       } finally {
@@ -145,8 +155,7 @@ export default function DocumentIntelligencePanel() {
       if (selectedDoc?.id === docId) setSelectedDoc(null);
       toast.success('Document deleted.');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Delete failed';
-      toast.error(message);
+      toast.error(errMsg(err, 'Delete failed'));
     }
   };
 

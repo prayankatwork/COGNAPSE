@@ -5,82 +5,59 @@
  * Zero API costs — all parsing is local. Works in Vercel serverless (128MB limit).
  *
  * Libraries used:
- *   - pdf-parse (MIT)    → PDF text extraction via Mozilla's PDF.js
- *   - mammoth    (MIT)    → DOCX → text conversion
- *   - jszip      (MIT)    → PPTX unzip + XML slide parsing (already in deps)
+ *   - pdfjs-dist (Apache-2.0) → Mozilla's PDF.js (pure JS, zero native deps)
+ *   - mammoth     (MIT)       → DOCX → text conversion
+ *   - jszip       (MIT)       → PPTX unzip + XML slide parsing (already in deps)
  */
 
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
 
-/**
- * Lazily loads pdf-parse using createRequire.
- * pdf-parse v2.x uses @napi-rs/canvas which fails on Vercel's serverless runtime.
- * By lazy-loading, the crash is isolated to only the PDF extraction endpoint
- * instead of bringing down the entire API.
- */
-let _pdfParse = null;
-let _pdfParseError = null;
-
-async function getPdfParse() {
-  if (_pdfParse) return _pdfParse;
-  if (_pdfParseError) throw _pdfParseError;
-
-  try {
-    const { createRequire } = await import('node:module');
-    const require = createRequire(import.meta.url);
-    _pdfParse = require('pdf-parse');
-    return _pdfParse;
-  } catch (err) {
-    _pdfParseError = new Error(
-      `PDF parsing library unavailable: ${err.message}. ` +
-      'The pdf-parse v2.x native addon (@napi-rs/canvas) is not available in this ' +
-      'server environment. Consider using pdf-parse v1.x (pure JS, no native deps).'
-    );
-    throw _pdfParseError;
-  }
-}
+// Disable PDF.js worker — we run synchronously in Node.js serverless
+pdfjs.GlobalWorkerOptions.workerSrc = '';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-const MAX_PDF_PAGES = 50;               // Limit to first 50 pages to avoid timeout
+const MAX_PDF_PAGES = 100;
+
+/* ─── PDF.js Text Extractor ────────────────────────────────────────────── */
 
 /**
- * Extract text from a PDF buffer.
+ * Extract text from a PDF buffer using Mozilla's PDF.js (pure JS).
+ * Handles compressed content streams, fonts, encodings, and layouts.
+ *
  * @param {Buffer} buffer
  * @returns {Promise<{ text: string, pageCount: number }>}
  */
 async function extractFromPDF(buffer) {
-  const pdfParse = await getPdfParse();
-  const { PDFParse } = pdfParse;
-  const parser = new PDFParse({ data: new Uint8Array(buffer), verbosity: 0 });
+  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
+  const doc = await loadingTask.promise;
 
   try {
-    await parser.load();
+    const pageCount = Math.min(doc.numPages, MAX_PDF_PAGES);
+    const texts = [];
 
-    // Get page count first — this is metadata and could fail on damaged PDFs,
-    // so we catch gracefully to avoid losing the text extraction result below.
-    let pageCount = 0;
-    try {
-      const infoResult = await parser.getInfo();
-      pageCount = infoResult?.total || 0;
-    } catch {
-      // Non-critical — page count is cosmetic, extraction can proceed without it
+    for (let i = 1; i <= pageCount; i++) {
+      const page = await doc.getPage(i);
+      try {
+        const content = await page.getTextContent();
+        const pageText = content.items
+          .map((item) => ('str' in item ? item.str : ''))
+          .join(' ')
+          .trim();
+        if (pageText) texts.push(pageText);
+      } finally {
+        page.cleanup();
+      }
     }
-    pageCount = Math.min(pageCount, MAX_PDF_PAGES);
-
-    // Note: getText() extracts all pages. The page cap above limits only the
-    // reported count, not the extraction work. The 50MB file size limit
-    // (enforced in extractDocumentText) provides the actual guardrail against
-    // large documents causing serverless timeouts.
-    const textResult = await parser.getText();
 
     return {
-      text: (textResult?.text || '').trim(),
+      text: texts.join('\n\n'),
       pageCount,
     };
   } finally {
-    // Clean up to prevent memory leaks in serverless environment
-    await parser.destroy().catch(() => {});
+    // Free memory — critical in serverless
+    await doc.destroy().catch(() => {});
   }
 }
 

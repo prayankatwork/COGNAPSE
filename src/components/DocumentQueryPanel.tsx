@@ -20,6 +20,16 @@ import { getRagAnswer, queryDocuments, processDocument } from '../services/docum
 import { extractDocumentText } from '../services/documentService';
 import { useStore } from '../store';
 
+/** Safely convert an unknown error to a displayable string */
+function errMsg(err: unknown, fallback = 'An unknown error occurred.'): string {
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object') {
+    try { return JSON.stringify(err); } catch { return String(err); }
+  }
+  return fallback;
+}
+
 interface DocumentQueryPanelProps {
   documents: DocumentRecord[];
   onRefreshDocuments: () => void;
@@ -114,14 +124,13 @@ export default function DocumentQueryPanel({
         },
       ]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Processing failed';
       setChatHistory((prev) => [
         ...prev,
         {
           id: `error-${Date.now()}`,
           type: 'error',
           query: `Process: ${doc.originalName}`,
-          error: message,
+          error: errMsg(err, 'Processing failed'),
           timestamp: Date.now(),
         },
       ]);
@@ -167,14 +176,13 @@ export default function DocumentQueryPanel({
         },
       ]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to generate answer';
       setChatHistory((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           type: 'error',
           query: trimmed,
-          error: message,
+          error: errMsg(err, 'Failed to generate answer'),
           timestamp: Date.now(),
         },
       ]);
