@@ -1,7 +1,6 @@
 import admin from 'firebase-admin';
 
 let initialized = false;
-let initFailed = false;
 
 function normalizePrivateKey(raw) {
   if (!raw) return null;
@@ -16,8 +15,6 @@ function normalizePrivateKey(raw) {
 }
 
 export function getFirebaseAdmin() {
-  if (initFailed) return null;
-
   const projectId =
     process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -40,7 +37,6 @@ export function getFirebaseAdmin() {
       }
       initialized = true;
     } catch (err) {
-      initFailed = true;
       console.error('[Firebase Admin] init failed:', err?.message || err);
       return null;
     }
