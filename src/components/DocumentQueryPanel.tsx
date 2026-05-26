@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import type { DocumentRecord, RagAnswer } from '../types';
 import { getRagAnswer, queryDocuments, processDocument } from '../services/documentRagService';
-import { extractFileText } from '../services/documentService';
+import { extractDocumentText } from '../services/documentService';
 import { useStore } from '../store';
 
 interface DocumentQueryPanelProps {
@@ -49,16 +49,9 @@ export default function DocumentQueryPanel({
 
   const userId = user?.id || '';
 
-  // A document is processable if it has real extracted text (not a placeholder)
-  const hasValidText = (doc: DocumentRecord) =>
-    !!doc.extractedText &&
-    !doc.extractedText.startsWith('[Document:') &&
-    !doc.extractedText.startsWith('[Image file:') &&
-    !doc.extractedText.includes('No extractable text found');
-
   const indexedDocs = documents.filter((d) => d.status === 'indexed');
   const processableDocs = documents.filter(
-    (d) => d.status === 'ready' && hasValidText(d)
+    (d) => d.status === 'ready'
   );
 
   // Auto-scroll chat
@@ -89,11 +82,16 @@ export default function DocumentQueryPanel({
     setIsProcessing(true);
 
     try {
-      // Extract text — for txt files this works client-side
-      const fileText = doc.extractedText;
+      // Get text: prefer local extractedText, otherwise fetch from server
+      let fileText = doc.extractedText;
+      if (!fileText || fileText.startsWith('[Document:') || fileText.startsWith('[Image file:')) {
+        const result = await extractDocumentText(userId, doc.id);
+        fileText = result.text || '';
+      }
+
       if (!fileText || fileText.startsWith('[Document:') || fileText.startsWith('[Image file:')) {
         throw new Error(
-          'Text content not available. For non-text files, text extraction via API is required.'
+          'Unable to extract text from this document. Only text-based files (PDF with text layer, TXT) can be processed for intelligence querying.'
         );
       }
 
@@ -237,7 +235,7 @@ export default function DocumentQueryPanel({
             const isIndexed = doc.status === 'indexed';
             const isSelected = selectedDocIds.has(doc.id);
             const isProcessingThis = processingDocId === doc.id;
-            const canProcess = doc.status === 'ready' && hasValidText(doc);
+            const canProcess = doc.status === 'ready';
 
             return (
               <div
