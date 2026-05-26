@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { COGNAPSE_Output, ResearchVisibility } from '../types';
 import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash } from 'lucide-react';
@@ -135,6 +135,15 @@ export default function ReportView({
   const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
   const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
 
+  // Persist follow-up suggestions as open threads for sidebar
+  useEffect(() => {
+    if (report.follow_up_suggestions?.length) {
+      const existing = JSON.parse(localStorage.getItem('cognapse_open_threads') || '[]');
+      const merged = [...new Set([...report.follow_up_suggestions.slice(0, 3).map((s: any) => typeof s === 'string' ? s : String(s)), ...existing])].slice(0, 10);
+      localStorage.setItem('cognapse_open_threads', JSON.stringify(merged));
+    }
+  }, [report.id, report.follow_up_suggestions?.length]);
+
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
 
@@ -249,6 +258,15 @@ export default function ReportView({
           </h1>
           <BrandLogo size={44} />
         </div>
+        {(() => {
+          const clusters = new Set(report.sources?.map(s => s.domain?.split('.').slice(-2).join('.')).filter(Boolean));
+          const coverageDepth = `Coverage: ${report.sources?.length || 0} sources across ${clusters.size} domains`;
+          return (
+            <div className="text-[9px] text-my-muted font-mono mb-4 tracking-wider">
+              {coverageDepth}{report.conflicts?.length ? ` · ${report.conflicts.length} conflict${report.conflicts.length > 1 ? 's' : ''} detected` : ''}
+            </div>
+          );
+        })()}
 
         {/* Unified Action Bar */}
         <div className="flex flex-wrap items-center gap-3 mb-6 pb-4 border-b border-my-border">
@@ -544,6 +562,35 @@ export default function ReportView({
           </div>
         </div>
       )}
+
+      {/* Unexpected Connections */}
+      {(() => {
+        const connections: { label: string; desc: string; type: string }[] = [];
+        if (report.conflicts?.length) {
+          report.conflicts.slice(0, 2).forEach(c => {
+            connections.push({ label: 'Source Conflict', desc: `${c.claim_a} vs ${c.claim_b}`, type: 'conflict' });
+          });
+        }
+        if (report.intelligence_map?.edges?.length && report.sources?.length) {
+          const mappedDomains = new Set(report.intelligence_map.edges.map((e: any) => e.label));
+          connections.push({ label: 'Map Connection', desc: `${mappedDomains.size} relational link${mappedDomains.size > 1 ? 's' : ''} in intelligence graph`, type: 'map' });
+        }
+        if (connections.length === 0) return null;
+        return (
+          <div className="pt-6 mt-8 border-t border-my-border">
+            <SectionTitle>Unexpected Connections</SectionTitle>
+            <div className="mt-3 space-y-2">
+              {connections.map((c, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] text-my-ink bg-my-callout/30 border border-my-border p-2.5">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-my-muted shrink-0">{c.type === 'conflict' ? '⚡' : '🔗'}</span>
+                  <span className="font-semibold text-my-muted text-[8px] uppercase tracking-wider shrink-0">{c.label}:</span>
+                  <span className="italic opacity-80">{c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Feedback */}
       {report.feedback_prompt && !rated && (
