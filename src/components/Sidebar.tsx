@@ -7,7 +7,6 @@ import {
   BookOpen, ChevronLeft, ChevronRight, 
   ArrowUpRight, ShieldCheck, Terminal,
   Library, Box, Fingerprint, Lock, Shield,
-  FolderKanban
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Button } from './ui';
@@ -124,19 +123,6 @@ export default function Sidebar() {
                 <div className="flex items-center justify-center gap-1">
                   <History size={10} />
                   Archive
-                </div>
-              </button>
-              <button
-                onClick={() => setView('documents')}
-                className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all rounded-sm ${
-                  currentView === 'documents'
-                    ? 'bg-my-accent text-white dark:text-black shadow-sm'
-                    : 'text-my-muted hover:text-my-ink'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <FolderKanban size={10} />
-                  Files
                 </div>
               </button>
             </div>
