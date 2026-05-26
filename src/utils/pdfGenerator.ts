@@ -130,7 +130,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
 
   if (report) {
     // Generate premium mock data if it doesn't exist
-    if (!report.premium_export_data) {
+    if (!report.premium_export_data && !report.archive_entry?.tags?.includes('document')) {
       report.premium_export_data = {
         executive_summary: {
           key_findings: [
@@ -193,8 +193,10 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
 
     const premium = report.premium_export_data;
+    const isDocument = report.archive_entry?.tags?.includes('document');
 
     // 2. TABLE OF CONTENTS
+    if (!isDocument) {
     let tocHTML = `
       <div style="${cardStyle}">
         <h3 style="${sectionTitleStyle}">Table of Contents</h3>
@@ -230,6 +232,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       </div>
     `;
     sectionsHTML.push(tocHTML);
+    }
 
     // 3. EXECUTIVE SUMMARY
     let execHTML = `
@@ -249,6 +252,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
           <p style="font-size: 12px; line-height: 1.7; color: #475569; margin: 0; text-align: justify;">${safeText(report.summary.full_synthesis)}</p>
         </div>
 
+${premium?.executive_summary ? `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
           <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 16px; border-radius: 4px;">
             <h4 style="color: #166534; font-size: 10px; text-transform: uppercase; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 0.08em;">Key Findings</h4>
@@ -263,21 +267,24 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
             </ul>
           </div>
         </div>
+` : ''}
       </div>
     `;
     sectionsHTML.push(execHTML);
 
+    if (!isDocument) {
+    const p = premium!;
     // 4. CONSENSUS ANALYSIS
-    const consensusColor = premium.multi_ai_consensus.consensus_score >= 85 ? '#10B981' : premium.multi_ai_consensus.consensus_score >= 70 ? '#F59E0B' : '#EF4444';
+    const consensusColor = p.multi_ai_consensus.consensus_score >= 85 ? '#10B981' : p.multi_ai_consensus.consensus_score >= 70 ? '#F59E0B' : '#EF4444';
     let consensusHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.consensus};">
         <h3 style="${sectionTitleStyle}">2. Consensus Analysis</h3>
         
         <div style="display: flex; gap: 24px; align-items: stretch; margin-bottom: 24px;">
           <div style="flex-shrink: 0; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 24px; border-radius: 6px; width: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 44px; font-weight: 900; color: ${consensusColor}; line-height: 1; font-family: ${systemFont};">${premium.multi_ai_consensus.consensus_score}%</div>
+            <div style="font-size: 44px; font-weight: 900; color: ${consensusColor}; line-height: 1; font-family: ${systemFont};">${p.multi_ai_consensus.consensus_score}%</div>
             <div style="width: 80%; height: 4px; background: #E2E8F0; border-radius: 2px; margin-top: 12px; overflow: hidden;">
-              <div style="width: ${premium.multi_ai_consensus.consensus_score}%; height: 100%; background: ${consensusColor}; border-radius: 2px;"></div>
+              <div style="width: ${p.multi_ai_consensus.consensus_score}%; height: 100%; background: ${consensusColor}; border-radius: 2px;"></div>
             </div>
             <div style="font-size: 9px; text-transform: uppercase; color: #64748B; letter-spacing: 0.12em; font-weight: 700; margin-top: 10px; text-align: center;">Consensus Score</div>
           </div>
@@ -286,13 +293,13 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
             <div style="background: #ECFDF5; border-left: 4px solid #10B981; padding: 14px; border-radius: 0 4px 4px 0;">
               <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #047857; display: block; margin-bottom: 6px; letter-spacing: 0.08em;">Agreement Between Systems</span>
               <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #064E3B; line-height: 1.5;">
-                ${formatList(premium.multi_ai_consensus.agreement_points)}
+                ${formatList(p.multi_ai_consensus.agreement_points)}
               </ul>
             </div>
             <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 14px; border-radius: 0 4px 4px 0;">
               <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #B91C1C; display: block; margin-bottom: 6px; letter-spacing: 0.08em;">Differing Viewpoints</span>
               <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #7F1D1D; line-height: 1.5;">
-                ${formatList(premium.multi_ai_consensus.conflicting_viewpoints)}
+                ${formatList(p.multi_ai_consensus.conflicting_viewpoints)}
               </ul>
             </div>
           </div>
@@ -309,7 +316,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
               </tr>
             </thead>
             <tbody>
-              ${premium.multi_ai_consensus.models_compared.map(m => `
+              ${p.multi_ai_consensus.models_compared.map(m => `
                 <tr>
                   <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(m.provider)}</td>
                   <td style="${tableCellStyle}">${safeText(m.stance)}</td>
@@ -330,23 +337,23 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
         
         <div style="margin-bottom: 20px;">
           <h4 style="color: #0F172A; font-size: 13px; font-weight: 700; margin: 0 0 10px 0;">Deeper Synthesis</h4>
-          <p style="font-size: 12px; line-height: 1.7; color: #475569; margin: 0; text-align: justify;">${safeText(premium.advanced_analysis.deeper_synthesis)}</p>
+          <p style="font-size: 12px; line-height: 1.7; color: #475569; margin: 0; text-align: justify;">${safeText(p.advanced_analysis.deeper_synthesis)}</p>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
           <div style="background: #FAF5FF; border: 1px solid #E9D5FF; padding: 16px; border-radius: 4px; border-left: 3px solid #A855F7;">
             <h4 style="color: #6B21A8; font-size: 10px; text-transform: uppercase; margin: 0 0 8px 0; font-weight: 700; letter-spacing: 0.08em;">Expanded Reasoning</h4>
-            <p style="font-size: 11px; line-height: 1.6; color: #581C87; margin: 0;">${safeText(premium.advanced_analysis.expanded_reasoning)}</p>
+            <p style="font-size: 11px; line-height: 1.6; color: #581C87; margin: 0;">${safeText(p.advanced_analysis.expanded_reasoning)}</p>
           </div>
           <div style="background: #FEF2F2; border: 1px solid #FECACA; padding: 16px; border-radius: 4px; border-left: 3px solid #EF4444;">
             <h4 style="color: #991B1B; font-size: 10px; text-transform: uppercase; margin: 0 0 8px 0; font-weight: 700; letter-spacing: 0.08em;">Contradiction Analysis</h4>
-            <p style="font-size: 11px; line-height: 1.6; color: #7F1D1D; margin: 0;">${safeText(premium.advanced_analysis.contradiction_analysis)}</p>
+            <p style="font-size: 11px; line-height: 1.6; color: #7F1D1D; margin: 0;">${safeText(p.advanced_analysis.contradiction_analysis)}</p>
           </div>
         </div>
 
         <div style="background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%); border-left: 4px solid #8B5CF6; padding: 20px; border-radius: 0 6px 6px 0;">
           <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #6D28D9; letter-spacing: 0.1em; display: block; margin-bottom: 6px;">Strategic Interpretation &amp; Recommendations</span>
-          <p style="font-size: 12px; line-height: 1.6; color: #0F172A; margin: 0; font-weight: 500;">${safeText(premium.advanced_analysis.strategic_interpretation)}</p>
+          <p style="font-size: 12px; line-height: 1.6; color: #0F172A; margin: 0; font-weight: 500;">${safeText(p.advanced_analysis.strategic_interpretation)}</p>
         </div>
       </div>
     `;
@@ -375,6 +382,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       `;
       sectionsHTML.push(timelineHTML);
     }
+    } // end !isDocument (consensus, advanced, timeline)
 
     // 6. HIGHLIGHT SECTIONS & ACTIONABLE TAKEAWAYS
     if (report.actionable_takeaways) {
@@ -441,13 +449,15 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       sectionsHTML.push(sourcesHTML);
     }
 
+    if (!isDocument) {
+    const p = premium!;
     // 8. FUTURE RESEARCH DIRECTIONS
     let futureHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.future};">
         <h3 style="${sectionTitleStyle}">8. Future Research Directions</h3>
         <p style="font-size: 12px; color: #475569; margin-bottom: 14px; line-height: 1.6;">Based on the findings and limitations of the current analysis, the following areas are recommended for continuation topics and deeper investigation:</p>
         <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #0F172A;">
-          ${formatList(premium.next_research_directions)}
+          ${formatList(p.next_research_directions)}
         </ul>
       </div>
     `;
@@ -469,6 +479,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       `;
       sectionsHTML.push(citationsHTML);
     }
+    } // end !isDocument (future, citations)
 
     // 9. APPENDIX & REPORT METADATA
     const credibilityPct = report.scores?.overall_credibility ?? 0;
@@ -496,7 +507,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
               <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;">
                 <span>Synthesis Depth</span>
               </div>
-              ${scoreBar((premium.metadata.synthesis_depth || 0) * 10, '#10B981')}
+              ${scoreBar((premium?.metadata?.synthesis_depth || 0) * 10, '#10B981')}
             </div>
           </div>
           
@@ -513,11 +524,11 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px;">
                 <span style="color: #475569;">Complexity</span>
-                <strong>${premium.metadata.research_complexity}/10</strong>
+                <strong>${(premium?.metadata?.research_complexity ?? '—')}/10</strong>
               </div>
               <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
                 <span style="color: #475569;">Routing</span>
-                <strong style="font-size: 10px;">${safeText(premium.metadata.model_routing)}</strong>
+                <strong style="font-size: 10px;">${safeText(premium?.metadata?.model_routing || '—')}</strong>
               </div>
             </div>
           </div>
