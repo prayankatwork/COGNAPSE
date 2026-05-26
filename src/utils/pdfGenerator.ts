@@ -4,6 +4,7 @@ import type { COGNAPSE_Output, DeepResearchThesis } from '../types';
 import { escapeHtml } from './escapeHtml';
 import { formatAllCitations, formatCitation } from './citations';
 import type { CitationFormat } from './citations';
+import { computeEnhancedSourceCredibility, computeEntityDiversity, computeBiasFromSentiment } from './scoringEngine';
 
 interface PDFGeneratorInput {
   query: string;
@@ -192,6 +193,19 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
 
     const premium = report.premium_export_data;
 
+    // Enhanced scoring using domain data (synchronous, no model download)
+    const sources = report.sources || [];
+    const enhancedCred = computeEnhancedSourceCredibility(sources);
+    const diversity = computeEntityDiversity(sources);
+    const biasResult = computeBiasFromSentiment(sources);
+    const avgCred = enhancedCred.average;
+    const credStdDev = sources.length > 1
+      ? Math.sqrt(enhancedCred.perSource.reduce((sum, s) => sum + (s - avgCred) ** 2, 0) / enhancedCred.perSource.length)
+      : 0;
+    const enhancedCredPct = Math.round((avgCred / 10) * 100);
+    const reliabilityIndex = Math.round(avgCred * 10) / 10;
+    const confidenceSpread = avgCred > 0 ? Math.round(credStdDev / avgCred * 100) : 0;
+
     // 2. TABLE OF CONTENTS
     let tocHTML = `
       <div style="${cardStyle}">
@@ -266,16 +280,19 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     sectionsHTML.push(execHTML);
 
     // 4. CONSENSUS ANALYSIS
-    const consensusColor = premium.multi_ai_consensus.consensus_score >= 85 ? '#10B981' : premium.multi_ai_consensus.consensus_score >= 70 ? '#F59E0B' : '#EF4444';
+    const conflictPenalty = Math.min((report.conflicts?.length || 0) * 15, 45);
+    const consensusBasePct = ({ strong: 88, mixed: 65, contested: 40, insufficient: 20 } as Record<string, number>)[report.scores?.evidence_consensus || ''] ?? 50;
+    const computedConsensus = Math.max(0, consensusBasePct - conflictPenalty);
+    const consensusColor = computedConsensus >= 85 ? '#10B981' : computedConsensus >= 70 ? '#F59E0B' : '#EF4444';
     let consensusHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.consensus};">
         <h3 style="${sectionTitleStyle}">2. Consensus Analysis</h3>
         
         <div style="display: flex; gap: 24px; align-items: stretch; margin-bottom: 24px;">
           <div style="flex-shrink: 0; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 24px; border-radius: 6px; width: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 44px; font-weight: 900; color: ${consensusColor}; line-height: 1; font-family: ${systemFont};">${premium.multi_ai_consensus.consensus_score}%</div>
+            <div style="font-size: 44px; font-weight: 900; color: ${consensusColor}; line-height: 1; font-family: ${systemFont};">${computedConsensus}%</div>
             <div style="width: 80%; height: 4px; background: #E2E8F0; border-radius: 2px; margin-top: 12px; overflow: hidden;">
-              <div style="width: ${premium.multi_ai_consensus.consensus_score}%; height: 100%; background: ${consensusColor}; border-radius: 2px;"></div>
+              <div style="width: ${computedConsensus}%; height: 100%; background: ${consensusColor}; border-radius: 2px;"></div>
             </div>
             <div style="font-size: 9px; text-transform: uppercase; color: #64748B; letter-spacing: 0.12em; font-weight: 700; margin-top: 10px; text-align: center;">Consensus Score</div>
           </div>
@@ -469,8 +486,8 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
 
     // 9. APPENDIX & REPORT METADATA
-    const credibilityPct = report.scores?.overall_credibility ?? 0;
-    const relevancePct = report.scores?.overall_relevance ?? 0;
+    const credibilityPct = enhancedCredPct;
+    const relevancePct = Math.round((report.scores?.overall_relevance || 0));
     let appendixHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.appendix};">
         <h3 style="${sectionTitleStyle}">9. Appendix &amp; Report Metadata</h3>
@@ -492,9 +509,9 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
             </div>
             <div>
               <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;">
-                <span>Synthesis Depth</span>
+                <span>Source Reliability Index</span>
               </div>
-              ${scoreBar((premium.metadata.synthesis_depth || 0) * 10, '#10B981')}
+              ${scoreBar(reliabilityIndex * 10, '#10B981')}
             </div>
           </div>
           
@@ -513,10 +530,19 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
                 <span style="color: #475569;">Complexity</span>
                 <strong>${premium.metadata.research_complexity}/10</strong>
               </div>
-              <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px;">
                 <span style="color: #475569;">Routing</span>
                 <strong style="font-size: 10px;">${safeText(premium.metadata.model_routing)}</strong>
               </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px;">
+                <span style="color: #475569;">Confidence Spread</span>
+                <strong>±${confidenceSpread}%</strong>
+              </div>
+              ${diversity.entityCount > 0 ? `
+              <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                <span style="color: #475569;">Entities</span>
+                <strong>${diversity.entityCount} (${diversity.orgCount} orgs, ${diversity.placeCount} places, ${diversity.personCount} people)</strong>
+              </div>` : ''}
             </div>
           </div>
         </div>
