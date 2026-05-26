@@ -523,7 +523,7 @@ export default function ReportView({
             </div>
           )}
 
-          {!readOnly && (
+          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
             <>
               {/* Forensic Reasoning Replay */}
               <ThoughtReplayEngine />

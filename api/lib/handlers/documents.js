@@ -526,7 +526,7 @@ RULES:
 Schema:
 {
   "mode": "standard",
-  "query_understood": "Descriptive title based on what the document is about — NOT 'Short title' or generic text",
+  "query_understood": "Descriptive title based on the document content — NOT 'Short title' or generic text",
   "summary": {
     "bottom_line": "1-2 sentence bottom line",
     "full_synthesis": "Concise 100-200 word analysis, narrative style, use [DOC] references",
@@ -551,6 +551,13 @@ Schema:
     "published_date": "unknown",
     "bias_flag": null
   }],
+  "intelligence_map": {
+    "central_node": { "id": "root", "label": "Main topic from document", "type": "CONCEPT" },
+    "nodes": [
+      { "id": "node_1", "label": "Key concept from document", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }
+    ],
+    "edges": [{ "from": "root", "to": "node_1", "label": "related" }]
+  },
   "actionable_takeaways": {
     "key_insight": "One sentence",
     "watch_out_for": "One caveat",
@@ -565,6 +572,8 @@ Schema:
     "summary_snippet": "15-word preview"
   }
 }
+
+IMPORTANT: Every field must be populated based on the actual document content. Do NOT use generic placeholder values. The intelligence_map must contain real concepts extracted from the document, not "Key concept 1" or similar placeholders.
 
 DOCUMENT:
 """
@@ -645,6 +654,13 @@ export async function handleAnalyzeDocument(req, res) {
         },
         scores: { overall_credibility: 65, overall_relevance: 70, evidence_consensus: 'mixed', confidence_label: 'Medium' },
         sources: [{ id: 1, title: fileName || 'Uploaded Document', url: '(uploaded document)', domain: '(user document)', type: 'Document', credibility_score: 65, relevance_score: 70, key_finding: documentText.slice(0, 200), published_date: 'unknown', bias_flag: null }],
+        intelligence_map: {
+          central_node: { id: 'root', label: (fileName || 'Document').replace(/\.[^.]+$/, ''), type: 'CONCEPT' },
+          nodes: [
+            { id: 'node_1', label: documentText.slice(0, 60), type: 'CONCEPT', relationship: 'discusses', sub_query: 'Find more details', importance: 3 },
+          ],
+          edges: [{ from: 'root', to: 'node_1', label: 'discusses' }],
+        },
         actionable_takeaways: { key_insight: 'Review the full document for complete analysis.', watch_out_for: 'Text extraction quality may vary based on document format.', next_step: 'Consider uploading a text-based document for richer analysis.' },
         follow_up_suggestions: ['What are the main topics?', 'Summarize the key arguments.', 'Extract key data points.'],
         archive_entry: { query: `Document Analysis: ${(fileName || 'uploaded').slice(0, 80)}`, timestamp: new Date().toISOString(), topic_cluster: 'Document Analysis', tags: ['document', 'analysis'], summary_snippet: `${documentText.slice(0, 100)}...` },
