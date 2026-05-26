@@ -202,9 +202,28 @@ async function searchBrave(query, count = 10) {
   return sources;
 }
 
+async function searchTavily(query, count = 10) {
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query, search_depth: 'basic', max_results: count }),
+  });
+  if (!response.ok) throw new Error(`Tavily API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
+  const data = await response.json();
+  const sources = [];
+  if (data.results && Array.isArray(data.results)) {
+    for (const result of data.results) {
+      const domain = extractDomain(result.url || '');
+      sources.push({ title: result.title || 'Untitled', url: result.url || '', domain, snippet: result.content || '', published_date: result.published_date || 'unknown', source_type: inferSourceType(domain), relevance_score: result.score ? Math.round(result.score * 100) : 50 });
+    }
+  }
+  return sources;
+}
+
 function getConfiguredProvider() {
   if (process.env.SERPER_API_KEY) return 'serper';
   if (process.env.BRAVE_SEARCH_API_KEY) return 'brave';
+  if (process.env.TAVILY_API_KEY) return 'tavily';
   return null;
 }
 
@@ -223,11 +242,11 @@ export async function handleSearch(req, res) {
   if (query.length > 500) return res.status(400).json({ error: 'Query exceeds maximum length of 500 characters' });
 
   const provider = getConfiguredProvider();
-  if (!provider) return res.status(503).json({ error: 'No search API key configured. Please set SERPER_API_KEY or BRAVE_SEARCH_API_KEY.', provider: null, sources: [], trace: null });
+  if (!provider) return res.status(503).json({ error: 'No search API key configured. Please set SERPER_API_KEY, BRAVE_SEARCH_API_KEY, or TAVILY_API_KEY.', provider: null, sources: [], trace: null });
 
   const startTime = Date.now();
   try {
-    let rawSources = provider === 'serper' ? await searchSerper(query, count) : await searchBrave(query, count);
+    let rawSources = provider === 'serper' ? await searchSerper(query, count) : provider === 'brave' ? await searchBrave(query, count) : await searchTavily(query, count);
     const beforeFilter = rawSources.length;
     const filtered = filterLowQuality(rawSources);
     const filteredCount = beforeFilter - filtered.length;

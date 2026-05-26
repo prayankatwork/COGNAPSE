@@ -14,6 +14,7 @@ export const allowDevBypass =
 export function getSearchProvider() {
   if (process.env.SERPER_API_KEY) return 'serper';
   if (process.env.BRAVE_SEARCH_API_KEY) return 'brave';
+  if (process.env.TAVILY_API_KEY) return 'tavily';
   return null;
 }
 
