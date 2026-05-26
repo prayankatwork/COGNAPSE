@@ -10,11 +10,36 @@
  *   - jszip      (MIT)    → PPTX unzip + XML slide parsing (already in deps)
  */
 
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
+
+/**
+ * Lazily loads pdf-parse using createRequire.
+ * pdf-parse v2.x uses @napi-rs/canvas which fails on Vercel's serverless runtime.
+ * By lazy-loading, the crash is isolated to only the PDF extraction endpoint
+ * instead of bringing down the entire API.
+ */
+let _pdfParse = null;
+let _pdfParseError = null;
+
+async function getPdfParse() {
+  if (_pdfParse) return _pdfParse;
+  if (_pdfParseError) throw _pdfParseError;
+
+  try {
+    const { createRequire } = await import('node:module');
+    const require = createRequire(import.meta.url);
+    _pdfParse = require('pdf-parse');
+    return _pdfParse;
+  } catch (err) {
+    _pdfParseError = new Error(
+      `PDF parsing library unavailable: ${err.message}. ` +
+      'The pdf-parse v2.x native addon (@napi-rs/canvas) is not available in this ' +
+      'server environment. Consider using pdf-parse v1.x (pure JS, no native deps).'
+    );
+    throw _pdfParseError;
+  }
+}
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 const MAX_PDF_PAGES = 50;               // Limit to first 50 pages to avoid timeout
@@ -25,6 +50,7 @@ const MAX_PDF_PAGES = 50;               // Limit to first 50 pages to avoid time
  * @returns {Promise<{ text: string, pageCount: number }>}
  */
 async function extractFromPDF(buffer) {
+  const pdfParse = await getPdfParse();
   const { PDFParse } = pdfParse;
   const parser = new PDFParse({ data: new Uint8Array(buffer), verbosity: 0 });
 
