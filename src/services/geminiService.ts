@@ -2,6 +2,7 @@ import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
 import type { COGNAPSE_Output, GroundedSource, RetrievalTrace } from '../types';
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
+import { useStore } from '../store';
 
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
@@ -37,7 +38,9 @@ export async function executeCognapseResearch(
   abortSignal?: AbortSignal
 ): Promise<COGNAPSE_Output> {
   // ─── PHASE 1: REAL SOURCE RETRIEVAL ───
-  // Search the web for real sources before generating
+  const addReasoningStep = useStore.getState().addReasoningStep;
+  addReasoningStep('Retrieving real-time sources from web...');
+
   let groundedSources: GroundedSource[] = [];
   let retrievalTrace: RetrievalTrace | null = null;
 
@@ -45,10 +48,10 @@ export async function executeCognapseResearch(
     const searchResult = await searchWeb(query, 10);
     groundedSources = searchResult.sources;
     retrievalTrace = searchResult.trace;
+    addReasoningStep(`Collected ${groundedSources.length} relevant sources`);
   } catch (e) {
-    // If search fails, we still proceed — the AI will work with what it has
-    // but we mark that no real sources were available
     console.warn('Web search failed, proceeding without real sources:', e);
+    addReasoningStep('Web search unavailable, using synthetic generation');
   }
 
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
@@ -80,6 +83,7 @@ Structure your intelligence perfectly. Base ALL claims on the PROVIDED SOURCES a
 If a source citation is needed, use the format [1], [2], etc. matching the source IDs above.
 If you cannot find supporting evidence in the provided sources, state uncertainty explicitly.`;
 
+  addReasoningStep('Synthesizing intelligence report from sources...');
   const rawResponse = await callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
   
   try {
@@ -116,6 +120,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       (parsed as COGNAPSE_Output)._retrieval_trace = retrievalTrace;
     }
 
+    addReasoningStep('Finalizing report structure...');
     return parsed;
   } catch (error) {
     throw new Error("Intelligence synthesis format error. Please retry — cloud nodes may have returned partial data.");
