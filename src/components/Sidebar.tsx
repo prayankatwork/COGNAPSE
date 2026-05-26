@@ -292,22 +292,6 @@ export default function Sidebar() {
                 </motion.div>
              </div>
 
-              {/* Unresolved Threads */}
-              {(() => {
-                const raw = localStorage.getItem('cognapse_open_threads');
-                if (!raw) return null;
-                const threads = JSON.parse(raw);
-                if (!threads.length || !currentReport) return null;
-                return (
-                  <div className="mb-4 p-3 bg-my-callout/30 border border-my-border/50 rounded-[4px]">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[7px] font-black uppercase tracking-widest text-my-muted">{threads.length} unresolved thread{threads.length > 1 ? 's' : ''}</span>
-                    </div>
-                    <p className="text-[9px] text-my-ink/70 italic truncate">{threads[0]}</p>
-                  </div>
-                );
-              })()}
-
 
               {/* Student Developer Disclaimer - Compact & Visible */}
              <div className="mb-4 p-3 bg-my-bg/50 border border-my-border rounded-[4px] relative overflow-hidden">
