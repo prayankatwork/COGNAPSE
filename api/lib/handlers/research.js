@@ -39,7 +39,7 @@ export async function handleResearch(req, res) {
   const rl = rateLimit(req, { key: 'research', limit: 30, windowMs: 60_000 });
   if (!rl.allowed) return res.status(429).json({ error: 'Research rate limit exceeded. Please wait before starting a new investigation.' });
 
-  const { userId, prompt, mode, requestedModel, isDeep, reportId, targetLanguage, username } = req.body || {};
+  const { userId, prompt, mode, requestedModel, isJson, isDeep, reportId, targetLanguage, username } = req.body || {};
   if (!userId) return res.status(400).json({ error: 'Missing userId parameter' });
   if (!prompt) return res.status(400).json({ error: 'Missing prompt parameter' });
 
@@ -50,14 +50,17 @@ export async function handleResearch(req, res) {
   const rlKey = `research_${uid}`;
 
   try {
+    const wantsJson = isJson === true || mode === 'json';
     const raw = await runSwarm({
-      prompt, isJson: mode === 'json',
+      prompt, isJson: wantsJson,
       estTokens: Math.ceil((prompt?.length || 0) / 4),
       requestedModel: requestedModel || 'groq-llama-3.1-8b-instant',
     });
 
     let result = raw.result;
-    if (mode === 'json' || mode === 'research') {
+    // When isJson, runSwarm already returns a JSON-stringified result.
+    // Only parse if the caller explicitly asked for a JS object via mode.
+    if (mode === 'research') {
       try { result = JSON.parse(result); } catch { }
     }
 
