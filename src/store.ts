@@ -56,6 +56,7 @@ export interface DeepResearchState {
   thesis: DeepResearchThesis | null;
   error: string | null;
   scores: ResearchScore | null;
+  reasoningTimeline: string[];
 }
 
 export interface Note {
@@ -154,6 +155,7 @@ interface AppState {
   deepResearch: DeepResearchState;
   setDeepResearch: (update: Partial<DeepResearchState>) => void;
   resetDeepResearch: () => void;
+  addReasoningStep: (step: string) => void;
 
   notes: Note[];
   setNotes: (notes: Note[]) => void;
@@ -494,7 +496,8 @@ export const useStore = create<AppState>()(
         progress: '',
         thesis: null,
         error: null,
-        scores: null
+        scores: null,
+        reasoningTimeline: []
       },
       setDeepResearch: (update) => set((state) => ({
         deepResearch: { ...state.deepResearch, ...update }
@@ -506,9 +509,16 @@ export const useStore = create<AppState>()(
           progress: '',
           thesis: null,
           error: null,
-          scores: null
+          scores: null,
+          reasoningTimeline: []
         }
       }),
+      addReasoningStep: (step) => set((state) => ({
+        deepResearch: {
+          ...state.deepResearch,
+          reasoningTimeline: [...state.deepResearch.reasoningTimeline, step]
+        }
+      })),
 
       notes: [],
       setNotes: (notes) => set({ notes }),

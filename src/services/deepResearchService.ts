@@ -91,14 +91,16 @@ CRITICAL REQUIREMENTS:
 `;
 
 export async function executeDeepResearch(query: string) {
-  const { setDeepResearch, clearCognition } = useStore.getState();
+  const { setDeepResearch, clearCognition, addReasoningStep } = useStore.getState();
 
   try {
+    addReasoningStep('Expanding research objective...');
     setDeepResearch({ status: 'running', stage: 1, progress: 'Expanding research objective...' });
     clearCognition();
 
     const stepTime = Date.now();
 
+    addReasoningStep('Retrieving real-time sources from web...');
     setDeepResearch({ stage: 2, progress: 'Retrieving real-time sources from web...' });
 
     // ─── REAL SOURCE RETRIEVAL ───
@@ -113,6 +115,7 @@ export async function executeDeepResearch(query: string) {
     } catch (e: any) {
     }
 
+    addReasoningStep('Synthesizing evidence-backed intelligence...');
     setDeepResearch({ stage: 3, progress: 'Synthesizing evidence-backed intelligence...' });
 
     // Compress sources for LLM context
@@ -144,6 +147,7 @@ ${compressSourcesForLLM(groundedSources, 3000)}
       if (report) dbService.saveScoreHistory(user.id, report);
     }
 
+    addReasoningStep('Finalizing intelligence report...');
     setDeepResearch({ 
       status: 'completed', 
       stage: 4, 
