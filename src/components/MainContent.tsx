@@ -468,7 +468,7 @@ export default function MainContent() {
           </div>
 
           <div className="flex items-center gap-4">
-            {( (query.trim() || currentReport) && !currentReport?.deep_research && !loading) && (
+            {( (query.trim() || currentReport) && !currentReport?.deep_research && !loading && !currentReport?.archive_entry?.tags?.includes('document')) && (
               <motion.button
                 id="walkthrough-deep-research-anchor"
                 initial={{ opacity: 0, x: 20 }}
