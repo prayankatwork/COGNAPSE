@@ -31,7 +31,50 @@ export async function analyzeDocument(
   }
 
   const data = await response.json();
-  return { report: data.report, usage: data.usage };
+  const report = sanitizeReport(data.report);
+  return { report, usage: data.usage };
+}
+
+/**
+ * Sanitize a document analysis report to ensure intelligence_map
+ * data is safe for PhysicsMap rendering. Prevents "Semantic graph
+ * unavailable" errors by fixing common LLM output issues.
+ */
+function sanitizeReport(report: any): any {
+  if (!report) return report;
+  const im = report.intelligence_map;
+  if (!im) return report;
+
+  // Ensure central_node
+  if (!im.central_node || typeof im.central_node !== 'object') {
+    im.central_node = { id: 'root', label: 'Document Analysis', type: 'CONCEPT' };
+  }
+  if (typeof im.central_node.id !== 'string') im.central_node.id = 'root';
+  if (typeof im.central_node.label !== 'string') im.central_node.label = 'Document Analysis';
+  if (typeof im.central_node.type !== 'string') im.central_node.type = 'CONCEPT';
+
+  // Ensure nodes is a non-empty array with safe types
+  if (!Array.isArray(im.nodes) || im.nodes.length === 0) {
+    im.nodes = [{ id: im.central_node.id, label: im.central_node.label, type: 'CONCEPT', relationship: '', sub_query: '', importance: 1 }];
+  }
+  im.nodes = im.nodes.map((n: any, i: number) => ({
+    id: typeof n?.id === 'string' ? n.id : `node_${i}`,
+    label: typeof n?.label === 'string' ? n.label : `Node ${i}`,
+    type: typeof n?.type === 'string' ? n.type : 'CONCEPT',
+    relationship: typeof n?.relationship === 'string' ? n.relationship : '',
+    sub_query: typeof n?.sub_query === 'string' ? n.sub_query : '',
+    importance: typeof n?.importance === 'number' ? n.importance : 0.5,
+  }));
+
+  // Ensure edges is an array
+  if (!Array.isArray(im.edges)) {
+    im.edges = [];
+  }
+  im.edges = im.edges.filter((e: any) =>
+    e && typeof e.from === 'string' && typeof e.to === 'string'
+  );
+
+  return report;
 }
 
 /**
