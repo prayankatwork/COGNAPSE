@@ -552,11 +552,15 @@ Schema:
     "bias_flag": null
   }],
   "intelligence_map": {
-    "central_node": { "id": "root", "label": "Main topic from document", "type": "CONCEPT" },
+    "central_node": { "id": "root", "label": "GENERATE: main subject/topic from this document here", "type": "CONCEPT" },
     "nodes": [
-      { "id": "node_1", "label": "Key concept from document", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }
+      { "id": "node_1", "label": "GENERATE: key concept or entity mentioned in the document", "type": "CONCEPT", "relationship": "GENERATE: how this relates to the main topic", "sub_query": "GENERATE: what to explore next about this concept", "importance": 3 },
+      { "id": "node_2", "label": "GENERATE: another important concept from the document", "type": "CONCEPT", "relationship": "GENERATE: how this relates to the main topic", "sub_query": "GENERATE: what to explore next", "importance": 2 }
     ],
-    "edges": [{ "from": "root", "to": "node_1", "label": "related" }]
+    "edges": [
+      { "from": "root", "to": "node_1", "label": "GENERATE: relationship description" },
+      { "from": "root", "to": "node_2", "label": "GENERATE: relationship description" }
+    ]
   },
   "actionable_takeaways": {
     "key_insight": "One sentence",
