@@ -44,24 +44,46 @@ function TrendBadge({ direction }: { direction: 'up' | 'down' | 'stable' }) {
 }
 
 export default function ResearchScoreCard({ scores }: Props) {
-  const { user } = useStore();
+  const { user, currentReport } = useStore();
   const isPremium = !!user?.premium;
 
-  // Generate derived premium data from the core scores
+  // Compute real premium scores from actual per-source data
+  const sources = currentReport?.sources || [];
+  const conflicts = currentReport?.conflicts || [];
+  const reportScores = currentReport?.scores;
+
+  const credScores = sources.map(s => s.credibility_score ?? 5);
+  const relevanceScores = sources.map(s => s.relevance_score ?? 5);
+  const avgCredibility = sources.length > 0 ? credScores.reduce((a, b) => a + b, 0) / credScores.length : 5;
+  const avgRelevance = sources.length > 0 ? relevanceScores.reduce((a, b) => a + b, 0) / relevanceScores.length : 5;
+
+  // Standard deviation of credibility scores — real confidence spread
+  const credStdDev = sources.length > 1
+    ? Math.sqrt(credScores.reduce((sum, s) => sum + (s - avgCredibility) ** 2, 0) / credScores.length)
+    : 0;
+
+  // Cross-validation: average credibility penalized by conflicts
+  const conflictPenalty = Math.min((conflicts?.length || 0) * 0.15, 0.45);
+  const crossValidation = Math.max(0, Math.min(1, (avgCredibility / 10) - conflictPenalty));
+
+  // Overall quality: weighted composite from real source data
+  const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[reportScores?.evidence_consensus || ''] ?? 0.5;
+  const overallQ = Math.round((
+    (avgCredibility / 10) * 0.40 +
+    consensusBase * 0.30 +
+    avgRelevance * 0.15 +
+    scores.sourceDiversity * 0.15
+  ) * 100);
+
   const premiumData = isPremium ? {
     credibilityTrend: (scores.accuracy >= 7 ? 'up' : scores.accuracy >= 4 ? 'stable' : 'down') as 'up' | 'down' | 'stable',
     biasTrend: (scores.bias < 0.3 ? 'up' : scores.bias < 0.6 ? 'stable' : 'down') as 'up' | 'down' | 'stable',
     diversityTrend: (scores.sourceDiversity >= 0.6 ? 'up' : scores.sourceDiversity >= 0.3 ? 'stable' : 'down') as 'up' | 'down' | 'stable',
     confidenceTrend: (scores.confidenceInterval >= 0.6 ? 'up' : scores.confidenceInterval >= 0.3 ? 'stable' : 'down') as 'up' | 'down' | 'stable',
-    overallQuality: Math.round((
-      (scores.accuracy / 10) +
-      (1 - scores.bias) +
-      scores.sourceDiversity +
-      scores.confidenceInterval
-    ) / 4 * 100),
-    confidenceSpread: Math.round((1 - scores.confidenceInterval) * 100),
-    sourceReliabilityIndex: Math.round(scores.sourceDiversity * scores.accuracy * 10),
-    crossValidationScore: Math.round(((1 - scores.bias) + scores.confidenceInterval) / 2 * 100),
+    overallQuality: overallQ,
+    confidenceSpread: Math.round(credStdDev / (avgCredibility || 1) * 100),
+    sourceReliabilityIndex: Math.round(avgCredibility * 10) / 10,
+    crossValidationScore: Math.round(crossValidation * 100),
   } : null;
 
   return (
