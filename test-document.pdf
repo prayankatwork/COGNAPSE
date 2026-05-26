@@ -1,0 +1,56 @@
+%PDF-1.4
+1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj
+2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj
+3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj
+4 0 obj<< /Length 2234 >>stream
+BT /F1 12 Tf 50 700 Td (COGNAPSE Document Intelligence Test
+====================================
+
+This is a test document for verifying the Document Intelligence pipeline.
+
+Artificial Intelligence Overview
+
+Artificial intelligence \(AI\) is the simulation of human intelligence processes by computer systems. These processes include learning, reasoning, and self-correction. AI applications include expert systems, natural language processing, speech recognition, and machine vision.
+
+Machine Learning Fundamentals
+
+Machine learning is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed. Key types include supervised learning, unsupervised learning, and reinforcement learning. Common algorithms include decision trees, neural networks, and support vector machines.
+
+Neural Networks and Deep Learning
+
+Neural networks are computing systems inspired by biological neural networks. Deep learning uses多层 neural networks to progressively extract higher-level features from raw input. Applications include image recognition, natural language processing, and autonomous vehicles.
+
+Natural Language Processing
+
+NLP is a branch of AI that helps computers understand, interpret, and manipulate human language. Key tasks include text classification, sentiment analysis, machine translation, and question answering. Modern NLP relies on transformer architectures like BERT and GPT.
+
+Data Science and Analytics
+
+Data science combines statistics, computer science, and domain expertise to extract insights from data. The data science lifecycle includes data collection, cleaning, exploration, modeling, and deployment. Python and R are the most commonly used programming languages.
+
+COGNAPSE Capabilities
+
+COGNAPSE is an intelligence analysis platform that provides deep research capabilities, document analysis, and real-time intelligence monitoring. It supports PDF, DOCX, and PPTX document processing with semantic search and question-answering features.
+
+Test Document Metadata
+Created: 2026-05-26
+Purpose: End-to-end pipeline verification
+Expected behavior: Upload -> Process -> Index -> Query -> Answer
+
+Sample Query: What is machine learning and how does it relate to AI?) Tj ET
+endstream
+endobj
+5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000056 00000 n
+0000000111 00000 n
+0000000235 00000 n
+0000002519 00000 n
+0000002587 00000 n
+trailer<< /Size 6 /Root 1 0 R >>
+startxref
+2592
+%%EOF

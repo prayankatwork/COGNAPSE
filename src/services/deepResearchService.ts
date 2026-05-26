@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
+import { dbService } from './dbService';
 import type { DeepResearchThesis, ResearchScore, GroundedSource, RetrievalTrace } from '../types';
 
 function classifyDomain(domain: string): string {
@@ -137,6 +138,11 @@ ${compressSourcesForLLM(groundedSources, 3000)}
 
     // Compute scores using real source data
     const scores: ResearchScore = computeScoresFromReport();
+    const { user } = useStore.getState();
+    if (user?.id) {
+      const report = useStore.getState().currentReport;
+      if (report) dbService.saveScoreHistory(user.id, report);
+    }
 
     setDeepResearch({ 
       status: 'completed', 

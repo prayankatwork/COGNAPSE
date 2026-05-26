@@ -660,6 +660,30 @@ export const dbService = {
     return [];
   },
 
+  // Score history for trend analysis
+  async saveScoreHistory(userId: string, report: COGNAPSE_Output) {
+    const cluster = report.archive_entry?.topic_cluster || report.query_understood?.substring(0, 60);
+    if (!cluster) return;
+    const key = `cognapse_score_history_${userId}`;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    history.push({
+      cluster,
+      scores: {
+        accuracy: report.scores?.overall_credibility ?? 0,
+        sourceDiversity: report.sources?.length || 0,
+        confidenceInterval: report.scores?.evidence_consensus || 'insufficient',
+        timestamp: new Date().toISOString(),
+      },
+    });
+    localStorage.setItem(key, JSON.stringify(history.slice(-50)));
+  },
+
+  getScoreHistory(userId: string, cluster: string): any[] {
+    const key = `cognapse_score_history_${userId}`;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    return history.filter((h: any) => h.cluster === cluster).slice(-5);
+  },
+
   clearLocalUserData(userId: string) {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
