@@ -520,17 +520,18 @@ CRITICAL RULES:
 - Base ALL claims on the document content. Do NOT use external knowledge.
 - If the document is unclear or incomplete, say so explicitly.
 - Never invent URLs, statistics, or quotes not found in the document.
+- Keep the JSON output concise — under 6000 tokens total.
 - The "sources" array should reference the uploaded document itself.
 
 Return valid JSON following this exact schema — no markdown, no preamble:
 {
-  "query_understood": "Descriptive title of this document analysis",
+  "query_understood": "Short descriptive title",
   "mode": "standard",
   "summary": {
-    "bottom_line": "1-2 sentence plain-English conclusion about this document",
-    "full_synthesis": "Comprehensive 400-800 word analysis of the document. Use narrative flow — not bullet points. Reference sections using [DOC].",
-    "eli5_version": "Same analysis explained simply, as if to a curious 12-year-old",
-    "confidence_narrative": "One sentence explaining confidence based on document completeness"
+    "bottom_line": "1-2 sentence plain-English conclusion",
+    "full_synthesis": "Concise 150-300 word analysis. No bullet points. Reference sections using [DOC].",
+    "eli5_version": "One paragraph for a 12-year-old",
+    "confidence_narrative": "One sentence on confidence"
   },
   "scores": {
     "overall_credibility": 0-100,
