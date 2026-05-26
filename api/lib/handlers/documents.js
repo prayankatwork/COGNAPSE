@@ -613,16 +613,22 @@ export async function handleAnalyzeDocument(req, res) {
     const prompt = DOCUMENT_SYSTEM_PROMPT(trimmedText, query);
     const raw = await runSwarm({
       prompt,
-      isJson: true,
+      isJson: false,
       estTokens: Math.ceil(prompt.length / 4) + 20000,
     });
 
     let result;
     try {
-      result = typeof raw.result === 'string' ? JSON.parse(raw.result) : raw.result;
-    } catch {
       const { extractJson } = await import('../swarm.js');
-      result = extractJson(raw.result);
+      const extracted = extractJson(raw.result);
+      result = typeof extracted === 'string' ? JSON.parse(extracted) : extracted;
+    } catch {
+      // If extractJson fails, try appending closing braces to recover truncated JSON
+      try {
+        result = JSON.parse(raw.result + '}'.repeat(10));
+      } catch {
+        result = JSON.parse(raw.result);
+      }
     }
 
     return res.status(200).json({ success: true, report: result, usage: raw.usage });
