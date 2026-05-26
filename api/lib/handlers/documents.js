@@ -408,11 +408,19 @@ export async function handleRagAnswer(req, res) {
 
     const allChunks = [];
     for (const docId of documentIds) {
-      const snapshot = await db.collection('document_chunks')
-        .where('documentId', '==', docId)
-        .where('userId', '==', uid)
-        .orderBy('index', 'asc')
-        .get();
+      let snapshot;
+      try {
+        snapshot = await db.collection('document_chunks')
+          .where('documentId', '==', docId)
+          .where('userId', '==', uid)
+          .orderBy('index', 'asc')
+          .get();
+      } catch (_) {
+        snapshot = await db.collection('document_chunks')
+          .where('documentId', '==', docId)
+          .where('userId', '==', uid)
+          .get();
+      }
       for (const doc of snapshot.docs) allChunks.push({ id: doc.id, ...doc.data() });
     }
 
@@ -422,13 +430,13 @@ export async function handleRagAnswer(req, res) {
 
     const TOP_K = 8;
     const topResults = scoreChunks(query, allChunks.map(c => ({ content: c.content, index: c.index, documentId: c.documentId })), TOP_K);
-    const relevantChunks = topResults.filter(r => r.score > 0.01);
+    const relevantChunks = topResults.filter(r => r.score > 0.01).slice(0, 6);
 
     if (relevantChunks.length === 0) {
       return res.status(200).json({ success: true, answer: 'No relevant content found in the selected documents for your query.', citations: [], chunksUsed: 0, latencyMs: Date.now() - overallStart });
     }
 
-    const contextText = relevantChunks.map((c, i) => `[CHUNK ${i + 1}] (relevance: ${(c.score * 100).toFixed(0)}% match)\n${c.content}`).join('\n\n---\n\n');
+    const contextText = relevantChunks.map((c, i) => `[CHUNK ${i + 1}] (relevance: ${(c.score * 100).toFixed(0)}% match)\n${(c.content || '').slice(0, 1500)}`).join('\n\n---\n\n');
     const prompt = `You are COGNAPSE Document Intelligence. Answer the user's question based STRICTLY on the provided document chunks below.\n\nDOCUMENT CONTEXT:\n${contextText}\n\nUSER QUESTION: ${query}\n\nINSTRUCTIONS:\n- Base your answer ONLY on the provided context. If the context doesn't contain enough information, say so clearly.\n- Cite the specific chunk numbers you're drawing from using [1], [2], etc.\n- Keep your answer concise, factual, and well-structured.\n- Do not use any external knowledge — only what's in the chunks above.\n\nANSWER:`;
 
     const { result: answerText } = await generateRag(prompt);

@@ -113,25 +113,35 @@ export async function generateRag(prompt) {
     throw new Error('GROQ_API_KEY not configured.');
   }
 
-  const response = await groq.chat.completions.create({
-    messages: [{ role: 'user', content: prompt }],
-    model: 'llama-3.1-8b-instant',
-    temperature: 0.3,
-    max_tokens: 1024,
-  });
-
-  const content = response.choices[0]?.message?.content || '';
-  if (!content) {
-    throw new Error('Groq returned empty response for RAG generation.');
+  // Prune very long prompts for 8b model context limits
+  let finalPrompt = prompt;
+  if (prompt.length > 20000) {
+    finalPrompt = `${prompt.substring(0, 20000)}\n\n[System: Content truncated to fit context window. Some document context was omitted.]`;
   }
 
-  return {
-    result: content,
-    usage: {
-      prompt_tokens: response.usage?.prompt_tokens || 0,
-      completion_tokens: response.usage?.completion_tokens || 0,
-      total_tokens: response.usage?.total_tokens || 0,
+  try {
+    const response = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: finalPrompt }],
       model: 'llama-3.1-8b-instant',
-    },
-  };
+      temperature: 0.3,
+      max_tokens: 1024,
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    if (!content) {
+      throw new Error('Groq returned empty response for RAG generation.');
+    }
+
+    return {
+      result: content,
+      usage: {
+        prompt_tokens: response.usage?.prompt_tokens || 0,
+        completion_tokens: response.usage?.completion_tokens || 0,
+        total_tokens: response.usage?.total_tokens || 0,
+        model: 'llama-3.1-8b-instant',
+      },
+    };
+  } catch (e) {
+    throw new Error(`Groq RAG generation failed: ${e.message || 'Unknown error'}`);
+  }
 }
