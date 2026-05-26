@@ -363,6 +363,7 @@ export default function MainContent() {
         report
       });
     } catch (err: any) {
+      console.error('[Document Analysis Error]', err);
       setError(err.message || "Failed to analyze document.");
       setDocFileName(null);
     } finally {

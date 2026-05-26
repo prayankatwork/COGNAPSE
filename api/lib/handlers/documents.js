@@ -512,24 +512,25 @@ export async function handleExtractDocumentText(req, res) {
 
 /* ─── POST /api/analyze-document ─── */
 
-const DOCUMENT_SYSTEM_PROMPT = (text, query) => `You are COGNAPSE Document Analyst. Analyze the provided document content below. This document is your ONLY source material — base every claim strictly on it.
-
-DOCUMENT CONTENT:
-"""
-${(text || '').slice(0, 50000)}
-"""
+const DOCUMENT_SYSTEM_PROMPT = (text, query) => `You are COGNAPSE Document Analyst. Analyze the provided document below. This document is your ONLY source material — base every claim strictly on it.
 
 ${query ? `USER QUESTION: ${query}` : 'USER QUESTION: Summarize and analyze this document comprehensively.'}
 
-Return a strictly valid JSON object with the following schema — no markdown, no preamble:
+CRITICAL RULES:
+- Base ALL claims on the document content. Do NOT use external knowledge.
+- If the document is unclear or incomplete, say so explicitly.
+- Never invent URLs, statistics, or quotes not found in the document.
+- The "sources" array should reference the uploaded document itself.
+
+Return valid JSON following this exact schema — no markdown, no preamble:
 {
   "query_understood": "Descriptive title of this document analysis",
   "mode": "standard",
   "summary": {
     "bottom_line": "1-2 sentence plain-English conclusion about this document",
-    "full_synthesis": "Comprehensive 400-800 word analysis of the document. Structure it with narrative flow — not bullet points. Reference sections of the document using [DOC] notation.",
+    "full_synthesis": "Comprehensive 400-800 word analysis of the document. Use narrative flow — not bullet points. Reference sections using [DOC].",
     "eli5_version": "Same analysis explained simply, as if to a curious 12-year-old",
-    "confidence_narrative": "One sentence explaining confidence level based on document completeness and clarity"
+    "confidence_narrative": "One sentence explaining confidence based on document completeness"
   },
   "scores": {
     "overall_credibility": 0-100,
@@ -537,27 +538,23 @@ Return a strictly valid JSON object with the following schema — no markdown, n
     "evidence_consensus": "strong | mixed | contested | insufficient",
     "confidence_label": "High | Medium | Low"
   },
-  "sources": [
-    {
-      "id": 1,
-      "title": "Uploaded Document",
-      "url": "(this uploaded document)",
-      "domain": "(user document)",
-      "type": "Document",
-      "credibility_score": 0-100,
-      "relevance_score": 0-100,
-      "key_finding": "Key finding from this document section",
-      "published_date": "(from document or 'unknown')",
-      "bias_flag": null
-    }
-  ],
+  "sources": [{
+    "id": 1,
+    "title": "Uploaded Document",
+    "url": "(this uploaded document)",
+    "domain": "(user document)",
+    "type": "Document",
+    "credibility_score": 0-100,
+    "relevance_score": 0-100,
+    "key_finding": "Key finding from this section",
+    "published_date": "(from document or 'unknown')",
+    "bias_flag": null
+  }],
   "conflicts": [],
   "bias_alert": null,
   "intelligence_map": {
     "central_node": { "id": "root", "label": "Main topic", "type": "CONCEPT" },
-    "nodes": [
-      { "id": "node_1", "label": "Key concept 1", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }
-    ],
+    "nodes": [{ "id": "node_1", "label": "Key concept 1", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }],
     "edges": [{ "from": "root", "to": "node_1", "label": "related" }]
   },
   "geo_points": [],
@@ -570,11 +567,11 @@ Return a strictly valid JSON object with the following schema — no markdown, n
   },
   "timeline_events": [],
   "actionable_takeaways": {
-    "key_insight": "Single most important takeaway from this document",
+    "key_insight": "Single most important takeaway",
     "watch_out_for": "Key limitation or caveat",
     "next_step": "What to do with this information"
   },
-  "follow_up_suggestions": ["Follow-up question 1", "Follow-up question 2", "Follow-up question 3"],
+  "follow_up_suggestions": ["Follow-up 1", "Follow-up 2", "Follow-up 3"],
   "archive_entry": {
     "query": "Document Analysis: ${(query || text || '').slice(0, 80)}",
     "timestamp": "ISO timestamp",
@@ -584,11 +581,12 @@ Return a strictly valid JSON object with the following schema — no markdown, n
   }
 }
 
-CRITICAL RULES:
-- Base ALL claims on the document content above. Do NOT use external knowledge.
-- If the document is unclear or incomplete, say so explicitly.
-- Never invent URLs, statistics, or quotes not found in the document.
-- The "sources" array should reference the uploaded document itself.`;
+DOCUMENT CONTENT (this is your ONLY source):
+"""
+${(text || '').slice(0, 25000)}
+"""`;
+
+const MAX_DOC_CHARS = 25000;
 
 export async function handleAnalyzeDocument(req, res) {
   applyCors(req, res);
@@ -624,9 +622,8 @@ export async function handleAnalyzeDocument(req, res) {
       return res.status(400).json({ error: 'Document text too short. Minimum 50 characters required.' });
     }
 
-    const MAX_DOC_CHARS = 25000;
     const trimmedText = documentText.length > MAX_DOC_CHARS
-      ? documentText.slice(0, MAX_DOC_CHARS) + '\n\n[... remaining content truncated for analysis speed]'
+      ? documentText.slice(0, MAX_DOC_CHARS)
       : documentText;
 
     const prompt = DOCUMENT_SYSTEM_PROMPT(trimmedText, query);
