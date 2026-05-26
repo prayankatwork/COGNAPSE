@@ -526,7 +526,7 @@ RULES:
 Schema:
 {
   "mode": "standard",
-  "query_understood": "Short title",
+  "query_understood": "Descriptive title based on what the document is about — NOT 'Short title' or generic text",
   "summary": {
     "bottom_line": "1-2 sentence bottom line",
     "full_synthesis": "Concise 100-200 word analysis, narrative style, use [DOC] references",
