@@ -520,7 +520,8 @@ RULES:
 - Base ALL claims on the document content only.
 - If unclear, say so.
 - Never invent quotes or data.
-- Output concise JSON only — under 4000 tokens.
+- Output ONLY the JSON object below — no explanation, no preamble, no markdown.
+- Keep it concise — under 3000 tokens total.
 
 Schema:
 {
