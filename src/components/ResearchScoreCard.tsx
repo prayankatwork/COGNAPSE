@@ -103,10 +103,11 @@ export default function ResearchScoreCard({ scores }: Props) {
     ? biasFromDomains.reduce((a, b) => a + b, 0) / biasFromDomains.length
     : null;
 
+  const avgRelevance = relevanceScores.length > 0 ? relevanceScores.reduce((a, b) => a + b, 0) / relevanceScores.length / 10 : 0.5;
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[reportScores?.evidence_consensus || ''] ?? 0.5;
   const fallbackOverallQ = Math.round((
     (avgCredibility / 10) * 0.40 + consensusBase * 0.30 +
-    (relevanceScores.reduce((a, b) => a + b, 0) / (relevanceScores.length || 1)) * 0.15 +
+    avgRelevance * 0.15 +
     scores.sourceDiversity * 0.15
   ) * 100);
 

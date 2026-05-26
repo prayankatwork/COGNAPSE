@@ -280,7 +280,7 @@ export async function computeAllScores(
 
   const useEmbeddings = relevance.average !== 0.5 || consensus.score > 0;
 
-  const accuracy = Math.round((avgCredibility / 10) * 100) / 100;
+  const accuracy = Math.round(avgCredibility * 10) / 10;
 
   const finalBias = sentimentResult.hasDomainOverride
     ? sentimentResult.biasScore
@@ -311,7 +311,7 @@ export async function computeAllScores(
   ) * 100);
 
   return {
-    accuracy: Math.round(accuracy * 10) / 10,
+    accuracy,
     bias: Math.round(finalBias * 100) / 100,
     sourceDiversity,
     confidenceInterval,
