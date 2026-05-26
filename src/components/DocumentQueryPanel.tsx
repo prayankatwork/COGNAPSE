@@ -108,6 +108,9 @@ export default function DocumentQueryPanel({
       const result = await processDocument(userId, doc.id, fileText);
       onRefreshDocuments();
 
+      // Auto-select the processed document so the user can query it immediately
+      setSelectedDocIds((prev) => new Set(prev).add(doc.id));
+
       setChatHistory((prev) => [
         ...prev,
         {
