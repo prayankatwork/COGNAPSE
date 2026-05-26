@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { callCloudAI } from './aiService';
-import type { DeepResearchThesis, ResearchScore } from '../types';
+import { searchWeb, compressSourcesForLLM } from './searchService';
+import type { DeepResearchThesis, ResearchScore, GroundedSource, RetrievalTrace } from '../types';
 
 function classifyDomain(domain: string): string {
   const d = (domain || '').toLowerCase();
@@ -52,21 +53,29 @@ function computeScoresFromReport(): ResearchScore {
   return { accuracy, bias, sourceDiversity, confidenceInterval };
 }
 
-const RESEARCH_MODEL = "ollama";      
+const RESEARCH_MODEL = "ollama";
 
-const THESIS_PROMPT = (query: string) => `
+/**
+ * Build a THESIS_PROMPT that includes real search results as context.
+ */
+const THESIS_PROMPT = (query: string, sourcesContext: string) => `
 Create a massive, professional-grade, academic-style thesis on: "${query}"
 
 You are analyzing this external topic, not yourself. Write about the subject matter only — never about COGNAPSE, the research system, query interpretation, or the platform itself.
+
+${sourcesContext}
+
+The above are REAL search results from the live web. You MUST base your entire thesis on these provided sources.
+Cite sources inline using the format [1], [2], etc. corresponding to the SOURCE IDs above.
 
 Structure your response as a valid JSON object with the following fields:
 1. title: Professional title focused on the actual topic
 2. abstract: High-level summary (150 words)
 3. introduction: Context and background (300 words)
 4. problemStatement: What critical gap are we investigating?
-5. literatureReview: Synthesize current knowledge (400 words) - DO NOT include citations or source references.
+5. literatureReview: Synthesize current knowledge (400 words) - MUST include inline citations like [1], [2]
 6. methodology: How this intelligence was structured.
-7. findings: Detailed analysis and data points (600 words)
+7. findings: Detailed analysis and data points (600 words) - MUST include inline citations
 8. comparativeInsights: How this compares to existing paradigms.
 9. limitations: What we still don't know.
 10. futureOutlook: Where this topic is headed.
@@ -74,9 +83,10 @@ Structure your response as a valid JSON object with the following fields:
 
 CRITICAL REQUIREMENTS:
 - Total word count should exceed 1500 words.
-- ABSOLUTELY NO CITATIONS, URLs, OR SOURCE REFERENCES. 
-- REMOVE all bibliographies or reference sections.
+- You MUST cite the PROVIDED SOURCES using inline [SOURCE_ID] format throughout.
+- Base ALL factual claims on the provided sources.
 - Focus purely on the synthesis and analysis of the intelligence.
+- If the provided sources don't cover an aspect, state "Limited source coverage on this aspect" rather than inventing.
 `;
 
 export async function executeDeepResearch(query: string) {
@@ -87,25 +97,86 @@ export async function executeDeepResearch(query: string) {
     clearCognition();
     clearReasoningTimeline();
 
+    const stepTime = Date.now();
+
     addReasoningStep({
       stage: 'Objective Expansion',
-      action: 'Decomposing query',
-      insight: `Expanding "${query}" into multi-dimensional investigation vectors.`,
+      action: 'Decomposing query into search vectors',
+      insight: `Expanding "${query}" into multi-dimensional investigation vectors for web retrieval.`,
       status: 'confirmed'
     });
 
-    setDeepResearch({ stage: 2, progress: 'Synthesizing verified intelligence...' });
-    
-    const rawThesis = await callCloudAI(THESIS_PROMPT(query), true, RESEARCH_MODEL);
-    
+    setDeepResearch({ stage: 2, progress: 'Retrieving real-time sources from web...' });
+
+    addReasoningStep({
+      stage: 'Source Retrieval',
+      action: 'Querying web search API',
+      insight: `Performing real-time web search to gather authoritative sources on: "${query}"`,
+      status: 'confirmed'
+    });
+
+    // ─── REAL SOURCE RETRIEVAL ───
+    let groundedSources: GroundedSource[] = [];
+    let retrievalTrace: RetrievalTrace | null = null;
+
+    try {
+      const searchResult = await searchWeb(query, 12);
+      groundedSources = searchResult.sources;
+      retrievalTrace = searchResult.trace;
+
+      addReasoningStep({
+        stage: 'Source Retrieval',
+        action: 'Filtering and ranking results',
+        insight: `Retrieved ${retrievalTrace.sources_retrieved} sources from ${retrievalTrace.search_provider}. After dedup (${retrievalTrace.dedup_removed} removed) & filtering (${retrievalTrace.low_quality_filtered} removed), using ${retrievalTrace.sources_used} sources in ${retrievalTrace.latency_ms}ms.`,
+        status: 'confirmed'
+      });
+    } catch (e: any) {
+      addReasoningStep({
+        stage: 'Source Retrieval',
+        action: 'Web search unavailable',
+        insight: `Could not retrieve real-time sources: ${e.message}. Proceeding with deep analysis using model knowledge.`,
+        status: 'pivoted'
+      });
+    }
+
+    setDeepResearch({ stage: 3, progress: 'Synthesizing evidence-backed intelligence...' });
+
+    addReasoningStep({
+      stage: 'Synthesis',
+      action: 'Generating evidence-backed thesis',
+      insight: `Synthesizing ${groundedSources.length > 0 ? `${groundedSources.length} real sources into` : 'model knowledge into'} an academic-grade thesis with inline source citations.`,
+      status: 'confirmed'
+    });
+
+    // Compress sources for LLM context
+    const sourcesContext = groundedSources.length > 0
+      ? `---PROVIDED SOURCES (REAL WEB SEARCH RESULTS)---
+Below are REAL search results. You MUST base your analysis on these sources and cite them using [SOURCE_ID].
+
+${compressSourcesForLLM(groundedSources, 3000)}
+
+---END OF PROVIDED SOURCES---
+
+`
+      : 'Note: Real-time web search was unavailable for this query. Base your thesis on your training knowledge, but mark areas of uncertainty.';
+
+    const rawThesis = await callCloudAI(THESIS_PROMPT(query, sourcesContext), true, RESEARCH_MODEL);
+
     let thesis: DeepResearchThesis;
     try {
-      // callCloudAI already returns JSON.stringify output — parse once
       thesis = typeof rawThesis === 'string' ? JSON.parse(rawThesis) : rawThesis;
     } catch (e) {
       throw new Error("Deep Research synthesis returned malformed intelligence. Please retry.");
     }
-    
+
+    addReasoningStep({
+      stage: 'Finalization',
+      action: 'Computing quality metrics',
+      insight: `Thesis generated with ${groundedSources.length} real sources. Computing credibility, diversity, bias, and confidence scores.`,
+      status: 'confirmed'
+    });
+
+    // Compute scores using real source data
     const scores: ResearchScore = computeScoresFromReport();
 
     setDeepResearch({ 

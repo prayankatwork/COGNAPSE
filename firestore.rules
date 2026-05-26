@@ -47,6 +47,22 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
+    // Premium Document Intelligence — server-side writes only (via Firebase Admin SDK)
+    match /user_documents/{documentId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if false; // Server-side only via Admin SDK
+      allow update: if false; // Server-side only
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Document Intelligence — RAG chunk storage, server-side writes only
+    match /document_chunks/{chunkId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if false; // Server-side only via Admin SDK
+      allow update: if false; // Server-side only
+      allow delete: if false; // Server-side only
+    }
+
     // Ops Telemetry — writes restricted to server-side API only; no direct client access
     match /ops_telemetry/{eventId} {
       allow create: if false;

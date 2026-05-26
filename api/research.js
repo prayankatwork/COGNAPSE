@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       prompt,
       isJson: !!isJson,
       estTokens: estTokens || Math.ceil(prompt.length / 4),
-      requestedModel: requestedModel || 'gemini-1.5-flash',
+      requestedModel: requestedModel || 'groq-llama-3.1-8b-instant',
     });
     return res.status(200).json({ result, usage: usage || null });
   } catch (error) {

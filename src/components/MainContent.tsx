@@ -119,73 +119,55 @@ export default function MainContent() {
       const reportId = uuidv4();
       report.id = reportId;
 
-      // === COGNITION REPLAY ENGINE FIX: SYNTHETIC REASONING TIMELINE ===
-      const syntheticSteps: any[] = [];
-      let timeOffset = 6000;
+      // ─── STANDARD RESEARCH REASONING TRACE ───
+      // Lightweight reasoning steps visible in ReportView's ReasoningTimeline
+      const hasSources = report.sources && report.sources.length > 0;
+      const hasConflicts = report.conflicts && report.conflicts.length > 0;
+      const hasBias = !!report.bias_alert;
 
-      syntheticSteps.push({
-        id: uuidv4(),
-        stage: 'Initial Vector',
-        action: 'Decomposing query constraints',
-        insight: `Analyzing "${targetQuery}" for core entities and logical boundaries.`,
-        status: 'confirmed',
-        timestamp: new Date(Date.now() - timeOffset).toISOString()
+      const { addReasoningStep, clearReasoningTimeline } = useStore.getState();
+      clearReasoningTimeline();
+
+      addReasoningStep({
+        stage: 'Source Retrieval',
+        action: 'Query decomposition and web search',
+        insight: `Expanding query "${targetQuery}" and retrieving authoritative sources from live web.`,
+        status: 'confirmed'
       });
-      timeOffset -= 1500;
 
-      if (report.sources && report.sources.length > 0) {
-        const topScore = Math.max(...report.sources.map((s: any) => s.credibility_score || 0));
-        syntheticSteps.push({
-          id: uuidv4(),
+      if (hasSources) {
+        addReasoningStep({
           stage: 'Source Aggregation',
-          action: `Cross-referencing ${report.sources.length} primary nodes`,
-          insight: `Verified highest credibility score of ${topScore}/100 among retrieved academic/industry sources.`,
-          status: 'confirmed',
-          timestamp: new Date(Date.now() - timeOffset).toISOString()
+          action: `Ranking ${report.sources!.length} retrieved sources`,
+          insight: `Evaluated credibility and relevance scores across ${report.sources!.length} sources. Top confidence: ${Math.max(...report.sources!.map(s => s.credibility_score || 0))}/100.`,
+          status: 'confirmed'
         });
-        timeOffset -= 1500;
       }
 
-      if (report.conflicts && report.conflicts.length > 0) {
-        syntheticSteps.push({
-          id: uuidv4(),
-          stage: 'Contradiction Alert',
-          action: 'Detected conflicting source claims',
-          insight: String(report.conflicts[0].explanation).substring(0, 120) + '...',
-          status: 'pivoted',
-          timestamp: new Date(Date.now() - timeOffset).toISOString()
+      if (hasConflicts) {
+        addReasoningStep({
+          stage: 'Contradiction Analysis',
+          action: `Analyzing ${report.conflicts!.length} conflicting claims`,
+          insight: `Detected source contradictions requiring reconciliation. Flagged for user review.`,
+          status: 'pivoted'
         });
-        timeOffset -= 1500;
       }
 
-      if (report.bias_alert) {
-        syntheticSteps.push({
-          id: uuidv4(),
+      if (hasBias) {
+        addReasoningStep({
           stage: 'Bias Mitigation',
-          action: 'Adjusting synthesis weights',
-          insight: `Detected leaning perspective: ${report.bias_alert.direction}. Applying corrective heuristic.`,
-          status: 'pivoted',
-          timestamp: new Date(Date.now() - timeOffset).toISOString()
+          action: 'Adjusting synthesis weight for detected bias',
+          insight: `Detected perspective leaning: ${report.bias_alert!.direction}. Applying corrective heuristic.`,
+          status: 'pivoted'
         });
-        timeOffset -= 1000;
       }
 
-      syntheticSteps.push({
-        id: uuidv4(),
-        stage: 'Final Synthesis',
-        action: 'Structuring intelligence payload',
-        insight: `Compiled intelligence map with ${report.intelligence_map?.nodes?.length || 0} entities. Consensus marked as ${report.scores?.evidence_consensus || 'strong'}.`,
-        status: 'confirmed',
-        timestamp: new Date().toISOString()
+      addReasoningStep({
+        stage: 'Synthesis & Structuring',
+        action: 'Generating final intelligence report',
+        insight: `Compiled report with ${hasSources ? report.sources!.length : 0} sources, ${hasConflicts ? report.conflicts!.length : 0} contradictions flagged. Producing structured output.`,
+        status: 'confirmed'
       });
-
-      useStore.setState((state) => ({
-        deepResearch: {
-          ...state.deepResearch,
-          reasoningTimeline: syntheticSteps
-        }
-      }));
-      // =================================================================
 
       setLoadingPhase("Finalizing report...");
       setCurrentReport(report);

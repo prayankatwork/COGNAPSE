@@ -6,7 +6,8 @@ import {
   Cpu, FileText, LayoutGrid, Activity, 
   BookOpen, ChevronLeft, ChevronRight, 
   ArrowUpRight, ShieldCheck, Terminal,
-  Library, Box, Fingerprint, Lock, Shield
+  Library, Box, Fingerprint, Lock, Shield,
+  FolderKanban
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Button } from './ui';
@@ -17,7 +18,8 @@ export default function Sidebar() {
   const { 
     isSidebarOpen, toggleSidebar, setView, archive, currentReport, 
     setCurrentReport, xp, rank, searchCount, user, setAuthOpen, setStatusOpen,
-    resetDeepResearch, setWalkthroughCompleted, walkthroughCompleted
+    resetDeepResearch, setWalkthroughCompleted, walkthroughCompleted,
+    currentView
   } = useStore(useShallow((state) => ({
     isSidebarOpen: state.isSidebarOpen,
     toggleSidebar: state.toggleSidebar,
@@ -33,7 +35,8 @@ export default function Sidebar() {
     setStatusOpen: state.setStatusOpen,
     resetDeepResearch: state.resetDeepResearch,
     setWalkthroughCompleted: state.setWalkthroughCompleted,
-    walkthroughCompleted: state.walkthroughCompleted
+    walkthroughCompleted: state.walkthroughCompleted,
+    currentView: state.currentView
   })));
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,6 +109,38 @@ export default function Sidebar() {
           {/* Blueprint Overlay - Hidden on mobile for performance */}
           <div className="hidden md:block absolute inset-0 opacity-[0.03] pointer-events-none -z-10" 
                style={{ backgroundImage: 'radial-gradient(#1A1A1A 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+
+          {/* View Toggle */}
+          <div className="px-8 pt-6 pb-2 border-b border-my-border">
+            <div className="flex items-center gap-1 bg-my-callout border border-my-border p-0.5 rounded-sm">
+              <button
+                onClick={() => setView('research')}
+                className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all rounded-sm ${
+                  currentView === 'research'
+                    ? 'bg-my-accent text-white dark:text-black shadow-sm'
+                    : 'text-my-muted hover:text-my-ink'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <History size={10} />
+                  Archive
+                </div>
+              </button>
+              <button
+                onClick={() => setView('documents')}
+                className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all rounded-sm ${
+                  currentView === 'documents'
+                    ? 'bg-my-accent text-white dark:text-black shadow-sm'
+                    : 'text-my-muted hover:text-my-ink'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <FolderKanban size={10} />
+                  Files
+                </div>
+              </button>
+            </div>
+          </div>
 
           {/* Sidebar Header */}
           <div className="p-8 pb-6 border-b border-my-border">
@@ -202,6 +237,7 @@ export default function Sidebar() {
                     {viewMode === 'chronological' ? (
                        Object.entries(dateGroups).map(([group, items], idx) => (
             <motion.div
+              key={group}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04 }}

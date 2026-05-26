@@ -117,6 +117,127 @@ export interface COGNAPSE_Output {
       model_routing: string;
     };
   };
+
+  // Source Grounding: retrieval trace attached by geminiService
+  _retrieval_trace?: RetrievalTrace;
+}
+
+/* ─── Source Grounding Types ─── */
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  url: string;
+  domain: string;
+  snippet: string;
+  published_date: string;
+  source_type: 'academic' | 'government' | 'industry' | 'journalism' | 'other';
+}
+
+export interface GroundedSource {
+  id: number;
+  title: string;
+  url: string;
+  domain: string;
+  type: string;
+  snippet: string;
+  credibility_score: number;
+  relevance_score: number;
+  key_finding: string;
+  published_date: string;
+  bias_flag: string | null;
+  retrieval_timestamp: string;
+}
+
+export interface EvidenceChain {
+  claim: string;
+  supporting_sources: number[];  // source ids
+  contradictory_sources: number[]; // source ids
+  confidence: number; // 0-1
+  reasoning: string;
+}
+
+export interface RetrievalTrace {
+  query: string;
+  sources_retrieved: number;
+  sources_used: number;
+  dedup_removed: number;
+  low_quality_filtered: number;
+  latency_ms: number;
+  search_provider: string;
+}
+
+/* ─── Premium Document Intelligence Types ─── */
+
+export type DocumentStatus = 'processing' | 'ready' | 'error' | 'indexed';
+export type DocumentType = 'pdf' | 'docx' | 'pptx' | 'image' | 'txt';
+
+export interface DocumentRecord {
+  id: string;
+  userId: string;
+  originalName: string;
+  mimeType: string;
+  documentType: DocumentType;
+  size: number;
+  status: DocumentStatus;
+  storagePath: string;
+  extractedText?: string;
+  pageCount?: number;
+  thumbnailUrl?: string;
+  summary?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentUploadIntent {
+  uploadUrl: string;
+  documentId: string;
+  fields: Record<string, string>;
+  expiresAt: string;
+}
+
+/* ─── Semantic Document Search & RAG Types ─── */
+
+export interface DocumentChunk {
+  id: string;
+  documentId: string;
+  content: string;
+  index: number;
+  embedding?: number[];
+  createdAt: string;
+}
+
+export interface ChunkSearchResult {
+  chunk: DocumentChunk;
+  score: number;
+  documentName: string;
+}
+
+export interface RagAnswer {
+  answer: string;
+  citations: { documentId: string; excerpt: string; score: number }[];
+  chunksUsed: number;
+  latencyMs: number;
+}
+
+export interface ProcessDocumentRequest {
+  userId: string;
+  documentId: string;
+  chunks: { content: string; index: number }[];
+}
+
+export interface QueryDocumentRequest {
+  userId: string;
+  query: string;
+  documentIds: string[];
+  topK?: number;
+}
+
+export interface RagAnswerRequest {
+  userId: string;
+  query: string;
+  documentIds: string[];
 }
 
 export type ResearchVisibility = "private" | "unlisted" | "public";

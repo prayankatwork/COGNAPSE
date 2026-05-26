@@ -97,6 +97,9 @@ import confetti from 'canvas-confetti';
 import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
+import SourceDrawer from './SourceDrawer';
+import EvidencePreview from './EvidencePreview';
+import ReasoningTimeline from './ReasoningTimeline';
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
@@ -121,7 +124,8 @@ export default function ReportView({
   const hasConflicts = report.conflicts && report.conflicts.length > 0;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
-  const { updateGamification, user, setAuthOpen } = useStore();
+  const [hoveredCitation, setHoveredCitation] = useState<number | null>(null);
+  const { updateGamification, user, setAuthOpen, deepResearch } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [shareVisibility, setShareVisibility] = useState<ResearchVisibility>('unlisted');
@@ -406,7 +410,52 @@ export default function ReportView({
               {report.summary?.full_synthesis && (
                 <div className="text-[14px] leading-[1.7] text-my-syn space-y-[1.25em]">
                   {report.summary.full_synthesis.split('\n').map((para: string, i: number) =>
-                    para.trim() ? <p key={i} className="leading-[1.7]">{para.replace(/\[\d+\]/g, '').trim()}</p> : <br key={i} />
+                    para.trim() ? (
+                      <p key={i} className="leading-[1.7] group relative">
+                        {(() => {
+                          // Parse paragraphs into text segments and citation superscripts
+                          const parts = para.split(/(\[\d+\])/g);
+                          return parts.map((part: string, j: number) => {
+                            const citeMatch = part.match(/\[(\d+)\]/);
+                            if (citeMatch) {
+                              const sourceId = parseInt(citeMatch[1]);
+                              const source = report.sources?.find(s => s.id === sourceId);
+                              return (
+                                <span key={j} className="relative inline">
+                                  <sup
+                                    className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative"
+                                    onMouseEnter={() => setHoveredCitation(sourceId)}
+                                    onMouseLeave={() => setHoveredCitation(null)}
+                                  >
+                                    [{sourceId}]
+                                  </sup>
+                                  {source && (
+                                    <EvidencePreview
+                                      source={{
+                                        id: source.id,
+                                        title: source.title,
+                                        url: source.url,
+                                        domain: source.domain || '',
+                                        type: source.type || 'web',
+                                        snippet: source.key_finding || '',
+                                        credibility_score: source.credibility_score || 0,
+                                        relevance_score: source.relevance_score || 0,
+                                        key_finding: source.key_finding || '',
+                                        published_date: source.published_date || '',
+                                        bias_flag: source.bias_flag || null,
+                                        retrieval_timestamp: source.retrieval_timestamp || new Date().toISOString()
+                                      }}
+                                      isVisible={hoveredCitation === source.id}
+                                    />
+                                  )}
+                                </span>
+                              );
+                            }
+                            return part;
+                          });
+                        })()}
+                      </p>
+                    ) : <br key={i} />
                   )}
                 </div>
               )}
@@ -415,6 +464,27 @@ export default function ReportView({
                    <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest shrink-0 mt-0.5">AI Self-Assessment</span>
                    <p className="italic text-my-muted text-[12px] leading-[1.6]">{safeText(report.summary.confidence_narrative)}</p>
                  </div>
+              )}
+
+              {/* Source Drawer - expandable source list */}
+              {report.sources && report.sources.length > 0 && (
+                <div className="mt-4">
+                  <SourceDrawer 
+                    sources={report.sources.map((s: any, idx: number) => ({
+                      ...s,
+                      snippet: s.key_finding || s.snippet || '',
+                      retrieval_timestamp: new Date().toISOString()
+                    }))}
+                    retrievalTrace={report._retrieval_trace || null}
+                  />
+                </div>
+              )}
+
+              {/* Reasoning Timeline */}
+              {deepResearch.reasoningTimeline && deepResearch.reasoningTimeline.length > 0 && (
+                <div className="mt-4">
+                  <ReasoningTimeline steps={deepResearch.reasoningTimeline} />
+                </div>
               )}
               
             </div>

@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 
 export const extractJson = (text) => {
@@ -20,89 +19,79 @@ export const extractJson = (text) => {
   }
 };
 
-export function getSwarmClients() {
-  const geminiKey = process.env.GEMINI_API_KEY;
+/**
+ * Get a Groq client (free-tier friendly).
+ * Falls back to null if GROQ_API_KEY is not set.
+ */
+export function getGroqClient() {
   const groqKey = process.env.GROQ_API_KEY;
-
-  return {
-    genAI: geminiKey ? new GoogleGenerativeAI(geminiKey) : null,
-    groq: groqKey ? new Groq({ apiKey: groqKey }) : null,
-  };
+  return groqKey ? new Groq({ apiKey: groqKey }) : null;
 }
 
-export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'gemini-1.5-flash' }) {
-  const { genAI, groq } = getSwarmClients();
+/**
+ * runSwarm — Groq-only intelligence swarm.
+ *
+ * Free-tier routing:
+ * - Deep research (requestedModel === 'ollama'): 70b model for quality
+ * - Everything else: 8b model for speed & capacity
+ * - Token-heavy prompts (>15K): fall back to 8b to stay within context limits
+ *
+ * Gemini was removed to eliminate API key dependency and stay fully
+ * within Groq's free tier (30 req/min, 14,400 req/day for open models).
+ */
+export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'groq-llama-3.1-8b-instant' }) {
+  const groq = getGroqClient();
 
-  // Smart model routing:
-  // - Deep research (requestedModel === 'ollama'): prioritize 70b for quality
-  // - Everything else (standard research, chat, synthesis): prioritize 8b for capacity
+  if (!groq) {
+    throw new Error('GROQ_API_KEY not configured. Set GROQ_API_KEY in your environment variables.');
+  }
+
+  // Model selection based on context size and research depth
   const isDeepResearch = requestedModel === 'ollama';
 
-  const swarmNodes =
-    estTokens > 15000
-      ? [
-          { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
-          { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
-          { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
-        ]
-      : isDeepResearch
-        ? [  // Deep research: quality first — 70b before 8b
-            { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
-            { name: 'groq-llama-3.3', type: 'groq', model: 'llama-3.3-70b-versatile' },
-            { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
-            { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
-          ]
-        : [  // Standard research: capacity first — 8b before 70b
-            { name: 'gemini-flash', type: 'gemini', model: 'gemini-1.5-flash' },
-            { name: 'groq-llama-3.1', type: 'groq', model: 'llama-3.1-8b-instant' },
-            { name: 'gemini-pro', type: 'gemini', model: 'gemini-1.5-pro' },
-            { name: 'groq-llama-3.3', type: 'groq', model: 'llama-3.3-70b-versatile' },
-          ];
+  const swarmNodes = isDeepResearch
+    ? [
+        { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile' },
+        { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' },
+      ]
+    : estTokens > 15000
+      ? [{ name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' }]
+      : [
+          { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' },
+          { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile' },
+        ];
 
   let lastError = null;
 
   for (const node of swarmNodes) {
     try {
-      if (node.type === 'gemini' && genAI) {
-        const genModel = genAI.getGenerativeModel({ model: node.model });
-        const result = await genModel.generateContent({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: isJson ? { responseMimeType: 'application/json' } : {},
-        });
-        const textResponse = (await result.response).text();
-        if (textResponse) {
-          return {
-            result: isJson ? JSON.stringify(extractJson(textResponse)) : textResponse,
-            usage: null,
-          };
-        }
+      let finalPrompt = prompt;
+      // Prune very long prompts for 8b model context limits
+      if (node.model.includes('8b') && estTokens > 5500) {
+        finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
       }
 
-      if (node.type === 'groq' && groq) {
-        let finalPrompt = prompt;
-        if (node.model.includes('8b') && estTokens > 5500) {
-          finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
-        }
-        // Higher temperature for 8b model encourages more detailed output
-        const temperature = node.model.includes('8b') ? 0.4 : 0.1;
-        const response = await groq.chat.completions.create({
-          messages: [{ role: 'user', content: finalPrompt }],
-          model: node.model,
-          temperature,
-          response_format: isJson ? { type: 'json_object' } : undefined,
-        });
-        const content = response.choices[0]?.message?.content || '';
-        if (content) {
-          return {
-            result: isJson ? JSON.stringify(extractJson(content)) : content,
-            usage: {
-              prompt_tokens: response.usage?.prompt_tokens || 0,
-              completion_tokens: response.usage?.completion_tokens || 0,
-              total_tokens: response.usage?.total_tokens || 0,
-              model: node.model,
-            },
-          };
-        }
+      // Higher temperature for 8b model encourages more detailed output
+      const temperature = node.model.includes('8b') ? 0.4 : 0.1;
+
+      const response = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: finalPrompt }],
+        model: node.model,
+        temperature,
+        response_format: isJson ? { type: 'json_object' } : undefined,
+      });
+
+      const content = response.choices[0]?.message?.content || '';
+      if (content) {
+        return {
+          result: isJson ? JSON.stringify(extractJson(content)) : content,
+          usage: {
+            prompt_tokens: response.usage?.prompt_tokens || 0,
+            completion_tokens: response.usage?.completion_tokens || 0,
+            total_tokens: response.usage?.total_tokens || 0,
+            model: node.model,
+          },
+        };
       }
     } catch (e) {
       lastError = e;
@@ -110,6 +99,39 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   }
 
   throw new Error(
-    `INTELLIGENCE OVERLOAD: All cloud nodes are saturated. Last error: ${lastError?.message || 'Unknown'}`
+    `INTELLIGENCE OVERLOAD: All Groq nodes saturated. Last error: ${lastError?.message || 'Unknown'}`
   );
+}
+
+/**
+ * generateRag — Simplified Groq call specifically for RAG answer generation.
+ * Uses llama-3.1-8b-instant for fast, cost-free answer generation.
+ */
+export async function generateRag(prompt) {
+  const groq = getGroqClient();
+  if (!groq) {
+    throw new Error('GROQ_API_KEY not configured.');
+  }
+
+  const response = await groq.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.1-8b-instant',
+    temperature: 0.3,
+    max_tokens: 1024,
+  });
+
+  const content = response.choices[0]?.message?.content || '';
+  if (!content) {
+    throw new Error('Groq returned empty response for RAG generation.');
+  }
+
+  return {
+    result: content,
+    usage: {
+      prompt_tokens: response.usage?.prompt_tokens || 0,
+      completion_tokens: response.usage?.completion_tokens || 0,
+      total_tokens: response.usage?.total_tokens || 0,
+      model: 'llama-3.1-8b-instant',
+    },
+  };
 }

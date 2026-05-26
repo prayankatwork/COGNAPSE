@@ -44,6 +44,7 @@ import { reportsToArchiveEntries } from './utils/archiveEntries';
 import DevDashboard from './components/DevDashboard';
 import CommandPalette from './components/CommandPalette';
 import ToastContainer from './components/ui/ToastContainer';
+import DocumentIntelligencePanel from './components/DocumentIntelligencePanel';
 
 import { audioService } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -299,6 +300,19 @@ export default function App() {
         return <ErrorBoundary name="LandingPage"><LandingPage /></ErrorBoundary>;
       case 'documentation':
         return <ErrorBoundary name="Documentation"><Documentation /></ErrorBoundary>;
+      case 'documents':
+        return (
+          <ErrorBoundary name="DocumentIntelligence">
+            <div className="flex h-full overflow-hidden relative">
+              <Sidebar />
+              <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
+                <div className="max-w-3xl mx-auto w-full py-8 px-6">
+                  <DocumentIntelligencePanel />
+                </div>
+              </main>
+            </div>
+          </ErrorBoundary>
+        );
       case 'creator':
         return <ErrorBoundary name="CreatorProfile"><CreatorProfile /></ErrorBoundary>;
       case 'news':

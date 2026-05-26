@@ -58,7 +58,7 @@ import { trackOperationalEvent } from './opsTelemetry';
  * PRODUCTION-READY INTELLIGENCE SWARM
  * Relies on Vercel Serverless Endpoint (/api/research) to hide API Keys
  */
-export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "gemini-1.5-flash", abortSignal?: AbortSignal) => {
+export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "groq-llama-3.1-8b-instant", abortSignal?: AbortSignal) => {
   const estTokens = Math.ceil(prompt.length / 4);
 
   // Auto-revive unstable nodes

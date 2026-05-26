@@ -1,9 +1,10 @@
 import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
-import type { COGNAPSE_Output } from '../types';
+import type { COGNAPSE_Output, GroundedSource, RetrievalTrace } from '../types';
 import { callCloudAI } from './aiService';
+import { searchWeb, compressSourcesForLLM } from './searchService';
 
-const RESEARCH_MODEL = "gemini-1.5-flash";      
-const UTILITY_MODEL = "gemini-1.5-flash";   
+const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
+const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 
 export async function executeCognapseChat(
   query: string,
@@ -35,8 +36,38 @@ export async function executeCognapseResearch(
   userStats: { xp: number; count: number; rank: string },
   abortSignal?: AbortSignal
 ): Promise<COGNAPSE_Output> {
-  const prompt = `${COGNAPSE_SYSTEM_PROMPT}
+  // ─── PHASE 1: REAL SOURCE RETRIEVAL ───
+  // Search the web for real sources before generating
+  let groundedSources: GroundedSource[] = [];
+  let retrievalTrace: RetrievalTrace | null = null;
 
+  try {
+    const searchResult = await searchWeb(query, 10);
+    groundedSources = searchResult.sources;
+    retrievalTrace = searchResult.trace;
+  } catch (e) {
+    // If search fails, we still proceed — the AI will work with what it has
+    // but we mark that no real sources were available
+    console.warn('Web search failed, proceeding without real sources:', e);
+  }
+
+  // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
+  // Compress sources into token-efficient context
+  const sourcesContext = groundedSources.length > 0
+    ? `
+---PROVIDED SOURCES---
+Below are REAL search results retrieved from the live web. You MUST base your analysis on these sources.
+Each source has an ID. You MUST cite sources inline using [ID] format for every claim.
+
+${compressSourcesForLLM(groundedSources)}
+
+---END OF PROVIDED SOURCES---
+
+`
+    : '';
+
+  const prompt = `${COGNAPSE_SYSTEM_PROMPT}
+${sourcesContext}
 USER QUERY: ${query}
 
 --- USER CONTEXT ---
@@ -44,7 +75,10 @@ XP: ${userStats.xp}
 Rank: ${userStats.rank}
 Missions Completed: ${userStats.count}
 
-Remember: Your output must be VALID JSON matching the provided schema. Structure your intelligence perfectly.`;
+CRITICAL REMINDER: Your output must be VALID JSON matching the provided schema.
+Structure your intelligence perfectly. Base ALL claims on the PROVIDED SOURCES above.
+If a source citation is needed, use the format [1], [2], etc. matching the source IDs above.
+If you cannot find supporting evidence in the provided sources, state uncertainty explicitly.`;
 
   const rawResponse = await callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
   
@@ -53,12 +87,33 @@ Remember: Your output must be VALID JSON matching the provided schema. Structure
     const parsed = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
 
     // Strip verbose wrappers from query_understood (safety net for AI non-compliance)
-    // Only targets the known verbose pattern "... is: 'query'" — leaves clean queries untouched
     if (typeof parsed.query_understood === 'string') {
       const match = parsed.query_understood.match(/is: '(.+)'$/);
       if (match) {
         parsed.query_understood = match[1];
       }
+    }
+
+    // Attach real sources and retrieval trace to the output
+    if (groundedSources.length > 0) {
+      // Replace any AI-hallucinated sources with our real ones
+      parsed.sources = groundedSources.map(s => ({
+        id: s.id,
+        title: s.title,
+        url: s.url,
+        domain: s.domain,
+        type: s.type,
+        credibility_score: s.credibility_score,
+        relevance_score: s.relevance_score,
+        key_finding: s.key_finding || s.snippet?.substring(0, 200) || '',
+        published_date: s.published_date,
+        bias_flag: null,
+      }));
+    }
+
+    // Attach retrieval metadata
+    if (retrievalTrace) {
+      (parsed as COGNAPSE_Output)._retrieval_trace = retrievalTrace;
     }
 
     return parsed;

@@ -33,6 +33,13 @@ export default defineConfig({
   },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
+    proxy: {
+      // Forward /api/* to Vercel dev server (run npm run dev:vercel in parallel)
+      '/api': {
+        target: process.env.VITE_API_TARGET || 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
   },
   optimizeDeps: {
     exclude: ['@xenova/transformers'],
