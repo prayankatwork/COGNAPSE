@@ -282,7 +282,6 @@ export default function ReportView({
 
           <div className="flex-1" />
 
-          {!report?.archive_entry?.tags?.includes('document') && (
           <div className="flex items-center gap-2">
             {isUnlocked && (
               <>
@@ -349,7 +348,6 @@ export default function ReportView({
               )}
             </button>
           </div>
-          )}
         </div>
 
         {/* Share link — appears right after the action bar when generated */}
