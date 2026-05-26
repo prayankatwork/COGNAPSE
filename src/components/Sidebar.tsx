@@ -109,25 +109,6 @@ export default function Sidebar() {
           <div className="hidden md:block absolute inset-0 opacity-[0.03] pointer-events-none -z-10" 
                style={{ backgroundImage: 'radial-gradient(#1A1A1A 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
-          {/* View Toggle */}
-          <div className="px-8 pt-6 pb-2 border-b border-my-border">
-            <div className="flex items-center gap-1 bg-my-callout border border-my-border p-0.5 rounded-sm">
-              <button
-                onClick={() => setView('research')}
-                className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all rounded-sm ${
-                  currentView === 'research'
-                    ? 'bg-my-accent text-white dark:text-black shadow-sm'
-                    : 'text-my-muted hover:text-my-ink'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <History size={10} />
-                  Archive
-                </div>
-              </button>
-            </div>
-          </div>
-
           {/* Sidebar Header */}
           <div className="p-8 pb-6 border-b border-my-border">
               <div className="flex items-center justify-between gap-4 mb-8">
