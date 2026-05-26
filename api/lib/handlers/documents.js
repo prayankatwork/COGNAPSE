@@ -16,6 +16,7 @@ import { generateRag } from '../swarm.js';
 import {
   generateUploadUrl,
   saveDocumentMetadata,
+  saveDocumentContent,
   classifyDocumentType,
   validateDocumentUpload,
   getDocumentMetadata,
@@ -235,13 +236,19 @@ export async function handleStoreDocumentContent(req, res) {
     if (!existing) return res.status(404).json({ error: 'Document record not found.' });
     if (existing.userId !== uid) return res.status(403).json({ error: 'Permission denied.' });
 
+    // Store content in separate collection to avoid Firestore 1MB document limit
+    await saveDocumentContent(documentId, content, mimeType || existing.mimeType);
+
+    // Update metadata without content payload
     const updated = {
-      ...existing, content, mimeType: mimeType || existing.mimeType,
+      ...existing, hasContent: true,
+      mimeType: mimeType || existing.mimeType,
       status: 'ready', updatedAt: new Date().toISOString(),
     };
+    // Remove any stale inline content
+    delete updated.content;
     await saveDocumentMetadata(updated);
-    const { content: _, ...rest } = updated;
-    return res.status(200).json({ success: true, document: rest });
+    return res.status(200).json({ success: true, document: updated });
   } catch (error) {
     return sendSafeError(res, 500, 'Failed to store document content.', error);
   }

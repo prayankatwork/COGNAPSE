@@ -53,12 +53,102 @@ export async function listUserDocuments(userId, limit = 50) {
 }
 
 /**
- * Delete document metadata from Firestore.
+ * Chunk size for document content storage. Firestore has a 1MB document size limit.
+ * We use 700KB chunks to leave margin for the document's other fields (~300KB).
+ */
+const CONTENT_CHUNK_BYTES = 700 * 1024;
+
+/**
+ * Store document file content in a separate collection, chunked across multiple
+ * documents if needed to stay within Firestore's 1MB document size limit.
+ *
+ * The first chunk is stored at document_contents/{documentId} (with totalParts).
+ * Additional chunks (if any) are stored at document_contents/{documentId}_p1,
+ * document_contents/{documentId}_p2, etc.
+ */
+export async function saveDocumentContent(documentId, content, mimeType) {
+  const db = getFirestoreAdmin();
+  if (!db) throw new Error('SERVER_DATABASE_NOT_CONFIGURED');
+
+  const totalParts = Math.ceil(content.length / CONTENT_CHUNK_BYTES);
+  const now = new Date().toISOString();
+
+  if (totalParts <= 1) {
+    await db.collection('document_contents').doc(documentId).set({
+      documentId, content, mimeType: mimeType || '',
+      totalParts: 1, createdAt: now,
+    });
+    return;
+  }
+
+  // Multi-chunk: write each part as a separate doc in a batch
+  const batch = db.batch();
+  for (let i = 0; i < totalParts; i++) {
+    const chunkContent = content.slice(i * CONTENT_CHUNK_BYTES, (i + 1) * CONTENT_CHUNK_BYTES);
+    const docId = i === 0 ? documentId : `${documentId}_p${i}`;
+    batch.set(db.collection('document_contents').doc(docId), {
+      documentId, content: chunkContent, mimeType: mimeType || '',
+      partIndex: i, totalParts,
+      createdAt: now,
+    });
+  }
+  await batch.commit();
+}
+
+/**
+ * Retrieve document file content, re-assembling from chunks if necessary.
+ */
+export async function getDocumentContent(documentId) {
+  const db = getFirestoreAdmin();
+  if (!db) throw new Error('SERVER_DATABASE_NOT_CONFIGURED');
+
+  // Read the first/manifest chunk
+  const manifestSnap = await db.collection('document_contents').doc(documentId).get();
+  if (!manifestSnap.exists) return null;
+  const manifest = manifestSnap.data();
+
+  // Single part — return as-is
+  if (!manifest.totalParts || manifest.totalParts <= 1) {
+    return manifest;
+  }
+
+  // Multi-part: read all remaining chunks and concatenate
+  const parts = [manifest.content];
+  for (let i = 1; i < manifest.totalParts; i++) {
+    const partSnap = await db.collection('document_contents').doc(`${documentId}_p${i}`).get();
+    if (!partSnap.exists) break;
+    parts.push(partSnap.data().content);
+  }
+
+  return {
+    ...manifest,
+    content: parts.join(''),
+    totalParts: manifest.totalParts,
+  };
+}
+
+/**
+ * Delete document metadata and all associated content chunks.
  */
 export async function deleteDocumentMetadata(documentId) {
   const db = getFirestoreAdmin();
   if (!db) throw new Error('SERVER_DATABASE_NOT_CONFIGURED');
   await db.collection('user_documents').doc(documentId).delete();
+
+  // Clean up all content chunks
+  try {
+    const manifestSnap = await db.collection('document_contents').doc(documentId).get();
+    if (manifestSnap.exists) {
+      const manifest = manifestSnap.data();
+      const totalParts = manifest?.totalParts || 1;
+      const batch = db.batch();
+      batch.delete(db.collection('document_contents').doc(documentId));
+      for (let i = 1; i < totalParts; i++) {
+        batch.delete(db.collection('document_contents').doc(`${documentId}_p${i}`));
+      }
+      await batch.commit();
+    }
+  } catch { /* content may not exist */ }
 }
 
 /**
@@ -71,9 +161,15 @@ export async function deleteDocumentMetadata(documentId) {
 export async function getDocumentFile(doc) {
   if (!doc) throw new Error('Document metadata not found.');
 
-  // Firestore fallback — doc.content holds base64-encoded data
+  // Firestore fallback — doc.content holds base64-encoded data (legacy inline)
   if (doc.content) {
     return Buffer.from(doc.content, 'base64');
+  }
+
+  // Firestore fallback — separate content collection
+  const contentRecord = await getDocumentContent(doc.id || doc.documentId);
+  if (contentRecord?.content) {
+    return Buffer.from(contentRecord.content, 'base64');
   }
 
   // Firebase Storage — download via Admin SDK
