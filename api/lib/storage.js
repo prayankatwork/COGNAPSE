@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { getFirestoreAdmin, getFirebaseAdmin } from './firebaseAdmin.js';
 
 /**
@@ -88,24 +89,30 @@ export async function getDocumentFile(doc) {
  * Falls back to generating an upload token for Firestore-based storage.
  */
 export async function generateUploadUrl(userId, fileName, mimeType) {
+  // Try Firebase Storage signed URL first
   if (hasStorageBucket()) {
-    const admin = getFirebaseAdmin();
-    if (!admin) throw new Error('FIREBASE_ADMIN_NOT_CONFIGURED');
-    const bucket = admin.storage().bucket();
-    const filePath = `documents/${userId}/${Date.now()}_${fileName}`;
-    const file = bucket.file(filePath);
+    try {
+      const admin = getFirebaseAdmin();
+      if (!admin) throw new Error('FIREBASE_ADMIN_NOT_CONFIGURED');
+      const bucket = admin.storage().bucket();
+      const filePath = `documents/${userId}/${Date.now()}_${fileName}`;
+      const file = bucket.file(filePath);
 
-    const [url] = await file.getSignedUrl({
-      action: 'write',
-      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-      contentType: mimeType,
-    });
+      const [url] = await file.getSignedUrl({
+        action: 'write',
+        expires: Date.now() + 15 * 60 * 1000,
+        contentType: mimeType,
+      });
 
-    return {
-      uploadUrl: url,
-      storagePath: filePath,
-      method: 'storage',
-    };
+      return {
+        uploadUrl: url,
+        storagePath: filePath,
+        method: 'storage',
+      };
+    } catch (storageErr) {
+      console.warn('[Storage] getSignedUrl failed, falling back to Firestore:', storageErr?.message || storageErr);
+      // fall through to Firestore fallback below
+    }
   }
 
   // Fallback: return a token for Firestore-based upload
