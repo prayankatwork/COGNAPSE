@@ -505,7 +505,7 @@ export default function ReportView({
           )}
 
           {/* Intelligence Map */}
-          {report.intelligence_map && (
+          {report.intelligence_map && report.intelligence_map.central_node && Array.isArray(report.intelligence_map.nodes) && report.intelligence_map.nodes.length > 0 && (
             <div className="mt-6 lg:mt-0">
               <SectionTitle>Intelligence Map</SectionTitle>
               <div className="mt-3">                  <ErrorBoundary fallback={<div className="h-48 flex items-center justify-center text-my-muted text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Semantic graph unavailable</div>}>
