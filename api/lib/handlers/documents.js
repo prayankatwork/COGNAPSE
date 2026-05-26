@@ -512,82 +512,65 @@ export async function handleExtractDocumentText(req, res) {
 
 /* ─── POST /api/analyze-document ─── */
 
-const DOCUMENT_SYSTEM_PROMPT = (text, query) => `You are COGNAPSE Document Analyst. Analyze the provided document below. This document is your ONLY source material — base every claim strictly on it.
+const DOCUMENT_SYSTEM_PROMPT = (text, query) => `You are COGNAPSE Document Analyst. Analyze the document below. Base every claim strictly on it.
 
-${query ? `USER QUESTION: ${query}` : 'USER QUESTION: Summarize and analyze this document comprehensively.'}
+${query ? `USER: ${query}` : 'USER: Summarize and analyze this document.'}
 
-CRITICAL RULES:
-- Base ALL claims on the document content. Do NOT use external knowledge.
-- If the document is unclear or incomplete, say so explicitly.
-- Never invent URLs, statistics, or quotes not found in the document.
-- Keep the JSON output concise — under 6000 tokens total.
-- The "sources" array should reference the uploaded document itself.
+RULES:
+- Base ALL claims on the document content only.
+- If unclear, say so.
+- Never invent quotes or data.
+- Output concise JSON only — under 4000 tokens.
 
-Return valid JSON following this exact schema — no markdown, no preamble:
+Schema:
 {
-  "query_understood": "Short descriptive title",
   "mode": "standard",
+  "query_understood": "Short title",
   "summary": {
-    "bottom_line": "1-2 sentence plain-English conclusion",
-    "full_synthesis": "Concise 150-300 word analysis. No bullet points. Reference sections using [DOC].",
-    "eli5_version": "One paragraph for a 12-year-old",
-    "confidence_narrative": "One sentence on confidence"
+    "bottom_line": "1-2 sentence bottom line",
+    "full_synthesis": "Concise 100-200 word analysis, narrative style, use [DOC] references",
+    "eli5_version": "One paragraph plain language",
+    "confidence_narrative": "One sentence"
   },
   "scores": {
     "overall_credibility": 0-100,
     "overall_relevance": 0-100,
-    "evidence_consensus": "strong | mixed | contested | insufficient",
-    "confidence_label": "High | Medium | Low"
+    "evidence_consensus": "strong|mixed|contested|insufficient",
+    "confidence_label": "High|Medium|Low"
   },
   "sources": [{
     "id": 1,
     "title": "Uploaded Document",
-    "url": "(this uploaded document)",
+    "url": "(this document)",
     "domain": "(user document)",
     "type": "Document",
     "credibility_score": 0-100,
     "relevance_score": 0-100,
-    "key_finding": "Key finding from this section",
-    "published_date": "(from document or 'unknown')",
+    "key_finding": "One key finding",
+    "published_date": "unknown",
     "bias_flag": null
   }],
-  "conflicts": [],
-  "bias_alert": null,
-  "intelligence_map": {
-    "central_node": { "id": "root", "label": "Main topic", "type": "CONCEPT" },
-    "nodes": [{ "id": "node_1", "label": "Key concept 1", "type": "CONCEPT", "relationship": "related to", "sub_query": "Explore this concept", "importance": 3 }],
-    "edges": [{ "from": "root", "to": "node_1", "label": "related" }]
-  },
-  "geo_points": [],
-  "swot": {
-    "perspective": "Document analysis perspective",
-    "strengths": ["Strength 1", "Strength 2", "Strength 3"],
-    "weaknesses": ["Weakness 1", "Weakness 2", "Weakness 3"],
-    "opportunities": ["Opportunity 1", "Opportunity 2"],
-    "threats": ["Threat 1", "Threat 2"]
-  },
-  "timeline_events": [],
   "actionable_takeaways": {
-    "key_insight": "Single most important takeaway",
-    "watch_out_for": "Key limitation or caveat",
-    "next_step": "What to do with this information"
+    "key_insight": "One sentence",
+    "watch_out_for": "One caveat",
+    "next_step": "What to do next"
   },
-  "follow_up_suggestions": ["Follow-up 1", "Follow-up 2", "Follow-up 3"],
+  "follow_up_suggestions": ["Q1", "Q2", "Q3"],
   "archive_entry": {
     "query": "Document Analysis: ${(query || text || '').slice(0, 80)}",
     "timestamp": "ISO timestamp",
     "topic_cluster": "Document Analysis",
     "tags": ["document", "analysis"],
-    "summary_snippet": "35-word preview"
+    "summary_snippet": "15-word preview"
   }
 }
 
-DOCUMENT CONTENT (this is your ONLY source):
+DOCUMENT:
 """
-${(text || '').slice(0, 25000)}
+${(text || '').slice(0, 10000)}
 """`;
 
-const MAX_DOC_CHARS = 25000;
+const MAX_DOC_CHARS = 10000;
 
 export async function handleAnalyzeDocument(req, res) {
   applyCors(req, res);
