@@ -99,7 +99,7 @@ import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
 import SourceDrawer from './SourceDrawer';
 import EvidencePreview from './EvidencePreview';
-import ReasoningTimeline from './ReasoningTimeline';
+
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
@@ -477,13 +477,6 @@ export default function ReportView({
                     }))}
                     retrievalTrace={report._retrieval_trace || null}
                   />
-                </div>
-              )}
-
-              {/* Reasoning Timeline */}
-              {deepResearch.reasoningTimeline && deepResearch.reasoningTimeline.length > 0 && (
-                <div className="mt-4">
-                  <ReasoningTimeline steps={deepResearch.reasoningTimeline} />
                 </div>
               )}
               
