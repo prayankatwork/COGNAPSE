@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, CheckCircle2, AlertTriangle, RotateCcw, 
-  ArrowRight, Zap, Shield, Cpu, Database
+import {
+  Search, CheckCircle2, AlertTriangle, RotateCcw,
+  ArrowRight, Zap, Shield, Cpu, Database, Play, SkipForward
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -45,14 +45,31 @@ function getStageIcon(stage: string) {
 
 export default function ReasoningTimeline({ steps, isRunning = false }: ReasoningTimelineProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to latest step
+  // Auto-scroll when new steps appear
   useEffect(() => {
-    if (isRunning && bottomRef.current) {
+    if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [steps.length, isRunning]);
+  }, [activeIndex]);
+
+  // Animation interval
+  useEffect(() => {
+    let interval: any;
+    if (isPlaying && activeIndex < steps.length - 1) {
+      interval = setInterval(() => {
+        setActiveIndex(prev => prev + 1);
+      }, 1200);
+    } else if (activeIndex >= steps.length - 1) {
+      setIsPlaying(false);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, activeIndex, steps.length]);
+
+  const visibleSteps = steps.slice(0, activeIndex + 1);
 
   if (!steps || steps.length === 0) {
     if (!isRunning) return null;
@@ -102,6 +119,34 @@ export default function ReasoningTimeline({ steps, isRunning = false }: Reasonin
         </motion.div>
       </button>
 
+      {/* Playback controls */}
+      {isExpanded && (
+        <div className="px-4 pb-2 flex items-center gap-2 border-b border-my-border/50">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (activeIndex >= steps.length - 1) setActiveIndex(-1);
+              setIsPlaying(!isPlaying);
+            }}
+            className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-my-accent"
+          >
+            <Play size={14} className={clsx(isPlaying && "fill-current")} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveIndex(steps.length - 1);
+            }}
+            className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-my-muted"
+          >
+            <SkipForward size={14} />
+          </button>
+          <span className="text-[8px] font-mono text-my-muted ml-auto">
+            {activeIndex + 1}/{steps.length}
+          </span>
+        </div>
+      )}
+
       {/* Timeline */}
       <AnimatePresence>
         {isExpanded && (
@@ -113,12 +158,17 @@ export default function ReasoningTimeline({ steps, isRunning = false }: Reasonin
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 max-h-80 overflow-y-auto no-scrollbar">
-              {steps.map((step, idx) => (
+              {visibleSteps.length === 0 && (
+                <div className="text-[10px] text-my-muted italic py-4 animate-pulse">
+                  Press play to begin trace reconstruction...
+                </div>
+              )}
+              {visibleSteps.map((step, idx) => (
                 <motion.div
                   key={step.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05, duration: 0.2 }}
+                  transition={{ delay: 0, duration: 0.3 }}
                   className="relative flex gap-3 pb-4 last:pb-0"
                 >
                   {/* Timeline line */}

@@ -94,7 +94,6 @@ function generateJSON(report: COGNAPSE_Output, citations?: string): string {
 const PhysicsMap = React.lazy(() => import('./PhysicsMap'));
 import { useStore } from '../store';
 import confetti from 'canvas-confetti';
-import ThoughtReplayEngine from './ThoughtReplayEngine';
 import BrandLogo from './BrandLogo';
 import PremiumExportModal from './PremiumExportModal';
 import SourceDrawer from './SourceDrawer';
@@ -481,13 +480,6 @@ export default function ReportView({
                   />
                 </div>
               )}
-
-              {/* Reasoning Timeline */}
-              {deepResearch.reasoningTimeline && deepResearch.reasoningTimeline.length > 0 && (
-                <div className="mt-4">
-                  <ReasoningTimeline steps={deepResearch.reasoningTimeline} />
-                </div>
-              )}
               
             </div>
           )}
@@ -525,10 +517,10 @@ export default function ReportView({
             </div>
           )}
 
-          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
+          {!readOnly && (
             <>
               {/* Forensic Reasoning Replay */}
-              <ThoughtReplayEngine />
+              <ReasoningTimeline steps={deepResearch.reasoningTimeline || []} isRunning={researchStatus === 'deep' && !report} />
             </>
           )}
         </motion.div>
