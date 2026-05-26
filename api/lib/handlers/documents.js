@@ -215,9 +215,10 @@ export async function handleStoreDocumentContent(req, res) {
   if (decoded === false) return;
 
   const { userId, documentId, content, mimeType } = req.body || {};
-  if (!userId || !documentId || !content) return res.status(400).json({ error: 'Missing required fields: userId, documentId, content' });
+  if (!documentId || !content) return res.status(400).json({ error: 'Missing required fields: documentId, content' });
 
   const uid = decoded?.uid || userId;
+  if (!uid) return res.status(401).json({ error: 'Authentication required.' });
 
   try {
     await enforcePremium(uid);

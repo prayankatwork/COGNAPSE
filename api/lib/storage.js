@@ -37,14 +37,19 @@ export async function listUserDocuments(userId, limit = 50) {
   if (!db) throw new Error('SERVER_DATABASE_NOT_CONFIGURED');
   const q = db
     .collection('user_documents')
-    .where('userId', '==', userId)
-    .orderBy('createdAt', 'desc')
-    .limit(limit);
+    .where('userId', '==', userId);
   const snap = await q.get();
-  return snap.docs.map((d) => {
+  const docs = snap.docs.map((d) => {
     const { content, ...rest } = d.data();
     return { id: d.id, ...rest };
   });
+  // Sort by createdAt descending (in-memory to avoid needing a composite Firestore index)
+  docs.sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+  return docs.slice(0, limit);
 }
 
 /**
