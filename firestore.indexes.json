@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "document_chunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "documentId", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "index", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
