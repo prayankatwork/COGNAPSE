@@ -96,6 +96,7 @@ import { useStore } from '../store';
 import confetti from 'canvas-confetti';
 
 import BrandLogo from './BrandLogo';
+import ThoughtReplayEngine from './ThoughtReplayEngine';
 import PremiumExportModal from './PremiumExportModal';
 import SourceDrawer from './SourceDrawer';
 import EvidencePreview from './EvidencePreview';
@@ -516,6 +517,12 @@ export default function ReportView({
             </div>
           )}
 
+          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
+            <>
+              {/* Forensic Reasoning Replay */}
+              <ThoughtReplayEngine />
+            </>
+          )}
         </motion.div>
       </motion.div>
 
