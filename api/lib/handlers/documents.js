@@ -624,12 +624,16 @@ export async function handleAnalyzeDocument(req, res) {
       return res.status(400).json({ error: 'Document text too short. Minimum 50 characters required.' });
     }
 
-    const prompt = DOCUMENT_SYSTEM_PROMPT(documentText, query);
+    const MAX_DOC_CHARS = 25000;
+    const trimmedText = documentText.length > MAX_DOC_CHARS
+      ? documentText.slice(0, MAX_DOC_CHARS) + '\n\n[... remaining content truncated for analysis speed]'
+      : documentText;
+
+    const prompt = DOCUMENT_SYSTEM_PROMPT(trimmedText, query);
     const raw = await runSwarm({
       prompt,
       isJson: true,
-      estTokens: Math.ceil(prompt.length / 4),
-      requestedModel: 'groq-llama-3.3-70b-versatile',
+      estTokens: Math.ceil(prompt.length / 4) + 20000,
     });
 
     let result;
