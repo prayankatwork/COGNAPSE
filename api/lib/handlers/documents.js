@@ -643,6 +643,6 @@ export async function handleAnalyzeDocument(req, res) {
 
     return res.status(200).json({ success: true, report: result, usage: raw.usage });
   } catch (error) {
-    return sendSafeError(res, 500, 'Failed to analyze document.', error);
+    return res.status(500).json({ error: 'Failed to analyze document.', detail: error?.message || error?.toString() || 'Unknown error' });
   }
 }

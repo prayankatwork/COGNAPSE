@@ -27,7 +27,7 @@ export async function analyzeDocument(
   if (!response.ok) {
     const err = await response.json().catch(() => ({ error: 'Analysis failed' }));
     if (err.premiumRequired) throw new Error('Premium subscription required.');
-    throw new Error(err.error || 'Failed to analyze document');
+    throw new Error(err.detail || err.error || 'Failed to analyze document');
   }
 
   const data = await response.json();
