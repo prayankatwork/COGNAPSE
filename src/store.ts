@@ -56,7 +56,16 @@ export interface DeepResearchState {
   thesis: DeepResearchThesis | null;
   error: string | null;
   scores: ResearchScore | null;
-  reasoningTimeline: string[];
+  reasoningTimeline: ReasoningStep[];
+}
+
+export interface ReasoningStep {
+  id: string;
+  stage: string;
+  action: string;
+  insight: string;
+  status: 'active' | 'confirmed' | 'discarded' | 'pivoted';
+  timestamp: number;
 }
 
 export interface Note {
@@ -155,7 +164,7 @@ interface AppState {
   deepResearch: DeepResearchState;
   setDeepResearch: (update: Partial<DeepResearchState>) => void;
   resetDeepResearch: () => void;
-  addReasoningStep: (step: string) => void;
+  addReasoningStep: (action: string) => void;
 
   notes: Note[];
   setNotes: (notes: Note[]) => void;
@@ -513,12 +522,23 @@ export const useStore = create<AppState>()(
           reasoningTimeline: []
         }
       }),
-      addReasoningStep: (step) => set((state) => ({
-        deepResearch: {
-          ...state.deepResearch,
-          reasoningTimeline: [...state.deepResearch.reasoningTimeline, step]
-        }
-      })),
+      addReasoningStep: (action) => set((state) => {
+        const stages = ['Thesis Formulation', 'Source Retrieval', 'Evidence Synthesis', 'Finalization'];
+        const step: ReasoningStep = {
+          id: crypto.randomUUID(),
+          stage: stages[state.deepResearch.stage - 1] || 'Processing',
+          action,
+          insight: action,
+          status: 'active' as const,
+          timestamp: Date.now()
+        };
+        return {
+          deepResearch: {
+            ...state.deepResearch,
+            reasoningTimeline: [...state.deepResearch.reasoningTimeline, step]
+          }
+        };
+      }),
 
       notes: [],
       setNotes: (notes) => set({ notes }),
