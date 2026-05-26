@@ -90,30 +90,15 @@ CRITICAL REQUIREMENTS:
 `;
 
 export async function executeDeepResearch(query: string) {
-  const { setDeepResearch, clearCognition, addReasoningStep, clearReasoningTimeline } = useStore.getState();
+  const { setDeepResearch, clearCognition } = useStore.getState();
 
   try {
     setDeepResearch({ status: 'running', stage: 1, progress: 'Expanding research objective...' });
     clearCognition();
-    clearReasoningTimeline();
 
     const stepTime = Date.now();
 
-    addReasoningStep({
-      stage: 'Objective Expansion',
-      action: 'Decomposing query into search vectors',
-      insight: `Expanding "${query}" into multi-dimensional investigation vectors for web retrieval.`,
-      status: 'confirmed'
-    });
-
     setDeepResearch({ stage: 2, progress: 'Retrieving real-time sources from web...' });
-
-    addReasoningStep({
-      stage: 'Source Retrieval',
-      action: 'Querying web search API',
-      insight: `Performing real-time web search to gather authoritative sources on: "${query}"`,
-      status: 'confirmed'
-    });
 
     // ─── REAL SOURCE RETRIEVAL ───
     let groundedSources: GroundedSource[] = [];
@@ -124,29 +109,10 @@ export async function executeDeepResearch(query: string) {
       groundedSources = searchResult.sources;
       retrievalTrace = searchResult.trace;
 
-      addReasoningStep({
-        stage: 'Source Retrieval',
-        action: 'Filtering and ranking results',
-        insight: `Retrieved ${retrievalTrace.sources_retrieved} sources from ${retrievalTrace.search_provider}. After dedup (${retrievalTrace.dedup_removed} removed) & filtering (${retrievalTrace.low_quality_filtered} removed), using ${retrievalTrace.sources_used} sources in ${retrievalTrace.latency_ms}ms.`,
-        status: 'confirmed'
-      });
     } catch (e: any) {
-      addReasoningStep({
-        stage: 'Source Retrieval',
-        action: 'Web search unavailable',
-        insight: `Could not retrieve real-time sources: ${e.message}. Proceeding with deep analysis using model knowledge.`,
-        status: 'pivoted'
-      });
     }
 
     setDeepResearch({ stage: 3, progress: 'Synthesizing evidence-backed intelligence...' });
-
-    addReasoningStep({
-      stage: 'Synthesis',
-      action: 'Generating evidence-backed thesis',
-      insight: `Synthesizing ${groundedSources.length > 0 ? `${groundedSources.length} real sources into` : 'model knowledge into'} an academic-grade thesis with inline source citations.`,
-      status: 'confirmed'
-    });
 
     // Compress sources for LLM context
     const sourcesContext = groundedSources.length > 0
@@ -168,13 +134,6 @@ ${compressSourcesForLLM(groundedSources, 3000)}
     } catch (e) {
       throw new Error("Deep Research synthesis returned malformed intelligence. Please retry.");
     }
-
-    addReasoningStep({
-      stage: 'Finalization',
-      action: 'Computing quality metrics',
-      insight: `Thesis generated with ${groundedSources.length} real sources. Computing credibility, diversity, bias, and confidence scores.`,
-      status: 'confirmed'
-    });
 
     // Compute scores using real source data
     const scores: ResearchScore = computeScoresFromReport();

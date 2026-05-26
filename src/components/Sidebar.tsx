@@ -408,8 +408,7 @@ function ArchiveItem({ item }: { item: any }) {
             thesis: item.report.deep_research,
             scores: item.report.deep_scores || null,
             stage: 4,
-            progress: 'Decrypted from Archive',
-            reasoningTimeline: []
+            progress: 'Decrypted from Archive'
           });
         } else {
           resetDeepResearch();

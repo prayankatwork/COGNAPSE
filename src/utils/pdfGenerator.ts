@@ -1,7 +1,6 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { COGNAPSE_Output, DeepResearchThesis } from '../types';
-import { useStore } from '../store';
 import { escapeHtml } from './escapeHtml';
 import { formatAllCitations, formatCitation } from './citations';
 import type { CitationFormat } from './citations';
@@ -24,7 +23,6 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
   const exportVersion = "1.0.0";
 
   // Pull reasoning timeline from store
-  const reasoningTimeline = useStore.getState().deepResearch?.reasoningTimeline || [];
 
   const safeText = (val: unknown) => escapeHtml(
     typeof val === 'string'

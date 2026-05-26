@@ -122,56 +122,6 @@ export default function MainContent() {
       const reportId = uuidv4();
       report.id = reportId;
 
-      // ─── STANDARD RESEARCH REASONING TRACE ───
-      // Lightweight reasoning steps visible in ReportView's ReasoningTimeline
-      const hasSources = report.sources && report.sources.length > 0;
-      const hasConflicts = report.conflicts && report.conflicts.length > 0;
-      const hasBias = !!report.bias_alert;
-
-      const { addReasoningStep, clearReasoningTimeline } = useStore.getState();
-      clearReasoningTimeline();
-
-      addReasoningStep({
-        stage: 'Source Retrieval',
-        action: 'Query decomposition and web search',
-        insight: `Expanding query "${targetQuery}" and retrieving authoritative sources from live web.`,
-        status: 'confirmed'
-      });
-
-      if (hasSources) {
-        addReasoningStep({
-          stage: 'Source Aggregation',
-          action: `Ranking ${report.sources!.length} retrieved sources`,
-          insight: `Evaluated credibility and relevance scores across ${report.sources!.length} sources. Top confidence: ${Math.max(...report.sources!.map(s => s.credibility_score || 0))}/100.`,
-          status: 'confirmed'
-        });
-      }
-
-      if (hasConflicts) {
-        addReasoningStep({
-          stage: 'Contradiction Analysis',
-          action: `Analyzing ${report.conflicts!.length} conflicting claims`,
-          insight: `Detected source contradictions requiring reconciliation. Flagged for user review.`,
-          status: 'pivoted'
-        });
-      }
-
-      if (hasBias) {
-        addReasoningStep({
-          stage: 'Bias Mitigation',
-          action: 'Adjusting synthesis weight for detected bias',
-          insight: `Detected perspective leaning: ${report.bias_alert!.direction}. Applying corrective heuristic.`,
-          status: 'pivoted'
-        });
-      }
-
-      addReasoningStep({
-        stage: 'Synthesis & Structuring',
-        action: 'Generating final intelligence report',
-        insight: `Compiled report with ${hasSources ? report.sources!.length : 0} sources, ${hasConflicts ? report.conflicts!.length : 0} contradictions flagged. Producing structured output.`,
-        status: 'confirmed'
-      });
-
       setLoadingPhase("Finalizing report...");
       setCurrentReport(report);
 

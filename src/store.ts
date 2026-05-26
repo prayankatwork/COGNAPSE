@@ -49,15 +49,6 @@ export interface CognitionGraph {
   rootThoughts: string[]; // Entry points
 }
 
-export interface ReasoningStep {
-  id: string;
-  stage: string;
-  action: string;
-  insight: string;
-  status: 'confirmed' | 'discarded' | 'pivoted';
-  timestamp: string;
-}
-
 export interface DeepResearchState {
   status: 'idle' | 'running' | 'completed' | 'error';
   stage: number;
@@ -65,7 +56,6 @@ export interface DeepResearchState {
   thesis: DeepResearchThesis | null;
   error: string | null;
   scores: ResearchScore | null;
-  reasoningTimeline: ReasoningStep[];
 }
 
 export interface Note {
@@ -179,9 +169,6 @@ interface AppState {
   speculativeCache: Record<string, string>; // question -> answer
   setSpeculativeAnswer: (question: string, answer: string) => void;
 
-  addReasoningStep: (step: Omit<ReasoningStep, 'id' | 'timestamp'>) => void;
-  clearReasoningTimeline: () => void;
-
   missions: { id: string; title: string; xp: number; completed: boolean }[];
   completeMission: (id: string) => void;
   refreshMissions: () => void;
@@ -289,8 +276,7 @@ export const useStore = create<AppState>()(
             progress: '',
             thesis: null,
             error: null,
-            scores: null,
-            reasoningTimeline: []
+            scores: null
           },
           currentView: 'landing'
         });
@@ -378,8 +364,7 @@ export const useStore = create<AppState>()(
                 thesis: entry.report.deep_research,
                 scores: entry.report.deep_scores || null,
                 stage: 4,
-                progress: 'Decrypted from Archive',
-                reasoningTimeline: []
+                progress: 'Decrypted from Archive'
               }
             });
           }
@@ -432,8 +417,7 @@ export const useStore = create<AppState>()(
               progress: '',
               thesis: null,
               error: null,
-              scores: null,
-              reasoningTimeline: []
+              scores: null
             }
           };
         }),
@@ -510,8 +494,7 @@ export const useStore = create<AppState>()(
         progress: '',
         thesis: null,
         error: null,
-        scores: null,
-        reasoningTimeline: []
+        scores: null
       },
       setDeepResearch: (update) => set((state) => ({
         deepResearch: { ...state.deepResearch, ...update }
@@ -523,8 +506,7 @@ export const useStore = create<AppState>()(
           progress: '',
           thesis: null,
           error: null,
-          scores: null,
-          reasoningTimeline: []
+          scores: null
         }
       }),
 
@@ -609,19 +591,6 @@ export const useStore = create<AppState>()(
       speculativeCache: {},
       setSpeculativeAnswer: (question, answer) => set((state) => ({
         speculativeCache: { ...state.speculativeCache, [question]: answer }
-      })),
-
-      addReasoningStep: (step) => set((state) => ({
-        deepResearch: {
-          ...state.deepResearch,
-          reasoningTimeline: [
-            ...state.deepResearch.reasoningTimeline,
-            { ...step, id: crypto.randomUUID(), timestamp: new Date().toISOString() }
-          ]
-        }
-      })),
-      clearReasoningTimeline: () => set((state) => ({
-        deepResearch: { ...state.deepResearch, reasoningTimeline: [] }
       })),
 
       missions: [
