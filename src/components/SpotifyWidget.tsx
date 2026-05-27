@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Music, X, PlayCircle, Minus, Move } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 
 export default function SpotifyWidget() {
   const [isOpen, setIsOpen] = useState(false);
