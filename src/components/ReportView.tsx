@@ -433,10 +433,50 @@ export default function ReportView({
               )}
               {report.summary?.full_synthesis && (
                 <div className="text-[14px] leading-[1.7] text-my-syn space-y-[1.25em]">
-                  {stripCitationMarkers(report.summary.full_synthesis).split('\n').map((para: string, i: number) =>
+                  {report.summary.full_synthesis.split('\n').map((para: string, i: number) =>
                     para.trim() ? (
                       <p key={i} className="leading-[1.7] group relative">
-                        {para}
+                        {(() => {
+                          const parts = para.split(/(\[\d+\])/g);
+                          return parts.map((part: string, j: number) => {
+                            const citeMatch = part.match(/\[(\d+)\]/);
+                            if (citeMatch) {
+                              const sourceId = parseInt(citeMatch[1]);
+                              const source = report.sources?.find(s => s.id === sourceId);
+                              return (
+                                <span key={j} className="relative inline">
+                                  <sup
+                                    className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative"
+                                    onMouseEnter={() => setHoveredCitation(sourceId)}
+                                    onMouseLeave={() => setHoveredCitation(null)}
+                                  >
+                                    [{sourceId}]
+                                  </sup>
+                                  {source && (
+                                    <EvidencePreview
+                                      source={{
+                                        id: source.id,
+                                        title: source.title,
+                                        url: source.url,
+                                        domain: source.domain || '',
+                                        type: source.type || 'web',
+                                        snippet: source.key_finding || '',
+                                        credibility_score: source.credibility_score || 0,
+                                        relevance_score: source.relevance_score || 0,
+                                        key_finding: source.key_finding || '',
+                                        published_date: source.published_date || '',
+                                        bias_flag: source.bias_flag || null,
+                                        retrieval_timestamp: source.retrieval_timestamp || new Date().toISOString()
+                                      }}
+                                      isVisible={hoveredCitation === source.id}
+                                    />
+                                  )}
+                                </span>
+                              );
+                            }
+                            return part;
+                          });
+                        })()}
                       </p>
                     ) : <br key={i} />
                   )}
