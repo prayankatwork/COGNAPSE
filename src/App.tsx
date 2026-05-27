@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import { useStore } from './store';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
-import UnifiedCanvas from './components/UnifiedCanvas';
+
 import Documentation from './components/Documentation';
 import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
@@ -399,7 +399,7 @@ export default function App() {
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       {!shareRoute && !legalPage && <NeuralWalkthrough />}
       {!shareRoute && !legalPage && <SelectionCapture />}
-      <UnifiedCanvas />
+
       <ToastContainer />
 
       {/* Suspended User Overlay */}

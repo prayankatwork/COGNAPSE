@@ -1,15 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Music, X, PlayCircle, Minus, Zap, Coffee, Maximize2, Move } from 'lucide-react';
-import { useStore } from '../store';
+import { Music, X, PlayCircle, Minus, Maximize2, Move } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import clsx from 'clsx';
 
 export default function SpotifyWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [playlistUri, setPlaylistUri] = useState('');
   const [activeEmbed, setActiveEmbed] = useState('');
-  const { vibe, setVibe } = useStore();
 
   const handleEmbed = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,17 +110,6 @@ export default function SpotifyWidget() {
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-white/90">Focus Stream</span>
               </div>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setVibe(vibe === 'focus' ? 'energy' : 'focus')}
-                  className={clsx(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all border",
-                    vibe === 'focus' ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-my-signal/20 text-my-signal border-my-signal/30"
-                  )}
-                  title="Toggle Visual Vibe"
-                >
-                  {vibe === 'focus' ? <Coffee size={10} /> : <Zap size={10} />}
-                  {vibe}
-                </button>
                 {activeEmbed && (
                   <button onClick={() => setIsMinimized(true)} className="p-1 text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full">
                     <Minus size={14} />
