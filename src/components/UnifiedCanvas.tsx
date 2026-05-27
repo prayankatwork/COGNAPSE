@@ -13,8 +13,6 @@ function detectMobileViewport() {
 export default function UnifiedCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const theme = useStore((state) => state.theme);
-  const vibe = useStore((s) => s.vibe);
-  const consensus = useStore((s) => s.currentReport?.scores?.evidence_consensus || 'insufficient');
   const isLoading = useStore((s) => s.isLoading);
   const [isMobile, setIsMobile] = useState(detectMobileViewport);
 
@@ -186,60 +184,7 @@ export default function UnifiedCanvas() {
         }
       });
 
-      // ══════════════════════════════════════
-      // MUSIC VISUALIZER LAYER (at the bottom)
-      // ══════════════════════════════════════
-
-      const isHighEnergy = vibe === 'energy';
-      const isConflicted = consensus === 'mixed' || consensus === 'contested';
-
-      time += isHighEnergy ? 0.04 : 0.01;
-      const bpm = isHighEnergy ? 128 : 60;
-      pulse = Math.abs(Math.sin(time * (bpm / 60) * Math.PI));
-
-      if (isHighEnergy && isConflicted) {
-        // Jagged glitchy spikes
-        ctx.strokeStyle = 'rgba(242, 125, 38, 0.2)';
-        ctx.lineWidth = 1;
-
-        for (let j = 0; j < 2; j++) {
-          ctx.beginPath();
-          for (let x = 0; x < width; x += 4) {
-            const glitchOffset = Math.random() > 0.98 ? (Math.random() - 0.5) * 100 : 0;
-            const noise = (Math.random() - 0.5) * 20;
-            const y = height * 0.75 + Math.sin(x * 0.01 + time * 2) * 50 + glitchOffset + noise;
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
-        }
-
-        // Sudden scanlines
-        if (Math.random() > 0.95) {
-          ctx.fillStyle = 'rgba(242, 125, 38, 0.05)';
-          ctx.fillRect(0, Math.random() * height, width, Math.random() * 4);
-        }
-      } else {
-        // Slow calming waves
-        const waveColor = vibe === 'focus'
-          ? 'rgba(42, 67, 101, 0.12)'
-          : 'rgba(242, 125, 38, 0.15)';
-
-        ctx.fillStyle = waveColor;
-        const waveCount = 3;
-
-        for (let i = 0; i < waveCount; i++) {
-          ctx.beginPath();
-          ctx.moveTo(0, height);
-          for (let x = 0; x <= width; x += 20) {
-            const amplitude = (12 + i * 8) * (1 + pulse * 0.25);
-            const y = height * 0.90 + Math.sin(x * 0.003 + time + i * 0.5) * amplitude;
-            ctx.lineTo(x, y);
-          }
-          ctx.lineTo(width, height);
-          ctx.fill();
-        }
-      }
+      // Music visualizer waves removed — no Spotify bg animations
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -257,7 +202,7 @@ export default function UnifiedCanvas() {
       cancelAnimationFrame(animationFrameId);
       unsubscribeLoading();
     };
-  }, [theme, vibe, consensus, isMobile, isLoading]);
+  }, [theme, isMobile]);
 
   if (isMobile) return null;
 

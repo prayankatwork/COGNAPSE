@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Music, X, PlayCircle, Minus, Maximize2, Move } from 'lucide-react';
+import { Music, X, PlayCircle, Minus, Move } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SpotifyWidget() {
