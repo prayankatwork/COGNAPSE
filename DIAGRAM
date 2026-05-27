@@ -1,0 +1,92 @@
+flowchart TD
+    sw1["SWIMLANE: MainContent.tsx<br/>User entry point"] -->|"handleSearch()"| sw2
+    sw2["SWIMLANE: searchService.ts<br/>Source retrieval + cache"] -->|"searchWeb(10)"| sw3
+    sw3["SWIMLANE: API /api/search<br/>Tavily search handler"] -->|"searchTavily()"| sw4
+    sw4["SWIMLANE: API /api/research<br/>runSwarm()"] -->|"callCloudAI()"| sw5
+    sw5["SWIMLANE: geminiService.ts<br/>Research orchestration"] -->|"returns COGNAPSE_Output"| sw1
+
+    subgraph sw1[" "]
+        direction TB
+        M1["query submitted"] --> M2["resetDeepResearch()"]
+        M2 --> M3["loading=true, error=null"]
+        M3 --> M4["executeCognapseResearch(query)"]
+        M4 --> M5["await result"]
+        M5 --> M6["setCurrentReport(report)"]
+        M6 --> M7["loading=false"]
+    end
+
+    subgraph sw2[" "]
+        direction TB
+        S1["searchWeb(query, 10)"] --> S2{"same query<br/>cached ≤5min?"}
+        S2 -->|yes| S3["return cached"]
+        S2 -->|no| S4["fetch /api/search"]
+        S4 --> S5["deduplicate + rank"]
+        S5 --> S6["cache + return"]
+    end
+
+    subgraph sw3[" "]
+        direction TB
+        T1["POST /api/search"] --> T2{"rate limited?<br/>20/min"}
+        T2 -->|yes| T3["429"]
+        T2 -->|no| T4{"TAVILY_API_KEY?"}
+        T4 -->|no| T5["503"]
+        T4 -->|yes| T6["fetch tavily.com/search"]
+        T6 --> T7["parse → title/url/domain/score"]
+        T7 --> T8["filter: drop short + disambig"]
+        T8 --> T9["dedup + rank"]
+        T9 --> T10["return { sources, trace }"]
+    end
+
+    subgraph sw4[" "]
+        direction TB
+        R1["runSwarm(prompt)"] --> R2["prune to 20K chars"]
+        R2 --> R3["call Groq flagship LLM"]
+        R3 --> R4{"retries < 2<br/>and failed?"}
+        R4 -->|yes| R2
+        R4 -->|no, success| R5["extractJson() regex"]
+        R5 --> R6["return JSON string"]
+        R4 -->|no, all failed| R7["markUnstable(45s cooldown)"]
+        R7 --> R8["return error"]
+    end
+
+    subgraph sw5[" "]
+        direction TB
+        G1["addReasoningStep(1):<br/>retrieving sources"] --> G2["searchWeb(10)"]
+        G2 --> G3{"web search<br/>succeeded?"}
+        G3 -->|yes| G4["addReasoningStep:<br/>collected N sources"]
+        G3 -->|no| G5["addReasoningStep:<br/>unavailable, synthetic"]
+        G4 --> G6["compressSourcesForLLM()"]
+        G5 --> G6
+        G6 --> G7["build prompt:<br/>SYSTEM_PROMPT + SOURCES +<br/>QUERY + USER_CONTEXT"]
+        G7 --> G8["addReasoningStep(2):<br/>synthesizing report"]
+        G8 --> G9["callCloudAI(primary key)"]
+        G9 --> G10["parse JSON"]
+        G10 --> G11{valid report?}
+        G11 -->|no| G12["throw format error"]
+        G11 -->|yes| G13["replace AI sources with real"]
+        G13 --> G14["attach retrieval trace"]
+        G14 --> G15["addReasoningStep(3):<br/>multi-model consensus"]
+        G15 --> G16["callCloudAI(secondary key,<br/>same prompt, different LLM)"]
+        G16 --> G17{success?}
+        G17 -->|no| G18["log warning, skip"]
+        G17 -->|yes| G19["diffReports() → MultiModelConsensus"]
+        G19 --> G20["attach to output"]
+        G18 --> G21["extractCitations()<br/>from synthesis text"]
+        G20 --> G21
+        G21 --> G22["build batch verification prompt"]
+        G22 --> G23["callCloudAI(secondary key,<br/>verify prompt)"]
+        G23 --> G24{success?}
+        G24 -->|no| G25["log warning, skip"]
+        G24 -->|yes| G26["parse verdicts, attach"]
+        G25 --> G27["addReasoningStep(4):<br/>finalizing"]
+        G26 --> G27
+        G27 --> G28["return COGNAPSE_Output"]
+    end
+
+    subgraph error["ERROR HANDLING<br/>(every catch block)"]
+        E1["catch(error)"] --> E2{"AbortError<br/>(user cancelled)?"}
+        E2 -->|yes| E3["silent return"]
+        E2 -->|no| E4["setError(message)"]
+        E4 --> E5["loading = false"]
+        E5 --> E6["banner shown to user"]
+    end
