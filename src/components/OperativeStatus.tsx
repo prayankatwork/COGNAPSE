@@ -647,7 +647,6 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                         <FeatureCheck label="Priority Processing" />
                         <FeatureCheck label="Session Memory Synthesis" />
                         <FeatureCheck label="Expanded Scoring Depth" />
-                        <FeatureCheck label="Research Templates" />
                         <FeatureCheck label="Persistent Chat History" />
                       </div>
                     </div>
@@ -686,7 +685,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                           <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Expanded Scoring Depth
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Research Templates & More
+                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Persistent Chat History
                         </div>
                       </div>
                     </div>
