@@ -325,6 +325,11 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       }
     }
 
+    // Ensure conflicts field always exists (AI often skips optional fields)
+    if (!parsed.conflicts) {
+      parsed.conflicts = [];
+    }
+
     // Attach real sources and retrieval trace to the output
     if (groundedSources.length > 0) {
       // Replace any AI-hallucinated sources with our real ones

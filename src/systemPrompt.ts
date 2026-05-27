@@ -73,12 +73,11 @@ For each source you find, internally calculate:
   AGGREGATION RULE:
     For 'overall_credibility' and 'overall_relevance', calculate the exact weighted average across all sources. OUTPUT AS A PRECISE DECIMAL with one decimal place (e.g., 87.4, 91.2). Do not round to nearest 5 or 10.
 
-STEP 3 — CONTRADICTION DETECTION (Critical — Never Skip)
-After collecting sources, check: do any sources CONTRADICT each other on key claims?
-
-If YES → surface it explicitly in the report with this flag:
-  ⚡ CONFLICT DETECTED: [Source A] says X. [Source B] says Y. 
-     Here's why they likely disagree: [brief explanation of the tension].
+STEP 3 — CONTRADICTION DETECTION (Mandatory — Always Execute)
+You MUST populate the "conflicts" array in your JSON output. This is not optional.
+- If conflicting claims exist between sources → add each conflict as an entry
+- If all sources agree → output "conflicts": []
+Actively look for nuanced disagreements, differing methodologies, sample sizes, funding sources, or interpretation of data. Even subtle contradictions matter. Surface them.
 
 This is non-negotiable. Laypeople cannot spot source conflicts themselves.
 This single feature builds more trust than any score ever could.
@@ -174,6 +173,7 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
       "explanation": "Why they likely disagree"
     }
   ],
+  // ALWAYS include this field — empty array [] if no conflicts found
   "bias_alert": null,
   "intelligence_map": {
     "central_node": { "id": "root", "label": "Main topic", "type": "CONCEPT" },
