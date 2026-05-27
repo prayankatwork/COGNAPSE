@@ -48,6 +48,7 @@ import ToastContainer from './components/ui/ToastContainer';
 import { audioService } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
 import { apiFetch } from './services/apiClient';
+import { toast } from './utils/toast';
 
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
@@ -311,16 +312,19 @@ export default function App() {
         if (!isActive) return;
         const newPremium = data.premium === true;
         const oldPremium = !!currentUser.premium;
-        if (newPremium !== oldPremium || (newPremium && data.premiumPlan !== currentUser.premiumPlan)) {
+        if (newPremium !== oldPremium) {
           useStore.setState({
             user: {
               ...currentUser,
               premium: newPremium,
-              premiumPlan: data.premiumPlan || undefined,
-              premiumActivatedAt: data.premiumActivatedAt || undefined,
-              premiumExpiresAt: data.premiumExpiresAt || undefined,
+              premiumPlan: newPremium ? (data.premiumPlan || 'admin-granted') : undefined,
+              premiumActivatedAt: newPremium ? (data.premiumActivatedAt || new Date().toISOString()) : undefined,
+              premiumExpiresAt: newPremium ? (data.premiumExpiresAt || undefined) : undefined,
             },
           });
+          if (newPremium) {
+            toast.success('Access Granted · Premium features are now active');
+          }
         }
       } catch (e) {
         console.warn('[PremiumSync] check failed:', e);
