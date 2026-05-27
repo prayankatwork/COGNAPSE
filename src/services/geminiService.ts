@@ -6,7 +6,7 @@ import { useStore } from '../store';
 
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
-const CONSENSUS_MODEL = "mixtral-8x7b-32768";          // Second model for consensus — different architecture, different perspective
+const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
 
 /* ─── Multi-Model Consensus ─── */
 
