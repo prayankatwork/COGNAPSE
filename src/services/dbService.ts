@@ -629,36 +629,63 @@ export const dbService = {
 
   // Premium Access Models
   async loadPremium(userId: string) {
+    // Try API first (handles expiry server-side)
     try {
       if (import.meta.env.PROD) {
         const response = await apiFetch('/api/check-premium', { method: 'POST', body: JSON.stringify({ userId }) });
         if (response.ok) {
           const data = await response.json();
-          if (data.premiumData) {
-            localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(data.premiumData));
-            return data.premiumData;
-          }
+          const result = {
+            premium: data.premium === true,
+            premiumPlan: data.premiumPlan || null,
+            premiumActivatedAt: data.premiumActivatedAt || null,
+            premiumExpiresAt: data.premiumExpiresAt || null,
+          };
+          localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(result));
+          return result;
         }
       }
     } catch (e) {
       console.warn("API check-premium failed, falling back to Firebase:", e);
     }
 
+    // Fallback: direct Firestore read with client-side expiry check
     try {
       const docRef = doc(db, "user_premium", userId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(data));
-        return data;
+        const now = new Date();
+        const expiry = data.premiumExpiresAt ? new Date(data.premiumExpiresAt) : null;
+        const expired = data.premium && expiry && expiry <= now;
+        const result = {
+          premium: data.premium === true && !expired,
+          premiumPlan: expired ? null : data.premiumPlan || null,
+          premiumActivatedAt: expired ? null : data.premiumActivatedAt || null,
+          premiumExpiresAt: expired ? null : data.premiumExpiresAt || null,
+        };
+        localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(result));
+        return result;
       }
     } catch (error) {
       console.warn("Firebase load premium failed, loading from local storage:", error);
     }
     
+    // Final fallback: localStorage with client-side expiry check
     const local = localStorage.getItem(`cognapse_premium_${userId}`);
     if (local) {
-      try { return JSON.parse(local); } catch (e) { return null; }
+      try {
+        const data = JSON.parse(local);
+        const now = new Date();
+        const expiry = data.premiumExpiresAt ? new Date(data.premiumExpiresAt) : null;
+        const expired = data.premium && expiry && expiry <= now;
+        return {
+          premium: data.premium === true && !expired,
+          premiumPlan: expired ? null : data.premiumPlan || null,
+          premiumActivatedAt: expired ? null : data.premiumActivatedAt || null,
+          premiumExpiresAt: expired ? null : data.premiumExpiresAt || null,
+        };
+      } catch (e) { return null; }
     }
     return null;
   },
