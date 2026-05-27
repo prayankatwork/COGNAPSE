@@ -291,19 +291,17 @@ export default function App() {
     syncUser();
   }, [userId, setStats, setNotes, setArchive]);
 
-  // Premium live sync — polls every 30s when tab is visible
+  // Premium live sync — polls every 10s when tab is visible, also checks on window focus
   useEffect(() => {
     if (!userId) return;
     let intervalId: ReturnType<typeof setInterval>;
     let isActive = true;
 
     const checkPremium = async () => {
-      if (document.hidden || !isActive) return;
+      if (!isActive) return;
       try {
         const currentUser = useStore.getState().user;
         if (!currentUser) return;
-        const token = await auth.currentUser?.getIdToken(false);
-        if (!token) return;
         const res = await apiFetch('/api/check-premium', {
           method: 'POST',
           body: JSON.stringify({ userId }),
@@ -324,25 +322,39 @@ export default function App() {
             },
           });
         }
-      } catch {}
-    };
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        checkPremium();
-        intervalId = setInterval(checkPremium, 30000);
-      } else {
-        clearInterval(intervalId);
+      } catch (e) {
+        console.warn('[PremiumSync] check failed:', e);
       }
     };
 
+    const startPolling = () => {
+      checkPremium();
+      clearInterval(intervalId);
+      intervalId = setInterval(checkPremium, 10000);
+    };
+
+    const stopPolling = () => {
+      clearInterval(intervalId);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') startPolling();
+      else stopPolling();
+    };
+
+    const onFocus = () => {
+      if (!document.hidden) startPolling();
+    };
+
     document.addEventListener('visibilitychange', onVisibility);
-    onVisibility();
+    window.addEventListener('focus', onFocus);
+    startPolling();
 
     return () => {
       isActive = false;
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
     };
   }, [userId]);
 
