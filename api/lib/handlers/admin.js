@@ -134,6 +134,209 @@ export async function handleAdminTrack(req, res) {
   }
 }
 
+/* ─── GET /api/admin-users ─── */
+
+export async function handleAdminUsers(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed. Use GET.' });
+  if (!authenticateApiKey(req)) return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
+  if (!TELEMETRY_API_KEY) return res.status(503).json({ error: 'Admin API not configured.' });
+
+  try {
+    const admin = await getFirebaseAdmin();
+    if (!admin) return res.status(503).json({ error: 'Firebase Admin SDK unavailable.' });
+
+    const auth = admin.auth();
+    const firestore = admin.firestore();
+    const search = (req.query?.search || '').trim().toLowerCase();
+    const pageToken = req.query?.pageToken || undefined;
+    const maxResults = Math.min(parseInt(req.query?.maxResults) || 50, 100);
+
+    let listUsersResult;
+    if (search && search.includes('@')) {
+      try {
+        const userRecord = await auth.getUserByEmail(search);
+        listUsersResult = { users: [userRecord], pageToken: undefined };
+      } catch {
+        listUsersResult = { users: [], pageToken: undefined };
+      }
+    } else if (search && /^[a-zA-Z0-9_-]+$/.test(search)) {
+      try {
+        const userRecord = await auth.getUser(search);
+        listUsersResult = { users: [userRecord], pageToken: undefined };
+      } catch {
+        listUsersResult = { users: [], pageToken: undefined };
+      }
+    } else {
+      listUsersResult = await auth.listUsers(maxResults, pageToken);
+    }
+
+    const users = await Promise.all((listUsersResult.users || []).map(async (user) => {
+      const uid = user.uid;
+      let premiumData = null;
+      let suspendedData = null;
+      try {
+        const premDoc = await firestore.collection('user_premium').doc(uid).get();
+        if (premDoc.exists) premiumData = premDoc.data();
+      } catch {}
+      try {
+        const suspDoc = await firestore.collection('suspended_users').doc(uid).get();
+        if (suspDoc.exists) suspendedData = suspDoc.data();
+      } catch {}
+
+      return {
+        uid,
+        email: user.email || null,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        createdAt: user.metadata?.creationTime || null,
+        lastLogin: user.metadata?.lastSignInTime || null,
+        provider: user.providerData?.[0]?.providerId || null,
+        premium: premiumData?.premium || false,
+        premiumPlan: premiumData?.premiumPlan || null,
+        premiumExpiresAt: premiumData?.premiumExpiresAt || null,
+        suspended: !!suspendedData,
+        suspendedAt: suspendedData?.suspendedAt || null,
+        suspendedReason: suspendedData?.reason || null,
+        customClaims: user.customClaims || {},
+      };
+    }));
+
+    return res.status(200).json({
+      users,
+      nextPageToken: listUsersResult.pageToken || null,
+      total: listUsersResult.users?.length || 0,
+    });
+  } catch (error) {
+    return sendSafeError(res, 500, 'Failed to list users.', error);
+  }
+}
+
+/* ─── POST /api/admin-set-premium ─── */
+
+export async function handleAdminSetPremium(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  if (!authenticateApiKey(req)) return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
+  if (!TELEMETRY_API_KEY) return res.status(503).json({ error: 'Admin API not configured.' });
+
+  try {
+    const admin = await getFirebaseAdmin();
+    if (!admin) return res.status(503).json({ error: 'Firebase Admin SDK unavailable.' });
+
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const { userId, premium, premiumPlan, premiumExpiresAt } = body;
+
+    if (!userId) return res.status(400).json({ error: 'userId is required.' });
+
+    const firestore = admin.firestore();
+    const auth = admin.auth();
+
+    if (premium) {
+      const premiumData = {
+        premium: true,
+        premiumPlan: premiumPlan || 'admin-granted',
+        premiumActivatedAt: new Date().toISOString(),
+        premiumExpiresAt: premiumExpiresAt || null,
+        grantedBy: 'ops-admin',
+      };
+      await firestore.collection('user_premium').doc(userId).set(premiumData, { merge: true });
+      await auth.setCustomUserClaims(userId, { premium: true, premiumPlan: premiumPlan || 'admin-granted' });
+      console.log(`[Admin Premium] User ${userId} granted premium by ops-admin.`);
+      return res.status(200).json({ success: true, userId, premium: true });
+    } else {
+      await firestore.collection('user_premium').doc(userId).delete();
+      try { await auth.setCustomUserClaims(userId, { premium: null, premiumPlan: null }); } catch {}
+      console.log(`[Admin Premium] User ${userId} premium removed by ops-admin.`);
+      return res.status(200).json({ success: true, userId, premium: false });
+    }
+  } catch (error) {
+    return sendSafeError(res, 500, 'Failed to update premium status.', error);
+  }
+}
+
+/* ─── POST /api/admin-purge-user ─── */
+
+export async function handleAdminPurgeUser(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  if (!authenticateApiKey(req)) return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
+  if (!TELEMETRY_API_KEY) return res.status(503).json({ error: 'Admin API not configured.' });
+
+  try {
+    const admin = await getFirebaseAdmin();
+    if (!admin) return res.status(503).json({ error: 'Firebase Admin SDK unavailable.' });
+
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const { userId } = body;
+    if (!userId) return res.status(400).json({ error: 'userId is required.' });
+
+    const firestore = admin.firestore();
+    const auth = admin.auth();
+    let deletedCount = 0;
+    const deletions = [];
+
+    // 1. Delete user_premium
+    deletions.push(firestore.collection('user_premium').doc(userId).delete());
+
+    // 2. Delete suspended_users entry
+    deletions.push(firestore.collection('suspended_users').doc(userId).delete());
+
+    // 3. Delete all shared_research owned by user
+    const shareSnap = await firestore.collection('shared_research').where('ownerId', '==', userId).get();
+    shareSnap.docs.forEach(doc => { deletions.push(doc.ref.delete()); deletedCount++; });
+
+    // 4. Delete all user_documents owned by user
+    const docSnap = await firestore.collection('user_documents').where('ownerId', '==', userId).get();
+    for (const doc of docSnap.docs) {
+      const docId = doc.id;
+      deletions.push(doc.ref.delete());
+      // Clean up document_contents
+      deletions.push(firestore.collection('document_contents').doc(docId).delete());
+      // Clean up document_chunks (query by documentId field)
+      const chunkSnap = await firestore.collection('document_chunks').where('documentId', '==', docId).get();
+      chunkSnap.docs.forEach(c => deletions.push(c.ref.delete()));
+      deletedCount++;
+    }
+
+    // 5. Delete ops_telemetry for user (batch in chunks)
+    const telemetrySnap = await firestore.collection('ops_telemetry').where('userId', '==', userId).get();
+    const telemetryBatches = [];
+    let batch = firestore.batch();
+    let opCount = 0;
+    telemetrySnap.docs.forEach((doc, i) => {
+      batch.delete(doc.ref);
+      opCount++;
+      if (opCount >= 500) {
+        telemetryBatches.push(batch.commit());
+        batch = firestore.batch();
+        opCount = 0;
+      }
+    });
+    if (opCount > 0) telemetryBatches.push(batch.commit());
+    deletedCount += telemetrySnap.size;
+
+    // Execute all deletions in parallel
+    await Promise.all([...deletions, ...telemetryBatches]);
+
+    // 6. Revoke sessions and remove custom claims
+    try { await auth.setCustomUserClaims(userId, {}); } catch {}
+    try { await auth.revokeRefreshTokens(userId); } catch {}
+
+    console.log(`[Admin Purge] User ${userId} purged. ${deletedCount} associated records deleted.`);
+    return res.status(200).json({
+      success: true, userId,
+      deletedRecords: deletedCount,
+      message: `User purged. ${deletedCount} associated records deleted.`,
+    });
+  } catch (error) {
+    return sendSafeError(res, 500, 'Failed to purge user.', error);
+  }
+}
+
 /* ─── POST /api/clear-data ─── */
 
 export async function handleClearData(req, res) {
