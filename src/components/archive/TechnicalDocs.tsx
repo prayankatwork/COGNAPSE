@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers, Database, Cpu, Terminal, Zap, ShieldCheck, Globe, GitBranch, FileText, Brain, Activity, Lock } from 'lucide-react';
+import researchPipelineDiagram from '../../../docs/current-research-pipeline-only.svg';
 
 export default function TechnicalDocs() {
   return (
@@ -66,6 +67,46 @@ export default function TechnicalDocs() {
                ├── Vercel Serverless (API proxy — hides API keys)<br/>
                ├── Razorpay (payment processing for premium subscriptions)<br/>
                └── Firebase Auth + Firestore (authentication & cloud sync)<br/>
+            </div>
+         </div>
+      </section>
+
+      {/* Research Pipeline Diagram */}
+      <section id="research-pipeline-diagram" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
+         <div className="flex items-center gap-2 mb-6">
+            <FileText size={16} className="text-my-accent" />
+            <h3 className="text-lg font-bold text-my-ink uppercase tracking-widest text-[11px]">Research Pipeline Diagram</h3>
+         </div>
+
+         <div className="space-y-4">
+            <p className="text-sm text-my-muted leading-relaxed max-w-3xl">
+              A research-only execution map showing retrieval, source processing, synthesis, consensus,
+              citation verification, scoring, graph payload generation, and the deep analysis continuation.
+            </p>
+
+            <div className="border border-my-border bg-my-sidebar/10 rounded-sm overflow-hidden">
+              <div className="flex items-center justify-between gap-4 border-b border-my-border px-5 py-3">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-[0.25em] text-my-ink">Current Research Pipeline</h4>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-my-muted">Anonymized technical flow</p>
+                </div>
+                <a
+                  href={researchPipelineDiagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 border border-my-border px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-my-muted transition-colors hover:border-my-accent hover:text-my-accent"
+                >
+                  Open SVG
+                </a>
+              </div>
+              <div className="overflow-x-auto bg-white p-4 custom-scrollbar">
+                <img
+                  src={researchPipelineDiagram}
+                  alt="Current research pipeline diagram"
+                  className="min-w-[1200px] w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
             </div>
          </div>
       </section>

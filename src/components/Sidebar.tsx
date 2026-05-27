@@ -170,7 +170,7 @@ export default function Sidebar() {
           </div>
 
           {/* Research List */}
-          <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-8">
               {filteredArchive.length === 0 ? (
                  <div className="h-60 flex flex-col items-center justify-center text-center px-4">
                     <div className="opacity-20 text-my-muted flex flex-col items-center mb-6">

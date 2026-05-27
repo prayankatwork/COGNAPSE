@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ExternalLink, ChevronDown, ChevronUp, ShieldCheck, 
-  AlertTriangle, Globe, FileText, Search, Clock, 
-  GraduationCap, Building2, Newspaper, Hash, X
+  ExternalLink, Globe, Search, Clock, 
+  Building2, Newspaper, Hash
 } from 'lucide-react';
 import type { GroundedSource, RetrievalTrace } from '../types';
 import clsx from 'clsx';
@@ -73,21 +72,14 @@ function CredibilityBar({ score }: { score: number }) {
 }
 
 export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [expandedSource, setExpandedSource] = useState<number | null>(null);
 
   if (!sources || sources.length === 0) return null;
 
-  const topSources = sources.slice(0, 3);
-  const remainingCount = sources.length - 3;
-
   return (
     <div className="border border-my-border bg-my-callout/50">
       {/* Header Bar */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-      >
+      <div className="w-full px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Search size={14} className="text-my-accent" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-my-ink">
@@ -99,38 +91,10 @@ export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerPr
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {!isExpanded && (
-            <div className="flex -space-x-1">
-              {topSources.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={clsx(
-                    'w-5 h-5 rounded-full border-2 border-my-bg flex items-center justify-center text-[7px] font-black',
-                    getSourceBg(s.type) + ' ' + getSourceColor(s.type)
-                  )}
-                  title={s.title}
-                >
-                  {s.id}
-                </div>
-              ))}
-            </div>
-          )}
-          {isExpanded ? <ChevronUp size={14} className="text-my-muted" /> : <ChevronDown size={14} className="text-my-muted" />}
-        </div>
-      </button>
+      </div>
 
-      {/* Expandable Content */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 space-y-2">
+      {/* Source List - always visible */}
+      <div className="px-4 pb-4 space-y-2">
               {sources.map((source) => (
                 <div key={source.id} className="border border-my-border bg-my-bg/50">
                   <button
@@ -160,11 +124,10 @@ export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerPr
                   <AnimatePresence>
                     {expandedSource === source.id && (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="overflow-hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.1 }}
                       >
                         <div className="px-3 pb-3 space-y-2">
                           <p className="text-[11px] leading-relaxed text-my-syn">
@@ -213,9 +176,6 @@ export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerPr
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

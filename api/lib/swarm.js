@@ -29,6 +29,15 @@ export function getGroqClient() {
 }
 
 /**
+ * Get a second Groq client for multi-model consensus.
+ * Uses GROQ_API_KEY_2 — a separate Groq account for running a different model in parallel.
+ */
+export function getGroqClient2() {
+  const groqKey = process.env.GROQ_API_KEY_2;
+  return groqKey ? new Groq({ apiKey: groqKey }) : null;
+}
+
+/**
  * runSwarm — Groq-only intelligence swarm.
  *
  * Free-tier routing:
@@ -39,11 +48,40 @@ export function getGroqClient() {
  * Gemini was removed to eliminate API key dependency and stay fully
  * within Groq's free tier (30 req/min, 14,400 req/day for open models).
  */
-export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'groq-llama-3.1-8b-instant' }) {
-  const groq = getGroqClient();
+export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'groq-llama-3.1-8b-instant', groqKey = 'primary', modelOverride }) {
+  const groq = groqKey === 'secondary' ? getGroqClient2() : getGroqClient();
 
   if (!groq) {
-    throw new Error('GROQ_API_KEY not configured. Set GROQ_API_KEY in your environment variables.');
+    const keyName = groqKey === 'secondary' ? 'GROQ_API_KEY_2' : 'GROQ_API_KEY';
+    throw new Error(`${keyName} not configured. Set ${keyName} in your environment variables.`);
+  }
+
+  // If modelOverride is provided, use it directly — no fallback chain
+  // Used for multi-model consensus where we want a specific secondary model
+  if (modelOverride) {
+    const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
+
+    const response = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: modelOverride,
+      temperature,
+      response_format: isJson ? { type: 'json_object' } : undefined,
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    if (content) {
+      return {
+        result: isJson ? JSON.stringify(extractJson(content)) : content,
+        usage: {
+          prompt_tokens: response.usage?.prompt_tokens || 0,
+          completion_tokens: response.usage?.completion_tokens || 0,
+          total_tokens: response.usage?.total_tokens || 0,
+          model: modelOverride,
+        },
+      };
+    }
+
+    throw new Error(`Secondary model ${modelOverride} returned empty response.`);
   }
 
   // Model selection based on context size and research depth

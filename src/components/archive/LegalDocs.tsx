@@ -492,23 +492,12 @@ export default function LegalDocs() {
                <ul className="list-disc pl-5 space-y-1.5 text-xs text-my-muted leading-relaxed">
                  <li><strong className="text-my-accent">Private:</strong> Accessible only to the report owner.</li>
                  <li><strong className="text-my-accent">Unlisted:</strong> Accessible to anyone with the direct link, but not indexed or publicly discoverable through the platform.</li>
-                 <li><strong className="text-my-accent">Public:</strong> Accessible to anyone with the link and potentially discoverable through the platform&rsquo;s public index.</li>
+                 <li><strong className="text-my-accent">Public:</strong> Accessible to anyone with the direct link.</li>
                </ul>
                <p className="text-xs text-my-muted leading-relaxed mt-3">
                  Owners retain full control over shared content and may disable shared links at any time, 
                  immediately rendering them inaccessible. Disabling a shared link does not affect copies that 
                  may have been created by collaborators who duplicated the document to their own accounts.
-               </p>
-            </div>
-
-            <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-               <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest">6.2 Forked Research &amp; Derived Works</h4>
-               <p className="text-xs text-my-muted leading-relaxed">
-                 When a collaborator duplicates a shared research report into their own account (&ldquo;forking&rdquo;), 
-                 the forked copy becomes an independent instance owned and controlled by the collaborator. 
-                 The original owner retains no control over forked copies. Forked works may be modified, 
-                 shared, or deleted independently of the source. Users who fork content are responsible 
-                 for ensuring compliance with these Terms and applicable law.
                </p>
             </div>
 
@@ -542,16 +531,6 @@ export default function LegalDocs() {
                </p>
             </div>
 
-            <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-               <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest">6.5 Intelligence Board Annotations</h4>
-               <p className="text-xs text-my-muted leading-relaxed">
-                 Annotations, comments, and notes added to shared intelligence boards are subject to the same 
-                 content standards as shared research. Annotations are attributed to the contributing user and 
-                 may be moderated or removed if they violate these guidelines. Users retain ownership of their 
-                 annotations but grant other authorized collaborators the right to view and reference them 
-                 within the scope of the shared intelligence board.
-               </p>
-            </div>
          </div>
       </section>
 

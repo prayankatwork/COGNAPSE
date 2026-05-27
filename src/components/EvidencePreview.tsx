@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, ShieldCheck, Clock, Globe } from 'lucide-react';
-import type { GroundedSource } from '../types';
+import { ExternalLink, ShieldCheck, Clock, Globe, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import type { GroundedSource, CitationVerification } from '../types';
 import clsx from 'clsx';
 
 interface EvidencePreviewProps {
   source: GroundedSource;
   isVisible: boolean;
   position?: 'top' | 'bottom';
+  verification?: CitationVerification | null;
 }
 
 function getCredibilityColor(score: number): string {
@@ -22,7 +23,33 @@ function getCredibilityLabel(score: number): string {
   return 'Low Credibility';
 }
 
-export default function EvidencePreview({ source, isVisible, position = 'bottom' }: EvidencePreviewProps) {
+function VerdictBadge({ verdict }: { verdict: string }) {
+  switch (verdict) {
+    case 'supported':
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-500/10 px-1 py-0.5">
+          <CheckCircle2 size={8} /> Verified
+        </span>
+      );
+    case 'partial':
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1 py-0.5">
+          <AlertTriangle size={8} /> Partial
+        </span>
+      );
+    case 'contradicted':
+    case 'unrelated':
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/10 px-1 py-0.5">
+          <XCircle size={8} /> Unsupported
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
+export default function EvidencePreview({ source, isVisible, position = 'bottom', verification }: EvidencePreviewProps) {
   if (!source) return null;
 
   return (
@@ -62,6 +89,16 @@ export default function EvidencePreview({ source, isVisible, position = 'bottom'
             <p className="text-[10px] leading-relaxed text-my-syn mb-3 line-clamp-3">
               {source.snippet || source.key_finding}
             </p>
+
+            {/* Verification Badge */}
+            {verification && (
+              <div className="mb-2">
+                <VerdictBadge verdict={verification.verdict} />
+                <span className="text-[8px] text-my-muted ml-2 font-mono">
+                  {verification.confidence >= 0.7 ? 'High confidence' : verification.confidence >= 0.4 ? 'Medium confidence' : 'Low confidence'}
+                </span>
+              </div>
+            )}
 
             {/* Meta Row */}
             <div className="flex items-center justify-between">

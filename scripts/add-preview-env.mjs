@@ -16,6 +16,7 @@ for (const line of readFileSync(resolve(root, '.env'), 'utf8').split(/\r?\n/)) {
 const pairs = [
   ['GEMINI_API_KEY', env.VITE_GEMINI_API_KEY],
   ['GROQ_API_KEY', env.VITE_GROQ_API_KEY],
+  ['GROQ_API_KEY_2', env.GROQ_API_KEY_2],
   ['FIREBASE_PROJECT_ID', env.VITE_FIREBASE_PROJECT_ID],
 ];
 

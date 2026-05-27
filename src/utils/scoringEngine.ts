@@ -212,22 +212,28 @@ export function computeBiasFromSentiment(
   };
 }
 
+export function normalizeCredScore(raw?: number): number | null {
+  if (raw == null) return null;
+  return raw > 10 ? raw / 10 : raw;
+}
+
 export function computeEnhancedSourceCredibility(
   sources: { domain?: string; credibility_score?: number; key_finding?: string; title?: string }[]
 ): { perSource: number[]; average: number } {
   const perSource = sources.map((s) => {
+    const cred = normalizeCredScore(s.credibility_score);
     const domainInfo = lookupDomain(s.domain || '');
 
     if (domainInfo) {
-      if (!s.credibility_score && s.credibility_score !== 0) return factualToScore(domainInfo.factual) * 0.7 + 5 * 0.3;
-      return factualToScore(domainInfo.factual) * 0.5 + (s.credibility_score || 5) * 0.3 + 2;
+      if (cred == null) return factualToScore(domainInfo.factual) * 0.7 + 5 * 0.3;
+      return factualToScore(domainInfo.factual) * 0.5 + cred * 0.3 + 2;
     }
 
     if (s.domain?.endsWith('.edu')) return 8.5;
     if (s.domain?.endsWith('.gov')) return 8;
     if (s.domain?.endsWith('.mil')) return 8;
 
-    return s.credibility_score ?? 5;
+    return cred ?? 5;
   });
 
   const average = perSource.length > 0
@@ -280,7 +286,7 @@ export async function computeAllScores(
 
   const useEmbeddings = relevance.average !== 0.5 || consensus.score > 0;
 
-  const accuracy = Math.round(avgCredibility * 10) / 10;
+  const accuracy = Math.round(Math.min(avgCredibility, 10) * 10) / 10;
 
   const finalBias = sentimentResult.hasDomainOverride
     ? sentimentResult.biasScore

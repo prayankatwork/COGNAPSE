@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="7200" height="4700" viewBox="0 0 7200 4700" role="img" aria-labelledby="title desc">
+<title id="title">HD Enterprise Intelligence Platform Architecture</title><desc id="desc">Anonymized high-definition C4 and swimlane hybrid architecture diagram for the full research, document intelligence, AI orchestration, scoring, storage and output lifecycle.</desc>
+<defs><style>
+.bg{fill:#f5f7fa}.paper{fill:#fff;stroke:#cbd5e1;stroke-width:4;rx:32}.band{fill:#fafbfc;stroke:#d0d7e2;stroke-width:3;rx:24}.bandAlt{fill:#f1f4f8;stroke:#d0d7e2;stroke-width:3;rx:24}.swim{font:900 30px Inter,Arial,sans-serif;letter-spacing:4px;fill:#111827}.swimSub{font:800 16px Inter,Arial,sans-serif;letter-spacing:2px;fill:#667085}.title{font:900 72px Inter,Arial,sans-serif;letter-spacing:8px;fill:#111827}.subtitle{font:800 25px Inter,Arial,sans-serif;letter-spacing:4px;fill:#52606d}.nodeTitle{font:900 28px Inter,Arial,sans-serif;fill:#111827}.nodeText{font:600 21px Inter,Arial,sans-serif;fill:#52606d}.nodeMeta{font:800 16px 'JetBrains Mono',Consolas,monospace;fill:#697586}.box{fill:#fff;stroke:#94a3b8;stroke-width:3;rx:16}.front{fill:#fff;stroke:#475569;stroke-width:4;rx:18}.api{fill:#f8fafc;stroke:#334155;stroke-width:4;rx:18}.ai{fill:#f8fafc;stroke:#111827;stroke-width:4;rx:18}.verify{fill:#fff;stroke:#475569;stroke-width:4;rx:18}.score{fill:#fff;stroke:#475569;stroke-width:4;rx:18}.store{fill:#eef2f7;stroke:#334155;stroke-width:4;rx:18}.output{fill:#fff;stroke:#0f172a;stroke-width:4;rx:18}.smallBox{fill:#fff;stroke:#94a3b8;stroke-width:2.5;rx:14}.flow{stroke:#111827;stroke-width:5;fill:none;marker-end:url(#arrow)}.soft{stroke:#64748b;stroke-width:4;fill:none;marker-end:url(#arrowSoft)}.dash{stroke:#64748b;stroke-width:4;fill:none;stroke-dasharray:14 14;marker-end:url(#arrowSoft)}.line{stroke:#cbd5e1;stroke-width:3}.step{fill:#111827}.stepText{font:900 22px Inter,Arial,sans-serif;fill:#fff}.flowLabel{font:900 18px Inter,Arial,sans-serif;letter-spacing:1px;fill:#344054}.legendText{font:800 17px 'JetBrains Mono',Consolas,monospace;letter-spacing:1.4px;fill:#344054}
+</style><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#111827"/></marker><marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#64748b"/></marker></defs>
+<rect class="bg" width="7200" height="4700"/><rect class="paper" x="70" y="70" width="7060" height="4560"/>
+<text class="title" x="150" y="170">ENTERPRISE INTELLIGENCE PLATFORM</text><text class="subtitle" x="155" y="225">HD C4 + SWIMLANE ARCHITECTURE / ANONYMIZED TECHNICAL SYSTEM MAP / CURRENT PRODUCTION SHAPE</text><line class="line" x1="150" y1="285" x2="7050" y2="285"/>
+<rect class="band" x="130" y="330" width="6940" height="430"/><text class="swim" x="180" y="388">01 USER INTERACTION</text><text class="swimSub" x="180" y="418">browser, extension, research, document, share and export actions</text>
+<rect class="bandAlt" x="130" y="800" width="6940" height="470"/><text class="swim" x="180" y="858">02 FRONTEND APPLICATION</text><text class="swimSub" x="180" y="888">client control plane, state, rendering, document workspace and shared read-only surfaces</text>
+<rect class="band" x="130" y="1310" width="6940" height="420"/><text class="swim" x="180" y="1368">03 API GATEWAY + SECURITY</text><text class="swimSub" x="180" y="1398">route dispatch, authentication, rate limits, premium gates and safe errors</text>
+<rect class="bandAlt" x="130" y="1770" width="6940" height="720"/><text class="swim" x="180" y="1828">04 CORE PROCESSING PIPELINES</text><text class="swimSub" x="180" y="1858">parallel research and document-intelligence paths with retrieval-first architecture</text>
+<rect class="band" x="130" y="2530" width="6940" height="560"/><text class="swim" x="180" y="2588">05 AI ORCHESTRATION + VERIFICATION + SCORING</text><text class="swimSub" x="180" y="2618">two active AI routes, consensus checks, citation verification and deterministic quality scoring</text>
+<rect class="bandAlt" x="130" y="3130" width="6940" height="650"/><text class="swim" x="180" y="3188">06 STORAGE + MEMORY</text><text class="swimSub" x="180" y="3218">cloud records, object storage, local cache, user memory, document chunks, exports and telemetry</text>
+<rect class="band" x="130" y="3820" width="6940" height="560"/><text class="swim" x="180" y="3878">07 OUTPUT + RESPONSE LIFECYCLE</text><text class="swimSub" x="180" y="3908">reports, graph, evidence, shared pages, document answers and exports</text>
+<g id="u1"><rect class="front" x="300" y="450" width="620" height="180"/><text class="nodeTitle" x="334" y="498">Research Request</text><text class="nodeText" x="334" y="546">Standard query, deep analysis request,</text>
+<text class="nodeText" x="334" y="571">follow-up query, or graph-node expansion.</text><text class="nodeMeta" x="334" y="596">human intent event</text></g>
+<g id="u2"><rect class="front" x="1040" y="450" width="620" height="180"/><text class="nodeTitle" x="1074" y="498">Document Action</text><text class="nodeText" x="1074" y="546">Upload files, process documents, select</text>
+<text class="nodeText" x="1074" y="571">corpus, or ask a document-grounded question.</text><text class="nodeMeta" x="1074" y="596">premium document path</text></g>
+<g id="u3"><rect class="front" x="1780" y="450" width="620" height="180"/><text class="nodeTitle" x="1814" y="498">Sharing Action</text><text class="nodeText" x="1814" y="546">Generate private, unlisted, or public</text>
+<text class="nodeText" x="1814" y="571">read-only research links.</text><text class="nodeMeta" x="1814" y="596">non-editable public view</text></g>
+<g id="u4"><rect class="front" x="2520" y="450" width="620" height="180"/><text class="nodeTitle" x="2554" y="498">Export Action</text><text class="nodeText" x="2554" y="546">Download PDF, Markdown, or JSON outputs with</text>
+<text class="nodeText" x="2554" y="571">formatted references.</text><text class="nodeMeta" x="2554" y="596">premium export path</text></g>
+<g id="u5"><rect class="front" x="3260" y="450" width="620" height="180"/><text class="nodeTitle" x="3294" y="498">Browser Extension</text><text class="nodeText" x="3294" y="546">Selection analysis and compact external-page</text>
+<text class="nodeText" x="3294" y="571">intelligence workflow.</text><text class="nodeMeta" x="3294" y="596">authenticated client</text></g>
+<g id="u6"><rect class="front" x="4000" y="450" width="620" height="180"/><text class="nodeTitle" x="4034" y="498">Account Operations</text><text class="nodeText" x="4034" y="546">Authentication, premium state, settings,</text>
+<text class="nodeText" x="4034" y="571">notebook and account deletion actions.</text><text class="nodeMeta" x="4034" y="596">owner-scoped operations</text></g>
+<g id="f1"><rect class="front" x="300" y="920" width="650" height="190"/><text class="nodeTitle" x="334" y="968">Application Shell</text><text class="nodeText" x="334" y="1016">Manual view routing, policy pages,</text>
+<text class="nodeText" x="334" y="1041">shared-page routing, global canvas and</text>
+<text class="nodeText" x="334" y="1066">high-level layout orchestration.</text><text class="nodeMeta" x="334" y="1076">client-side app boundary</text></g>
+<g id="f2"><rect class="front" x="1080" y="920" width="650" height="190"/><text class="nodeTitle" x="1114" y="968">Research Controller</text><text class="nodeText" x="1114" y="1016">Owns query submission, abort control,</text>
+<text class="nodeText" x="1114" y="1041">loading phases, chat follow-up and</text>
+<text class="nodeText" x="1114" y="1066">investigation stack updates.</text><text class="nodeMeta" x="1114" y="1076">request lifecycle manager</text></g>
+<g id="f3"><rect class="front" x="1860" y="920" width="650" height="190"/><text class="nodeTitle" x="1894" y="968">Report Renderer</text><text class="nodeText" x="1894" y="1016">Renders synthesis, scores, source drawer,</text>
+<text class="nodeText" x="1894" y="1041">graph canvas, consensus indicators and</text>
+<text class="nodeText" x="1894" y="1066">export controls.</text><text class="nodeMeta" x="1894" y="1076">owner + read-only modes</text></g>
+<g id="f4"><rect class="front" x="2640" y="920" width="650" height="190"/><text class="nodeTitle" x="2674" y="968">Document Workspace</text><text class="nodeText" x="2674" y="1016">Document vault, upload zone, document</text>
+<text class="nodeText" x="2674" y="1041">library, processing actions and RAG question</text>
+<text class="nodeText" x="2674" y="1066">interface.</text><text class="nodeMeta" x="2674" y="1076">premium workspace</text></g>
+<g id="f5"><rect class="front" x="3420" y="920" width="650" height="190"/><text class="nodeTitle" x="3454" y="968">State Store</text><text class="nodeText" x="3454" y="1016">User session, archive, current report,</text>
+<text class="nodeText" x="3454" y="1041">deep-analysis state, chat, loading, exports</text>
+<text class="nodeText" x="3454" y="1066">and local persistence hooks.</text><text class="nodeMeta" x="3454" y="1076">central UI memory</text></g>
+<g id="f6"><rect class="front" x="4200" y="920" width="650" height="190"/><text class="nodeTitle" x="4234" y="968">Shared Read-Only Renderer</text><text class="nodeText" x="4234" y="1016">Public/unlisted research pages with report,</text>
+<text class="nodeText" x="4234" y="1041">graph, sources and timestamps but no</text>
+<text class="nodeText" x="4234" y="1066">exploration controls.</text><text class="nodeMeta" x="4234" y="1076">non-editable output surface</text></g>
+<g id="f7"><rect class="front" x="4980" y="920" width="650" height="190"/><text class="nodeTitle" x="5014" y="968">Evidence And Graph UI</text><text class="nodeText" x="5014" y="1016">Interactive knowledge graph, source evidence</text>
+<text class="nodeText" x="5014" y="1041">drawer, citation formatting and verification</text>
+<text class="nodeText" x="5014" y="1066">indicators.</text><text class="nodeMeta" x="5014" y="1076">visual analysis surface</text></g>
+<g id="a1"><rect class="api" x="300" y="1430" width="620" height="180"/><text class="nodeTitle" x="334" y="1478">Unified API Router</text><text class="nodeText" x="334" y="1526">Single serverless route table dispatching</text>
+<text class="nodeText" x="334" y="1551">system, auth, admin, premium, research,</text>
+<text class="nodeText" x="334" y="1576">search and document handlers.</text><text class="nodeMeta" x="334" y="1576">route gateway</text></g>
+<g id="a2"><rect class="api" x="1040" y="1430" width="620" height="180"/><text class="nodeTitle" x="1074" y="1478">Security Boundary</text><text class="nodeText" x="1074" y="1526">Verifies authenticated session, asserts</text>
+<text class="nodeText" x="1074" y="1551">matching user identity and restricts</text>
+<text class="nodeText" x="1074" y="1576">local-only fallback behavior.</text><text class="nodeMeta" x="1074" y="1576">auth + owner guard</text></g>
+<g id="a3"><rect class="api" x="1780" y="1430" width="620" height="180"/><text class="nodeTitle" x="1814" y="1478">Rate Limit Layer</text><text class="nodeText" x="1814" y="1526">Protects research, analysis, search and</text>
+<text class="nodeText" x="1814" y="1551">document endpoints from excessive request</text>
+<text class="nodeText" x="1814" y="1576">volume.</text><text class="nodeMeta" x="1814" y="1576">quota controls</text></g>
+<g id="a4"><rect class="api" x="2520" y="1430" width="620" height="180"/><text class="nodeTitle" x="2554" y="1478">Premium Gate</text><text class="nodeText" x="2554" y="1526">Enforces subscription access for document</text>
+<text class="nodeText" x="2554" y="1551">intelligence, premium exports and restricted</text>
+<text class="nodeText" x="2554" y="1576">workflows.</text><text class="nodeMeta" x="2554" y="1576">entitlement checks</text></g>
+<g id="a5"><rect class="api" x="3260" y="1430" width="620" height="180"/><text class="nodeTitle" x="3294" y="1478">Safe Error Layer</text><text class="nodeText" x="3294" y="1526">Converts backend failures into sanitized</text>
+<text class="nodeText" x="3294" y="1551">client-safe messages without leaking</text>
+<text class="nodeText" x="3294" y="1576">secrets.</text><text class="nodeMeta" x="3294" y="1576">production error boundary</text></g>
+<g id="a6"><rect class="api" x="4000" y="1430" width="620" height="180"/><text class="nodeTitle" x="4034" y="1478">Operational Telemetry</text>
+<text class="nodeTitle" x="4034" y="1508">Endpoint</text><text class="nodeText" x="4034" y="1526">Receives token usage, health and operational</text>
+<text class="nodeText" x="4034" y="1551">events for server-side monitoring.</text><text class="nodeMeta" x="4034" y="1576">server-only event intake</text></g>
+<text class="swim" x="300" y="1888">RESEARCH PIPELINE</text><text class="swim" x="3820" y="1888">DOCUMENT INTELLIGENCE PIPELINE</text><line class="line" x1="3580" y1="1840" x2="3580" y2="2440"/>
+<g id="r1"><rect class="smallBox" x="300" y="1930" width="590" height="170"/><text class="nodeTitle" x="334" y="1978">Search Cache Lookup</text><text class="nodeText" x="334" y="2026">Checks short-lived client cache before</text>
+<text class="nodeText" x="334" y="2051">calling the server search endpoint.</text><text class="nodeMeta" x="334" y="2066">cache hit returns early</text></g>
+<g id="r2"><rect class="smallBox" x="1010" y="1930" width="590" height="170"/><text class="nodeTitle" x="1044" y="1978">Single Search Provider</text><text class="nodeText" x="1044" y="2026">Uses one configured external web index.</text>
+<text class="nodeText" x="1044" y="2051">There is no active provider fallback chain.</text><text class="nodeMeta" x="1044" y="2066">one provider only</text></g>
+<g id="r3"><rect class="smallBox" x="1720" y="1930" width="590" height="170"/><text class="nodeTitle" x="1754" y="1978">Source Processing</text><text class="nodeText" x="1754" y="2026">Filters low-quality results, deduplicates</text>
+<text class="nodeText" x="1754" y="2051">sources, ranks by credibility and relevance,</text>
+<text class="nodeText" x="1754" y="2076">then compresses evidence.</text><text class="nodeMeta" x="1754" y="2066">trace + top sources</text></g>
+<g id="r4"><rect class="smallBox" x="2430" y="1930" width="590" height="170"/><text class="nodeTitle" x="2464" y="1978">Research Prompt Assembly</text><text class="nodeText" x="2464" y="2026">Combines system instructions, compressed</text>
+<text class="nodeText" x="2464" y="2051">sources, user query and context into a</text>
+<text class="nodeText" x="2464" y="2076">strict schema prompt.</text><text class="nodeMeta" x="2464" y="2066">retrieval-grounded prompt</text></g>
+<g id="r5"><rect class="smallBox" x="300" y="2180" width="590" height="170"/><text class="nodeTitle" x="334" y="2228">Standard Research Branch</text><text class="nodeText" x="334" y="2276">Creates the primary structured intelligence</text>
+<text class="nodeText" x="334" y="2301">report with synthesis, scores, sources,</text>
+<text class="nodeText" x="334" y="2326">graph and follow-ups.</text><text class="nodeMeta" x="334" y="2316">main research path</text></g>
+<g id="r6"><rect class="smallBox" x="1010" y="2180" width="590" height="170"/><text class="nodeTitle" x="1044" y="2228">Deep Analysis Branch</text><text class="nodeText" x="1044" y="2276">Retrieves additional sources and generates a</text>
+<text class="nodeText" x="1044" y="2301">long-form thesis with stage progress and</text>
+<text class="nodeText" x="1044" y="2326">deep scores.</text><text class="nodeMeta" x="1044" y="2316">long-form path</text></g>
+<g id="r7"><rect class="smallBox" x="1720" y="2180" width="590" height="170"/><text class="nodeTitle" x="1754" y="2228">Follow-Up Branch</text><text class="nodeText" x="1754" y="2276">Answers user questions using the current</text>
+<text class="nodeText" x="1754" y="2301">report and current conversation context.</text><text class="nodeMeta" x="1754" y="2316">contextual Q/A</text></g>
+<g id="r8"><rect class="smallBox" x="2430" y="2180" width="590" height="170"/><text class="nodeTitle" x="2464" y="2228">Graph Expansion Branch</text><text class="nodeText" x="2464" y="2276">Uses graph node sub-queries to expand the</text>
+<text class="nodeText" x="2464" y="2301">investigation stack.</text><text class="nodeMeta" x="2464" y="2316">node-driven research</text></g>
+<g id="d1"><rect class="smallBox" x="3820" y="1930" width="590" height="170"/><text class="nodeTitle" x="3854" y="1978">Upload Intent</text><text class="nodeText" x="3854" y="2026">Creates document metadata and returns either</text>
+<text class="nodeText" x="3854" y="2051">a signed binary upload path or fallback</text>
+<text class="nodeText" x="3854" y="2076">upload token.</text><text class="nodeMeta" x="3854" y="2066">server-authorized upload</text></g>
+<g id="d2"><rect class="smallBox" x="4530" y="1930" width="590" height="170"/><text class="nodeTitle" x="4564" y="1978">Document Storage Path</text><text class="nodeText" x="4564" y="2026">Stores binary files in object storage when</text>
+<text class="nodeText" x="4564" y="2051">available, or stores content in chunked</text>
+<text class="nodeText" x="4564" y="2076">document records.</text><text class="nodeMeta" x="4564" y="2066">storage + fallback</text></g>
+<g id="d3"><rect class="smallBox" x="5240" y="1930" width="590" height="170"/><text class="nodeTitle" x="5274" y="1978">Text Extraction</text><text class="nodeText" x="5274" y="2026">Extracts readable content from supported</text>
+<text class="nodeText" x="5274" y="2051">documents and caches extraction metadata.</text><text class="nodeMeta" x="5274" y="2066">PDF / doc / slides / text</text></g>
+<g id="d4"><rect class="smallBox" x="5950" y="1930" width="590" height="170"/><text class="nodeTitle" x="5984" y="1978">Chunk Indexing</text><text class="nodeText" x="5984" y="2026">Splits extracted text into overlapping</text>
+<text class="nodeText" x="5984" y="2051">chunks and stores a document-scoped</text>
+<text class="nodeText" x="5984" y="2076">retrieval corpus.</text><text class="nodeMeta" x="5984" y="2066">indexed RAG corpus</text></g>
+<g id="d5"><rect class="smallBox" x="3820" y="2180" width="590" height="170"/><text class="nodeTitle" x="3854" y="2228">Keyword Retrieval</text><text class="nodeText" x="3854" y="2276">Scores chunks with a local</text>
+<text class="nodeText" x="3854" y="2301">keyword/BM25-style scorer. No external</text>
+<text class="nodeText" x="3854" y="2326">embedding API is active.</text><text class="nodeMeta" x="3854" y="2316">zero embedding API</text></g>
+<g id="d6"><rect class="smallBox" x="4530" y="2180" width="590" height="170"/><text class="nodeTitle" x="4564" y="2228">Document RAG Answer</text><text class="nodeText" x="4564" y="2276">Generates grounded answers from selected</text>
+<text class="nodeText" x="4564" y="2301">chunks with chunk-level citations.</text><text class="nodeMeta" x="4564" y="2316">document Q/A output</text></g>
+<g id="d7"><rect class="smallBox" x="5240" y="2180" width="590" height="170"/><text class="nodeTitle" x="5274" y="2228">Document Report Generator</text><text class="nodeText" x="5274" y="2276">Turns document text into a full</text>
+<text class="nodeText" x="5274" y="2301">research-style report with sources and a</text>
+<text class="nodeText" x="5274" y="2326">graph payload.</text><text class="nodeMeta" x="5274" y="2316">document analysis report</text></g>
+<g id="d8"><rect class="smallBox" x="5950" y="2180" width="590" height="170"/><text class="nodeTitle" x="5984" y="2228">Graph Payload Sanitizer</text><text class="nodeText" x="5984" y="2276">Repairs malformed map data before rendering</text>
+<text class="nodeText" x="5984" y="2301">to keep the graph canvas stable.</text><text class="nodeMeta" x="5984" y="2316">render protection</text></g>
+<g id="m1"><rect class="ai" x="300" y="2670" width="640" height="185"/><text class="nodeTitle" x="334" y="2718">Client AI Gateway</text><text class="nodeText" x="334" y="2766">Dispatches text or JSON prompts. Optional</text>
+<text class="nodeText" x="334" y="2791">local runtime check is only an acceleration</text>
+<text class="nodeText" x="334" y="2816">path, not a production cloud model.</text><text class="nodeMeta" x="334" y="2821">prompt dispatch boundary</text></g>
+<g id="m2"><rect class="ai" x="1080" y="2670" width="640" height="185"/><text class="nodeTitle" x="1114" y="2718">Cloud Inference Route</text><text class="nodeText" x="1114" y="2766">Authenticated server route for all</text>
+<text class="nodeText" x="1114" y="2791">production inference requests and token</text>
+<text class="nodeText" x="1114" y="2816">usage reporting.</text><text class="nodeMeta" x="1114" y="2821">server inference boundary</text></g>
+<g id="m3"><rect class="ai" x="1860" y="2670" width="640" height="185"/><text class="nodeTitle" x="1894" y="2718">AI Model 1</text><text class="nodeText" x="1894" y="2766">Primary API key route used for standard</text>
+<text class="nodeText" x="1894" y="2791">synthesis, deep analysis, document analysis</text>
+<text class="nodeText" x="1894" y="2816">and fallback generation.</text><text class="nodeMeta" x="1894" y="2821">primary active model route</text></g>
+<g id="m4"><rect class="ai" x="2640" y="2670" width="640" height="185"/><text class="nodeTitle" x="2674" y="2718">AI Model 2</text><text class="nodeText" x="2674" y="2766">Secondary API key route used for consensus</text>
+<text class="nodeText" x="2674" y="2791">and citation verification workflows.</text><text class="nodeMeta" x="2674" y="2821">secondary active model route</text></g>
+<g id="m5"><rect class="verify" x="3420" y="2670" width="640" height="185"/><text class="nodeTitle" x="3454" y="2718">Consensus Engine</text><text class="nodeText" x="3454" y="2766">Compares independent reports with sentence</text>
+<text class="nodeText" x="3454" y="2791">overlap, agreement points, divergent claims</text>
+<text class="nodeText" x="3454" y="2816">and score comparison.</text><text class="nodeMeta" x="3454" y="2821">multi-model validation</text></g>
+<g id="m6"><rect class="verify" x="4200" y="2670" width="640" height="185"/><text class="nodeTitle" x="4234" y="2718">Citation Verifier</text><text class="nodeText" x="4234" y="2766">Extracts inline citation markers, pairs</text>
+<text class="nodeText" x="4234" y="2791">claims with source snippets and assigns</text>
+<text class="nodeText" x="4234" y="2816">support verdicts.</text><text class="nodeMeta" x="4234" y="2821">claim-source checks</text></g>
+<g id="m7"><rect class="score" x="4980" y="2670" width="640" height="185"/><text class="nodeTitle" x="5014" y="2718">Scoring Engine</text><text class="nodeText" x="5014" y="2766">Computes credibility, semantic relevance,</text>
+<text class="nodeText" x="5014" y="2791">source consensus, entity diversity, bias,</text>
+<text class="nodeText" x="5014" y="2816">conflicts and confidence.</text><text class="nodeMeta" x="5014" y="2821">deterministic quality layer</text></g>
+<g id="m8"><rect class="score" x="5760" y="2670" width="640" height="185"/><text class="nodeTitle" x="5794" y="2718">Knowledge Graph Builder</text><text class="nodeText" x="5794" y="2766">Creates entities, clusters, relationships,</text>
+<text class="nodeText" x="5794" y="2791">conflict edges and graph-ready payloads.</text><text class="nodeMeta" x="5794" y="2821">semantic graph structure</text></g>
+<g id="s0"><rect class="store" x="300" y="3260" width="500" height="155"/><text class="nodeTitle" x="334" y="3308">Report Store</text><text class="nodeText" x="334" y="3356">Private owner-scoped research reports</text><text class="nodeMeta" x="334" y="3381">persistent memory</text></g>
+<g id="s1"><rect class="store" x="895" y="3260" width="500" height="155"/><text class="nodeTitle" x="929" y="3308">Shared Report Store</text><text class="nodeText" x="929" y="3356">Read-only public or unlisted records</text><text class="nodeMeta" x="929" y="3381">persistent memory</text></g>
+<g id="s2"><rect class="store" x="1490" y="3260" width="500" height="155"/><text class="nodeTitle" x="1524" y="3308">User State Store</text><text class="nodeText" x="1524" y="3356">Settings, stats, premium state</text><text class="nodeMeta" x="1524" y="3381">persistent memory</text></g>
+<g id="s3"><rect class="store" x="2085" y="3260" width="500" height="155"/><text class="nodeTitle" x="2119" y="3308">Notebook Store</text><text class="nodeText" x="2119" y="3356">Captured notes and snippets</text><text class="nodeMeta" x="2119" y="3381">persistent memory</text></g>
+<g id="s4"><rect class="store" x="2680" y="3260" width="500" height="155"/><text class="nodeTitle" x="2714" y="3308">Document Store</text><text class="nodeText" x="2714" y="3356">Metadata and fallback content</text><text class="nodeMeta" x="2714" y="3381">persistent memory</text></g>
+<g id="s5"><rect class="store" x="3275" y="3260" width="500" height="155"/><text class="nodeTitle" x="3309" y="3308">Chunk Store</text><text class="nodeText" x="3309" y="3356">Indexed document chunks</text><text class="nodeMeta" x="3309" y="3381">persistent memory</text></g>
+<g id="s6"><rect class="store" x="300" y="3470" width="500" height="155"/><text class="nodeTitle" x="334" y="3518">Object Storage</text><text class="nodeText" x="334" y="3566">Uploaded binary files</text><text class="nodeMeta" x="334" y="3591">persistent memory</text></g>
+<g id="s7"><rect class="store" x="895" y="3470" width="500" height="155"/><text class="nodeTitle" x="929" y="3518">Local Cache</text><text class="nodeText" x="929" y="3566">Client fallback and hydration</text><text class="nodeMeta" x="929" y="3591">persistent memory</text></g>
+<g id="s8"><rect class="store" x="1490" y="3470" width="500" height="155"/><text class="nodeTitle" x="1524" y="3518">Export Ledger</text><text class="nodeText" x="1524" y="3566">Download history</text><text class="nodeMeta" x="1524" y="3591">persistent memory</text></g>
+<g id="s9"><rect class="store" x="2085" y="3470" width="500" height="155"/><text class="nodeTitle" x="2119" y="3518">Chat History Store</text><text class="nodeText" x="2119" y="3566">Premium thread memory</text><text class="nodeMeta" x="2119" y="3591">persistent memory</text></g>
+<g id="s10"><rect class="store" x="2680" y="3470" width="500" height="155"/><text class="nodeTitle" x="2714" y="3518">Ops Telemetry</text><text class="nodeText" x="2714" y="3566">Server-only operational events</text><text class="nodeMeta" x="2714" y="3591">persistent memory</text></g>
+<g id="o0"><rect class="output" x="300" y="3960" width="560" height="165"/><text class="nodeTitle" x="334" y="4008">Final Report</text><text class="nodeText" x="334" y="4056">Synthesis, bottom line, sources, scores and</text>
+<text class="nodeText" x="334" y="4081">confidence indicators.</text><text class="nodeMeta" x="334" y="4091">response surface</text></g>
+<g id="o1"><rect class="output" x="940" y="3960" width="560" height="165"/><text class="nodeTitle" x="974" y="4008">Evidence Explorer</text><text class="nodeText" x="974" y="4056">Source drawer, citation state, retrieval</text>
+<text class="nodeText" x="974" y="4081">trace and direct reference actions.</text><text class="nodeMeta" x="974" y="4091">response surface</text></g>
+<g id="o2"><rect class="output" x="1580" y="3960" width="560" height="165"/><text class="nodeTitle" x="1614" y="4008">Graph Explorer</text><text class="nodeText" x="1614" y="4056">Interactive map of concepts, relationships</text>
+<text class="nodeText" x="1614" y="4081">and sub-query expansion paths.</text><text class="nodeMeta" x="1614" y="4091">response surface</text></g>
+<g id="o3"><rect class="output" x="2220" y="3960" width="560" height="165"/><text class="nodeTitle" x="2254" y="4008">Consensus Panel</text><text class="nodeText" x="2254" y="4056">Agreement summary, divergent claims and</text>
+<text class="nodeText" x="2254" y="4081">model comparison output.</text><text class="nodeMeta" x="2254" y="4091">response surface</text></g>
+<g id="o4"><rect class="output" x="2860" y="3960" width="560" height="165"/><text class="nodeTitle" x="2894" y="4008">Document Answer</text><text class="nodeText" x="2894" y="4056">Chunk-grounded RAG answer with document</text>
+<text class="nodeText" x="2894" y="4081">citations.</text><text class="nodeMeta" x="2894" y="4091">response surface</text></g>
+<g id="o5"><rect class="output" x="300" y="4180" width="560" height="165"/><text class="nodeTitle" x="334" y="4228">Read-Only Shared Page</text><text class="nodeText" x="334" y="4276">Public or unlisted report rendering with no</text>
+<text class="nodeText" x="334" y="4301">edit or investigation controls.</text><text class="nodeMeta" x="334" y="4311">response surface</text></g>
+<g id="o6"><rect class="output" x="940" y="4180" width="560" height="165"/><text class="nodeTitle" x="974" y="4228">PDF Export</text><text class="nodeText" x="974" y="4276">Premium dossier generation for print-quality</text>
+<text class="nodeText" x="974" y="4301">report output.</text><text class="nodeMeta" x="974" y="4311">response surface</text></g>
+<g id="o7"><rect class="output" x="1580" y="4180" width="560" height="165"/><text class="nodeTitle" x="1614" y="4228">Markdown Export</text><text class="nodeText" x="1614" y="4276">Portable text report with formatted</text>
+<text class="nodeText" x="1614" y="4301">references.</text><text class="nodeMeta" x="1614" y="4311">response surface</text></g>
+<g id="o8"><rect class="output" x="2220" y="4180" width="560" height="165"/><text class="nodeTitle" x="2254" y="4228">JSON Export</text><text class="nodeText" x="2254" y="4276">Machine-readable structured report payload.</text><text class="nodeMeta" x="2254" y="4311">response surface</text></g>
+<g><circle class="step" cx="690" cy="760" r="24"/><text class="stepText" x="690" y="767" text-anchor="middle">1</text><text class="flowLabel" x="726" y="767">User action enters client control plane</text></g>
+<path class="flow" d="M610 630 C616.75 630 618.25 920 625 920"/>
+<g><circle class="step" cx="1165" cy="1285" r="24"/><text class="stepText" x="1165" y="1292" text-anchor="middle">2</text><text class="flowLabel" x="1201" y="1292">Client sends authenticated request to API</text></g>
+<path class="flow" d="M1405 1110 C1047.25 1110 967.75 1430 610 1430"/>
+<g><circle class="step" cx="610" cy="1740" r="24"/><text class="stepText" x="610" y="1747" text-anchor="middle">3</text><text class="flowLabel" x="646" y="1747">Research path performs retrieval-first processing</text></g>
+<path class="flow" d="M610 1610 C603.25 1610 601.75 1930 595 1930"/>
+<g><circle class="step" cx="4120" cy="1740" r="24"/><text class="stepText" x="4120" y="1747" text-anchor="middle">4</text><text class="flowLabel" x="4156" y="1747">Document path stores, extracts, chunks and retrieves</text></g>
+<path class="soft" d="M2950 1610 C3474.25 1610 3590.75 1930 4115 1930"/>
+<g><circle class="step" cx="1540" cy="2500" r="24"/><text class="stepText" x="1540" y="2507" text-anchor="middle">5</text><text class="flowLabel" x="1576" y="2507">Prepared context enters two-route AI orchestration</text></g>
+<path class="flow" d="M2725 2350 C1777.75 2350 1567.25 2670 620 2670"/>
+<path class="soft" d="M4825 2350 C2932.75 2350 2512.25 2670 620 2670"/>
+<g><circle class="step" cx="3945" cy="2500" r="24"/><text class="stepText" x="3945" y="2507" text-anchor="middle">6</text><text class="flowLabel" x="3981" y="2507">Secondary route verifies consensus and citations</text></g>
+<path class="soft" d="M2500 2762 C3058 2762 3182 2762 3740 2762"/>
+<g><circle class="step" cx="5510" cy="2500" r="24"/><text class="stepText" x="5510" y="2507" text-anchor="middle">7</text><text class="flowLabel" x="5546" y="2507">Quality scoring and graph payload finalize structure</text></g>
+<path class="soft" d="M4840 2762 C5047 2762 5093 2762 5300 2762"/>
+<g><circle class="step" cx="905" cy="3155" r="24"/><text class="stepText" x="905" y="3162" text-anchor="middle">8</text><text class="flowLabel" x="941" y="3162">Reports, documents, memory and telemetry persist</text></g>
+<path class="flow" d="M5300 2855 C3162.5 2855 2687.5 3260 550 3260"/>
+<g><circle class="step" cx="1010" cy="3865" r="24"/><text class="stepText" x="1010" y="3872" text-anchor="middle">9</text><text class="flowLabel" x="1046" y="3872">Final response renders to user-facing outputs</text></g>
+<path class="flow" d="M550 3415 C563.5 3415 566.5 3960 580 3960"/>
+<path class="soft" d="M1800 3415 C1539 3415 1481 3960 1220 3960"/>
+<path class="soft" d="M2470 3415 C2195.5 3415 2134.5 3960 1860 3960"/>
+<path class="soft" d="M3570 3415 C3376.5 3415 3333.5 3960 3140 3960"/>
+<path class="soft" d="M4550 3415 C4203.5 3415 4126.5 3960 3780 3960"/>
+<path class="soft" d="M890 2015 C944 2015 956 2015 1010 2015"/>
+<path class="soft" d="M1600 2015 C1654 2015 1666 2015 1720 2015"/>
+<path class="soft" d="M2310 2015 C2364 2015 2376 2015 2430 2015"/>
+<path class="soft" d="M890 2265 C944 2265 956 2265 1010 2265"/>
+<path class="soft" d="M1600 2265 C1654 2265 1666 2265 1720 2265"/>
+<path class="soft" d="M2310 2265 C2364 2265 2376 2265 2430 2265"/>
+<path class="soft" d="M4410 2015 C4464 2015 4476 2015 4530 2015"/>
+<path class="soft" d="M5120 2015 C5174 2015 5186 2015 5240 2015"/>
+<path class="soft" d="M5830 2015 C5884 2015 5896 2015 5950 2015"/>
+<path class="soft" d="M4410 2265 C4464 2265 4476 2265 4530 2265"/>
+<path class="soft" d="M5120 2265 C5174 2265 5186 2265 5240 2265"/>
+<path class="soft" d="M5830 2265 C5884 2265 5896 2265 5950 2265"/>
+<path class="soft" d="M940 2762 C1003 2762 1017 2762 1080 2762"/>
+<path class="soft" d="M1720 2762 C1783 2762 1797 2762 1860 2762"/>
+<path class="soft" d="M2500 2762 C2563 2762 2577 2762 2640 2762"/>
+<path class="soft" d="M3280 2762 C3343 2762 3357 2762 3420 2762"/>
+<path class="soft" d="M4060 2762 C4123 2762 4137 2762 4200 2762"/>
+<path class="soft" d="M4840 2762 C4903 2762 4917 2762 4980 2762"/>
+<path class="soft" d="M5620 2762 C5683 2762 5697 2762 5760 2762"/>
+<path class="dash" d="M575 1930 C430 1810 420 1810 610 1610"/><text class="nodeMeta" x="380" y="1845">cache hit returns before search provider call</text>
+<path class="dash" d="M4825 1930 C5000 1800 5650 1800 6085 1930"/><text class="nodeMeta" x="5090" y="1818">object storage failure uses fallback content store</text>
+<path class="dash" d="M2180 2855 C2100 3040 3120 3040 2960 2855"/><text class="nodeMeta" x="2240" y="3055">only two active AI model routes are represented</text>
+<g transform="translate(150 4495)"><rect class="front" x="0" y="0" width="250" height="72"/><text class="legendText" x="28" y="43">FRONTEND</text><rect class="api" x="290" y="0" width="250" height="72"/><text class="legendText" x="318" y="43">API / SECURITY</text><rect class="ai" x="580" y="0" width="250" height="72"/><text class="legendText" x="608" y="43">AI ROUTE</text><rect class="verify" x="870" y="0" width="250" height="72"/><text class="legendText" x="898" y="43">VERIFICATION</text><rect class="score" x="1160" y="0" width="250" height="72"/><text class="legendText" x="1188" y="43">SCORING</text><rect class="store" x="1450" y="0" width="250" height="72"/><text class="legendText" x="1478" y="43">STORAGE</text><rect class="output" x="1740" y="0" width="250" height="72"/><text class="legendText" x="1768" y="43">OUTPUT</text></g>
+</svg>

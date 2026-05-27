@@ -297,7 +297,7 @@ export const dbService = {
     }
   },
 
-  async deleteReport(id: string) {
+  async deleteReport(id: string, userId?: string) {
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -317,6 +317,36 @@ export const dbService = {
     } catch (error) {
       console.warn("Firebase report deletion failed, local storage updated.");
     }
+
+    // Also delete associated PDF exports and shared research links
+    if (userId) {
+      try {
+        const exportsQ = query(
+          collection(db, "pdf_exports"),
+          where("researchId", "==", id)
+        );
+        const exportsSnap = await getDocs(exportsQ);
+        for (const d of exportsSnap.docs) {
+          await deleteDoc(d.ref);
+        }
+      } catch (e) {
+        console.warn("Failed to delete associated exports:", e);
+      }
+
+      try {
+        const sharedQ = query(
+          collection(db, "shared_research"),
+          where("researchId", "==", id)
+        );
+        const sharedSnap = await getDocs(sharedQ);
+        for (const d of sharedSnap.docs) {
+          localStorage.removeItem(`cognapse_shared_${d.id}`);
+          await deleteDoc(d.ref);
+        }
+      } catch (e) {
+        console.warn("Failed to delete associated shared research:", e);
+      }
+    }
   },
 
   async clearHistory(userId: string) {
@@ -331,6 +361,29 @@ export const dbService = {
       await batch.commit();
     } catch (error) {
       console.warn("Firebase history purge failed, local storage cleared.");
+    }
+
+    // Also delete all PDF exports for this user
+    try {
+      const exportsQ = query(collection(db, "pdf_exports"), where("userId", "==", userId));
+      const exportsSnap = await getDocs(exportsQ);
+      for (const d of exportsSnap.docs) {
+        await deleteDoc(d.ref);
+      }
+    } catch (e) {
+      console.warn("Firebase exports purge failed:", e);
+    }
+
+    // Also delete all shared research for this user
+    try {
+      const sharedQ = query(collection(db, "shared_research"), where("ownerId", "==", userId));
+      const sharedSnap = await getDocs(sharedQ);
+      for (const d of sharedSnap.docs) {
+        localStorage.removeItem(`cognapse_shared_${d.id}`);
+        await deleteDoc(d.ref);
+      }
+    } catch (e) {
+      console.warn("Firebase shared research purge failed:", e);
     }
   },
 
@@ -727,14 +780,48 @@ export const dbService = {
       await this.clearHistory(userId);
       await this.clearNotebook(userId);
 
-      const sharedQ = query(
-        collection(db, 'shared_research'),
-        where('ownerId', '==', userId)
-      );
-      const sharedSnap = await getDocs(sharedQ);
-      for (const d of sharedSnap.docs) {
-        await deleteDoc(d.ref);
+      // Clear PDF exports
+      try {
+        const exportsQ = query(collection(db, 'pdf_exports'), where('userId', '==', userId));
+        const exportsSnap = await getDocs(exportsQ);
+        for (const d of exportsSnap.docs) {
+          await deleteDoc(d.ref);
+        }
+      } catch (e) {
+        console.warn('Failed to delete exports during account deletion:', e);
       }
+
+      // Clear chat history
+      try {
+        await deleteDoc(doc(db, 'chat_history', userId));
+      } catch (e) {
+        console.warn('Failed to delete chat history:', e);
+      }
+
+      // Clear document chunks
+      try {
+        const chunksQ = query(collection(db, 'document_chunks'), where('userId', '==', userId));
+        const chunksSnap = await getDocs(chunksQ);
+        for (const d of chunksSnap.docs) {
+          await deleteDoc(d.ref);
+        }
+      } catch (e) {
+        console.warn('Failed to delete document chunks:', e);
+      }
+
+      // Clear user documents
+      try {
+        const docsQ = query(collection(db, 'user_documents'), where('userId', '==', userId));
+        const docsSnap = await getDocs(docsQ);
+        for (const d of docsSnap.docs) {
+          await deleteDoc(d.ref);
+        }
+      } catch (e) {
+        console.warn('Failed to delete user documents:', e);
+      }
+
+      // Note: shared_research, stats, settings, premium are already deleted in clearHistory
+      // We still delete the user profile docs below
 
       const batch = writeBatch(db);
       batch.delete(doc(db, 'user_stats', userId));

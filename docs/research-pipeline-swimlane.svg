@@ -1,0 +1,393 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="7600" height="5200" viewBox="0 0 7600 5200" role="img" aria-labelledby="title desc">
+<title id="title">Enterprise Research Pipeline Swimlane</title>
+<desc id="desc">An anonymized HD swimlane diagram showing request lifecycle, retrieval, AI orchestration, verification, persistence, rendering and export flows.</desc>
+<defs>
+<marker id="arrowhead" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
+  <path d="M 0 0 L 14 7 L 0 14 z" fill="#1d2734"/>
+</marker></defs>
+<style>
+  :root { color-scheme: light; }
+  svg { background: #f7f9fc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .page { fill: #ffffff; stroke: #ccd5e1; stroke-width: 3; }
+  .headline { fill: #111827; font-size: 72px; font-weight: 900; letter-spacing: 8px; }
+  .subhead { fill: #667085; font-size: 26px; font-weight: 800; letter-spacing: 3px; }
+  .rule { stroke: #d7dee8; stroke-width: 4; }
+  .phase { fill: #ffffff; stroke: #cfd8e5; stroke-width: 2.5; }
+  .phaseText { fill: #283548; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+  .lane { fill: #eef2f7; stroke: #d3dbe8; stroke-width: 2.5; }
+  .lane:nth-of-type(even) { fill: #f4f6f9; }
+  .laneNo { fill: #0f172a; font-size: 28px; font-weight: 900; letter-spacing: 3px; }
+  .laneTitle { fill: #111827; font-size: 30px; font-weight: 900; letter-spacing: 4px; }
+  .laneSub { fill: #667085; font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+  .box, .frontend, .process, .external, .api, .ai, .verify, .score, .storage, .output, .branch, .decision {
+    stroke: #253247; stroke-width: 4; filter: url(#none);
+  }
+  .box { fill: #ffffff; }
+  .frontend { fill: #f9fbff; }
+  .process { fill: #f6fbff; }
+  .external { fill: #fffdf4; }
+  .api { fill: #f8fafc; }
+  .ai { fill: #f5f7ff; }
+  .verify { fill: #fffaf5; }
+  .score { fill: #f5fbf8; }
+  .storage { fill: #f8fbff; }
+  .output { fill: #ffffff; }
+  .branch { fill: #fbfcff; }
+  .decision { fill: #ffffff; }
+  .nodeTitle { fill: #101828; font-size: 26px; font-weight: 900; letter-spacing: .2px; }
+  .nodeText { fill: #344054; font-size: 22px; font-weight: 650; }
+  .arrow { fill: none; stroke: #1d2734; stroke-width: 5; marker-end: url(#arrowhead); }
+  .dash { stroke-dasharray: 14 12; stroke: #667085; }
+  .arrowText { fill: #111827; font-size: 18px; font-weight: 900; letter-spacing: .5px; }
+  .note { fill: #667085; font-size: 18px; font-weight: 750; letter-spacing: .3px; }
+  .legendText { fill: #344054; font-size: 20px; font-weight: 800; letter-spacing: 2px; }
+</style>
+<rect class="page" x="40" y="40" width="7520" height="5120" rx="28"/>
+<text class="headline" x="130" y="155">ENTERPRISE RESEARCH PIPELINE SWIMLANE</text>
+<text class="subhead" x="135" y="218">ANONYMIZED TECHNICAL FLOW / RETRIEVAL-FIRST INTELLIGENCE SYSTEM / HD OPERATIONAL MAP</text>
+<line class="rule" x1="130" y1="275" x2="7470" y2="275"/>
+<rect class="phase" x="430" y="330" width="720" height="70" rx="12"/>
+<text class="phaseText" x="454" y="376">Request entry</text>
+<rect class="phase" x="1280" y="330" width="900" height="70" rx="12"/>
+<text class="phaseText" x="1304" y="376">Retrieval first</text>
+<rect class="phase" x="2310" y="330" width="930" height="70" rx="12"/>
+<text class="phaseText" x="2334" y="376">Prompt + AI route</text>
+<rect class="phase" x="3370" y="330" width="1020" height="70" rx="12"/>
+<text class="phaseText" x="3394" y="376">Consensus + verification</text>
+<rect class="phase" x="4520" y="330" width="900" height="70" rx="12"/>
+<text class="phaseText" x="4544" y="376">Persist + state update</text>
+<rect class="phase" x="5550" y="330" width="860" height="70" rx="12"/>
+<text class="phaseText" x="5574" y="376">Render + explore</text>
+<rect class="phase" x="6540" y="330" width="720" height="70" rx="12"/>
+<text class="phaseText" x="6564" y="376">Export + lifecycle</text>
+<rect class="lane" x="60" y="440" width="7480" height="520" rx="18"/>
+<text class="laneNo" x="96" y="488">01</text>
+<text class="laneTitle" x="170" y="488">USER INTERACTION</text>
+<text class="laneSub" x="170" y="522">query, chat follow-up, document action, deep analysis, export and source actions</text>
+<rect class="lane" x="60" y="990" width="7480" height="610" rx="18"/>
+<text class="laneNo" x="96" y="1038">02</text>
+<text class="laneTitle" x="170" y="1038">FRONTEND ORCHESTRATION</text>
+<text class="laneSub" x="170" y="1072">client state, prompt assembly, loading phases, report rendering and interaction state</text>
+<rect class="lane" x="60" y="1630" width="7480" height="660" rx="18"/>
+<text class="laneNo" x="96" y="1678">03</text>
+<text class="laneTitle" x="170" y="1678">RETRIEVAL + EXTERNAL SEARCH</text>
+<text class="laneSub" x="170" y="1712">cache decision, single provider search, filtering, deduplication, ranking and trace metadata</text>
+<rect class="lane" x="60" y="2320" width="7480" height="670" rx="18"/>
+<text class="laneNo" x="96" y="2368">04</text>
+<text class="laneTitle" x="170" y="2368">SECURE API + AI ORCHESTRATION</text>
+<text class="laneSub" x="170" y="2402">authentication, usage limits, primary model route, retry strategy and output normalization</text>
+<rect class="lane" x="60" y="3020" width="7480" height="610" rx="18"/>
+<text class="laneNo" x="96" y="3068">05</text>
+<text class="laneTitle" x="170" y="3068">CONSENSUS + VERIFICATION</text>
+<text class="laneSub" x="170" y="3102">secondary model route, agreement scoring, citation extraction and support verification</text>
+<rect class="lane" x="60" y="3660" width="7480" height="520" rx="18"/>
+<text class="laneNo" x="96" y="3708">06</text>
+<text class="laneTitle" x="170" y="3708">STORAGE + MEMORY</text>
+<text class="laneSub" x="170" y="3742">cloud vault, local cache, archive, investigation stack, exports and history records</text>
+<rect class="lane" x="60" y="4210" width="7480" height="600" rx="18"/>
+<text class="laneNo" x="96" y="4258">07</text>
+<text class="laneTitle" x="170" y="4258">OUTPUT RENDERING</text>
+<text class="laneSub" x="170" y="4292">report surface, evidence explorer, graph view, reasoning replay, feedback and share-safe view</text>
+<rect class="lane" x="60" y="4840" width="7480" height="300" rx="18"/>
+<text class="laneNo" x="96" y="4888">08</text>
+<text class="laneTitle" x="170" y="4888">SPECIALIZED BRANCHES</text>
+<text class="laneSub" x="170" y="4922">deep analysis, premium export, scoring enhancement and document intelligence side paths</text>
+<rect class="box" x="320" y="555" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="348" y="601">User Query</text>
+<text class="nodeText" x="348" y="643">Standard research, deep analysis,</text>
+<text class="nodeText" x="348" y="671">document upload, export, or</text>
+<text class="nodeText" x="348" y="699">graph/source interaction.</text>
+<polygon class="decision" points="1270,530 1480,645 1270,760 1060,645"/>
+<text class="nodeTitle" text-anchor="middle" x="1270" y="588">Report Exists?</text>
+<text class="nodeText" x="1118" y="632">Existing report sends</text>
+<text class="nodeText" x="1118" y="659">the user into</text>
+<text class="nodeText" x="1118" y="686">follow-up chat;</text>
+<text class="nodeText" x="1118" y="713">otherwise a new</text>
+<text class="nodeText" x="1118" y="740">research session</text>
+<text class="nodeText" x="1118" y="767">begins.</text>
+<rect class="frontend" x="1610" y="555" width="620" height="190" rx="18"/>
+<text class="nodeTitle" x="1638" y="601">Follow-Up Chat</text>
+<text class="nodeText" x="1638" y="643">Builds prompt from active report,</text>
+<text class="nodeText" x="1638" y="671">chat history, and new question.</text>
+<rect class="box" x="5560" y="555" width="560" height="190" rx="18"/>
+<text class="nodeTitle" x="5588" y="601">Deep Analysis Action</text>
+<text class="nodeText" x="5588" y="643">Available when a report or query</text>
+<text class="nodeText" x="5588" y="671">exists and no document-only</text>
+<text class="nodeText" x="5588" y="699">constraint blocks the branch.</text>
+<rect class="box" x="6410" y="555" width="560" height="190" rx="18"/>
+<text class="nodeTitle" x="6438" y="601">Export Action</text>
+<text class="nodeText" x="6438" y="643">Premium report, markdown,</text>
+<text class="nodeText" x="6438" y="671">structured data, source panel, or</text>
+<text class="nodeText" x="6438" y="699">read-only share action.</text>
+<rect class="frontend" x="320" y="1110" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="348" y="1156">New Research Controller</text>
+<text class="nodeText" x="348" y="1198">Clears errors, chat history, deep</text>
+<text class="nodeText" x="348" y="1226">analysis state, and starts visible</text>
+<text class="nodeText" x="348" y="1254">loading phase text.</text>
+<rect class="frontend" x="1060" y="1110" width="620" height="220" rx="18"/>
+<text class="nodeTitle" x="1088" y="1156">Reasoning Timeline</text>
+<text class="nodeText" x="1088" y="1198">Adds retrieval, synthesis, conflict</text>
+<text class="nodeText" x="1088" y="1226">analysis, source count, consensus and</text>
+<text class="nodeText" x="1088" y="1254">finalization steps.</text>
+<rect class="frontend" x="2390" y="1110" width="680" height="220" rx="18"/>
+<text class="nodeTitle" x="2418" y="1156">Prompt Assembly</text>
+<text class="nodeText" x="2418" y="1198">Compresses source payload, attaches user</text>
+<text class="nodeText" x="2418" y="1226">query and user context, then requests</text>
+<text class="nodeText" x="2418" y="1254">JSON output.</text>
+<rect class="frontend" x="4520" y="1110" width="650" height="220" rx="18"/>
+<text class="nodeTitle" x="4548" y="1156">Client State Update</text>
+<text class="nodeText" x="4548" y="1198">Sets active report, updates XP/search</text>
+<text class="nodeText" x="4548" y="1226">count, stores archive entry, and</text>
+<text class="nodeText" x="4548" y="1254">scrolls to top.</text>
+<rect class="frontend" x="5560" y="1110" width="650" height="220" rx="18"/>
+<text class="nodeTitle" x="5588" y="1156">Report Surface</text>
+<text class="nodeText" x="5588" y="1198">Header, coverage metadata, actions,</text>
+<text class="nodeText" x="5588" y="1226">synthesis, evidence, analysis panel and</text>
+<text class="nodeText" x="5588" y="1254">source drawer.</text>
+<rect class="frontend" x="6410" y="1110" width="560" height="220" rx="18"/>
+<text class="nodeTitle" x="6438" y="1156">Read-Only Share View</text>
+<text class="nodeText" x="6438" y="1198">Public/unlisted rendering</text>
+<text class="nodeText" x="6438" y="1226">excludes further investigation</text>
+<text class="nodeText" x="6438" y="1254">and replay controls.</text>
+<polygon class="decision" points="535,1760 750,1875 535,1990 320,1875"/>
+<text class="nodeTitle" text-anchor="middle" x="535" y="1818">Cache Hit?</text>
+<text class="nodeText" x="378" y="1862">Same normalized query</text>
+<text class="nodeText" x="378" y="1889">within short TTL</text>
+<text class="nodeText" x="378" y="1916">returns cached sources</text>
+<text class="nodeText" x="378" y="1943">immediately.</text>
+<rect class="process" x="880" y="1760" width="590" height="230" rx="18"/>
+<text class="nodeTitle" x="908" y="1806">Search Adapter</text>
+<text class="nodeText" x="908" y="1848">Calls a single configured external</text>
+<text class="nodeText" x="908" y="1876">search provider through a server</text>
+<text class="nodeText" x="908" y="1904">endpoint.</text>
+<rect class="process" x="1600" y="1760" width="590" height="230" rx="18"/>
+<text class="nodeTitle" x="1628" y="1806">Search Rate Gate</text>
+<text class="nodeText" x="1628" y="1848">IP-based request limit protects the</text>
+<text class="nodeText" x="1628" y="1876">search endpoint from excessive</text>
+<text class="nodeText" x="1628" y="1904">traffic.</text>
+<rect class="external" x="2320" y="1760" width="650" height="230" rx="18"/>
+<text class="nodeTitle" x="2348" y="1806">Single Search Provider</text>
+<text class="nodeText" x="2348" y="1848">Uses one active web index route. No</text>
+<text class="nodeText" x="2348" y="1876">live multi-provider fallback is</text>
+<text class="nodeText" x="2348" y="1904">represented.</text>
+<rect class="process" x="3100" y="1760" width="680" height="230" rx="18"/>
+<text class="nodeTitle" x="3128" y="1806">Source Processing</text>
+<text class="nodeText" x="3128" y="1848">Parse response, infer domains, remove</text>
+<text class="nodeText" x="3128" y="1876">low-quality snippets, deduplicate URLs</text>
+<text class="nodeText" x="3128" y="1904">and rank by credibility.</text>
+<rect class="process" x="3910" y="1760" width="650" height="230" rx="18"/>
+<text class="nodeTitle" x="3938" y="1806">Retrieval Trace</text>
+<text class="nodeText" x="3938" y="1848">Returns top sources with metadata,</text>
+<text class="nodeText" x="3938" y="1876">source count, cache state and trace</text>
+<text class="nodeText" x="3938" y="1904">details.</text>
+<rect class="api" x="2390" y="2460" width="650" height="230" rx="18"/>
+<text class="nodeTitle" x="2418" y="2506">Research API</text>
+<text class="nodeText" x="2418" y="2548">Validates authenticated request,</text>
+<text class="nodeText" x="2418" y="2576">applies cost limits and dispatches to</text>
+<text class="nodeText" x="2418" y="2604">the AI route.</text>
+<rect class="api" x="3150" y="2460" width="590" height="230" rx="18"/>
+<text class="nodeTitle" x="3178" y="2506">Security Boundary</text>
+<text class="nodeText" x="3178" y="2548">Verifies user identity token,</text>
+<text class="nodeText" x="3178" y="2576">applies revoked-token checks and</text>
+<text class="nodeText" x="3178" y="2604">authorization state.</text>
+<rect class="ai" x="3910" y="2460" width="650" height="230" rx="18"/>
+<text class="nodeTitle" x="3938" y="2506">AI Model 1</text>
+<text class="nodeText" x="3938" y="2548">Primary active model route for standard</text>
+<text class="nodeText" x="3938" y="2576">synthesis and deep analysis JSON</text>
+<text class="nodeText" x="3938" y="2604">output.</text>
+<polygon class="decision" points="4925,2460 5160,2575 4925,2690 4690,2575"/>
+<text class="nodeTitle" text-anchor="middle" x="4925" y="2518">Stable Output?</text>
+<text class="nodeText" x="4748" y="2562">If parsing or model</text>
+<text class="nodeText" x="4748" y="2589">response fails, retry</text>
+<text class="nodeText" x="4748" y="2616">before cooldown and error</text>
+<text class="nodeText" x="4748" y="2643">response.</text>
+<rect class="api" x="5350" y="2460" width="680" height="230" rx="18"/>
+<text class="nodeTitle" x="5378" y="2506">Output Normalizer</text>
+<text class="nodeText" x="5378" y="2548">Extracts JSON, validates required fields,</text>
+<text class="nodeText" x="5378" y="2576">strips verbose wrappers and attaches real</text>
+<text class="nodeText" x="5378" y="2604">sources.</text>
+<rect class="ai" x="320" y="3150" width="650" height="230" rx="18"/>
+<text class="nodeTitle" x="348" y="3196">AI Model 2</text>
+<text class="nodeText" x="348" y="3238">Secondary active model route used for</text>
+<text class="nodeText" x="348" y="3266">consensus and citation verification.</text>
+<rect class="verify" x="1100" y="3150" width="700" height="230" rx="18"/>
+<text class="nodeTitle" x="1128" y="3196">Consensus Engine</text>
+<text class="nodeText" x="1128" y="3238">Sentence split, word-overlap agreement,</text>
+<text class="nodeText" x="1128" y="3266">divergent points and score comparison.</text>
+<rect class="verify" x="1930" y="3150" width="700" height="230" rx="18"/>
+<text class="nodeTitle" x="1958" y="3196">Citation Extraction</text>
+<text class="nodeText" x="1958" y="3238">Finds numbered citation markers, pairs</text>
+<text class="nodeText" x="1958" y="3266">claim text with source snippets and</text>
+<text class="nodeText" x="1958" y="3294">prepares a batch.</text>
+<rect class="verify" x="2760" y="3150" width="700" height="230" rx="18"/>
+<text class="nodeTitle" x="2788" y="3196">Citation Verifier</text>
+<text class="nodeText" x="2788" y="3238">Classifies support as supported, partial,</text>
+<text class="nodeText" x="2788" y="3266">contradicted or unrelated with confidence.</text>
+<rect class="score" x="3590" y="3150" width="700" height="230" rx="18"/>
+<text class="nodeTitle" x="3618" y="3196">Quality Scoring</text>
+<text class="nodeText" x="3618" y="3238">Source credibility, semantic relevance,</text>
+<text class="nodeText" x="3618" y="3266">consensus, diversity, bias and confidence</text>
+<text class="nodeText" x="3618" y="3294">spread.</text>
+<rect class="score" x="4420" y="3150" width="700" height="230" rx="18"/>
+<text class="nodeTitle" x="4448" y="3196">Knowledge Graph Builder</text>
+<text class="nodeText" x="4448" y="3238">Entity clusters, relationship mapping,</text>
+<text class="nodeText" x="4448" y="3266">conflict surfaces and graph payload</text>
+<text class="nodeText" x="4448" y="3294">preparation.</text>
+<rect class="api" x="5350" y="3150" width="680" height="230" rx="18"/>
+<text class="nodeTitle" x="5378" y="3196">Final Output Package</text>
+<text class="nodeText" x="5378" y="3238">Report, scores, citations, consensus</text>
+<text class="nodeText" x="5378" y="3266">object, verification object and graph</text>
+<text class="nodeText" x="5378" y="3294">payload.</text>
+<rect class="storage" x="320" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="348" y="3836">Cloud Vault</text>
+<text class="nodeText" x="348" y="3878">Owner-scoped reports, shared</text>
+<text class="nodeText" x="348" y="3906">records, export logs and account</text>
+<text class="nodeText" x="348" y="3934">state.</text>
+<rect class="storage" x="1080" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="1108" y="3836">Local Cache</text>
+<text class="nodeText" x="1108" y="3878">Hydration fallback, short-term</text>
+<text class="nodeText" x="1108" y="3906">client cache and offline-adjacent</text>
+<text class="nodeText" x="1108" y="3934">archive continuity.</text>
+<rect class="storage" x="1840" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="1868" y="3836">Research Archive</text>
+<text class="nodeText" x="1868" y="3878">In-memory and persisted report list</text>
+<text class="nodeText" x="1868" y="3906">with timestamps and metadata.</text>
+<rect class="storage" x="2600" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="2628" y="3836">Investigation Stack</text>
+<text class="nodeText" x="2628" y="3878">Active inquiry trail for returning</text>
+<text class="nodeText" x="2628" y="3906">to saved research context.</text>
+<rect class="storage" x="3360" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="3388" y="3836">Scoring History</text>
+<text class="nodeText" x="3388" y="3878">Saved enhanced scoring output,</text>
+<text class="nodeText" x="3388" y="3906">export state and quality evolution.</text>
+<rect class="storage" x="4120" y="3790" width="610" height="190" rx="18"/>
+<text class="nodeTitle" x="4148" y="3836">Document Stores</text>
+<text class="nodeText" x="4148" y="3878">Uploaded object content, extracted</text>
+<text class="nodeText" x="4148" y="3906">text, chunks and document answer</text>
+<text class="nodeText" x="4148" y="3934">traces.</text>
+<rect class="output" x="320" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="348" y="4396">Final Report</text>
+<text class="nodeText" x="348" y="4438">Title, summary, bottom-line callout,</text>
+<text class="nodeText" x="348" y="4466">full synthesis, score cards and</text>
+<text class="nodeText" x="348" y="4494">confidence indicators.</text>
+<rect class="output" x="1080" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="1108" y="4396">Evidence Explorer</text>
+<text class="nodeText" x="1108" y="4438">Source drawer, citation hover</text>
+<text class="nodeText" x="1108" y="4466">preview, live source panel and trace</text>
+<text class="nodeText" x="1108" y="4494">metadata.</text>
+<rect class="output" x="1840" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="1868" y="4396">Graph Explorer</text>
+<text class="nodeText" x="1868" y="4438">Interactive relationship map</text>
+<text class="nodeText" x="1868" y="4466">generated from sanitized graph</text>
+<text class="nodeText" x="1868" y="4494">payload.</text>
+<rect class="output" x="2600" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="2628" y="4396">Reasoning Replay</text>
+<text class="nodeText" x="2628" y="4438">Timeline of retrieval, synthesis,</text>
+<text class="nodeText" x="2628" y="4466">consensus and finalization events.</text>
+<rect class="output" x="3360" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="3388" y="4396">Feedback + XP</text>
+<text class="nodeText" x="3388" y="4438">Rating action can grant reward and</text>
+<text class="nodeText" x="3388" y="4466">records lightweight user feedback.</text>
+<rect class="output" x="4120" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="4148" y="4396">Export Outputs</text>
+<text class="nodeText" x="4148" y="4438">PDF, markdown, structured data and</text>
+<text class="nodeText" x="4148" y="4466">browser download lifecycle.</text>
+<rect class="output" x="4880" y="4350" width="610" height="220" rx="18"/>
+<text class="nodeTitle" x="4908" y="4396">Safety Notices</text>
+<text class="nodeText" x="4908" y="4438">AI-generated content disclaimer and</text>
+<text class="nodeText" x="4908" y="4466">premium gate messaging where</text>
+<text class="nodeText" x="4908" y="4494">applicable.</text>
+<rect class="branch" x="600" y="4940" width="1320" height="160" rx="18"/>
+<text class="nodeTitle" x="628" y="4986">Deep Analysis Branch</text>
+<text class="nodeText" x="628" y="5028">Expands research objective, retrieves additional sources, synthesizes thesis,</text>
+<text class="nodeText" x="628" y="5056">computes scores, saves history and renders deep analysis view.</text>
+<rect class="branch" x="2120" y="4940" width="1320" height="160" rx="18"/>
+<text class="nodeTitle" x="2148" y="4986">Premium Export Branch</text>
+<text class="nodeText" x="2148" y="5028">Premium gate, enhanced source credibility, entity diversity, bias/confidence</text>
+<text class="nodeText" x="2148" y="5056">calculations, PDF assembly, export log and download.</text>
+<rect class="branch" x="3640" y="4940" width="1320" height="160" rx="18"/>
+<text class="nodeTitle" x="3668" y="4986">Display Scoring Branch</text>
+<text class="nodeText" x="3668" y="5028">Uses existing report scores, optional local semantic model cache, domain fallback</text>
+<text class="nodeText" x="3668" y="5056">and cached analyst interpretation.</text>
+<rect class="branch" x="5160" y="4940" width="1320" height="160" rx="18"/>
+<text class="nodeTitle" x="5188" y="4986">Document Intelligence Branch</text>
+<text class="nodeText" x="5188" y="5028">Upload metadata, object storage fallback, text extraction, chunk indexing, keyword</text>
+<text class="nodeText" x="5188" y="5056">retrieval, RAG answer and report generation.</text>
+<path class="arrow solid" d="M 930 650 C 1010 650, 1010 645, 1060 645"/>
+<text class="arrowText" x="875" y="631.5">submit</text>
+<path class="arrow solid" d="M 1270 760 C 1270 935, 625 935, 625 1110"/>
+<text class="arrowText" x="971.5" y="935">new research</text>
+<path class="arrow solid" d="M 1480 645 C 1560 645, 1560 650, 1610 650"/>
+<text class="arrowText" x="1425" y="631.5">follow-up</text>
+<path class="arrow dash" d="M 1920 745 C 1920 927.5, 2730 927.5, 2730 1110"/>
+<text class="arrowText" x="2349" y="927.5">plain text route</text>
+<path class="arrow solid" d="M 930 1220 C 1010 1220, 1010 1220, 1060 1220"/>
+<path class="arrow solid" d="M 1370 1330 C 1370 1545, 535 1545, 535 1760"/>
+<text class="arrowText" x="976.5" y="1545">retrieve sources</text>
+<path class="arrow solid" d="M 750 1875 C 830 1875, 830 1875, 880 1875"/>
+<text class="arrowText" x="695" y="1859">miss</text>
+<path class="arrow solid" d="M 1470 1875 C 1550 1875, 1550 1875, 1600 1875"/>
+<path class="arrow solid" d="M 2190 1875 C 2270 1875, 2270 1875, 2320 1875"/>
+<text class="arrowText" x="2135" y="1859">allowed</text>
+<path class="arrow solid" d="M 2970 1875 C 3050 1875, 3050 1875, 3100 1875"/>
+<path class="arrow solid" d="M 3780 1875 C 3860 1875, 3860 1875, 3910 1875"/>
+<path class="arrow solid" d="M 4235 1990 C 4235 1550, 2730 1550, 2730 1110"/>
+<text class="arrowText" x="3506.5" y="1550">source payload</text>
+<path class="arrow solid" d="M 2730 1330 C 2730 1895, 2715 1895, 2715 2460"/>
+<text class="arrowText" x="2746.5" y="1895">JSON prompt</text>
+<path class="arrow solid" d="M 3040 2575 C 3120 2575, 3120 2575, 3150 2575"/>
+<path class="arrow solid" d="M 3740 2575 C 3825 2575, 3825 2575, 3910 2575"/>
+<path class="arrow solid" d="M 4560 2575 C 4640 2575, 4640 2575, 4690 2575"/>
+<path class="arrow solid" d="M 5160 2575 C 5255 2575, 5255 2575, 5350 2575"/>
+<text class="arrowText" x="5135" y="2559">valid</text>
+<path class="arrow solid" d="M 5690 2690 C 5690 2920, 5690 2920, 5690 3150"/>
+<text class="arrowText" x="5714" y="2920">source-grounded output</text>
+<path class="arrow solid" d="M 970 3265 C 1050 3265, 1050 3265, 1100 3265"/>
+<path class="arrow solid" d="M 1800 3265 C 1880 3265, 1880 3265, 1930 3265"/>
+<path class="arrow solid" d="M 2630 3265 C 2710 3265, 2710 3265, 2760 3265"/>
+<path class="arrow solid" d="M 3460 3265 C 3540 3265, 3540 3265, 3590 3265"/>
+<path class="arrow solid" d="M 4290 3265 C 4370 3265, 4370 3265, 4420 3265"/>
+<path class="arrow solid" d="M 5120 3265 C 5235 3265, 5235 3265, 5350 3265"/>
+<path class="arrow solid" d="M 5690 3380 C 5690 3585, 625 3585, 625 3790"/>
+<text class="arrowText" x="3181.5" y="3585">persist</text>
+<path class="arrow solid" d="M 5690 3380 C 5690 2245, 4845 2245, 4845 1110"/>
+<text class="arrowText" x="5291.5" y="2245">response</text>
+<path class="arrow solid" d="M 930 3885 C 1010 3885, 1010 3885, 1080 3885"/>
+<path class="arrow solid" d="M 1690 3885 C 1770 3885, 1770 3885, 1840 3885"/>
+<path class="arrow solid" d="M 2450 3885 C 2530 3885, 2530 3885, 2600 3885"/>
+<path class="arrow solid" d="M 3210 3885 C 3290 3885, 3290 3885, 3360 3885"/>
+<path class="arrow dash" d="M 3970 3885 C 4050 3885, 4050 3885, 4120 3885"/>
+<path class="arrow solid" d="M 4845 1330 C 4845 2840, 625 2840, 625 4350"/>
+<text class="arrowText" x="2759" y="2840">render</text>
+<path class="arrow solid" d="M 930 4460 C 1010 4460, 1010 4460, 1080 4460"/>
+<path class="arrow solid" d="M 1690 4460 C 1770 4460, 1770 4460, 1840 4460"/>
+<path class="arrow solid" d="M 2450 4460 C 2530 4460, 2530 4460, 2600 4460"/>
+<path class="arrow solid" d="M 3210 4460 C 3290 4460, 3290 4460, 3360 4460"/>
+<path class="arrow solid" d="M 3970 4460 C 4050 4460, 4050 4460, 4120 4460"/>
+<path class="arrow solid" d="M 4730 4460 C 4810 4460, 4810 4460, 4880 4460"/>
+<path class="arrow solid" d="M 6210 1220 C 6310 1220, 6310 1220, 6410 1220"/>
+<text class="arrowText" x="6190" y="1204">share-safe rendering</text>
+<path class="arrow solid" d="M 5840 745 C 5840 2842.5, 1260 2842.5, 1260 4940"/>
+<text class="arrowText" x="3574" y="2842.5">branch</text>
+<path class="arrow solid" d="M 6690 745 C 6690 2842.5, 2780 2842.5, 2780 4940"/>
+<text class="arrowText" x="4759" y="2842.5">premium export</text>
+<path class="arrow solid" d="M 4425 3980 C 4425 4460, 5820 4460, 5820 4940"/>
+<text class="arrowText" x="5146.5" y="4460">document path</text>
+<path class="arrow solid" d="M 3940 3380 C 3940 4160, 4300 4160, 4300 4940"/>
+<text class="arrowText" x="4144" y="4160">display enhancement</text>
+<path class="arrow dash" d="M 4235 2690 C 4235 2920, 645 2920, 645 3150"/>
+<text class="arrowText" x="2464" y="2920">optional secondary pass</text>
+<text class="note" x="332" y="2045">cache hit bypasses provider and returns cached normalized sources</text>
+<path class="arrow dash" d="M 535 1990 C 690 2180, 2050 2140, 2520 1110"/>
+<text class="note" x="4685" y="2742">retry, then temporary cooldown and sanitized error if unstable</text>
+<text class="note" x="388" y="3428">secondary route is optional: failure logs warning and does not block report delivery</text>
+<g transform="translate(130,5140)">
+  <rect class="box" x="0" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="18" y="-12">FRONTEND</text>
+  <rect class="api" x="250" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="268" y="-12">API / SECURITY</text>
+  <rect class="process" x="500" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="518" y="-12">RETRIEVAL</text>
+  <rect class="ai" x="750" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="768" y="-12">AI ROUTE</text>
+  <rect class="verify" x="1000" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="1018" y="-12">VERIFY</text>
+  <rect class="storage" x="1250" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="1268" y="-12">STORAGE</text>
+  <rect class="output" x="1500" y="-38" width="215" height="38" rx="8"/><text class="legendText" x="1518" y="-12">OUTPUT</text>
+</g>
+</svg>

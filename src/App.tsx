@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import { useStore } from './store';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
-import NeuralBackground from './components/NeuralBackground';
+import UnifiedCanvas from './components/UnifiedCanvas';
 import Documentation from './components/Documentation';
 import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
@@ -341,9 +341,10 @@ export default function App() {
 
   const handleLegalNav = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
     e.preventDefault();
-    setLegalPage(null); // Clear standalone legal page if open
-    useStore.getState().setView('documentation');
+    // Set hash first, then switch view — prevents flash of wrong content
     window.location.hash = hash;
+    setLegalPage(null);
+    useStore.getState().setView('documentation');
   };
 
   const isDashboard = currentView === 'research' || currentView === 'news';
@@ -398,7 +399,7 @@ export default function App() {
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       {!shareRoute && !legalPage && <NeuralWalkthrough />}
       {!shareRoute && !legalPage && <SelectionCapture />}
-      <NeuralBackground />
+      <UnifiedCanvas />
       <ToastContainer />
 
       {/* Suspended User Overlay */}

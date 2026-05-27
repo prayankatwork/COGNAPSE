@@ -118,6 +118,12 @@ export interface COGNAPSE_Output {
     };
   };
 
+  // Citation Verification: attached by geminiService after verifying each [N] claim against its source
+  citation_verifications?: CitationVerification[];
+
+  // Multi-Model Consensus: attached by geminiService when running two-model validation
+  multi_model_consensus?: MultiModelConsensus;
+
   // Source Grounding: retrieval trace attached by geminiService
   _retrieval_trace?: RetrievalTrace;
 }
@@ -241,6 +247,40 @@ export interface RagAnswerRequest {
 }
 
 export type ResearchVisibility = "private" | "unlisted" | "public";
+
+/* ─── Citation Verification Types ─── */
+
+export interface CitationVerification {
+  source_id: number;
+  claim: string;
+  verdict: 'supported' | 'partial' | 'contradicted' | 'unrelated';
+  confidence: number;
+  explanation: string;
+}
+
+/* ─── Multi-Model Consensus Types ─── */
+
+export interface MultiModelConsensus {
+  overall_agreement: number; // 0–100 — how much the two models agreed
+  model_a: {
+    provider: string;
+    model: string;
+  };
+  model_b: {
+    provider: string;
+    model: string;
+  };
+  agreement_points: string[];
+  divergent_points: {
+    from: 'model_a' | 'model_b' | 'unique_to_a' | 'unique_to_b';
+    claim: string;
+  }[];
+  score_comparison: {
+    metric: string;
+    model_a: number | string;
+    model_b: number | string;
+  }[];
+}
 
 export interface SharedResearchRecord {
   id: string;

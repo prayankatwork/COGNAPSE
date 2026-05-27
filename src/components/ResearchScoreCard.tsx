@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ResearchScore } from '../types';
-import { ShieldCheck, AlertTriangle, Globe, TrendingUp, BarChart3, Layers, ArrowUp, ArrowDown, Minus, Crown, Loader2, BrainCircuit } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Globe, TrendingUp, BarChart3, Layers, Crown, Loader2, BrainCircuit } from 'lucide-react';
 import { useStore } from '../store';
-import { callCloudAI } from '../services/aiService';
-import { lookupDomain, factualToScore, biasToBiasScore, credibilityTrendFromHistory } from '../utils/domainCredibility';
-import { computeAllScores, computeEntityDiversity } from '../utils/scoringEngine';
-import { dbService } from '../services/dbService';
+import { lookupDomain, factualToScore, biasToBiasScore } from '../utils/domainCredibility';
+import { computeAllScores, computeEntityDiversity, normalizeCredScore } from '../utils/scoringEngine';
 import clsx from 'clsx';
 
 interface Props { scores: ResearchScore; }
@@ -34,19 +32,6 @@ function ScoreMeter({ value, max = 1, label, icon, color }: {
   );
 }
 
-function TrendBadge({ direction }: { direction: 'up' | 'down' | 'stable' }) {
-  const [icon, color, label] = direction === 'up'
-    ? [<ArrowUp size={10} />, 'text-green-500', 'Improving']
-    : direction === 'down'
-    ? [<ArrowDown size={10} />, 'text-red-500', 'Declining']
-    : [<Minus size={10} />, 'text-yellow-500', 'Stable'];
-  return (
-    <span className={clsx('inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest', color)}>
-      {icon} {label}
-    </span>
-  );
-}
-
 export default function ResearchScoreCard({ scores }: Props) {
   const { user, currentReport } = useStore();
   const isPremium = !!user?.premium;
@@ -55,13 +40,6 @@ export default function ResearchScoreCard({ scores }: Props) {
   const reportScores = currentReport?.scores;
   const query = currentReport?.query_understood || currentReport?.archive_entry?.query || '';
   const topicCluster = currentReport?.archive_entry?.topic_cluster || query.substring(0, 60);
-
-  const [history, setHistory] = useState<any[]>([]);
-  useEffect(() => {
-    if (user?.id && topicCluster) {
-      setHistory(dbService.getScoreHistory(user.id, topicCluster));
-    }
-  }, [user?.id, topicCluster]);
 
   // Neural scoring engine
   const [enhanced, setEnhanced] = useState<{
@@ -85,9 +63,10 @@ export default function ResearchScoreCard({ scores }: Props) {
 
   // Domain-only fallback computation (same as before)
   const credScores = sources.map(s => {
+    const cred = normalizeCredScore(s.credibility_score);
     const domainInfo = lookupDomain(s.domain || '');
-    if (domainInfo) return factualToScore(domainInfo.factual) * 0.7 + (s.credibility_score || 5) * 0.3;
-    return s.credibility_score ?? 5;
+    if (domainInfo) return factualToScore(domainInfo.factual) * 0.7 + (cred ?? 5) * 0.3;
+    return cred ?? 5;
   });
   const relevanceScores = sources.map(s => s.relevance_score ?? 5);
   const avgCredibility = sources.length > 0 ? credScores.reduce((a, b) => a + b, 0) / credScores.length : 5;
@@ -103,7 +82,7 @@ export default function ResearchScoreCard({ scores }: Props) {
     ? biasFromDomains.reduce((a, b) => a + b, 0) / biasFromDomains.length
     : null;
 
-  const avgRelevance = relevanceScores.length > 0 ? relevanceScores.reduce((a, b) => a + b, 0) / relevanceScores.length / 10 : 0.5;
+  const avgRelevance = relevanceScores.length > 0 ? relevanceScores.reduce((a, b) => a + b, 0) / relevanceScores.length / 100 : 0.5;
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[reportScores?.evidence_consensus || ''] ?? 0.5;
   const fallbackOverallQ = Math.round((
     (avgCredibility / 10) * 0.40 + consensusBase * 0.30 +
@@ -123,67 +102,7 @@ export default function ResearchScoreCard({ scores }: Props) {
 
   const entityInfo = useMemo(() => sources.length > 0 ? computeEntityDiversity(sources) : null, [sources]);
 
-  // Trends
-  const credTrend = credibilityTrendFromHistory(history.map((h: any) => h.scores?.accuracy ?? 5));
-  const biasTrendVal = sources.length > 0
-    ? (() => {
-        const biasLabels = sources.map(s => lookupDomain(s.domain || '')?.bias).filter(Boolean);
-        if (biasLabels.length === 0) return displayBias < 0.3 ? 'up' as const : displayBias < 0.6 ? 'stable' as const : 'down' as const;
-        return biasLabels.some(b => b === 'pro-science' || b === 'center') ? 'up' as const
-          : biasLabels.some(b => b === 'left-center' || b === 'right-center') ? 'stable' as const : 'down' as const;
-      })()
-    : (displayBias < 0.3 ? 'up' as const : displayBias < 0.6 ? 'stable' as const : 'down' as const);
-  const diversityTrend = history.length >= 2
-    ? credibilityTrendFromHistory(history.map((h: any) => h.scores?.sourceDiversity ?? 0))
-    : (displayDiversity >= 0.6 ? 'up' as const : displayDiversity >= 0.3 ? 'stable' as const : 'down' as const);
-  const confidenceTrend = history.length >= 2
-    ? credibilityTrendFromHistory(history.map((h: any) => {
-        const cmap: Record<string, number> = { strong: 0.85, mixed: 0.6, contested: 0.4, insufficient: 0.2 };
-        return cmap[h.scores?.confidenceInterval || ''] ?? 0.5;
-      }))
-    : (displayConfidence >= 0.6 ? 'up' as const : displayConfidence >= 0.3 ? 'stable' as const : 'down' as const);
-
-  const [analystInterpretation, setAnalystInterpretation] = useState<string | null>(null);
-  const [loadingInterpretation, setLoadingInterpretation] = useState(false);
-  const interpretationCacheKey = currentReport?.id || currentReport?.archive_entry?.query || '';
-
-  useEffect(() => {
-    if (!isPremium || !interpretationCacheKey) return;
-    const cached = localStorage.getItem(`cognapse_analyst_${interpretationCacheKey}`);
-    if (cached) { setAnalystInterpretation(cached); return; }
-    setLoadingInterpretation(true);
-    const context = `Topic: ${currentReport?.query_understood || ''}
-Source count: ${sources.length}
-Average credibility: ${displayCredibility.toFixed(1)}/10
-Evidence consensus: ${reportScores?.evidence_consensus || 'unknown'}
-Overall quality: ${displayOverallQ}%
-Consensus score: ${es?.consensusScore?.toFixed(2) || 'N/A'}
-Relevance score: ${es?.relevanceScore?.toFixed(2) || 'N/A'}
-Entity diversity: ${es?.entityDiversity?.toFixed(2) || 'N/A'}
-Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
-    callCloudAI(
-      `You are an intelligence analyst. Write a 2-3 sentence analyst interpretation of this research report's quality and reliability. Be specific — cite trends, source quality, and caveats. No markdown. Under 150 words.\n\n${context}`,
-      false, 'groq-llama-3.1-8b-instant'
-    ).then((text) => {
-      const interpretation = typeof text === 'string' ? text.trim() : 'Analysis based on AI-generated source evaluation and domain credibility signals.';
-      setAnalystInterpretation(interpretation);
-      localStorage.setItem(`cognapse_analyst_${interpretationCacheKey}`, interpretation);
-    }).catch(() => {
-      setAnalystInterpretation(
-        displayOverallQ >= 70
-          ? 'High-confidence synthesis with strong source credibility and broad topical coverage.'
-          : displayOverallQ >= 40
-          ? 'Moderate confidence synthesis with mixed source quality.'
-          : 'Low-confidence synthesis requiring independent verification.'
-      );
-    }).finally(() => setLoadingInterpretation(false));
-  }, [interpretationCacheKey, isPremium, es?.consensusScore]);
-
   const premiumData = isPremium ? {
-    credibilityTrend: credTrend,
-    biasTrend: biasTrendVal,
-    diversityTrend,
-    confidenceTrend,
     overallQuality: displayOverallQ,
     confidenceSpread: Math.round(displayStdDev),
     sourceReliabilityIndex: Math.round(displayCredibility * 10) / 10,
@@ -238,25 +157,7 @@ Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
             )}
           </div>
 
-          {/* Trend indicators */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="p-2 bg-my-bg border border-my-border flex items-center justify-between">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Credibility Trend</span>
-              <TrendBadge direction={premiumData.credibilityTrend} />
-            </div>
-            <div className="p-2 bg-my-bg border border-my-border flex items-center justify-between">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Bias Direction</span>
-              <TrendBadge direction={premiumData.biasTrend} />
-            </div>
-            <div className="p-2 bg-my-bg border border-my-border flex items-center justify-between">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Diversity Trend</span>
-              <TrendBadge direction={premiumData.diversityTrend} />
-            </div>
-            <div className="p-2 bg-my-bg border border-my-border flex items-center justify-between">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Confidence Trend</span>
-              <TrendBadge direction={premiumData.confidenceTrend} />
-            </div>
-          </div>
+
 
           {/* Neural metrics row */}
           {(premiumData.consensusScore !== null || premiumData.relevanceScore !== null) && (
@@ -268,7 +169,7 @@ Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
                     'text-[10px] font-black font-mono',
                     premiumData.consensusScore! >= 0.7 ? 'text-green-500' : premiumData.consensusScore! >= 0.4 ? 'text-yellow-500' : 'text-red-500'
                   )}>
-                    {Math.round(premiumData.consensusScore * 100)}%
+                    {premiumData.consensusScore! >= 0.7 ? 'High' : premiumData.consensusScore! >= 0.4 ? 'Medium' : 'Low'}
                   </span>
                 </div>
               )}
@@ -279,7 +180,7 @@ Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
                     'text-[10px] font-black font-mono',
                     premiumData.relevanceScore! >= 0.7 ? 'text-green-500' : premiumData.relevanceScore! >= 0.4 ? 'text-yellow-500' : 'text-red-500'
                   )}>
-                    {Math.round(premiumData.relevanceScore * 100)}%
+                    {premiumData.relevanceScore! >= 0.7 ? 'High' : premiumData.relevanceScore! >= 0.4 ? 'Medium' : 'Low'}
                   </span>
                 </div>
               )}
@@ -321,7 +222,12 @@ Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
             <div className="p-3 bg-my-bg border border-my-border flex flex-col">
               <span className="text-[8px] font-bold uppercase tracking-widest text-my-muted mb-1">Overall Quality</span>
               <div className="flex items-end gap-2">
-                <span className="text-xl font-black text-my-ink">{premiumData.overallQuality}%</span>
+                <span className="text-xl font-black text-my-ink">
+                  {(() => {
+                    const q = premiumData.overallQuality;
+                    return q >= 90 ? 'A' : q >= 70 ? 'B' : q >= 50 ? 'C' : q >= 30 ? 'D' : 'F';
+                  })()}
+                </span>
                 <div className="flex-1 h-2 bg-my-border rounded-full overflow-hidden self-center mb-1">
                   <div className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -344,23 +250,7 @@ Source domains: ${sources.slice(0, 5).map(s => s.domain).join(', ')}`;
             </div>
           </div>
 
-          {/* Analyst interpretation */}
-          <div className="p-3 bg-my-accent/5 border border-my-accent/20">
-            <p className="text-[9px] text-my-ink leading-relaxed">
-              <strong className="uppercase tracking-wider">Analyst Interpretation:</strong>{' '}
-              {loadingInterpretation ? (
-                <span className="inline-flex items-center gap-1 text-my-muted">
-                  <Loader2 size={8} className="animate-spin" /> Generating analysis...
-                </span>
-              ) : analystInterpretation || (
-                  displayOverallQ >= 70
-                    ? 'High-confidence synthesis with strong source credibility and broad topical coverage.'
-                    : displayOverallQ >= 40
-                    ? 'Moderate confidence synthesis with mixed source quality.'
-                    : 'Low-confidence synthesis requiring independent verification.'
-                )}
-            </p>
-          </div>
+
         </div>
       )}
 

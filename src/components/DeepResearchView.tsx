@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../store';
 import { ChevronDown, ChevronRight, CheckCircle2, Shield, Lock, Download, Loader2 } from 'lucide-react';
 import { toast } from '../utils/toast';
+import { stripCitationMarkers } from '../utils/citations';
 import ResearchScoreCard from './ResearchScoreCard';
 import PremiumExportModal from './PremiumExportModal';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
@@ -66,16 +67,16 @@ export default function DeepResearchView() {
   };
 
   const sections = [
-    { id: 'abstract', title: 'Abstract', content: safeText(thesis.abstract) },
-    { id: 'introduction', title: 'Introduction', content: safeText(thesis.introduction) },
-    { id: 'problemStatement', title: 'Problem Statement', content: safeText(thesis.problemStatement) },
-    { id: 'literatureReview', title: 'Literature Review', content: safeText(thesis.literatureReview) },
-    { id: 'methodology', title: 'Methodology / Approach', content: safeText(thesis.methodology) },
-    { id: 'findings', title: 'Key Findings & Analysis', content: safeText(thesis.findings) },
-    { id: 'comparativeInsights', title: 'Comparative Insights', content: safeText(thesis.comparativeInsights) },
-    { id: 'limitations', title: 'Limitations', content: safeText(thesis.limitations) },
-    { id: 'futureScope', title: 'Future Scope', content: safeText(thesis.futureScope) },
-    { id: 'conclusion', title: 'Conclusion', content: safeText(thesis.conclusion) },
+    { id: 'abstract', title: 'Abstract', content: stripCitationMarkers(safeText(thesis.abstract)) },
+    { id: 'introduction', title: 'Introduction', content: stripCitationMarkers(safeText(thesis.introduction)) },
+    { id: 'problemStatement', title: 'Problem Statement', content: stripCitationMarkers(safeText(thesis.problemStatement)) },
+    { id: 'literatureReview', title: 'Literature Review', content: stripCitationMarkers(safeText(thesis.literatureReview)) },
+    { id: 'methodology', title: 'Methodology / Approach', content: stripCitationMarkers(safeText(thesis.methodology)) },
+    { id: 'findings', title: 'Key Findings & Analysis', content: stripCitationMarkers(safeText(thesis.findings)) },
+    { id: 'comparativeInsights', title: 'Comparative Insights', content: stripCitationMarkers(safeText(thesis.comparativeInsights)) },
+    { id: 'limitations', title: 'Limitations', content: stripCitationMarkers(safeText(thesis.limitations)) },
+    { id: 'futureScope', title: 'Future Scope', content: stripCitationMarkers(safeText(thesis.futureScope)) },
+    { id: 'conclusion', title: 'Conclusion', content: stripCitationMarkers(safeText(thesis.conclusion)) },
   ];
 
   return (

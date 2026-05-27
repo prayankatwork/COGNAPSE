@@ -1,0 +1,361 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="7600" height="4300" viewBox="0 0 7600 4300" role="img" aria-labelledby="title desc">
+<title id="title">Current Research Pipeline Only</title>
+<desc id="desc">HD anonymized research-only diagram showing retrieval, synthesis, consensus, verification, scoring, graph construction, final package and deep analysis continuation.</desc>
+<defs><marker id="arrowhead" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto"><path d="M 0 0 L 16 8 L 0 16 z" fill="#182230"/></marker></defs>
+<style>
+svg { background:#f7f9fc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; text-rendering: geometricPrecision; }
+.page { fill:#ffffff; stroke:#cfd8e5; stroke-width:3; }
+.title { fill:#111827; font-size:76px; font-weight:900; letter-spacing:8px; }
+.subtitle { fill:#667085; font-size:28px; font-weight:850; letter-spacing:3px; }
+.rule { stroke:#d9e1ec; stroke-width:4; }
+.lane { fill:#edf3f8; stroke:#d4deeb; stroke-width:3; }
+.laneTitle { fill:#101828; font-size:34px; font-weight:900; letter-spacing:5px; }
+.laneSub { fill:#667085; font-size:22px; font-weight:780; letter-spacing:.8px; }
+.box,.retrieval,.ai,.verify,.score,.graph,.final,.deep { stroke:#253247; stroke-width:4.5; }
+.box { fill:#ffffff; }
+.retrieval { fill:#f7fbff; }
+.ai { fill:#f6f7ff; }
+.verify { fill:#fffaf5; }
+.score { fill:#f5fbf8; }
+.graph { fill:#f8fbff; }
+.final { fill:#ffffff; }
+.deep { fill:#fbfcff; }
+.stepCircle { fill:#111827; }
+.stepNo { fill:#ffffff; font-size:22px; font-weight:950; }
+.nodeTitle { fill:#101828; font-size:30px; font-weight:900; }
+.nodeText { fill:#344054; font-size:25px; font-weight:680; }
+.arrow { fill:none; stroke:#182230; stroke-width:6; marker-end:url(#arrowhead); }
+.dashed { stroke:#667085; stroke-dasharray:18 14; }
+.pill { fill:#ffffff; stroke:#cfd8e5; stroke-width:2.5; }
+.pillText { fill:#344054; font-size:22px; font-weight:850; letter-spacing:1.5px; }
+.noteTitle { fill:#101828; font-size:27px; font-weight:900; letter-spacing:2px; }
+.noteText { fill:#475467; font-size:24px; font-weight:720; }
+</style>
+<rect class="page" x="38" y="38" width="7524" height="4224" rx="32"/>
+<text class="title" x="140" y="158">CURRENT RESEARCH PIPELINE ONLY</text>
+<text class="subtitle" x="145" y="226">ANONYMIZED TECHNICAL FLOW / NO UI LAYER / NO API ROUTING LAYER / ACTIVE RESEARCH LOGIC</text>
+<line class="rule" x1="140" y1="290" x2="7460" y2="290"/>
+<rect class="pill" x="145" y="330" width="650" height="58" rx="14"/>
+<text class="pillText" x="173" y="368">ACCURACY: ONE ACTIVE SEARCH ROUTE</text>
+<rect class="pill" x="870" y="330" width="650" height="58" rx="14"/>
+<text class="pillText" x="898" y="368">ACCURACY: TWO ACTIVE AI ROUTES</text>
+<rect class="pill" x="1595" y="330" width="650" height="58" rx="14"/>
+<text class="pillText" x="1623" y="368">SECONDARY CONSENSUS IS OPTIONAL</text>
+<rect class="pill" x="2320" y="330" width="650" height="58" rx="14"/>
+<text class="pillText" x="2348" y="368">DEEP ANALYSIS CONTINUES AFTER BASE REPORT</text>
+<rect class="lane" x="90" y="430" width="7420" height="760" rx="28"/>
+<text class="laneTitle" x="145" y="488">01 RETRIEVAL FOUNDATION</text>
+<text class="laneSub" x="145" y="524">query intake, client cache, active web retrieval, server quality filters, deduplication, ranking and compression</text>
+<rect class="lane" x="90" y="1260" width="7420" height="710" rx="28"/>
+<text class="laneTitle" x="145" y="1318">02 PRIMARY SYNTHESIS FOUNDATION</text>
+<text class="laneSub" x="145" y="1354">prompt assembly, primary model synthesis, JSON parsing, source grounding and trace preservation</text>
+<rect class="lane" x="90" y="2040" width="7420" height="720" rx="28"/>
+<text class="laneTitle" x="145" y="2098">03 TRUST + QUALITY LAYER</text>
+<text class="laneSub" x="145" y="2134">optional secondary model comparison, citation verification, score signals and graph payload generation</text>
+<rect class="lane" x="90" y="2830" width="7420" height="890" rx="28"/>
+<text class="laneTitle" x="145" y="2888">04 DEEP ANALYSIS CONTINUATION</text>
+<text class="laneSub" x="145" y="2924">the completed base report can branch into a deeper thesis pipeline with expanded retrieval and deep scores</text>
+<rect class="lane" x="90" y="3790" width="7420" height="330" rx="28"/>
+<text class="laneTitle" x="145" y="3848">05 FINAL STRUCTURED RESEARCH PACKAGE</text>
+<text class="laneSub" x="145" y="3884">the completed intelligence object used by rendering, export, sharing and long-term archive flows</text>
+<g id="q">
+<rect class="box" x="170" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="212" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="212" y="704">01</text>
+<text class="nodeTitle" x="248" y="704">Query Intake</text>
+<text class="nodeText" x="202" y="754">Research objective is normalized</text>
+<text class="nodeText" x="202" y="786">as the investigation input.</text>
+</g>
+<g id="cache">
+<rect class="retrieval" x="875" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="917" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="917" y="704">02</text>
+<text class="nodeTitle" x="953" y="704">Cache Decision</text>
+<text class="nodeText" x="907" y="754">Fresh equivalent query within 5</text>
+<text class="nodeText" x="907" y="786">minutes can reuse stored sources.</text>
+</g>
+<g id="web">
+<rect class="retrieval" x="1580" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="1622" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1622" y="704">03</text>
+<text class="nodeTitle" x="1658" y="704">Live Retrieval</text>
+<text class="nodeText" x="1612" y="754">Cache miss calls the single</text>
+<text class="nodeText" x="1612" y="786">active external search route.</text>
+</g>
+<g id="norm">
+<rect class="retrieval" x="2285" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="2327" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="2327" y="704">04</text>
+<text class="nodeTitle" x="2363" y="704">Normalize Sources</text>
+<text class="nodeText" x="2317" y="754">Map results into title, URL,</text>
+<text class="nodeText" x="2317" y="786">domain, snippet, type and</text>
+<text class="nodeText" x="2317" y="818">relevance score.</text>
+</g>
+<g id="filter">
+<rect class="retrieval" x="2990" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="3032" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3032" y="704">05</text>
+<text class="nodeTitle" x="3068" y="704">Quality Filters</text>
+<text class="nodeText" x="3022" y="754">Drop weak snippets,</text>
+<text class="nodeText" x="3022" y="786">disambiguation-style pages and</text>
+<text class="nodeText" x="3022" y="818">low-credibility records.</text>
+</g>
+<g id="dedupe">
+<rect class="retrieval" x="3695" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="3737" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3737" y="704">06</text>
+<text class="nodeTitle" x="3773" y="704">Deduplicate</text>
+<text class="nodeText" x="3727" y="754">Collapse duplicate URLs and keep</text>
+<text class="nodeText" x="3727" y="786">the strongest evidence candidate.</text>
+</g>
+<g id="rank">
+<rect class="retrieval" x="4400" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="4442" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="4442" y="704">07</text>
+<text class="nodeTitle" x="4478" y="704">Rank Sources</text>
+<text class="nodeText" x="4432" y="754">Sort by credibility, relevance,</text>
+<text class="nodeText" x="4432" y="786">domain signals and recency where</text>
+<text class="nodeText" x="4432" y="818">present.</text>
+</g>
+<g id="comp">
+<rect class="retrieval" x="5105" y="650" width="570" height="230" rx="18"/>
+<circle class="stepCircle" cx="5147" cy="695" r="22"/>
+<text class="stepNo" text-anchor="middle" x="5147" y="704">08</text>
+<text class="nodeTitle" x="5183" y="704">Compress Evidence</text>
+<text class="nodeText" x="5137" y="754">Create a compact source block for</text>
+<text class="nodeText" x="5137" y="786">model context within token</text>
+<text class="nodeText" x="5137" y="818">limits.</text>
+</g>
+<g id="prompt">
+<rect class="box" x="875" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="917" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="917" y="1549">09</text>
+<text class="nodeTitle" x="953" y="1549">Research Prompt</text>
+<text class="nodeText" x="907" y="1599">Combine system instruction, evidence</text>
+<text class="nodeText" x="907" y="1631">block, query and user research context.</text>
+</g>
+<g id="ai1">
+<rect class="ai" x="1720" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="1762" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1762" y="1549">10</text>
+<text class="nodeTitle" x="1798" y="1549">AI Model 1</text>
+<text class="nodeText" x="1752" y="1599">Primary active route produces</text>
+<text class="nodeText" x="1752" y="1631">structured JSON research synthesis.</text>
+</g>
+<g id="parse">
+<rect class="box" x="2565" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="2607" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="2607" y="1549">11</text>
+<text class="nodeTitle" x="2643" y="1549">Parse + Validate</text>
+<text class="nodeText" x="2597" y="1599">Extract JSON, require report fields and</text>
+<text class="nodeText" x="2597" y="1631">throw format error on malformed output.</text>
+</g>
+<g id="ground">
+<rect class="box" x="3410" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="3452" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3452" y="1549">12</text>
+<text class="nodeTitle" x="3488" y="1549">Source Grounding</text>
+<text class="nodeText" x="3442" y="1599">Replace model-made sources with</text>
+<text class="nodeText" x="3442" y="1631">retrieved sources and attach source</text>
+<text class="nodeText" x="3442" y="1663">IDs.</text>
+</g>
+<g id="trace">
+<rect class="box" x="4255" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="4297" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="4297" y="1549">13</text>
+<text class="nodeTitle" x="4333" y="1549">Trace Metadata</text>
+<text class="nodeText" x="4287" y="1599">Attach source counts, dedup/filter</text>
+<text class="nodeText" x="4287" y="1631">stats, latency and search route</text>
+<text class="nodeText" x="4287" y="1663">metadata.</text>
+</g>
+<g id="draft">
+<rect class="final" x="5100" y="1495" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="5142" cy="1540" r="22"/>
+<text class="stepNo" text-anchor="middle" x="5142" y="1549">14</text>
+<text class="nodeTitle" x="5178" y="1549">Grounded Report</text>
+<text class="nodeText" x="5132" y="1599">Base research object ready for trust</text>
+<text class="nodeText" x="5132" y="1631">checks and final packaging.</text>
+</g>
+<g id="ai2">
+<rect class="ai" x="170" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="212" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="212" y="2319">15</text>
+<text class="nodeTitle" x="248" y="2319">AI Model 2</text>
+<text class="nodeText" x="202" y="2369">Secondary active route attempts an</text>
+<text class="nodeText" x="202" y="2401">independent synthesis using the same</text>
+<text class="nodeText" x="202" y="2433">prompt.</text>
+</g>
+<g id="cons">
+<rect class="verify" x="960" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="1002" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1002" y="2319">16</text>
+<text class="nodeTitle" x="1038" y="2319">Consensus Diff</text>
+<text class="nodeText" x="992" y="2369">Sentence overlap, agreement points,</text>
+<text class="nodeText" x="992" y="2401">divergent points and score</text>
+<text class="nodeText" x="992" y="2433">comparison.</text>
+</g>
+<g id="cite">
+<rect class="verify" x="1750" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="1792" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1792" y="2319">17</text>
+<text class="nodeTitle" x="1828" y="2319">Citation Extraction</text>
+<text class="nodeText" x="1782" y="2369">Find numbered citation markers and</text>
+<text class="nodeText" x="1782" y="2401">pair claims with nearby text.</text>
+</g>
+<g id="ver">
+<rect class="verify" x="2540" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="2582" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="2582" y="2319">18</text>
+<text class="nodeTitle" x="2618" y="2319">Citation Verification</text>
+<text class="nodeText" x="2572" y="2369">Check claim-source pairs as</text>
+<text class="nodeText" x="2572" y="2401">supported, partial, contradicted or</text>
+<text class="nodeText" x="2572" y="2433">unrelated.</text>
+</g>
+<g id="score">
+<rect class="score" x="3330" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="3372" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3372" y="2319">19</text>
+<text class="nodeTitle" x="3408" y="2319">Quality Signals</text>
+<text class="nodeText" x="3362" y="2369">Use model scores plus credibility,</text>
+<text class="nodeText" x="3362" y="2401">relevance, consensus, confidence and</text>
+<text class="nodeText" x="3362" y="2433">bias signals.</text>
+</g>
+<g id="graph">
+<rect class="graph" x="4120" y="2265" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="4162" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="4162" y="2319">20</text>
+<text class="nodeTitle" x="4198" y="2319">Graph Payload</text>
+<text class="nodeText" x="4152" y="2369">Use report entities, clusters and</text>
+<text class="nodeText" x="4152" y="2401">relationships for knowledge graph</text>
+<text class="nodeText" x="4152" y="2433">output.</text>
+</g>
+<g id="baseFinal">
+<rect class="final" x="5100" y="2265" width="650" height="240" rx="18"/>
+<circle class="stepCircle" cx="5142" cy="2310" r="22"/>
+<text class="stepNo" text-anchor="middle" x="5142" y="2319">21</text>
+<text class="nodeTitle" x="5178" y="2319">Base Research Package</text>
+<text class="nodeText" x="5132" y="2369">Report, sources, consensus,</text>
+<text class="nodeText" x="5132" y="2401">verifications, scores, graph data and</text>
+<text class="nodeText" x="5132" y="2433">metadata.</text>
+</g>
+<g id="deepStart">
+<rect class="deep" x="170" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="212" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="212" y="3174">22</text>
+<text class="nodeTitle" x="248" y="3174">Deep Analysis Request</text>
+<text class="nodeText" x="202" y="3224">Starts only after a query or base</text>
+<text class="nodeText" x="202" y="3256">report exists and the item is not</text>
+<text class="nodeText" x="202" y="3288">document-only.</text>
+</g>
+<g id="deepRet">
+<rect class="retrieval" x="960" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="1002" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1002" y="3174">23</text>
+<text class="nodeTitle" x="1038" y="3174">Expanded Retrieval</text>
+<text class="nodeText" x="992" y="3224">Runs a deeper source pass with a</text>
+<text class="nodeText" x="992" y="3256">larger requested evidence count.</text>
+</g>
+<g id="deepComp">
+<rect class="retrieval" x="1750" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="1792" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1792" y="3174">24</text>
+<text class="nodeTitle" x="1828" y="3174">Deep Evidence Block</text>
+<text class="nodeText" x="1782" y="3224">Compresses expanded sources with a</text>
+<text class="nodeText" x="1782" y="3256">larger context budget.</text>
+</g>
+<g id="thesisPrompt">
+<rect class="box" x="2540" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="2582" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="2582" y="3174">25</text>
+<text class="nodeTitle" x="2618" y="3174">Thesis Prompt</text>
+<text class="nodeText" x="2572" y="3224">Requests academic-style thesis JSON</text>
+<text class="nodeText" x="2572" y="3256">with citations and uncertainty</text>
+<text class="nodeText" x="2572" y="3288">handling.</text>
+</g>
+<g id="deepAi">
+<rect class="ai" x="3330" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="3372" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3372" y="3174">26</text>
+<text class="nodeTitle" x="3408" y="3174">AI Model 1 Deep Route</text>
+<text class="nodeText" x="3362" y="3224">Generates the deep thesis object from</text>
+<text class="nodeText" x="3362" y="3256">the expanded evidence package.</text>
+</g>
+<g id="deepParse">
+<rect class="box" x="4120" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="4162" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="4162" y="3174">27</text>
+<text class="nodeTitle" x="4198" y="3174">Parse Thesis</text>
+<text class="nodeText" x="4152" y="3224">Validate deep research JSON or mark</text>
+<text class="nodeText" x="4152" y="3256">the branch as failed.</text>
+</g>
+<g id="deepScore">
+<rect class="score" x="4910" y="3120" width="620" height="240" rx="18"/>
+<circle class="stepCircle" cx="4952" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="4952" y="3174">28</text>
+<text class="nodeTitle" x="4988" y="3174">Deep Scores</text>
+<text class="nodeText" x="4942" y="3224">Compute accuracy, bias, source</text>
+<text class="nodeText" x="4942" y="3256">diversity and confidence from the</text>
+<text class="nodeText" x="4942" y="3288">current report state.</text>
+</g>
+<g id="deepAttach">
+<rect class="final" x="5700" y="3120" width="680" height="240" rx="18"/>
+<circle class="stepCircle" cx="5742" cy="3165" r="22"/>
+<text class="stepNo" text-anchor="middle" x="5742" y="3174">29</text>
+<text class="nodeTitle" x="5778" y="3174">Attach Deep Result</text>
+<text class="nodeText" x="5732" y="3224">Update the research package with thesis</text>
+<text class="nodeText" x="5732" y="3256">and deep score fields.</text>
+</g>
+<g id="finalObj">
+<rect class="final" x="1620" y="3895" width="980" height="190" rx="18"/>
+<circle class="stepCircle" cx="1662" cy="3940" r="22"/>
+<text class="stepNo" text-anchor="middle" x="1662" y="3949">30</text>
+<text class="nodeTitle" x="1698" y="3949">Final Research Object</text>
+<text class="nodeText" x="1652" y="3999">Single structured research package: summary, synthesis,</text>
+<text class="nodeText" x="1652" y="4031">sources, citations, consensus, verification, scores, graph,</text>
+<text class="nodeText" x="1652" y="4063">timestamps and metadata.</text>
+</g>
+<g id="archiveReady">
+<rect class="final" x="3020" y="3895" width="980" height="190" rx="18"/>
+<circle class="stepCircle" cx="3062" cy="3940" r="22"/>
+<text class="stepNo" text-anchor="middle" x="3062" y="3949">31</text>
+<text class="nodeTitle" x="3098" y="3949">Persistence-Ready Package</text>
+<text class="nodeText" x="3052" y="3999">Ready for archive, read-only sharing, export generation and</text>
+<text class="nodeText" x="3052" y="4031">future deep-analysis retrieval.</text>
+</g>
+<path class="arrow" d="M 740 765 L 875 765"/>
+<path class="arrow" d="M 1445 765 L 1580 765"/>
+<path class="arrow" d="M 2150 765 L 2285 765"/>
+<path class="arrow" d="M 2855 765 L 2990 765"/>
+<path class="arrow" d="M 3560 765 L 3695 765"/>
+<path class="arrow" d="M 4265 765 L 4400 765"/>
+<path class="arrow" d="M 4970 765 L 5105 765"/>
+<path class="arrow" d="M 5390 880 C 5390 1187.5, 1200 1187.5, 1200 1495"/>
+<path class="arrow" d="M 1525 1615 L 1720 1615"/>
+<path class="arrow" d="M 2370 1615 L 2565 1615"/>
+<path class="arrow" d="M 3215 1615 L 3410 1615"/>
+<path class="arrow" d="M 4060 1615 L 4255 1615"/>
+<path class="arrow" d="M 4905 1615 L 5100 1615"/>
+<path class="arrow" d="M 5425 1735 C 5425 2000, 5425 2000, 5425 2265"/>
+<path class="arrow" d="M 790 2385 L 960 2385"/>
+<path class="arrow" d="M 1580 2385 L 1750 2385"/>
+<path class="arrow" d="M 2370 2385 L 2540 2385"/>
+<path class="arrow" d="M 3160 2385 L 3330 2385"/>
+<path class="arrow" d="M 3950 2385 L 4120 2385"/>
+<path class="arrow" d="M 4740 2385 L 5100 2385"/>
+<path class="arrow dashed" d="M 5425 2505 C 5425 2812.5, 6040 2812.5, 6040 3120"/>
+<path class="arrow" d="M 790 3240 L 960 3240"/>
+<path class="arrow" d="M 1580 3240 L 1750 3240"/>
+<path class="arrow" d="M 2370 3240 L 2540 3240"/>
+<path class="arrow" d="M 3160 3240 L 3330 3240"/>
+<path class="arrow" d="M 3950 3240 L 4120 3240"/>
+<path class="arrow" d="M 4740 3240 L 4910 3240"/>
+<path class="arrow" d="M 5530 3240 L 5700 3240"/>
+<path class="arrow" d="M 6040 3360 C 6040 3455, 2110 3455, 2110 3895"/>
+<path class="arrow" d="M 2600 3990 L 3020 3990"/>
+<path class="arrow dashed" d="M 1160 880 C 1160 1187.5, 1200 1187.5, 1200 1495"/>
+<path class="arrow dashed" d="M 5425 1735 C 5425 2000, 480 2000, 480 2265"/>
+<text class="noteTitle" x="5080" y="3645">Operational Notes</text>
+<text class="noteText" x="5080" y="3690">Cache hit skips live retrieval but still feeds source context into synthesis.</text>
+<text class="noteText" x="5080" y="3724">Secondary consensus and citation verification fail gracefully when unavailable.</text>
+<text class="noteText" x="5080" y="3758">Deep analysis is a continuation branch, not a replacement for the base report.</text>
+</svg>

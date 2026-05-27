@@ -410,7 +410,7 @@ export const useStore = create<AppState>()(
       removeFromArchive: (id) =>
         set((state) => {
           if (state.user) {
-            dbService.deleteReport(id);
+            dbService.deleteReport(id, state.user.id);
           }
           return { archive: state.archive.filter(item => item.id !== id) };
         }),

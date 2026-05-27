@@ -1,11 +1,238 @@
 import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
-import type { COGNAPSE_Output, GroundedSource, RetrievalTrace } from '../types';
+import type { COGNAPSE_Output, GroundedSource, RetrievalTrace, MultiModelConsensus, CitationVerification } from '../types';
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
 import { useStore } from '../store';
 
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
+const CONSENSUS_MODEL = "mixtral-8x7b-32768";          // Second model for consensus — different architecture, different perspective
+
+/* ─── Multi-Model Consensus ─── */
+
+/**
+ * Simple sentence-level similarity using word overlap (Jaccard).
+ * Returns 0–1 where 1 = identical word composition.
+ */
+function sentenceSimilarity(a: string, b: string): number {
+  const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+  let intersection = 0;
+  for (const w of wordsA) if (wordsB.has(w)) intersection++;
+  return intersection / Math.min(wordsA.size, wordsB.size);
+}
+
+/**
+ * Split text into sentences.
+ */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 10);
+}
+
+/**
+ * Diff two COGNAPSE_Output reports and produce a consensus summary.
+ * Compares:
+ *   - bottom_line & full_synthesis (sentence overlap)
+ *   - scores
+ *   - conflicts
+ *   - actionable_takeaways
+ */
+function diffReports(
+  primary: COGNAPSE_Output,
+  secondary: COGNAPSE_Output
+): MultiModelConsensus {
+  const agreementPoints: string[] = [];
+  const divergentPoints: { from: 'unique_to_a' | 'unique_to_b'; claim: string }[] = [];
+
+  // ─── Compare bottom_line ───
+  const blA = (primary.summary?.bottom_line || '').trim();
+  const blB = (secondary.summary?.bottom_line || '').trim();
+  if (blA && blB) {
+    const sim = sentenceSimilarity(blA, blB);
+    if (sim > 0.35) {
+      agreementPoints.push(blA.length > blB.length ? blB : blA);
+    } else {
+      divergentPoints.push({ from: 'unique_to_a', claim: blA });
+      divergentPoints.push({ from: 'unique_to_b', claim: blB });
+    }
+  }
+
+  // ─── Compare full_synthesis (sentence by sentence) ───
+  const synA = splitSentences(primary.summary?.full_synthesis || '');
+  const synB = splitSentences(secondary.summary?.full_synthesis || '');
+  const matchedB = new Set<number>();
+
+  for (const sA of synA) {
+    let bestMatchIdx = -1;
+    let bestScore = 0;
+    for (let i = 0; i < synB.length; i++) {
+      if (matchedB.has(i)) continue;
+      const score = sentenceSimilarity(sA, synB[i]);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatchIdx = i;
+      }
+    }
+    if (bestScore > 0.35 && bestMatchIdx >= 0) {
+      matchedB.add(bestMatchIdx);
+      // Only add as agreement point if substantial
+      if (sA.length > 30) agreementPoints.push(sA);
+    } else {
+      divergentPoints.push({ from: 'unique_to_a', claim: sA });
+    }
+  }
+
+  // Remaining unmatched B sentences
+  for (let i = 0; i < synB.length; i++) {
+    if (!matchedB.has(i) && synB[i].length > 30) {
+      divergentPoints.push({ from: 'unique_to_b', claim: synB[i] });
+    }
+  }
+
+  // ─── Compare scores ───
+  const scoreComparison: { metric: string; model_a: number | string; model_b: number | string }[] = [];
+  if (primary.scores && secondary.scores) {
+    scoreComparison.push({
+      metric: 'Overall Credibility',
+      model_a: primary.scores.overall_credibility ?? 'N/A',
+      model_b: secondary.scores.overall_credibility ?? 'N/A',
+    });
+    scoreComparison.push({
+      metric: 'Overall Relevance',
+      model_a: primary.scores.overall_relevance ?? 'N/A',
+      model_b: secondary.scores.overall_relevance ?? 'N/A',
+    });
+    scoreComparison.push({
+      metric: 'Evidence Consensus',
+      model_a: primary.scores.evidence_consensus ?? 'N/A',
+      model_b: secondary.scores.evidence_consensus ?? 'N/A',
+    });
+    scoreComparison.push({
+      metric: 'Confidence Label',
+      model_a: primary.scores.confidence_label ?? 'N/A',
+      model_b: secondary.scores.confidence_label ?? 'N/A',
+    });
+  }
+
+  // ─── Calculate overall agreement ───
+  const totalSentences = synA.length + synB.length;
+  const totalDivergent = divergentPoints.length;
+  const agreementPercent = totalSentences > 0
+    ? Math.round(((totalSentences - totalDivergent) / totalSentences) * 100)
+    : 50;
+
+  return {
+    overall_agreement: Math.min(100, Math.max(0, agreementPercent)),
+    model_a: { provider: 'Groq', model: 'llama-3.3-70b-versatile' },
+    model_b: { provider: 'Groq', model: CONSENSUS_MODEL },
+    agreement_points: agreementPoints.slice(0, 8), // cap at 8 for readability
+    divergent_points: divergentPoints.slice(0, 10), // cap at 10
+    score_comparison: scoreComparison,
+  };
+}
+
+/* ─── Citation Verification ─── */
+
+/**
+ * Extract (citation → claim) pairs from synthesis text.
+ * Each `[N]` marker is paired with the text immediately before it
+ * (up to the previous sentence boundary or 200 chars max).
+ */
+function extractCitations(synthesis: string): { sourceId: number; claimText: string }[] {
+  const pairs: { sourceId: number; claimText: string }[] = [];
+  // Matches [N], [N, M], [N,M] patterns
+  const regex = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
+  let match: RegExpExecArray | null;
+  let lastCitationEnd = 0;
+
+  while ((match = regex.exec(synthesis)) !== null) {
+    const ids = match[1].split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+    const matchStart = match.index;
+    const matchEnd = matchStart + match[0].length;
+
+    // Extract claim: text from last sentence boundary before the citation
+    const searchStart = Math.max(lastCitationEnd, matchStart - 200);
+    const preText = synthesis.slice(searchStart, matchStart).trim();
+    // Try to start from the last sentence boundary
+    const sentenceBoundary = preText.lastIndexOf('. ');
+    const claimText = sentenceBoundary >= 0
+      ? preText.slice(sentenceBoundary + 2).trim()
+      : preText.slice(-150).trim(); // fallback: last 150 chars
+
+    if (claimText.length > 5) {
+      for (const id of ids) {
+        pairs.push({ sourceId: id, claimText });
+      }
+    }
+
+    lastCitationEnd = matchEnd;
+  }
+
+  return pairs;
+}
+
+/**
+ * Batch-verify citations via Groq (secondary account).
+ * Sends all (claim, source_snippet) pairs in one prompt and returns verdicts.
+ * Falls back gracefully on failure.
+ */
+async function verifyCitations(
+  citations: { sourceId: number; claimText: string }[],
+  sources: { id: number; snippet: string; title: string; domain: string }[],
+  abortSignal?: AbortSignal
+): Promise<CitationVerification[]> {
+  if (citations.length === 0 || sources.length === 0) return [];
+
+  // Build a lookup of sourceId → snippet
+  const sourceMap = new Map<number, string>();
+  for (const s of sources) {
+    sourceMap.set(s.id, s.snippet || s.key_finding || '');
+  }
+
+  // Only verify citations where we actually have the source
+  const verifiable = citations.filter(c => sourceMap.has(c.sourceId) && sourceMap.get(c.sourceId)!.length > 10);
+  if (verifiable.length === 0) return [];
+
+  // Build the batch prompt
+  const pairsText = verifiable.map((c, i) => {
+    const snippet = sourceMap.get(c.sourceId)!.substring(0, 500); // trim to 500 chars
+    return `PAIR ${i + 1}:\nCLAIM: "${c.claimText}"\nSOURCE SNIPPET: "${snippet}"\n`;
+  }).join('\n');
+
+  const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE SNIPPETS, determine for each pair whether the source supports the claim.
+
+For each pair, return:
+- verdict: "supported" (source clearly supports the claim) | "partial" (source partially supports but missing key details) | "contradicted" (source contradicts the claim) | "unrelated" (source doesn't address the claim)
+- confidence: 0.0 to 1.0
+- explanation: One brief sentence explaining why
+
+Respond with ONLY a valid JSON array of objects (no markdown, no backticks). Each object must have: "verdict", "confidence", "explanation"
+
+${pairsText}`;
+
+  try {
+    const raw = await callCloudAI(verifierPrompt, true, CONSENSUS_MODEL, abortSignal, 'secondary', CONSENSUS_MODEL);
+    const results = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    const arr = Array.isArray(results) ? results : (results.verifications || results.results || []);
+
+    return arr.map((r: any, i: number) => ({
+      source_id: verifiable[i]?.sourceId ?? 0,
+      claim: verifiable[i]?.claimText ?? '',
+      verdict: ['supported', 'partial', 'contradicted', 'unrelated'].includes(r.verdict)
+        ? r.verdict
+        : 'unrelated',
+      confidence: typeof r.confidence === 'number' ? Math.max(0, Math.min(1, r.confidence)) : 0,
+      explanation: r.explanation || 'No explanation provided',
+    }));
+  } catch (e) {
+    console.warn('Citation verification failed:', e);
+    return [];
+  }
+}
 
 export async function executeCognapseChat(
   query: string,
@@ -118,6 +345,68 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     // Attach retrieval metadata
     if (retrievalTrace) {
       (parsed as COGNAPSE_Output)._retrieval_trace = retrievalTrace;
+    }
+
+    addReasoningStep('Running multi-model consensus validation...');
+
+    // ─── PHASE 3: SECOND MODEL SYNTHESIS (Multi-Model Consensus) ───
+    try {
+      const secondaryResponse = await callCloudAI(
+        prompt,
+        true,
+        CONSENSUS_MODEL,
+        abortSignal,
+        'secondary',     // use GROQ_API_KEY_2
+        CONSENSUS_MODEL  // force Mixtral
+      );
+
+      const secondaryParsed = typeof secondaryResponse === 'string'
+        ? JSON.parse(secondaryResponse)
+        : secondaryResponse;
+
+      // Diff the two reports
+      const consensus = diffReports(parsed, secondaryParsed);
+      (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
+
+      addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);
+    } catch (e) {
+      // Second model is optional — if it fails, proceed with single-model report
+      console.warn('Multi-model consensus unavailable (secondary model failed):', e);
+      addReasoningStep('Multi-model consensus unavailable — proceeding with single-model report');
+    }
+
+    addReasoningStep('Verifying citations against source material...');
+
+    // ─── PHASE 4: CITATION VERIFICATION ───
+    if (groundedSources.length > 0 && parsed.summary?.full_synthesis) {
+      try {
+        const citationPairs = extractCitations(parsed.summary.full_synthesis);
+
+        if (citationPairs.length > 0) {
+          const verifications = await verifyCitations(
+            citationPairs,
+            groundedSources.map(s => ({
+              id: s.id,
+              snippet: s.snippet || '',
+              key_finding: s.key_finding || '',
+              title: s.title,
+              domain: s.domain,
+            })),
+            abortSignal
+          );
+
+          if (verifications.length > 0) {
+            (parsed as COGNAPSE_Output).citation_verifications = verifications;
+            const supported = verifications.filter(v => v.verdict === 'supported').length;
+            const partial = verifications.filter(v => v.verdict === 'partial').length;
+            const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
+            addReasoningStep(`Citations: ${supported} verified, ${partial} partial, ${failed} unsupported`);
+          }
+        }
+      } catch (e) {
+        console.warn('Citation verification unavailable:', e);
+        addReasoningStep('Citation verification unavailable — proceeding without claim-level checks');
+      }
     }
 
     addReasoningStep('Finalizing report structure...');

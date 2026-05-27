@@ -1,0 +1,551 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="3600" viewBox="0 0 2600 3600" role="img" aria-labelledby="title desc">
+  <title id="title">COGNAPSE Enterprise Research Pipeline Architecture</title>
+  <desc id="desc">A single unified enterprise architecture diagram showing the complete COGNAPSE request lifecycle, AI orchestration, retrieval, verification, scoring, storage, rendering, sharing, and export systems.</desc>
+
+  <defs>
+    <style>
+      .bg { fill: #f7f8fa; }
+      .paper { fill: #ffffff; stroke: #cfd6df; stroke-width: 2; }
+      .layer { fill: #fbfcfd; stroke: #c7d0da; stroke-width: 2; }
+      .layer-alt { fill: #f4f6f8; stroke: #c7d0da; stroke-width: 2; }
+      .title { font-family: Inter, Arial, sans-serif; font-size: 48px; font-weight: 900; letter-spacing: 8px; fill: #101820; }
+      .subtitle { font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 4px; fill: #52606d; }
+      .layer-title { font-family: Inter, Arial, sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 4px; fill: #111827; }
+      .layer-note { font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; fill: #667085; }
+      .node-title { font-family: Inter, Arial, sans-serif; font-size: 19px; font-weight: 900; fill: #17202a; }
+      .node-text { font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #52606d; }
+      .small { font-family: JetBrains Mono, Consolas, monospace; font-size: 12px; font-weight: 700; fill: #697586; }
+      .tag { font-family: JetBrains Mono, Consolas, monospace; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; fill: #344054; }
+      .box { fill: #ffffff; stroke: #aeb9c6; stroke-width: 1.8; rx: 8; }
+      .box-front { fill: #ffffff; stroke: #7d8a99; stroke-width: 2.2; rx: 8; }
+      .box-ai { fill: #f8fafc; stroke: #586574; stroke-width: 2.2; rx: 8; }
+      .box-det { fill: #ffffff; stroke: #9aa6b2; stroke-width: 1.8; rx: 4; }
+      .box-store { fill: #f3f6f9; stroke: #6f7d8c; stroke-width: 2.2; rx: 6; }
+      .box-score { fill: #ffffff; stroke: #637381; stroke-width: 2; rx: 6; }
+      .box-verify { fill: #ffffff; stroke: #7a8695; stroke-width: 2; rx: 6; }
+      .box-output { fill: #ffffff; stroke: #111827; stroke-width: 2.4; rx: 8; }
+      .muted-line { stroke: #aeb9c6; stroke-width: 2; fill: none; }
+      .flow { stroke: #111827; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .flow-soft { stroke: #667085; stroke-width: 2.2; fill: none; marker-end: url(#arrow-soft); }
+      .flow-dashed { stroke: #667085; stroke-width: 2.2; fill: none; stroke-dasharray: 8 8; marker-end: url(#arrow-soft); }
+      .flow-return { stroke: #344054; stroke-width: 2.4; fill: none; stroke-dasharray: 3 7; marker-end: url(#arrow); }
+      .badge { fill: #eef2f6; stroke: #c7d0da; stroke-width: 1; rx: 12; }
+      .rail { stroke: #d0d5dd; stroke-width: 4; fill: none; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#111827" />
+    </marker>
+    <marker id="arrow-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#667085" />
+    </marker>
+  </defs>
+
+  <rect class="bg" width="2600" height="3600" />
+  <rect class="paper" x="60" y="60" width="2480" height="3480" rx="22" />
+
+  <g id="header">
+    <text class="title" x="130" y="145">COGNAPSE</text>
+    <text class="subtitle" x="134" y="188">ENTERPRISE RESEARCH PIPELINE / UNIFIED INTELLIGENCE INFRASTRUCTURE BLUEPRINT</text>
+    <line x1="130" y1="225" x2="2470" y2="225" class="muted-line" />
+    <g transform="translate(1950 118)">
+      <rect class="badge" x="0" y="0" width="480" height="58" />
+      <text class="tag" x="26" y="24">REQUEST FLOW: SOLID</text>
+      <text class="tag" x="26" y="44">RESPONSE / PERSISTENCE: DASHED</text>
+    </g>
+  </g>
+
+  <!-- Layer containers -->
+  <g id="layers">
+    <rect class="layer" x="110" y="280" width="2380" height="255" rx="14" />
+    <rect class="layer-alt" x="110" y="565" width="2380" height="330" rx="14" />
+    <rect class="layer" x="110" y="925" width="2380" height="350" rx="14" />
+    <rect class="layer-alt" x="110" y="1305" width="2380" height="255" rx="14" />
+    <rect class="layer" x="110" y="1590" width="2380" height="360" rx="14" />
+    <rect class="layer-alt" x="110" y="1980" width="2380" height="255" rx="14" />
+    <rect class="layer" x="110" y="2265" width="2380" height="330" rx="14" />
+    <rect class="layer-alt" x="110" y="2625" width="2380" height="255" rx="14" />
+    <rect class="layer" x="110" y="2910" width="2380" height="270" rx="14" />
+    <rect class="layer-alt" x="110" y="3210" width="2380" height="250" rx="14" />
+  </g>
+
+  <!-- Left lifecycle rail -->
+  <path class="rail" d="M170 325 L170 3415" />
+  <circle cx="170" cy="405" r="12" fill="#111827" />
+  <circle cx="170" cy="725" r="12" fill="#111827" />
+  <circle cx="170" cy="1100" r="12" fill="#111827" />
+  <circle cx="170" cy="1430" r="12" fill="#111827" />
+  <circle cx="170" cy="1770" r="12" fill="#111827" />
+  <circle cx="170" cy="2110" r="12" fill="#111827" />
+  <circle cx="170" cy="2430" r="12" fill="#111827" />
+  <circle cx="170" cy="2750" r="12" fill="#111827" />
+  <circle cx="170" cy="3050" r="12" fill="#111827" />
+  <circle cx="170" cy="3330" r="12" fill="#111827" />
+
+  <!-- Layer labels -->
+  <g id="layer-labels">
+    <text class="layer-title" x="210" y="325">01 USER INTERACTION LAYER</text>
+    <text class="layer-note" x="210" y="350">ENTRY POINTS / USER INTENT / HUMAN ACTIONS</text>
+    <text class="layer-title" x="210" y="610">02 FRONTEND ORCHESTRATION LAYER</text>
+    <text class="layer-note" x="210" y="635">REACT CONTROL PLANE / STATE / REPORT UI / GRAPH UI</text>
+    <text class="layer-title" x="210" y="970">03 RETRIEVAL AND PROCESSING LAYER</text>
+    <text class="layer-note" x="210" y="995">RETRIEVAL-FIRST PIPELINE / CACHE / FILTERING / SOURCE PREP</text>
+    <text class="layer-title" x="210" y="1350">04 EXTERNAL SEARCH LAYER</text>
+    <text class="layer-note" x="210" y="1375">REMOTE KNOWLEDGE INDEXES / WEB SEARCH ADAPTERS</text>
+    <text class="layer-title" x="210" y="1635">05 AI ORCHESTRATION LAYER</text>
+    <text class="layer-note" x="210" y="1660">MODEL ROUTING / PARALLEL SWARM / FALLBACK CHAIN / DEEP BRANCH</text>
+    <text class="layer-title" x="210" y="2025">06 MODEL LAYER</text>
+    <text class="layer-note" x="210" y="2050">CLOUD AND LOCAL INFERENCE PROVIDERS</text>
+    <text class="layer-title" x="210" y="2310">07 CONSENSUS, VERIFICATION AND SCORING LAYER</text>
+    <text class="layer-note" x="210" y="2335">DETERMINISTIC QUALITY CONTROL / CITATION / CONTRADICTION / CONFIDENCE</text>
+    <text class="layer-title" x="210" y="2670">08 KNOWLEDGE GRAPH LAYER</text>
+    <text class="layer-note" x="210" y="2695">ENTITY EXTRACTION / CLUSTERS / RELATIONSHIPS / PHYSICSMAP PAYLOAD</text>
+    <text class="layer-title" x="210" y="2955">09 STORAGE AND MEMORY LAYER</text>
+    <text class="layer-note" x="210" y="2980">FIREBASE / LOCAL CACHE / SNAPSHOTS / STACK / HISTORY</text>
+    <text class="layer-title" x="210" y="3255">10 OUTPUT AND RESPONSE LAYER</text>
+    <text class="layer-note" x="210" y="3280">FINAL RENDERING / EXPORT / SHARING / RESPONSE DELIVERY</text>
+  </g>
+
+  <!-- Helper node function manually expanded -->
+  <!-- 01 User Interaction -->
+  <g id="user-layer">
+    <rect class="box-front" x="360" y="375" width="270" height="92" />
+    <text class="node-title" x="385" y="410">Standard Research</text>
+    <text class="node-text" x="385" y="438">primary query submission</text>
+    <text class="small" x="385" y="460">query -> research lifecycle</text>
+
+    <rect class="box-front" x="675" y="375" width="270" height="92" />
+    <text class="node-title" x="700" y="410">Deep Research</text>
+    <text class="node-text" x="700" y="438">long-form thesis branch</text>
+    <text class="small" x="700" y="460">4-stage analysis mode</text>
+
+    <rect class="box-front" x="990" y="375" width="270" height="92" />
+    <text class="node-title" x="1015" y="410">Follow-up Chat</text>
+    <text class="node-text" x="1015" y="438">contextual report Q/A</text>
+    <text class="small" x="1015" y="460">current report memory</text>
+
+    <rect class="box-front" x="1305" y="375" width="270" height="92" />
+    <text class="node-title" x="1330" y="410">PhysicsMap Interaction</text>
+    <text class="node-text" x="1330" y="438">node exploration</text>
+    <text class="small" x="1330" y="460">sub-query expansion</text>
+
+    <rect class="box-front" x="1620" y="375" width="270" height="92" />
+    <text class="node-title" x="1645" y="410">Document Upload</text>
+    <text class="node-text" x="1645" y="438">file/source ingestion path</text>
+    <text class="small" x="1645" y="460">extract -> normalize</text>
+
+    <rect class="box-front" x="1935" y="375" width="270" height="92" />
+    <text class="node-title" x="1960" y="410">Export Actions</text>
+    <text class="node-text" x="1960" y="438">PDF / premium dossier</text>
+    <text class="small" x="1960" y="460">download / package</text>
+  </g>
+
+  <!-- 02 Frontend Orchestration -->
+  <g id="frontend-layer">
+    <rect class="box-front" x="300" y="680" width="285" height="108" />
+    <text class="node-title" x="325" y="716">MainContent.tsx</text>
+    <text class="node-text" x="325" y="744">query controller</text>
+    <text class="small" x="325" y="768">handleSearch / handleSubSearch</text>
+
+    <rect class="box-front" x="625" y="680" width="285" height="108" />
+    <text class="node-title" x="650" y="716">Investigation Stack</text>
+    <text class="node-text" x="650" y="744">active research trail</text>
+    <text class="small" x="650" y="768">push / pop / clear</text>
+
+    <rect class="box-front" x="950" y="680" width="285" height="108" />
+    <text class="node-title" x="975" y="716">ReportView</text>
+    <text class="node-text" x="975" y="744">report rendering shell</text>
+    <text class="small" x="975" y="768">share / read-only guard</text>
+
+    <rect class="box-front" x="1275" y="680" width="285" height="108" />
+    <text class="node-title" x="1300" y="716">PhysicsMap</text>
+    <text class="node-text" x="1300" y="744">graph visualization</text>
+    <text class="small" x="1300" y="768">nodes / edges / sub_query</text>
+
+    <rect class="box-front" x="1600" y="680" width="285" height="108" />
+    <text class="node-title" x="1625" y="716">ThoughtReplayEngine</text>
+    <text class="node-text" x="1625" y="744">reasoning timeline UI</text>
+    <text class="small" x="1625" y="768">owner-only report view</text>
+
+    <rect class="box-front" x="1925" y="680" width="285" height="108" />
+    <text class="node-title" x="1950" y="716">PDF Generator</text>
+    <text class="node-text" x="1950" y="744">HTML -> PDF dossier</text>
+    <text class="small" x="1950" y="768">escaped content render</text>
+
+    <rect class="box-front" x="950" y="805" width="285" height="58" />
+    <text class="node-title" x="975" y="840">ResearchScoreCard</text>
+  </g>
+
+  <!-- 03 Retrieval & Processing -->
+  <g id="retrieval-layer">
+    <rect class="box-det" x="300" y="1040" width="250" height="92" />
+    <text class="node-title" x="325" y="1076">searchService.ts</text>
+    <text class="node-text" x="325" y="1104">retrieval adapter plane</text>
+
+    <rect class="box-det" x="585" y="1040" width="250" height="92" />
+    <text class="node-title" x="610" y="1076">Query Normalization</text>
+    <text class="node-text" x="610" y="1104">intent / terms / scope</text>
+
+    <rect class="box-store" x="870" y="1040" width="250" height="92" />
+    <text class="node-title" x="895" y="1076">Cache Lookup</text>
+    <text class="node-text" x="895" y="1104">hit / stale / miss</text>
+
+    <rect class="box-det" x="1155" y="1040" width="250" height="92" />
+    <text class="node-title" x="1180" y="1076">Retrieval Trace</text>
+    <text class="node-text" x="1180" y="1104">source provenance log</text>
+
+    <rect class="box-det" x="1440" y="1040" width="250" height="92" />
+    <text class="node-title" x="1465" y="1076">Filtering</text>
+    <text class="node-text" x="1465" y="1104">noise / invalid URLs</text>
+
+    <rect class="box-det" x="1725" y="1040" width="250" height="92" />
+    <text class="node-title" x="1750" y="1076">Deduplication</text>
+    <text class="node-text" x="1750" y="1104">canonical source set</text>
+
+    <rect class="box-det" x="2010" y="1040" width="250" height="92" />
+    <text class="node-title" x="2035" y="1076">Ranking</text>
+    <text class="node-text" x="2035" y="1104">relevance / credibility</text>
+
+    <rect class="box-det" x="870" y="1160" width="535" height="76" />
+    <text class="node-title" x="895" y="1194">Source Compression</text>
+    <text class="node-text" x="895" y="1220">compact evidence payload for AI inference and scoring</text>
+
+    <rect class="box-det" x="1440" y="1160" width="535" height="76" />
+    <text class="node-title" x="1465" y="1194">Cache Decision Point</text>
+    <text class="node-text" x="1465" y="1220">cache hit returns directly; miss triggers external retrieval</text>
+  </g>
+
+  <!-- 04 External Search -->
+  <g id="external-layer">
+    <rect class="box" x="505" y="1405" width="340" height="92" />
+    <text class="node-title" x="535" y="1442">Serper API</text>
+    <text class="node-text" x="535" y="1470">Google-style search results</text>
+
+    <rect class="box" x="1030" y="1405" width="340" height="92" />
+    <text class="node-title" x="1060" y="1442">Brave Search</text>
+    <text class="node-text" x="1060" y="1470">independent web index</text>
+
+    <rect class="box" x="1555" y="1405" width="340" height="92" />
+    <text class="node-title" x="1585" y="1442">Tavily API</text>
+    <text class="node-text" x="1585" y="1470">research-oriented retrieval</text>
+
+    <rect class="box-det" x="2080" y="1405" width="250" height="92" />
+    <text class="node-title" x="2110" y="1442">Fallback Search</text>
+    <text class="node-text" x="2110" y="1470">provider failover chain</text>
+  </g>
+
+  <!-- 05 AI Orchestration -->
+  <g id="ai-orchestration-layer">
+    <rect class="box-ai" x="300" y="1710" width="320" height="112" />
+    <text class="node-title" x="325" y="1748">executeCognapseResearch()</text>
+    <text class="node-text" x="325" y="1778">standard intelligence synthesis</text>
+    <text class="small" x="325" y="1802">primary report schema</text>
+
+    <rect class="box-ai" x="660" y="1710" width="320" height="112" />
+    <text class="node-title" x="685" y="1748">executeDeepResearch()</text>
+    <text class="node-text" x="685" y="1778">deep thesis branch</text>
+    <text class="small" x="685" y="1802">abstract / findings / conclusion</text>
+
+    <rect class="box-ai" x="1020" y="1710" width="320" height="112" />
+    <text class="node-title" x="1045" y="1748">callCloudAI()</text>
+    <text class="node-text" x="1045" y="1778">secure API inference</text>
+    <text class="small" x="1045" y="1802">serverless route boundary</text>
+
+    <rect class="box-ai" x="1380" y="1710" width="320" height="112" />
+    <text class="node-title" x="1405" y="1748">runSwarm()</text>
+    <text class="node-text" x="1405" y="1778">parallel model ensemble</text>
+    <text class="small" x="1405" y="1802">async branch fan-out</text>
+
+    <rect class="box-ai" x="1740" y="1710" width="320" height="112" />
+    <text class="node-title" x="1765" y="1748">AI Routing</text>
+    <text class="node-text" x="1765" y="1778">provider selection</text>
+    <text class="small" x="1765" y="1802">cost / latency / availability</text>
+
+    <rect class="box-ai" x="2100" y="1710" width="250" height="112" />
+    <text class="node-title" x="2125" y="1748">Fallback</text>
+    <text class="node-text" x="2125" y="1778">ordered failover</text>
+    <text class="small" x="2125" y="1802">cloud -> local -> cached</text>
+
+    <rect class="box-det" x="660" y="1848" width="680" height="64" />
+    <text class="node-title" x="685" y="1888">Structured Prompt Assembly + Schema Enforcement</text>
+
+    <rect class="box-det" x="1380" y="1848" width="680" height="64" />
+    <text class="node-title" x="1405" y="1888">Async Orchestration + Error Recovery + Timeout Guard</text>
+  </g>
+
+  <!-- 06 Model Layer -->
+  <g id="model-layer">
+    <rect class="box-ai" x="390" y="2075" width="360" height="92" />
+    <text class="node-title" x="420" y="2112">Groq Llama 3.3 70B</text>
+    <text class="node-text" x="420" y="2140">fast cloud reasoning model</text>
+
+    <rect class="box-ai" x="805" y="2075" width="360" height="92" />
+    <text class="node-title" x="835" y="2112">Mixtral 8x7B</text>
+    <text class="node-text" x="835" y="2140">ensemble / alternative inference</text>
+
+    <rect class="box-ai" x="1220" y="2075" width="360" height="92" />
+    <text class="node-title" x="1250" y="2112">Ollama Local</text>
+    <text class="node-text" x="1250" y="2140">desktop fallback / private local AI</text>
+
+    <rect class="box-ai" x="1635" y="2075" width="360" height="92" />
+    <text class="node-title" x="1665" y="2112">Gemini Flash</text>
+    <text class="node-text" x="1665" y="2140">primary web synthesis provider</text>
+
+    <rect class="box-det" x="2050" y="2075" width="300" height="92" />
+    <text class="node-title" x="2080" y="2112">Model Output Parser</text>
+    <text class="node-text" x="2080" y="2140">JSON repair / validation</text>
+  </g>
+
+  <!-- 07 Consensus / Verification / Scoring -->
+  <g id="verification-scoring-layer">
+    <rect class="box-verify" x="300" y="2380" width="285" height="92" />
+    <text class="node-title" x="325" y="2416">Multi-Model Consensus</text>
+    <text class="node-text" x="325" y="2444">ensemble agreement pass</text>
+
+    <rect class="box-verify" x="625" y="2380" width="285" height="92" />
+    <text class="node-title" x="650" y="2416">Semantic Overlap</text>
+    <text class="node-text" x="650" y="2444">meaning-level comparison</text>
+
+    <rect class="box-verify" x="950" y="2380" width="285" height="92" />
+    <text class="node-title" x="975" y="2416">Jaccard Similarity</text>
+    <text class="node-text" x="975" y="2444">token-set agreement metric</text>
+
+    <rect class="box-verify" x="1275" y="2380" width="285" height="92" />
+    <text class="node-title" x="1300" y="2416">Contradiction Detection</text>
+    <text class="node-text" x="1300" y="2444">claim conflict analysis</text>
+
+    <rect class="box-verify" x="1600" y="2380" width="285" height="92" />
+    <text class="node-title" x="1625" y="2416">Citation Extraction</text>
+    <text class="node-text" x="1625" y="2444">source references from output</text>
+
+    <rect class="box-verify" x="1925" y="2380" width="285" height="92" />
+    <text class="node-title" x="1950" y="2416">Citation Verification</text>
+    <text class="node-text" x="1950" y="2444">URL / title / domain checks</text>
+
+    <rect class="box-score" x="300" y="2498" width="285" height="68" />
+    <text class="node-title" x="325" y="2538">Semantic Relevance</text>
+    <rect class="box-score" x="625" y="2498" width="285" height="68" />
+    <text class="node-title" x="650" y="2538">Semantic Consensus</text>
+    <rect class="box-score" x="950" y="2498" width="285" height="68" />
+    <text class="node-title" x="975" y="2538">Diversity Score</text>
+    <rect class="box-score" x="1275" y="2498" width="285" height="68" />
+    <text class="node-title" x="1300" y="2538">Bias Score</text>
+    <rect class="box-score" x="1600" y="2498" width="285" height="68" />
+    <text class="node-title" x="1625" y="2538">Confidence Interval</text>
+    <rect class="box-score" x="1925" y="2498" width="285" height="68" />
+    <text class="node-title" x="1950" y="2538">Domain Credibility DB</text>
+
+    <rect class="box-score" x="760" y="2578" width="990" height="52" />
+    <text class="node-title" x="795" y="2612">Weighted Quality Formula -> Credibility, Relevance, Consensus, Confidence Label, Risk Notes</text>
+  </g>
+
+  <!-- 08 Knowledge Graph -->
+  <g id="knowledge-graph-layer">
+    <rect class="box-det" x="360" y="2740" width="320" height="92" />
+    <text class="node-title" x="390" y="2776">Entity Extraction</text>
+    <text class="node-text" x="390" y="2804">concepts / actors / systems</text>
+
+    <rect class="box-det" x="730" y="2740" width="320" height="92" />
+    <text class="node-title" x="760" y="2776">Semantic Clusters</text>
+    <text class="node-text" x="760" y="2804">topic grouping and density</text>
+
+    <rect class="box-det" x="1100" y="2740" width="320" height="92" />
+    <text class="node-title" x="1130" y="2776">Relationship Mapping</text>
+    <text class="node-text" x="1130" y="2804">nodes / edges / labels</text>
+
+    <rect class="box-det" x="1470" y="2740" width="320" height="92" />
+    <text class="node-title" x="1500" y="2776">Conflict Mapping</text>
+    <text class="node-text" x="1500" y="2804">contested claims as graph edges</text>
+
+    <rect class="box-det" x="1840" y="2740" width="360" height="92" />
+    <text class="node-title" x="1870" y="2776">PhysicsMap Generation</text>
+    <text class="node-text" x="1870" y="2804">central node + branches + sub_query</text>
+  </g>
+
+  <!-- 09 Storage -->
+  <g id="storage-layer">
+    <rect class="box-store" x="300" y="3020" width="285" height="92" />
+    <text class="node-title" x="325" y="3056">Firestore</text>
+    <text class="node-text" x="325" y="3084">reports / shares / settings</text>
+
+    <rect class="box-store" x="625" y="3020" width="285" height="92" />
+    <text class="node-title" x="650" y="3056">Local Archive</text>
+    <text class="node-text" x="650" y="3084">client cache and fallback</text>
+
+    <rect class="box-store" x="950" y="3020" width="285" height="92" />
+    <text class="node-title" x="975" y="3056">Cache</text>
+    <text class="node-text" x="975" y="3084">retrieval / shared records</text>
+
+    <rect class="box-store" x="1275" y="3020" width="285" height="92" />
+    <text class="node-title" x="1300" y="3056">Research Snapshots</text>
+    <text class="node-text" x="1300" y="3084">immutable report payloads</text>
+
+    <rect class="box-store" x="1600" y="3020" width="285" height="92" />
+    <text class="node-title" x="1625" y="3056">Scoring History</text>
+    <text class="node-text" x="1625" y="3084">quality and export metadata</text>
+
+    <rect class="box-store" x="1925" y="3020" width="285" height="92" />
+    <text class="node-title" x="1950" y="3056">Investigation Stack</text>
+    <text class="node-text" x="1950" y="3084">active memory trail</text>
+  </g>
+
+  <!-- 10 Output -->
+  <g id="output-layer">
+    <rect class="box-output" x="260" y="3320" width="255" height="82" />
+    <text class="node-title" x="290" y="3354">Final Report</text>
+    <text class="node-text" x="290" y="3382">structured synthesis</text>
+
+    <rect class="box-output" x="555" y="3320" width="255" height="82" />
+    <text class="node-title" x="585" y="3354">Score Cards</text>
+    <text class="node-text" x="585" y="3382">credibility / relevance</text>
+
+    <rect class="box-output" x="850" y="3320" width="255" height="82" />
+    <text class="node-title" x="880" y="3354">Confidence Indicators</text>
+    <text class="node-text" x="880" y="3382">risk / consensus</text>
+
+    <rect class="box-output" x="1145" y="3320" width="255" height="82" />
+    <text class="node-title" x="1175" y="3354">Citations</text>
+    <text class="node-text" x="1175" y="3382">sources / direct access</text>
+
+    <rect class="box-output" x="1440" y="3320" width="255" height="82" />
+    <text class="node-title" x="1470" y="3354">Consensus Panel</text>
+    <text class="node-text" x="1470" y="3382">agreement evidence</text>
+
+    <rect class="box-output" x="1735" y="3320" width="255" height="82" />
+    <text class="node-title" x="1765" y="3354">Evidence Explorer</text>
+    <text class="node-text" x="1765" y="3382">map / references</text>
+
+    <rect class="box-output" x="2030" y="3320" width="255" height="82" />
+    <text class="node-title" x="2060" y="3354">PDF Export</text>
+    <text class="node-text" x="2060" y="3382">premium dossier</text>
+
+    <rect class="box-output" x="2285" y="3320" width="150" height="82" />
+    <text class="node-title" x="2310" y="3354">Share</text>
+    <text class="node-text" x="2310" y="3382">read-only link</text>
+  </g>
+
+  <!-- Core flow arrows -->
+  <g id="request-flow">
+    <path class="flow" d="M495 467 C495 540 442 610 442 680" />
+    <path class="flow" d="M810 467 C810 540 768 610 768 680" />
+    <path class="flow" d="M1125 467 C1125 550 1093 610 1093 680" />
+    <path class="flow" d="M1440 467 C1440 550 1418 610 1418 680" />
+    <path class="flow" d="M2070 467 C2070 560 2068 610 2068 680" />
+
+    <path class="flow" d="M442 788 C442 900 425 955 425 1040" />
+    <path class="flow-soft" d="M768 788 C768 900 710 955 710 1040" />
+    <path class="flow-soft" d="M1093 788 C1093 900 995 955 995 1040" />
+    <path class="flow-soft" d="M1418 788 C1418 900 1280 955 1280 1040" />
+    <path class="flow-soft" d="M2068 788 C2068 900 2135 955 2135 1040" />
+
+    <path class="flow" d="M550 1086 L585 1086" />
+    <path class="flow" d="M835 1086 L870 1086" />
+    <path class="flow" d="M1120 1086 L1155 1086" />
+    <path class="flow" d="M1405 1086 L1440 1086" />
+    <path class="flow" d="M1690 1086 L1725 1086" />
+    <path class="flow" d="M1975 1086 L2010 1086" />
+    <path class="flow-soft" d="M995 1132 C995 1142 995 1150 995 1160" />
+    <path class="flow-soft" d="M1280 1132 C1280 1145 1180 1148 1138 1160" />
+    <path class="flow-soft" d="M1565 1132 C1565 1145 1565 1148 1565 1160" />
+
+    <path class="flow-dashed" d="M995 1236 C995 1308 675 1340 675 1405" />
+    <path class="flow-dashed" d="M995 1236 C995 1308 1200 1340 1200 1405" />
+    <path class="flow-dashed" d="M1565 1236 C1565 1308 1725 1340 1725 1405" />
+    <path class="flow-dashed" d="M2260 1086 C2325 1185 2260 1305 2205 1405" />
+
+    <path class="flow" d="M675 1497 C675 1580 460 1635 460 1710" />
+    <path class="flow" d="M1200 1497 C1200 1580 1180 1635 1180 1710" />
+    <path class="flow" d="M1725 1497 C1725 1580 1540 1635 1540 1710" />
+    <path class="flow-soft" d="M2205 1497 C2205 1580 2225 1635 2225 1710" />
+
+    <path class="flow" d="M620 1766 L660 1766" />
+    <path class="flow" d="M980 1766 L1020 1766" />
+    <path class="flow" d="M1340 1766 L1380 1766" />
+    <path class="flow" d="M1700 1766 L1740 1766" />
+    <path class="flow" d="M2060 1766 L2100 1766" />
+    <path class="flow-soft" d="M1000 1822 L1000 1848" />
+    <path class="flow-soft" d="M1540 1822 L1540 1848" />
+
+    <path class="flow" d="M1180 1912 C1180 1980 570 2015 570 2075" />
+    <path class="flow" d="M1180 1912 C1180 1980 985 2015 985 2075" />
+    <path class="flow" d="M1540 1912 C1540 1980 1400 2015 1400 2075" />
+    <path class="flow" d="M1540 1912 C1540 1980 1815 2015 1815 2075" />
+    <path class="flow-soft" d="M1995 2121 L2050 2121" />
+
+    <path class="flow" d="M2200 2167 C2200 2270 442 2288 442 2380" />
+    <path class="flow-soft" d="M585 2426 L625 2426" />
+    <path class="flow-soft" d="M910 2426 L950 2426" />
+    <path class="flow-soft" d="M1235 2426 L1275 2426" />
+    <path class="flow-soft" d="M1560 2426 L1600 2426" />
+    <path class="flow-soft" d="M1885 2426 L1925 2426" />
+    <path class="flow-soft" d="M442 2472 L442 2498" />
+    <path class="flow-soft" d="M767 2472 L767 2498" />
+    <path class="flow-soft" d="M1092 2472 L1092 2498" />
+    <path class="flow-soft" d="M1417 2472 L1417 2498" />
+    <path class="flow-soft" d="M1742 2472 L1742 2498" />
+    <path class="flow-soft" d="M2067 2472 L2067 2498" />
+    <path class="flow" d="M1255 2630 C1255 2672 520 2695 520 2740" />
+
+    <path class="flow-soft" d="M680 2786 L730 2786" />
+    <path class="flow-soft" d="M1050 2786 L1100 2786" />
+    <path class="flow-soft" d="M1420 2786 L1470 2786" />
+    <path class="flow-soft" d="M1790 2786 L1840 2786" />
+
+    <path class="flow" d="M2020 2832 C2020 2900 442 2950 442 3020" />
+    <path class="flow-soft" d="M442 3112 C442 3180 388 3245 388 3320" />
+    <path class="flow-soft" d="M767 3112 C767 3180 682 3245 682 3320" />
+    <path class="flow-soft" d="M1092 3112 C1092 3180 978 3245 978 3320" />
+    <path class="flow-soft" d="M1417 3112 C1417 3180 1272 3245 1272 3320" />
+    <path class="flow-soft" d="M1742 3112 C1742 3180 1568 3245 1568 3320" />
+    <path class="flow-soft" d="M2067 3112 C2067 3180 1862 3245 1862 3320" />
+    <path class="flow-soft" d="M2068 788 C2200 1450 2360 2650 2360 3320" />
+  </g>
+
+  <!-- Verification loops / persistence loops -->
+  <g id="loops">
+    <path class="flow-dashed" d="M2210 2426 C2330 2426 2330 2532 2210 2532" />
+    <text class="small" x="2250" y="2490">verification loop</text>
+
+    <path class="flow-return" d="M995 1132 C900 1280 900 950 995 1040" />
+    <text class="small" x="740" y="960">cache hit returns early</text>
+
+    <path class="flow-return" d="M2205 1497 C2385 1590 2385 1766 2350 1766" />
+    <text class="small" x="2280" y="1648">provider fallback</text>
+
+    <path class="flow-return" d="M442 3020 C240 2900 240 840 300 734" />
+    <text class="small" x="215" y="1880" transform="rotate(-90 215 1880)">persistence and hydration back to frontend</text>
+
+    <path class="flow-return" d="M2360 3402 C2450 3402 2450 705 2210 734" />
+    <text class="small" x="2412" y="2130" transform="rotate(-90 2412 2130)">export and share lifecycle returns to user surface</text>
+  </g>
+
+  <!-- System classification legend -->
+  <g id="legend" transform="translate(130 3385)">
+    <rect class="box-front" x="0" y="0" width="210" height="62" />
+    <text class="tag" x="18" y="25">FRONTEND SYSTEM</text>
+    <text class="small" x="18" y="45">React / UI / state</text>
+
+    <rect class="box-ai" x="235" y="0" width="210" height="62" />
+    <text class="tag" x="253" y="25">AI SYSTEM</text>
+    <text class="small" x="253" y="45">routing / inference</text>
+
+    <rect class="box-det" x="470" y="0" width="210" height="62" />
+    <text class="tag" x="488" y="25">DETERMINISTIC</text>
+    <text class="small" x="488" y="45">logic / transforms</text>
+
+    <rect class="box-verify" x="705" y="0" width="210" height="62" />
+    <text class="tag" x="723" y="25">VERIFICATION</text>
+    <text class="small" x="723" y="45">citation / conflict</text>
+
+    <rect class="box-score" x="940" y="0" width="210" height="62" />
+    <text class="tag" x="958" y="25">SCORING</text>
+    <text class="small" x="958" y="45">quality metrics</text>
+
+    <rect class="box-store" x="1175" y="0" width="210" height="62" />
+    <text class="tag" x="1193" y="25">STORAGE</text>
+    <text class="small" x="1193" y="45">memory / cache</text>
+
+    <rect class="box-output" x="1410" y="0" width="210" height="62" />
+    <text class="tag" x="1428" y="25">OUTPUT</text>
+    <text class="small" x="1428" y="45">render / export</text>
+  </g>
+</svg>

@@ -1,11 +1,11 @@
 import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { COGNAPSE_Output, ResearchVisibility } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Map, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash } from 'lucide-react';
 import { toast } from '../utils/toast';
 import { ErrorBoundary } from './ui';
 import clsx from 'clsx';
-import { formatAllCitations, getDomainBadge, getDaysSincePublished, getDaysLabel, type CitationFormat } from '../utils/citations';
+import { formatAllCitations, getDomainBadge, getDaysSincePublished, getDaysLabel, stripCitationMarkers, type CitationFormat } from '../utils/citations';
 
 /** Download helper for generated text-based exports */
 function downloadAsFile(content: string, filename: string, mimeType: string) {
@@ -134,7 +134,20 @@ export default function ReportView({
   const [sharing, setSharing] = useState(false);
   const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
   const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
-  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false);
+  // Build a lookup of sourceId → worst citation verdict for display
+  const verdictMap = new Map<number, { verdict: string; confidence: number }>();
+  if (report.citation_verifications) {
+    for (const v of report.citation_verifications) {
+      const existing = verdictMap.get(v.source_id);
+      // Keep the "worst" verdict (supported < partial < unrelated/contradicted)
+      const rank = { supported: 0, partial: 1, unrelated: 2, contradicted: 2 };
+      const newRank = rank[v.verdict] ?? 0;
+      const oldRank = existing ? (rank[existing.verdict as keyof typeof rank] ?? 0) : -1;
+      if (!existing || newRank > oldRank) {
+        verdictMap.set(v.source_id, { verdict: v.verdict, confidence: v.confidence });
+      }
+    }
+  }
 
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
@@ -386,7 +399,7 @@ export default function ReportView({
 
         {/* Bottom Line */}
         <div className="bg-my-callout border-l-[4px] border-my-accent px-6 py-5 italic font-serif text-[15px] leading-[1.6] text-my-ink">
-          {safeText(report.summary?.bottom_line) || "Summary not available for this report."}
+          {safeText(stripCitationMarkers(report.summary?.bottom_line || '')) || "Summary not available for this report."}
         </div>
 
         {!isUnlocked && (
@@ -400,79 +413,30 @@ export default function ReportView({
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-        className={clsx("flex flex-col gap-[24px]", showAnalysisPanel ? "lg:grid lg:grid-cols-[1.4fr_1fr]" : "")}
+        className="flex flex-col lg:grid lg:grid-cols-[1fr_0.85fr] gap-[24px] min-w-0"
       >
         
         {/* Synthesis Column */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-6 min-w-0"
         >
-          <div className="flex items-center justify-between">
-            <SectionTitle>Intelligence Synthesis</SectionTitle>
-            <button
-              onClick={() => setShowAnalysisPanel(!showAnalysisPanel)}
-              className="text-[8px] font-black uppercase tracking-widest text-my-muted hover:text-my-accent transition-colors px-2 py-1 border border-my-border hover:border-my-accent"
-            >
-              {showAnalysisPanel ? 'Hide Analysis' : 'Show Analysis'}
-            </button>
-          </div>
+          <SectionTitle>Intelligence Synthesis</SectionTitle>
           
           {(report.summary?.full_synthesis || report.summary?.eli5_version) && (
             <div className="bg-my-bg/70 backdrop-blur-md p-6 border border-my-border rounded-[4px] text-[13px] leading-[1.6] text-my-syn flex flex-col gap-4 shadow-sm">
               {report.summary?.eli5_version && (
                 <div className="p-4 bg-my-accent/5 border border-my-accent/10 rounded">
                   <span className="font-bold text-[10px] uppercase tracking-widest block mb-1 text-my-accent">ELI5 Version</span>
-                  {safeText(report.summary.eli5_version)}
+                  {safeText(stripCitationMarkers(report.summary.eli5_version))}
                 </div>
               )}
               {report.summary?.full_synthesis && (
                 <div className="text-[14px] leading-[1.7] text-my-syn space-y-[1.25em]">
-                  {report.summary.full_synthesis.split('\n').map((para: string, i: number) =>
+                  {stripCitationMarkers(report.summary.full_synthesis).split('\n').map((para: string, i: number) =>
                     para.trim() ? (
                       <p key={i} className="leading-[1.7] group relative">
-                        {(() => {
-                          // Parse paragraphs into text segments and citation superscripts
-                          const parts = para.split(/(\[\d+\])/g);
-                          return parts.map((part: string, j: number) => {
-                            const citeMatch = part.match(/\[(\d+)\]/);
-                            if (citeMatch) {
-                              const sourceId = parseInt(citeMatch[1]);
-                              const source = report.sources?.find(s => s.id === sourceId);
-                              return (
-                                <span key={j} className="relative inline">
-                                  <sup
-                                    className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative"
-                                    onMouseEnter={() => setHoveredCitation(sourceId)}
-                                    onMouseLeave={() => setHoveredCitation(null)}
-                                  >
-                                    [{sourceId}]
-                                  </sup>
-                                  {source && (
-                                    <EvidencePreview
-                                      source={{
-                                        id: source.id,
-                                        title: source.title,
-                                        url: source.url,
-                                        domain: source.domain || '',
-                                        type: source.type || 'web',
-                                        snippet: source.key_finding || '',
-                                        credibility_score: source.credibility_score || 0,
-                                        relevance_score: source.relevance_score || 0,
-                                        key_finding: source.key_finding || '',
-                                        published_date: source.published_date || '',
-                                        bias_flag: source.bias_flag || null,
-                                        retrieval_timestamp: source.retrieval_timestamp || new Date().toISOString()
-                                      }}
-                                      isVisible={hoveredCitation === source.id}
-                                    />
-                                  )}
-                                </span>
-                              );
-                            }
-                            return part;
-                          });
-                        })()}
+                        {para}
                       </p>
                     ) : <br key={i} />
                   )}
@@ -484,29 +448,25 @@ export default function ReportView({
                    <p className="italic text-my-muted text-[12px] leading-[1.6]">{safeText(report.summary.confidence_narrative)}</p>
                  </div>
               )}
-
-              {/* Source Drawer - expandable source list */}
-              {report.sources && report.sources.length > 0 && (
-                <div className="mt-4">
-                  <SourceDrawer 
-                    sources={report.sources.map((s: any, idx: number) => ({
-                      ...s,
-                      snippet: s.key_finding || s.snippet || '',
-                      retrieval_timestamp: new Date().toISOString()
-                    }))}
-                    retrievalTrace={report._retrieval_trace || null}
-                  />
-                </div>
-              )}
-              
             </div>
+          )}
+
+          {/* Source Drawer - standalone section outside synthesis box */}
+          {report.sources && report.sources.length > 0 && (
+            <SourceDrawer 
+              sources={report.sources.map((s: any) => ({
+                ...s,
+                snippet: s.key_finding || s.snippet || '',
+                retrieval_timestamp: new Date().toISOString()
+              }))}
+              retrievalTrace={report._retrieval_trace || null}
+            />
           )}
         </motion.div>
 
-        {showAnalysisPanel && (
         <motion.div
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-6 min-w-0"
         >
           
           {/* Metrics */}
@@ -519,6 +479,50 @@ export default function ReportView({
                  <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
                  <span className="text-my-ink font-semibold capitalize text-[13px]">{safeText(report.scores.evidence_consensus)}</span>
                </div>
+            </div>
+          )}
+
+          {/* Contradictions Panel */}
+          {hasConflicts && (
+            <div className="border border-my-border bg-my-callout/50">
+              <div className="w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle size={14} className="text-red-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-my-ink">
+                    Contradictions ({report.conflicts!.length})
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 pb-4 space-y-3">
+                {report.conflicts!.map((c, i) => (
+                  <div key={i} className="border border-red-200 dark:border-red-900/40 bg-my-bg/50">
+                    {/* Side-by-side claims */}
+                    <div className="grid grid-cols-2 divide-x divide-red-200 dark:divide-red-900/40">
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                          <span className="text-[8px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Claim A</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-my-ink">{c.claim_a}</p>
+                        <span className="text-[9px] font-mono text-my-muted mt-1.5 block">Source: {c.source_a}</span>
+                      </div>
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                          <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Claim B</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-my-ink">{c.claim_b}</p>
+                        <span className="text-[9px] font-mono text-my-muted mt-1.5 block">Source: {c.source_b}</span>
+                      </div>
+                    </div>
+                    {/* Explanation */}
+                    <div className="px-3 py-2.5 bg-red-50/50 dark:bg-red-950/20 border-t border-red-200 dark:border-red-900/40">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-my-muted block mb-1">Analysis</span>
+                      <p className="text-[11px] leading-relaxed text-my-syn">{c.explanation}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -542,7 +546,6 @@ export default function ReportView({
             </>
           )}
         </motion.div>
-        )}
       </motion.div>
 
       {/* Follow-ups */}

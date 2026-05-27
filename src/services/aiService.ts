@@ -58,7 +58,7 @@ import { trackOperationalEvent } from './opsTelemetry';
  * PRODUCTION-READY INTELLIGENCE SWARM
  * Relies on Vercel Serverless Endpoint (/api/research) to hide API Keys
  */
-export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "groq-llama-3.1-8b-instant", abortSignal?: AbortSignal) => {
+export const callCloudAI = async (prompt: string, isJson = false, requestedModel = "groq-llama-3.1-8b-instant", abortSignal?: AbortSignal, groqKey?: string, modelOverride?: string) => {
   const estTokens = Math.ceil(prompt.length / 4);
 
   // Auto-revive unstable nodes
@@ -91,50 +91,61 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
     }
   }
 
-  // 2. Call Vercel Serverless Backend (Secure API Keys)
+  // 2. Call Vercel Serverless Backend (Secure API Keys) — with retry on transient failures
   if (isStable("cloud-swarm")) {
-    try {
-      if (import.meta.env.PROD && !auth.currentUser) {
-        throw new Error(
-          'Sign in required to use cloud intelligence. Create a free account, or run COGNAPSE locally with Ollama for private offline research.'
-        );
+    let lastError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (import.meta.env.PROD && !auth.currentUser) {
+          throw new Error(
+            'Sign in required to use cloud intelligence. Create a free account, or run COGNAPSE locally with Ollama for private offline research.'
+          );
+        }
+
+        const response = await apiFetch('/api/research', {
+          method: 'POST',
+          body: JSON.stringify({ prompt, isJson, estTokens, requestedModel, userId: auth.currentUser?.uid || '', groqKey, modelOverride }),
+          signal: abortSignal,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Serverless backend failed');
+        }
+
+        // Track token consumption from Groq for ops dashboard
+        if (data.usage && data.usage.total_tokens > 0) {
+          try {
+            trackOperationalEvent('tokens_consumed', {
+              prompt_tokens: data.usage.prompt_tokens,
+              completion_tokens: data.usage.completion_tokens,
+              total_tokens: data.usage.total_tokens,
+              model: data.usage.model,
+              research_type: requestedModel === 'ollama' ? 'deep' : 'standard',
+            });
+          } catch {}
+        }
+
+        return data.result;
+      } catch (e: any) {
+        lastError = e;
+        console.warn(`Cloud Swarm attempt ${attempt + 1}/2 failed:`, e.message);
+        if (e?.message?.includes('Sign in required')) throw e;
+        // Brief delay before retry to let transient issues clear
+        if (attempt === 0) await new Promise(r => setTimeout(r, 1200));
       }
-
-      const response = await apiFetch('/api/research', {
-        method: 'POST',
-        body: JSON.stringify({ prompt, isJson, estTokens, requestedModel, userId: auth.currentUser?.uid || '' }),
-        signal: abortSignal,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Serverless backend failed');
-      }
-
-      // Track token consumption from Groq for ops dashboard
-      if (data.usage && data.usage.total_tokens > 0) {
-        try {
-          trackOperationalEvent('tokens_consumed', {
-            prompt_tokens: data.usage.prompt_tokens,
-            completion_tokens: data.usage.completion_tokens,
-            total_tokens: data.usage.total_tokens,
-            model: data.usage.model,
-            research_type: requestedModel === 'ollama' ? 'deep' : 'standard',
-          });
-        } catch {}
-      }
-
-      return data.result;
-    } catch (e: any) {
-      console.warn('Secure Cloud Swarm failed:', e);
-      markUnstable('cloud-swarm');
-      if (e?.message?.includes('Sign in required')) throw e;
     }
+
+    // Both attempts failed — mark unstable so we don't spam the backend
+    markUnstable('cloud-swarm');
+    throw new Error(
+      `Cloud intelligence is temporarily unavailable. ${lastError?.message || 'The backend did not respond.'} Please wait a moment and try again.`
+    );
   }
 
   throw new Error(
-    'INTELLIGENCE OVERLOAD: Cloud nodes are unavailable. Sign in for cloud research, or enable Local Acceleration via Ollama on your machine.'
+    'INTELLIGENCE OVERLOAD: No AI providers are available. Sign in to use cloud research, or run COGNAPSE locally with Ollama for private offline research.'
   );
 };
 

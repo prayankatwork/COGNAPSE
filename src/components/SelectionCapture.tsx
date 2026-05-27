@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookPlus, Check } from 'lucide-react';
 import { useStore } from '../store';
+import { toast } from '../utils/toast';
 
 export default function SelectionCapture() {
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -45,6 +46,7 @@ export default function SelectionCapture() {
 
     addNote(selectedText, currentReport?.query_understood || 'Manual Selection');
     setIsSaved(true);
+    toast.success('Note captured to Notebook');
 
     // Hide after success
     setTimeout(() => {

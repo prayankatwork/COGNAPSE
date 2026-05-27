@@ -132,8 +132,7 @@ export default function PlatformDocs() {
                     <p className="text-sm text-my-muted leading-relaxed mb-4">
                       Users can upgrade to a Monthly or Annual Premium pass to unlock advanced capabilities. 
                       Premium features include generating structured PDF dossiers of completed research with 
-                      executive summaries, multi-AI consensus scoring, advanced analysis layers, hidden reasoning 
-                      pathways, and strategic interpretations. Payments are processed securely via Razorpay.
+                      executive summaries, multi-AI consensus scoring,SWOT analysis, actionable takeaways, and comprehensive appendix metadata. Payments are processed securely via Razorpay.
                     </p>
                  </div>
               </div>
@@ -150,7 +149,7 @@ export default function PlatformDocs() {
                     <p className="text-sm text-my-muted leading-relaxed mb-4">
                       A gamification layer tracks research activity through XP accumulation, search streak bonuses, 
                       and rank progression from Novice through Omni-Observer. Badge unlocks, confetti celebrations 
-                      on rank-ups, and daily missions incentivize continuous research. The analyst profile displays 
+                      on rank-ups, and ongoing progression milestones incentivize continuous research. The analyst profile displays 
                       cumulative stats, PDF export history, and an activity heatmap.
                     </p>
                  </div>
@@ -291,16 +290,6 @@ export default function PlatformDocs() {
                 Shared research links use cryptographically random identifiers, preventing enumeration attacks. 
                 Owners retain full control and may disable shared links at any time. Read-only views preserve 
                 all report sections, synthesis content, deep research theses, and intelligence maps.
-              </p>
-           </div>
-
-           <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-              <h4 className="font-bold text-my-ink mb-3">Forking &amp; Derived Works</h4>
-              <p className="text-sm text-my-muted leading-relaxed">
-                Collaborators who duplicate shared research into their own account create independent instances 
-                under their ownership. Forked copies may be modified, shared, or deleted independently of the 
-                source. The original owner retains no control over forked works. Each forked copy includes 
-                attribution to the original research source.
               </p>
            </div>
 

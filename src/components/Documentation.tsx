@@ -36,6 +36,7 @@ const ARCHIVE_MAP = [
     subsections: [
       { id: 'tech-overview', label: 'Stack Overview' },
       { id: 'stack', label: 'Infrastructure Diagram' },
+      { id: 'research-pipeline-diagram', label: 'Research Pipeline Diagram' },
       { id: 'orchestration', label: 'AI Swarm Logic' },
       { id: 'deep-research', label: 'Deep Research Protocol' },
       { id: 'state', label: 'State Mgmt & Data' },
@@ -164,7 +165,7 @@ export default function Documentation() {
       <div className="flex-1 flex overflow-hidden">
 
         {/* Nested Sidebar */}
-        <aside className="w-80 border-r border-my-border overflow-y-auto no-scrollbar p-6 hidden lg:block bg-my-sidebar/10">
+        <aside className="w-80 border-r border-my-border overflow-y-auto custom-scrollbar p-6 hidden lg:block bg-my-sidebar/10">
           <div className="space-y-8">
             {filteredArchiveMap.length === 0 ? (
               <div className="py-8 text-center border border-dashed border-my-border">
@@ -228,7 +229,7 @@ export default function Documentation() {
         </aside>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto p-10 md:p-20 relative scroll-smooth bg-my-bg">
+        <main className="flex-1 overflow-y-auto p-10 md:p-20 relative scroll-smooth custom-scrollbar bg-my-bg">
 
           {/* Cinematic Background */}
           <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-my-accent/5 to-transparent pointer-events-none -z-10" />

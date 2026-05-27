@@ -3,6 +3,7 @@ import { AlertCircle, AlertTriangle, Calendar, FlaskConical, Loader2, ShieldChec
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
 import type { SharedResearchRecord } from '../types';
+import { stripCitationMarkers } from '../utils/citations';
 import ReportView from './ReportView';
 
 export default function SharedResearchPage({ shareId }: { shareId: string }) {
@@ -140,7 +141,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
               content ? (
                 <section key={title} className="mb-4 border border-my-border bg-my-callout p-5">
                   <h3 className="text-xs font-black uppercase tracking-widest text-my-accent mb-3">{title}</h3>
-                  <p className="text-sm leading-relaxed text-my-syn whitespace-pre-wrap">{String(content)}</p>
+                  <p className="text-sm leading-relaxed text-my-syn whitespace-pre-wrap">{stripCitationMarkers(String(content))}</p>
                 </section>
               ) : null
             ))}

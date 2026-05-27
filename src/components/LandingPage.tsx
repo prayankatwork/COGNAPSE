@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
@@ -102,18 +102,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-px bg-my-border border border-my-border">
-            <FeatureBox icon={<Search />} title="Autonomous Discovery" desc="Parallel crawling of global knowledge indexes with semantic clustering." />
-            <FeatureBox icon={<Sparkles />} title="Comprehensive Reports" desc="Autonomous generation of 5,000+ word professional analytical reports." />
-            <FeatureBox icon={<History />} title="Thought Replay" desc="Deconstruct and replay the step-by-step logic used to reach conclusions." />
-            <FeatureBox icon={<Layers />} title="Research Hub" desc="Hierarchical investigation stacks and cross-reference layers." />
-            <FeatureBox icon={<HardDrive />} title="Native Desktop Client" desc="Zero-configuration local AI acceleration via Ollama. 100% private and offline." />
-            <FeatureBox icon={<BarChart3 />} title="Visual Research Map" desc="Interactive semantic node-branching logic and evidence mapping." />
-            <FeatureBox icon={<FileText />} title="Cognitive Notebook" desc="Instantly capture snippets and insights into a persistent research journal." />
-            <FeatureBox icon={<Database />} title="Secure Archive" desc="Persistent SQLite-backed research reports with analyst isolation." />
-            <FeatureBox icon={<Waves />} title="Adaptive Sonification" desc="Syncs with Spotify to visually react to your music in both dark and light modes." />
-            <FeatureBox icon={<Trophy />} title="Research Analytics" desc="Acquire experience, unlock new tiers, and expand system access." />
-          </div>
+          <FeatureGrid />
         </div>
       </section>
 
@@ -201,6 +190,42 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function FeatureGrid() {
+  const [showAll, setShowAll] = useState(false);
+  const features = [
+    { icon: <Search />, title: "Autonomous Discovery", desc: "Parallel crawling of global knowledge indexes with semantic clustering." },
+    { icon: <Sparkles />, title: "Comprehensive Reports", desc: "Autonomous generation of 5,000+ word professional analytical reports." },
+    { icon: <History />, title: "Thought Replay", desc: "Deconstruct and replay the step-by-step logic used to reach conclusions." },
+    { icon: <Layers />, title: "Research Hub", desc: "Hierarchical investigation stacks and cross-reference layers." },
+    { icon: <HardDrive />, title: "Native Desktop Client", desc: "Zero-configuration local AI acceleration via Ollama. 100% private and offline." },
+    { icon: <BarChart3 />, title: "Visual Research Map", desc: "Interactive semantic node-branching logic and evidence mapping." },
+    { icon: <FileText />, title: "Cognitive Notebook", desc: "Instantly capture snippets and insights into a persistent research journal." },
+    { icon: <Database />, title: "Secure Archive", desc: "Persistent SQLite-backed research reports with analyst isolation." },
+    { icon: <Waves />, title: "Adaptive Sonification", desc: "Syncs with Spotify to visually react to your music in both dark and light modes." },
+    { icon: <Trophy />, title: "Research Analytics", desc: "Acquire experience, unlock new tiers, and expand system access." },
+  ];
+
+  const visibleFeatures = showAll ? features : features.slice(0, 5);
+
+  return (
+    <div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-px bg-my-border border border-my-border">
+        {visibleFeatures.map((f, i) => (
+          <FeatureBox key={i} icon={f.icon} title={f.title} desc={f.desc} />
+        ))}
+      </div>
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="px-8 py-3 border border-my-border text-[10px] font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
+        >
+          {showAll ? 'Show Less' : `Show All Features (${features.length})`}
+        </button>
+      </div>
     </div>
   );
 }

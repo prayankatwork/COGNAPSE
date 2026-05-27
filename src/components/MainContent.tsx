@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
 import SpotifyWidget from './SpotifyWidget';
-import MusicVisualizer from './MusicVisualizer';
 import clsx from 'clsx';
 import confetti from 'canvas-confetti';
 import { v4 as uuidv4 } from 'uuid';
@@ -241,9 +240,10 @@ export default function MainContent() {
         role: 'model',
         content: reply
       });
-      setTimeout(() => {
+      // Single scroll call — no duplicate jitter
+      requestAnimationFrame(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      });
     } catch (err: any) {
       setError(err.message || "Failed to process follow-up question.");
     } finally {
@@ -397,7 +397,6 @@ export default function MainContent() {
 
   return (
     <ErrorBoundary>
-      <MusicVisualizer />
       <div className="flex-1 flex flex-col h-full bg-my-callout/20 backdrop-blur-md md:backdrop-blur-xl relative overflow-hidden">
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-8 border-b border-my-border z-10 shrink-0 bg-my-bg/40 backdrop-blur-md">
@@ -559,34 +558,6 @@ export default function MainContent() {
                     <div className="mb-20" />
                   </motion.div>
 
-                  {/* Premium Research Templates */}
-                  {isPremium && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6 }}
-                      className="flex flex-wrap items-center justify-center gap-2 mb-6"
-                    >
-                      <span className="text-[8px] font-bold uppercase tracking-widest text-my-muted mr-1">Templates:</span>
-                      {[
-                        { label: 'SWOT Analysis', query: 'Perform a comprehensive SWOT analysis of' },
-                        { label: 'Competitive Intel', query: 'Provide a competitive intelligence brief on' },
-                        { label: 'Deep Research', query: 'Conduct an exhaustive deep research analysis on' },
-                        { label: 'Timeline', query: 'Build a chronological timeline of key events in' },
-                      ].map((t) => (
-                        <button
-                          key={t.label}
-                          onClick={() => {
-                            setQuery(t.query + ' ');
-                          }}
-                          className="px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider border border-my-accent/20 text-my-accent hover:bg-my-accent/10 hover:border-my-accent/40 transition-all rounded-sm"
-                        >
-                          {t.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -601,11 +572,67 @@ export default function MainContent() {
                           handleSearch(query);
                         } else {
                           const rabbitHoles = [
+                            // History & Archaeology
                             "Synthesize the history of the Voyager Golden Record and its cultural impact.",
                             "What are the leading theories on what happened to the Bronze Age collapse?",
-                            "How does the mycelial network in forests compare to neural networks?",
                             "Analyze the strategic brilliance of the Mongol Empire's postal system (Yam).",
-                            "Explain the concept of 'Time Crystals' in quantum physics."
+                            "Trace the lost libraries of the ancient world from Alexandria to Timbuktu.",
+                            "What really happened during the Dancing Plague of 1518 in Strasbourg?",
+                            "Investigate the Antikythera mechanism and what it reveals about ancient Greek engineering.",
+                            "How did the Chernobyl exclusion zone become an unexpected wildlife sanctuary?",
+                            "Examine the rise and fall of the Khmer Empire and the mysteries of Angkor Wat.",
+                            "What were the real causes of the fall of the Western Roman Empire?",
+                            "Explore the history and cultural significance of the Silk Road.",
+                            // Science & Nature
+                            "How does the mycelial network in forests compare to neural networks?",
+                            "Explain the concept of 'Time Crystals' in quantum physics.",
+                            "How do tardigrades survive extreme environments that would kill most life?",
+                            "Investigate the Great Oxidation Event and how it shaped life on Earth.",
+                            "What is the Fermi Paradox and what are the most compelling resolutions?",
+                            "How do bioluminescent organisms produce light and why did it evolve?",
+                            "Explore the science behind the 'Wow!' signal and the search for extraterrestrial intelligence.",
+                            "How does epigenetics challenge our understanding of heredity and evolution?",
+                            "What is dark matter and what evidence supports its existence?",
+                            "Examine the symbiotic relationship between clownfish and sea anemones.",
+                            // Technology & Computing
+                            "Trace the history of cryptography from the Caesar cipher to quantum encryption.",
+                            "How do Large Language Models like GPT actually 'understand' language?",
+                            "What was the Silk Road darknet marketplace and how did law enforcement shut it down?",
+                            "Explain the mechanics of the MP3 compression algorithm and its impact on music.",
+                            "How did the Apollo Guidance Computer land humans on the moon with less power than a calculator?",
+                            "Investigate the potential and challenges of quantum computing.",
+                            // Philosophy & Psychology
+                            "Analyze the Ship of Theseus paradox in the context of modern identity and consciousness.",
+                            "What is the 'hard problem of consciousness' and why does it resist scientific explanation?",
+                            "Examine the Stanford prison experiment through a modern ethical lens.",
+                            "How does the placebo effect work and what does it reveal about the mind-body connection?",
+                            "Explore the concept of 'effective altruism' — its promise and its criticisms.",
+                            "What is solipsism and why has it persisted as a philosophical problem for centuries?",
+                            // Art & Culture
+                            "Trace the evolution of Japanese woodblock printing (ukiyo-e) and its influence on Western art.",
+                            "How did the BBC Radiophonic Workshop pioneer electronic music?",
+                            "Analyze the Bauhaus movement and its lasting impact on modern design.",
+                            "What is Kintsugi and what does it teach about imperfection and repair?",
+                            "Explore the history of typography from Gutenberg to digital fonts.",
+                            "How did Studio Ghibli redefine animation as a serious artistic medium?",
+                            // Espionage & Mystery
+                            "What really happened to the crew of the SS Ourang Medan?",
+                            "Investigate the Cambridge Five spy ring and how they infiltrated British intelligence.",
+                            "What was the CIA's MKUltra program and what did it actually accomplish?",
+                            "Examine the Dyatlov Pass incident and the most plausible explanations.",
+                            "How did the Enigma machine work and how did the Allies break it?",
+                            // Economics & Society
+                            "Analyze the economic causes and global consequences of the 2008 financial crisis.",
+                            "How does the concept of 'Universal Basic Income' work and where has it been tested?",
+                            "What caused the Dutch Tulip Mania and how does it compare to modern speculative bubbles?",
+                            "Examine the game theory behind nuclear deterrence and Mutually Assured Destruction.",
+                            "How did the Marshall Plan reshape post-war Europe?",
+                            // Curiosities
+                            "Why do cats purr and what are the leading theories about its function?",
+                            "Investigate the phenomenon of 'false memories' and how they form.",
+                            "What is the 'Coolidge effect' and what does it reveal about evolutionary biology?",
+                            "How do migrating birds navigate across thousands of miles with such precision?",
+                            "Explore the science and history of fermentation — from beer to kimchi."
                           ];
                           const randomQuery = rabbitHoles[Math.floor(Math.random() * rabbitHoles.length)];
                           handleSearch(randomQuery);
@@ -719,53 +746,155 @@ export default function MainContent() {
             )}
 
             {loading && loadingPhase !== "Analyzing context..." && (
-              <div className="flex flex-col items-center justify-center py-16 mt-24 animate-in fade-in zoom-in duration-500">
-                <div className="relative flex items-center justify-center w-24 h-24 mb-8">
-                  {/* Outer rotating ring */}
-                  <div className="absolute inset-0 border-[2px] border-my-accent/20 border-t-my-accent rounded-full animate-[spin_2s_linear_infinite]"></div>
-                  {/* Inner rotating element */}
-                  <Hexagon className="w-10 h-10 text-my-accent animate-pulse" strokeWidth={1} />
-                  <div className="absolute inset-2 border-[1px] border-my-border border-b-my-ink rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+              <div className="flex flex-col items-center justify-center py-12 mt-16 animate-in fade-in duration-500">
+                {/* Neural Orbital Scanner */}
+                <div className="relative flex items-center justify-center w-28 h-28 mb-8">
+                  {/* Outer glow pulse */}
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.08, 0.15] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute inset-0 bg-my-accent rounded-full blur-3xl"
+                  />
+
+                  {/* Orbit ring 1 — outer, slow clockwise */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-0 border border-my-accent/20 rounded-full"
+                  >
+                    {/* Orbital particle */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2">
+                      <div className="w-full h-full rounded-full bg-my-accent" style={{ boxShadow: '0 0 10px color-mix(in srgb, var(--accent) 90%, transparent)' }} />
+                      <div className="w-4 h-4 -top-1 -left-1 absolute rounded-full bg-my-accent/20 animate-ping" />
+                    </div>
+                  </motion.div>
+
+                  {/* Orbit ring 2 — middle, dashed, counter-clockwise */}
+                  <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-3 border border-dashed border-my-accent/15 rounded-full"
+                  >
+                    {/* Orbital particle */}
+                    <div className="absolute top-1/2 -right-1.5 w-1.5 h-1.5">
+                      <div className="w-full h-full rounded-full bg-my-signal" style={{ boxShadow: '0 0 8px color-mix(in srgb, var(--signal) 80%, transparent)' }} />
+                    </div>
+                  </motion.div>
+
+                  {/* Orbit ring 3 — inner, faster */}
+                  <motion.div
+                    animate={{ rotate: 480 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-6 border border-my-accent/10 rounded-full"
+                  >
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1 h-1">
+                      <div className="w-full h-full rounded-full bg-my-success" style={{ boxShadow: '0 0 6px color-mix(in srgb, var(--success) 80%, transparent)' }} />
+                    </div>
+                  </motion.div>
+
+                  {/* Scanning line sweep */}
+                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                    <motion.div
+                      initial={{ y: '-100%' }}
+                      animate={{ y: '100%' }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+                      className="w-full h-[3px] bg-gradient-to-r from-transparent via-my-accent/80 to-transparent blur-[2px]"
+                    />
+                  </div>
+
+                  {/* Core hexagon */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="relative z-10"
+                  >
+                    <Hexagon className="w-10 h-10 text-my-accent" strokeWidth={1.5} />
+                  </motion.div>
                 </div>
 
+                {/* Neural pulse dots — wave effect */}
+                <div className="flex items-center gap-2 mb-6 h-4">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{
+                        backgroundColor: 'var(--accent)',
+                      }}
+                      animate={{
+                        scale: [0.4, 1.2, 0.4],
+                        opacity: [0.2, 0.9, 0.2],
+                        backgroundColor: [
+                          'color-mix(in srgb, var(--accent) 40%, transparent)',
+                          'var(--accent)',
+                          'color-mix(in srgb, var(--accent) 40%, transparent)'
+                        ]
+                      }}
+                      transition={{
+                        duration: 1.4,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                        ease: 'easeInOut'
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Loading phase text with cursor */}
                 <div className="w-64">
-                  <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-my-ink mb-4 text-center animate-pulse">
-                    {loadingPhase}
-                  </p>
-                  <div className="h-1 w-full bg-my-border rounded-full overflow-hidden relative">
-                    <div className="absolute inset-y-0 left-0 bg-my-accent transition-all duration-500 ease-out" style={{
-                      width: loadingPhase === "Analyzing research query..." ? "20%" :
-                        loadingPhase === "Reviewing available data..." ? "40%" :
-                          loadingPhase === "Synthesizing primary sources..." ? "60%" :
-                            loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
-                    }}></div>
+                  <div className="flex items-center justify-center mb-3">
+                    <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-my-ink text-center">
+                      {loadingPhase}
+                    </p>
+                    <motion.span
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="inline-block w-[2px] h-3 bg-my-accent ml-1"
+                    />
                   </div>
-                </div>
 
-                <div className="mt-12 flex flex-col items-center max-w-sm text-center">
-                  <div className="flex items-center gap-2 mb-3" style={{ color: isPremium ? '#10B981' : 'var(--accent)' }}>
-                    {isPremium ? (
-                      <div className="relative">
-                        <Zap size={14} className="animate-pulse relative z-10" />
-                        <span className="absolute inset-0 bg-green-500/20 blur-md rounded-full animate-premium-glow" />
-                      </div>
-                    ) : (
-                      <Zap size={14} className="animate-pulse" />
-                    )}
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">
-                      {isPremium ? 'Priority Processing Active' : 'Processing Framework Active'}
-                    </span>
-                    {isPremium && (
-                      <span className="text-[7px] font-black uppercase tracking-widest px-1 py-0.5 bg-green-500/10 text-green-500 border border-green-500/30 rounded-sm">
-                        Premium Node
-                      </span>
-                    )}
+                  {/* Enhanced gradient progress bar */}
+                  <div className="relative h-1.5 w-full bg-my-border/50 rounded-full overflow-hidden">
+                    <motion.div
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{
+                        background: 'linear-gradient(90deg, var(--accent), var(--signal))'
+                      }}
+                      animate={{
+                        width: loadingPhase === "Analyzing research query..." ? "20%" :
+                          loadingPhase === "Reviewing available data..." ? "40%" :
+                            loadingPhase === "Synthesizing primary sources..." ? "60%" :
+                              loadingPhase === "Identifying data conflicts..." ? "80%" : ["90%", "100%"],
+                      }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                    />
+                    {/* Glow overlay */}
+                    <motion.div
+                      className="absolute inset-y-0 left-0 rounded-full blur-sm"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 30%, transparent), transparent)',
+                        width: loadingPhase === "Analyzing research query..." ? "20%" :
+                          loadingPhase === "Reviewing available data..." ? "40%" :
+                            loadingPhase === "Synthesizing primary sources..." ? "60%" :
+                              loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
+                      }}
+                    />
                   </div>
-                  <p className="text-[11px] text-my-muted leading-relaxed italic">
-                    High-quality synthesis in progress. Because we prioritize professional-grade accuracy and verified data, our analysis engine is currently cross-referencing global sources and validating its findings.
-                  </p>
-                </div>
 
+                  {/* Subtle status hint */}
+                  <motion.p
+                    animate={{ opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-[8px] font-mono text-my-muted/40 text-center mt-2 tracking-[0.3em] uppercase"
+                  >
+                    {loadingPhase === "Analyzing research query..." && "▸ vectorizing query"}
+                    {loadingPhase === "Reviewing available data..." && "▸ aggregating sources"}
+                    {loadingPhase === "Synthesizing primary sources..." && "▸ processing corpus"}
+                    {loadingPhase === "Identifying data conflicts..." && "▸ cross-referencing"}
+                    {loadingPhase === "Structuring report..." && "▸ compiling dossier"}
+                    {loadingPhase === "Finalizing report..." && "▸ encrypting payload"}
+                  </motion.p>
+                </div>
               </div>
             )}
 

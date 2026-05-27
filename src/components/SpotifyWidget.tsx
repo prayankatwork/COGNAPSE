@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Music, X, PlayCircle, Minus, Zap, Coffee, Maximize2, Move } from 'lucide-react';
 import { useStore } from '../store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,7 +34,7 @@ export default function SpotifyWidget() {
     }
   };
 
-  const [hasDragged, setHasDragged] = useState(false);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const isClosed = !isOpen && !activeEmbed;
   const isMini = isMinimized || isClosed;
@@ -43,8 +43,23 @@ export default function SpotifyWidget() {
     <motion.div 
       drag
       dragMomentum={false}
-      onDragStart={() => setHasDragged(true)}
-      onDragEnd={() => setTimeout(() => setHasDragged(false), 50)}
+      onDragStart={(_, info) => {
+        dragStartPos.current = { x: info.point.x, y: info.point.y };
+      }}
+      onDragEnd={(_, info) => {
+        const start = dragStartPos.current;
+        if (start) {
+          const dx = Math.abs(info.point.x - start.x);
+          const dy = Math.abs(info.point.y - start.y);
+          // If user barely moved (< 5px), treat as click instead of drag
+          if (dx < 5 && dy < 5) {
+            dragStartPos.current = null;
+            // Allow click handler to fire naturally
+            return;
+          }
+        }
+        dragStartPos.current = null;
+      }}
       initial={{ opacity: 0, scale: 0.9, y: 50 }}
       animate={{ 
         opacity: 1, 
@@ -73,10 +88,8 @@ export default function SpotifyWidget() {
              exit={{ opacity: 0 }}
              className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer hover:bg-black/10 transition-colors group"
              onClick={() => {
-               if (!hasDragged) {
-                 setIsOpen(true);
-                 setIsMinimized(false);
-               }
+               setIsOpen(true);
+               setIsMinimized(false);
              }}
            >
              <Music size={24} className={clsx("fill-black text-black", activeEmbed && "animate-pulse")} />

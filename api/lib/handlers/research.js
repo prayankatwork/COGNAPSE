@@ -39,7 +39,7 @@ export async function handleResearch(req, res) {
   const rl = rateLimit(req, { key: 'research', limit: 30, windowMs: 60_000 });
   if (!rl.allowed) return res.status(429).json({ error: 'Research rate limit exceeded. Please wait before starting a new investigation.' });
 
-  const { userId, prompt, mode, requestedModel, isJson, isDeep, reportId, targetLanguage, username } = req.body || {};
+  const { userId, prompt, mode, requestedModel, isJson, isDeep, reportId, targetLanguage, username, groqKey, modelOverride } = req.body || {};
   if (!userId) return res.status(400).json({ error: 'Missing userId parameter' });
   if (!prompt) return res.status(400).json({ error: 'Missing prompt parameter' });
 
@@ -55,6 +55,8 @@ export async function handleResearch(req, res) {
       prompt, isJson: wantsJson,
       estTokens: Math.ceil((prompt?.length || 0) / 4),
       requestedModel: requestedModel || 'groq-llama-3.1-8b-instant',
+      groqKey: groqKey || 'primary',
+      modelOverride,
     });
 
     let result = raw.result;
@@ -176,7 +178,7 @@ async function searchSerper(query, count = 10) {
   if (data.organic && Array.isArray(data.organic)) {
     for (const result of data.organic) {
       const domain = extractDomain(result.link || '');
-      sources.push({ title: result.title || 'Untitled', url: result.link || '', domain, snippet: result.snippet || '', published_date: result.date || 'unknown', source_type: inferSourceType(domain), relevance_score: 50 + Math.round(Math.random() * 30) });
+      sources.push({ title: result.title || 'Untitled', url: result.link || '', domain, snippet: result.snippet || '', published_date: result.date || 'unknown', source_type: inferSourceType(domain), relevance_score: 50 });
     }
   }
   if (data.knowledgeGraph) {
@@ -253,10 +255,13 @@ export async function handleSearch(req, res) {
     const deduped = deduplicateSources(filtered);
     const dedupCount = filtered.length - deduped.length;
     const ranked = rankSources(deduped);
-    const topSources = ranked.slice(0, count);
+    // Filter out low-credibility sources (< 40) — spam, unknown domains, garbage
+    const credibleSources = ranked.filter(s => s.credibility_score >= 40);
+    const credibilityFiltered = ranked.length - credibleSources.length;
+    const topSources = credibleSources.slice(0, count);
 
     return res.status(200).json({
-      provider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, latency_ms: Date.now() - startTime, search_provider: provider },
+      provider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, credibility_filtered: credibilityFiltered, latency_ms: Date.now() - startTime, search_provider: provider },
       sources: topSources.map((s, i) => ({
         id: i + 1, title: s.title, url: s.url, domain: s.domain, type: s.source_type,
         snippet: s.snippet, credibility_score: s.credibility_score, relevance_score: s.relevance_score,
