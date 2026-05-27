@@ -444,12 +444,13 @@ export default function ReportView({
                               const sourceId = parseInt(citeMatch[1]);
                               const source = report.sources?.find(s => s.id === sourceId);
                               return (
-                                <span key={j} className="relative inline">
-                                  <sup
-                                    className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative"
-                                    onMouseEnter={() => setHoveredCitation(sourceId)}
-                                    onMouseLeave={() => setHoveredCitation(null)}
-                                  >
+                                <span
+                                  key={j}
+                                  className="relative inline"
+                                  onMouseEnter={() => setHoveredCitation(sourceId)}
+                                  onMouseLeave={() => setHoveredCitation(null)}
+                                >
+                                  <sup className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative">
                                     [{sourceId}]
                                   </sup>
                                   {source && (

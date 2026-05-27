@@ -34,7 +34,8 @@ export default function UnifiedCanvas() {
     let animationFrameId: number;
     let width: number;
     let height: number;
-    let isPaused = isLoading;
+    let targetOpacity = isLoading ? 0.4 : 1;
+    let currentOpacity = targetOpacity;
 
     // ── NeuralBackground state ──
     const dots: { x: number; y: number; isSignal: boolean }[] = [];
@@ -42,7 +43,7 @@ export default function UnifiedCanvas() {
     const mouse = { x: -1000, y: -1000, active: false };
     const spacing = 40;
 
-    // ── MusicVisualizer state ──
+    // ── Ambient pulse state ──
     let time = 0;
     let pulse = 0;
 
@@ -73,21 +74,28 @@ export default function UnifiedCanvas() {
       mouse.active = false;
     };
 
-    // Pause/resume based on loading state
+    // Smooth dim/brighten based on loading state
     const unsubscribeLoading = useStore.subscribe((state, prev) => {
       if (state.isLoading !== prev.isLoading) {
-        isPaused = state.isLoading;
+        targetOpacity = state.isLoading ? 0.4 : 1;
       }
     });
 
     const render = () => {
-      // Pause during loading to free GPU for research computation
-      if (document.hidden || isPaused) {
+      if (document.hidden) {
         animationFrameId = requestAnimationFrame(render);
         return;
       }
 
+      // Ambient pulse — keeps canvas feeling alive even when dimmed
+      time += 0.02;
+      pulse = Math.sin(time) * 0.5 + 0.5;
+
+      // Lerp opacity toward target for smooth transition
+      currentOpacity += (targetOpacity - currentOpacity) * 0.03;
+
       ctx.clearRect(0, 0, width, height);
+      ctx.globalAlpha = currentOpacity;
 
       // ══════════════════════════════════════
       // NEURAL BACKGROUND LAYER
@@ -156,12 +164,13 @@ export default function UnifiedCanvas() {
         const finalAlpha = Math.min(1, baseAlpha + intensity);
 
         if (dot.isSignal) {
-          ctx.globalAlpha = finalAlpha;
+          const breath = 0.6 + 0.4 * pulse;
+          ctx.globalAlpha = finalAlpha * breath;
           ctx.strokeStyle = getSignalColor();
           ctx.lineWidth = 1.5;
 
           if (intensity > 0.1) {
-            ctx.shadowBlur = 15 * intensity;
+            ctx.shadowBlur = 15 * intensity * breath;
             ctx.shadowColor = getSignalColor();
           } else {
             ctx.shadowBlur = 0;
@@ -186,6 +195,7 @@ export default function UnifiedCanvas() {
 
       // Music visualizer waves removed — no Spotify bg animations
 
+      ctx.globalAlpha = 1;
       animationFrameId = requestAnimationFrame(render);
     };
 
