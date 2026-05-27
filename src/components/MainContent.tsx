@@ -346,6 +346,7 @@ export default function MainContent() {
   };
 
   const startDeepResearch = async () => {
+    setError(null);
     const user = useStore.getState().user;
     if (!user) {
       setError("Sign in to use Deep Analysis");
@@ -427,15 +428,7 @@ export default function MainContent() {
                 id="walkthrough-deep-research-anchor"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                onClick={() => {
-                  const user = useStore.getState().user;
-                  if (!user) {
-                    setError("Sign in to use Deep Analysis");
-                    useStore.getState().setAuthOpen(true);
-                    return;
-                  }
-                  startDeepResearch();
-                }}
+                onClick={startDeepResearch}
                 disabled={
                   deepResearch.status === 'running' || 
                   (!query.trim() && !currentReport) ||
