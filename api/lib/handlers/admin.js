@@ -325,9 +325,12 @@ export async function handleAdminPurgeUser(req, res) {
     // Execute all deletions in parallel
     await Promise.all([...deletions, ...telemetryBatches]);
 
-    // 5. Revoke sessions and remove custom claims
-    try { await auth.setCustomUserClaims(userId, {}); } catch {}
-    try { await auth.revokeRefreshTokens(userId); } catch {}
+    // 5. Delete Firebase Auth account, revoke sessions, remove custom claims
+    try { await auth.deleteUser(userId); } catch (err) {
+      // If delete fails (e.g., user already deleted), still clear claims and revoke
+      try { await auth.setCustomUserClaims(userId, {}); } catch {}
+      try { await auth.revokeRefreshTokens(userId); } catch {}
+    }
 
     console.log(`[Admin Purge] User ${userId} purged. ${deletedCount} associated records deleted.`);
     return res.status(200).json({
