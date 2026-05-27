@@ -207,7 +207,7 @@ export default function Sidebar() {
               key={group}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.04 }}
+              transition={{ delay: Math.min(idx, 5) * 0.04 }}
               className="space-y-4"
             >
               <div className="flex items-center gap-3">
@@ -229,22 +229,22 @@ export default function Sidebar() {
                     ) : (
                       Object.entries(topicGroups).map(([topic, items], groupIdx) => (
                         <motion.div
-                          key={topic}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: groupIdx * 0.04 }}
-                          className="space-y-4"
-                        >
-                          <div className="flex items-center gap-3">
-                             <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{topic}</span>
-                             <div className="h-px flex-1 bg-my-border" />
-                          </div>
-                         {items.map((item, idx) => (
+              key={group}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(groupIdx, 5) * 0.04 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                 <span className="text-[8px] font-bold text-my-accent uppercase tracking-[0.2em]">{topic}</span>
+                 <div className="h-px flex-1 bg-my-border" />
+              </div>
+             {items.map((item, idx) => (
                            <motion.div
                              key={item.id}
                              initial={{ opacity: 0, x: -8 }}
                              animate={{ opacity: 1, x: 0 }}
-                             transition={{ delay: 0.05 + idx * 0.03 }}
+                             transition={{ delay: 0.05 + Math.min(idx, 5) * 0.03 }}
                            >
                              <ArchiveItem item={item} />
                            </motion.div>

@@ -134,6 +134,7 @@ export default function ReportView({
   const [sharing, setSharing] = useState(false);
   const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
   const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
+  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false);
 
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
@@ -399,7 +400,7 @@ export default function ReportView({
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-        className="flex flex-col lg:grid lg:grid-cols-[1.4fr_1fr] gap-[24px]"
+        className={clsx("flex flex-col gap-[24px]", showAnalysisPanel ? "lg:grid lg:grid-cols-[1.4fr_1fr]" : "")}
       >
         
         {/* Synthesis Column */}
@@ -407,7 +408,15 @@ export default function ReportView({
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
           className="flex flex-col gap-6"
         >
-          <SectionTitle>Intelligence Synthesis</SectionTitle>
+          <div className="flex items-center justify-between">
+            <SectionTitle>Intelligence Synthesis</SectionTitle>
+            <button
+              onClick={() => setShowAnalysisPanel(!showAnalysisPanel)}
+              className="text-[8px] font-black uppercase tracking-widest text-my-muted hover:text-my-accent transition-colors px-2 py-1 border border-my-border hover:border-my-accent"
+            >
+              {showAnalysisPanel ? 'Hide Analysis' : 'Show Analysis'}
+            </button>
+          </div>
           
           {(report.summary?.full_synthesis || report.summary?.eli5_version) && (
             <div className="bg-my-bg/70 backdrop-blur-md p-6 border border-my-border rounded-[4px] text-[13px] leading-[1.6] text-my-syn flex flex-col gap-4 shadow-sm">
@@ -494,6 +503,7 @@ export default function ReportView({
           )}
         </motion.div>
 
+        {showAnalysisPanel && (
         {/* Sidebar Column */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
@@ -518,10 +528,10 @@ export default function ReportView({
             <div className="mt-6 lg:mt-0">
               <SectionTitle>Intelligence Map</SectionTitle>
               <div className="mt-3">                  <ErrorBoundary fallback={<div className="h-48 flex items-center justify-center text-my-muted text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Semantic graph unavailable</div>}>
-                   <Suspense fallback={<div className="h-48 flex items-center justify-center text-my-muted animate-pulse text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Loading semantic graph...</div>}>
-                     <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
-                   </Suspense>
-                  </ErrorBoundary>
+                 <Suspense fallback={<div className="h-48 flex items-center justify-center text-my-muted animate-pulse text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Loading semantic graph...</div>}>
+                   <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
+                 </Suspense>
+               </ErrorBoundary>
               </div>
             </div>
           )}
@@ -533,6 +543,7 @@ export default function ReportView({
             </>
           )}
         </motion.div>
+        )}
       </motion.div>
 
       {/* Follow-ups */}

@@ -777,6 +777,19 @@ export default function MainContent() {
         <div className="absolute bottom-0 left-0 right-0 p-4 lg:px-8 lg:pb-8 lg:pt-16 bg-gradient-to-t from-my-bg via-my-bg to-transparent pointer-events-none">
           <div className="max-w-4xl mx-auto w-full pointer-events-auto">
             <form onSubmit={onSubmit} className="relative group">
+              {/* Input Mode Badge */}
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className={clsx(
+                  "text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 border",
+                  !currentReport
+                    ? "text-my-accent border-my-accent/30 bg-my-accent/5"
+                    : !walkthroughCompleted
+                    ? "text-amber-500 border-amber-500/30 bg-amber-500/5"
+                    : "text-green-600 border-green-600/30 bg-green-600/5"
+                )}>
+                  {!currentReport ? 'New Research' : !walkthroughCompleted ? 'Locked' : 'Follow-up Chat'}
+                </span>
+              </div>
               {/* Soft Outer Glow */}
               <div className="absolute -inset-1 bg-gradient-to-r from-my-accent/20 via-my-accent/5 to-my-accent/20 rounded-none blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200" />
 
