@@ -504,7 +504,6 @@ export default function ReportView({
         </motion.div>
 
         {showAnalysisPanel && (
-        {/* Sidebar Column */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
           className="flex flex-col gap-6"
