@@ -279,35 +279,38 @@ export async function handleAdminPurgeUser(req, res) {
     let deletedCount = 0;
     const deletions = [];
 
-    // 1. Delete user_premium
-    deletions.push(firestore.collection('user_premium').doc(userId).delete());
-
-    // 2. Delete suspended_users entry
-    deletions.push(firestore.collection('suspended_users').doc(userId).delete());
-
-    // 3. Delete all shared_research owned by user
-    const shareSnap = await firestore.collection('shared_research').where('ownerId', '==', userId).get();
-    shareSnap.docs.forEach(doc => { deletions.push(doc.ref.delete()); deletedCount++; });
-
-    // 4. Delete all user_documents owned by user
-    const docSnap = await firestore.collection('user_documents').where('ownerId', '==', userId).get();
-    for (const doc of docSnap.docs) {
-      const docId = doc.id;
-      deletions.push(doc.ref.delete());
-      // Clean up document_contents
-      deletions.push(firestore.collection('document_contents').doc(docId).delete());
-      // Clean up document_chunks (query by documentId field)
-      const chunkSnap = await firestore.collection('document_chunks').where('documentId', '==', docId).get();
-      chunkSnap.docs.forEach(c => deletions.push(c.ref.delete()));
-      deletedCount++;
+    // 1. Direct doc lookups (doc ID = userId)
+    const directDocCollections = ['user_premium', 'suspended_users', 'user_stats', 'user_settings', 'chat_history'];
+    for (const col of directDocCollections) {
+      deletions.push(firestore.collection(col).doc(userId).delete());
     }
 
-    // 5. Delete ops_telemetry for user (batch in chunks)
+    // 2. Query-by-field lookups
+    async function deleteWhere(collection, field, value) {
+      const snap = await firestore.collection(collection).where(field, '==', value).get();
+      snap.docs.forEach(d => { deletions.push(d.ref.delete()); deletedCount++; });
+    }
+
+    await deleteWhere('shared_research', 'ownerId', userId);
+    await deleteWhere('intelligence_reports', 'user_id', userId);
+    await deleteWhere('notebook', 'user_id', userId);
+    await deleteWhere('pdf_exports', 'userId', userId);
+    await deleteWhere('user_documents', 'ownerId', userId);
+    await deleteWhere('document_chunks', 'userId', userId);
+
+    // 3. Document contents — no userId field, resolve via user_documents IDs
+    const userDocSnap = await firestore.collection('user_documents').where('ownerId', '==', userId).get();
+    for (const doc of userDocSnap.docs) {
+      const docId = doc.id;
+      deletions.push(firestore.collection('document_contents').doc(docId).delete());
+    }
+
+    // 4. Ops telemetry (batch in chunks of 500)
     const telemetrySnap = await firestore.collection('ops_telemetry').where('userId', '==', userId).get();
     const telemetryBatches = [];
     let batch = firestore.batch();
     let opCount = 0;
-    telemetrySnap.docs.forEach((doc, i) => {
+    telemetrySnap.docs.forEach((doc) => {
       batch.delete(doc.ref);
       opCount++;
       if (opCount >= 500) {
@@ -322,7 +325,7 @@ export async function handleAdminPurgeUser(req, res) {
     // Execute all deletions in parallel
     await Promise.all([...deletions, ...telemetryBatches]);
 
-    // 6. Revoke sessions and remove custom claims
+    // 5. Revoke sessions and remove custom claims
     try { await auth.setCustomUserClaims(userId, {}); } catch {}
     try { await auth.revokeRefreshTokens(userId); } catch {}
 
