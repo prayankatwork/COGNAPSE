@@ -143,20 +143,18 @@ export default function MainContent() {
         });
       }
 
-      // Add to archive (Always archive, force current system time for sorting)
-      addToArchive({
-        id: reportId,
-        query: report.archive_entry?.query || targetQuery,
-        timestamp: new Date().toISOString(), // FORCE SYSTEM TIME
-        topic_cluster: report.archive_entry?.topic_cluster || "General Intelligence",
-        tags: report.archive_entry?.tags || [],
-        summary_snippet: report.archive_entry?.summary_snippet || report.summary.bottom_line || "",
-        report
-      });
-
-      // Save to SQLite Vault if logged in
+      // Add to archive (logged-in users only)
       const user = useStore.getState().user;
       if (user) {
+        addToArchive({
+          id: reportId,
+          query: report.archive_entry?.query || targetQuery,
+          timestamp: new Date().toISOString(),
+          topic_cluster: report.archive_entry?.topic_cluster || "General Intelligence",
+          tags: report.archive_entry?.tags || [],
+          summary_snippet: report.archive_entry?.summary_snippet || report.summary.bottom_line || "",
+          report
+        });
         dbService.saveReport(reportId, user.id, targetQuery, report);
       }
 
@@ -303,15 +301,18 @@ export default function MainContent() {
       setCurrentReport(report);
 
       updateGamification({ xpAcquired: 10, searchCountIncrease: 1 });
-      addToArchive({
-        id: reportId,
-        query: report.archive_entry?.query || `Document: ${file.name}`,
-        timestamp: new Date().toISOString(),
-        topic_cluster: "Document Analysis",
-        tags: ["document", "analysis"],
-        summary_snippet: report.summary?.bottom_line || "",
-        report
-      });
+      const user = useStore.getState().user;
+      if (user) {
+        addToArchive({
+          id: reportId,
+          query: report.archive_entry?.query || `Document: ${file.name}`,
+          timestamp: new Date().toISOString(),
+          topic_cluster: "Document Analysis",
+          tags: ["document", "analysis"],
+          summary_snippet: report.summary?.bottom_line || "",
+          report
+        });
+      }
     } catch (err: any) {
       console.error('[Document Analysis Error]', err);
       setError(err.message || "Failed to analyze document.");
@@ -345,8 +346,12 @@ export default function MainContent() {
   };
 
   const startDeepResearch = async () => {
-    // Use the original user query from the archive (not the AI-interpreted query_understood)
-    // to prevent deep research from going off-topic on self-referential AI output
+    const user = useStore.getState().user;
+    if (!user) {
+      setError("Sign in to use Deep Analysis");
+      useStore.getState().setAuthOpen(true);
+      return;
+    }
     const archiveEntry = currentReport?.id
       ? useStore.getState().archive.find(e => e.id === currentReport.id)
       : null;
@@ -422,7 +427,15 @@ export default function MainContent() {
                 id="walkthrough-deep-research-anchor"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                onClick={startDeepResearch}
+                onClick={() => {
+                  const user = useStore.getState().user;
+                  if (!user) {
+                    setError("Sign in to use Deep Analysis");
+                    useStore.getState().setAuthOpen(true);
+                    return;
+                  }
+                  startDeepResearch();
+                }}
                 disabled={
                   deepResearch.status === 'running' || 
                   (!query.trim() && !currentReport) ||
