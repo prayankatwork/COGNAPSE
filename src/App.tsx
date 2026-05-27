@@ -47,6 +47,7 @@ import ToastContainer from './components/ui/ToastContainer';
 
 import { audioService } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
+import { apiFetch } from './services/apiClient';
 
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
@@ -289,6 +290,61 @@ export default function App() {
     };
     syncUser();
   }, [userId, setStats, setNotes, setArchive]);
+
+  // Premium live sync — polls every 30s when tab is visible
+  useEffect(() => {
+    if (!userId) return;
+    let intervalId: ReturnType<typeof setInterval>;
+    let isActive = true;
+
+    const checkPremium = async () => {
+      if (document.hidden || !isActive) return;
+      try {
+        const currentUser = useStore.getState().user;
+        if (!currentUser) return;
+        const token = await auth.currentUser?.getIdToken(false);
+        if (!token) return;
+        const res = await apiFetch('/api/check-premium', {
+          method: 'POST',
+          body: JSON.stringify({ userId }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isActive) return;
+        const newPremium = data.premium === true;
+        const oldPremium = !!currentUser.premium;
+        if (newPremium !== oldPremium || (newPremium && data.premiumPlan !== currentUser.premiumPlan)) {
+          useStore.setState({
+            user: {
+              ...currentUser,
+              premium: newPremium,
+              premiumPlan: data.premiumPlan || undefined,
+              premiumActivatedAt: data.premiumActivatedAt || undefined,
+              premiumExpiresAt: data.premiumExpiresAt || undefined,
+            },
+          });
+        }
+      } catch {}
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkPremium();
+        intervalId = setInterval(checkPremium, 30000);
+      } else {
+        clearInterval(intervalId);
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    onVisibility();
+
+    return () => {
+      isActive = false;
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [userId]);
 
   // Determine Content Based on View
   const renderContent = () => {
