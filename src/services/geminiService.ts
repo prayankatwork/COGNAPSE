@@ -3,9 +3,6 @@ import type { COGNAPSE_Output, GroundedSource, RetrievalTrace, MultiModelConsens
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
 import { useStore } from '../store';
-import { listDocuments } from './documentService';
-import { queryDocuments } from './documentRagService';
-
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
@@ -287,6 +284,10 @@ export async function executeCognapseResearch(
   const { user } = useStore.getState();
   if (user?.id && user?.premium) {
     try {
+      // Dynamic imports to avoid production bundle TDZ issues
+      const { listDocuments } = await import('./documentService');
+      const { queryDocuments } = await import('./documentRagService');
+
       const docs = await listDocuments(user.id, 50);
       const indexedDocs = docs.filter(d => d.status === 'indexed');
 
