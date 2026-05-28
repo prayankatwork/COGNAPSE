@@ -1,8 +1,5 @@
 import nlp from 'compromise';
-import Sentiment from 'sentiment';
 import { lookupDomain, factualToScore, biasToBiasScore } from './domainCredibility';
-
-const sentiment = new Sentiment();
 
 let embedder: any = null;
 let embedderLoading = false;
@@ -27,6 +24,49 @@ async function getEmbedder(): Promise<any> {
     return null;
   } finally {
     embedderLoading = false;
+  }
+}
+
+// ─── Sentiment Model (replaces AFINN-111 word-list) ───
+
+let sentimentModel: any = null;
+let sentimentLoading = false;
+let sentimentReady = false;
+
+async function getSentimentModel(): Promise<any> {
+  if (sentimentReady) return sentimentModel;
+  if (sentimentLoading) {
+    while (sentimentLoading) await new Promise(r => setTimeout(r, 100));
+    return sentimentModel;
+  }
+  sentimentLoading = true;
+  try {
+    const { pipeline } = await import(/* @vite-ignore */ '@xenova/transformers');
+    sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
+      quantized: true,
+    });
+    sentimentReady = true;
+    return sentimentModel;
+  } catch (e) {
+    console.warn('[ScoringEngine] Sentiment model unavailable, using neutral fallback:', e);
+    return null;
+  } finally {
+    sentimentLoading = false;
+  }
+}
+
+async function analyzeSentiment(text: string): Promise<{ comparative: number }> {
+  const pipe = await getSentimentModel();
+  if (!pipe || !text.trim()) return { comparative: 0 };
+
+  try {
+    const result = await pipe(text.slice(0, 500));
+    const output = result[0] as { label: string; score: number };
+    // Convert POSITIVE(0.95) → 0.95, NEGATIVE(0.95) → -0.95
+    const comparative = output.label === 'POSITIVE' ? output.score : -output.score;
+    return { comparative };
+  } catch {
+    return { comparative: 0 };
   }
 }
 
@@ -162,7 +202,7 @@ export function computeEntityDiversity(sources: { domain?: string; key_finding?:
   };
 }
 
-export function computeBiasFromSentiment(
+export async function computeBiasFromSentiment(
   sources: { domain?: string; key_finding?: string; title?: string }[]
 ): {
   averageSentiment: number;
@@ -178,17 +218,23 @@ export function computeBiasFromSentiment(
   let domainBiasSum = 0;
   let domainCount = 0;
 
-  for (const s of sources) {
-    const text = `${s.title || ''} ${s.key_finding || ''}`;
-    if (!text.trim()) continue;
+  // Batch sentiment analysis in parallel for performance
+  const results = await Promise.all(
+    sources.map(async (s) => {
+      const text = `${s.title || ''} ${s.key_finding || ''}`;
+      if (!text.trim()) return null;
+      const result = await analyzeSentiment(text);
+      const domainInfo = lookupDomain(s.domain || '');
+      return { comparative: result.comparative, domainInfo };
+    })
+  );
 
-    const result = sentiment.analyze(text);
-    totalComparative += result.comparative;
-    totalIntensity += Math.abs(result.comparative);
-
-    const domainInfo = lookupDomain(s.domain || '');
-    if (domainInfo) {
-      domainBiasSum += biasToBiasScore(domainInfo.bias);
+  for (const r of results) {
+    if (!r) continue;
+    totalComparative += r.comparative;
+    totalIntensity += Math.abs(r.comparative);
+    if (r.domainInfo) {
+      domainBiasSum += biasToBiasScore(r.domainInfo.bias);
       domainCount++;
       hasDomainOverride = true;
     }
@@ -197,7 +243,7 @@ export function computeBiasFromSentiment(
   const avgSentiment = sources.length > 0 ? totalComparative / sources.length : 0;
   const emotionalIntensity = sources.length > 0 ? totalIntensity / sources.length : 0;
 
-  const sentimentBias = Math.max(0, Math.min(1, (1 - Math.abs(avgSentiment)) * 0.5 + emotionalIntensity * 0.5));
+  const sentimentBias = Math.max(0, Math.min(1, Math.abs(avgSentiment) * 0.7 + emotionalIntensity * 0.3));
   const domainBias = domainCount > 0 ? domainBiasSum / domainCount : 0.3;
 
   const biasScore = hasDomainOverride
@@ -274,7 +320,7 @@ export async function computeAllScores(
   ]);
 
   const entityDiversity = computeEntityDiversity(sources);
-  const sentimentResult = computeBiasFromSentiment(sources);
+  const sentimentResult = await computeBiasFromSentiment(sources);
   const credibility = computeEnhancedSourceCredibility(sources);
 
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[evidenceConsensus || ''] ?? 0.5;

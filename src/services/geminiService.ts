@@ -3,6 +3,8 @@ import type { COGNAPSE_Output, GroundedSource, RetrievalTrace, MultiModelConsens
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
 import { useStore } from '../store';
+import { listDocuments } from './documentService';
+import { queryDocuments } from './documentRagService';
 
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
@@ -281,13 +283,72 @@ export async function executeCognapseResearch(
     addReasoningStep('Web search unavailable, using synthetic generation');
   }
 
+  // ─── PHASE 1B: DOCUMENT SOURCE RETRIEVAL (Premium users with indexed docs) ───
+  const { user } = useStore.getState();
+  if (user?.id && user?.premium) {
+    try {
+      const docs = await listDocuments(user.id, 50);
+      const indexedDocs = docs.filter(d => d.status === 'indexed');
+
+      if (indexedDocs.length > 0) {
+        addReasoningStep(`Searching ${indexedDocs.length} indexed documents for relevant content...`);
+
+        const docSearchResults = await queryDocuments(
+          user.id,
+          query,
+          indexedDocs.map(d => d.id),
+          5 // top K chunks
+        );
+
+        if (docSearchResults.length > 0) {
+          addReasoningStep(`Found ${docSearchResults.length} relevant excerpts from your documents`);
+
+          // Build a lookup: documentId → originalName
+          const docNameMap = new Map<string, string>();
+          for (const d of indexedDocs) {
+            docNameMap.set(d.id, d.originalName);
+          }
+
+          // Map document chunks to GroundedSource format
+          let nextId = 0;
+          for (const s of groundedSources) {
+            if (s.id > nextId) nextId = s.id;
+          }
+
+          const docSources: GroundedSource[] = docSearchResults.map((r, i) => ({
+            id: nextId + i + 1,
+            title: docNameMap.get(r.chunk.documentId) || 'Uploaded Document',
+            url: '',
+            domain: 'document',
+            type: 'Document',
+            snippet: r.chunk.content.substring(0, 400),
+            credibility_score: Math.round(r.score * 100),
+            relevance_score: Math.round(r.score * 100),
+            key_finding: r.chunk.content.substring(0, 200),
+            published_date: '',
+            bias_flag: null,
+            retrieval_timestamp: new Date().toISOString(),
+          }));
+
+          // Append document sources AFTER web sources
+          groundedSources.push(...docSources);
+        } else {
+          addReasoningStep('No relevant content found in your uploaded documents for this query');
+        }
+      }
+    } catch (e) {
+      // Document search is a bonus — don't break research if it fails
+      console.warn('Document search unavailable:', e);
+    }
+  }
+
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
   // Compress sources into token-efficient context
   const sourcesContext = groundedSources.length > 0
     ? `
 ---PROVIDED SOURCES---
-Below are REAL search results retrieved from the live web. You MUST base your analysis on these sources.
-Each source has an ID. You MUST cite sources inline using [ID] format for every claim.
+Below are REAL search results retrieved from the live web, plus relevant content from your uploaded documents.
+You MUST base your analysis on these sources. Each source has an ID. You MUST cite sources inline using [ID] format for every claim.
 
 ${compressSourcesForLLM(groundedSources)}
 
