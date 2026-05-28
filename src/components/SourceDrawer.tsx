@@ -49,6 +49,7 @@ function getSourceLabel(type: string): string {
     case 'government': return 'Government';
     case 'journalism': return 'Journalism';
     case 'industry': return 'Industry';
+    case 'Document': return 'Document';
     default: return 'Web';
   }
 }
