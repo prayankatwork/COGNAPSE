@@ -351,11 +351,20 @@ export async function handleQueryDocumentChunks(req, res) {
 
     const allChunks = [];
     for (const docId of documentIds) {
-      const snapshot = await db.collection('document_chunks')
-        .where('documentId', '==', docId)
-        .where('userId', '==', uid)
-        .orderBy('index', 'asc')
-        .get();
+      let snapshot;
+      try {
+        snapshot = await db.collection('document_chunks')
+          .where('documentId', '==', docId)
+          .where('userId', '==', uid)
+          .orderBy('index', 'asc')
+          .get();
+      } catch (_) {
+        // Fallback: query without orderBy in case composite index is not deployed
+        snapshot = await db.collection('document_chunks')
+          .where('documentId', '==', docId)
+          .where('userId', '==', uid)
+          .get();
+      }
       for (const doc of snapshot.docs) allChunks.push({ id: doc.id, ...doc.data() });
     }
 

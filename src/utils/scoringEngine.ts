@@ -13,7 +13,7 @@ async function getEmbedder(): Promise<any> {
   }
   embedderLoading = true;
   try {
-    const { pipeline } = await import(/* @vite-ignore */ '@xenova/transformers');
+    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
     });
@@ -41,7 +41,7 @@ async function getSentimentModel(): Promise<any> {
   }
   sentimentLoading = true;
   try {
-    const { pipeline } = await import(/* @vite-ignore */ '@xenova/transformers');
+    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
     });

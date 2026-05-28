@@ -1,0 +1,222 @@
+2263af1 fix TDZ error caused by variable shadowing: rename const user to const storeUser in try blocks
+d16c044 fix production TDZ error: eliminate all dual static+dynamic import patterns
+a8e2094 fix production TDZ error by using dynamic imports for document services in geminiService.ts
+52cb16f replace sentiment word-list with transformer model; wire document retrieval into research pipeline
+c8ab345 v1.0.0 — Initial Production Release
+099e445 remove fake 'Research Templates' premium feature listing
+e9c9a8c show toast notification when premium is granted via live sync
+b55929a purge now also deletes Firebase Auth user account so user can fully re-register
+4b5d1a9 purge: also delete intelligence_reports, notebook, pdf_exports, user_stats, user_settings, chat_history
+c52502d improve premium sync: 10s interval, focus event, error logging
+e01fa8a fix premium expiry: loadPremium now reads API response correctly and checks expiry in fallback paths
+00a65d4 add premium live polling: re-checks status every 30s when tab is visible
+36a1980 api: add admin-users, admin-set-premium, admin-purge-user endpoints
+ee12853 bg canvas: smooth dim instead of freeze, citation hover zone fix, ambient pulse
+d37612f Make conflicts field mandatory in system prompt, add fallback empty array in parser
+3f54c5a Fix Deep Analysis guard not clearing error after login
+bddbde0 Guard archive and deep analysis for guest users
+7eecba5 Restore clsx import in SpotifyWidget
+d72c199 Remove music visualizer waves from UnifiedCanvas, keep particle bg; remove vibe toggle from SpotifyWidget
+eab526b Remove focus/energy vibe toggle and UnifiedCanvas background visuals
+731218e Replace decommissioned mixtral-8x7b-32768 with llama-3.1-8b-instant for consensus model
+3c45e4f Restore citation hover preview with EvidencePreview in full_synthesis
+56436be loader brand colors, research pipeline docs, scoring engine, multi-model consensus, citation verification, UX audit fixes
+1b2f911 Create DIAGRAM
+331f144 Fix syntax: remove JSX comment inside expression block
+4ce798d UX improvements: collapsible analysis panel, input mode badge, remove walkthrough gate, cap stagger delays
+45cf9d5 Add reasoning timeline steps to standard research flow
+5617cca Add Tavily search API provider support
+14d1a6e Fix ReasoningStep type mismatch: store objects not strings
+d79d293 Fix Cognition Replay: restore addReasoningStep calls and reasoningTimeline state
+8b62d2b Remove unresolved threads sidebar and socratic loop, keep only coverage metadata line
+b8b0dae Add three psychological retention hooks: competence feedback, unresolved threads sidebar, socratic loop unexpected connections
+93e827b Sync enhanced scoring to premium PDF: replace raw AI credibility with domain-enhanced score, replace hardcoded mock consensus with conflict-penalized evidence consensus, add source reliability index, confidence spread, entity diversity to appendix
+802b0b2 Fix Overall Quality >100% bug: normalize relevance_score (0-10) to 0-1 in fallback formula, fix accuracy scale mismatch in neural engine
+69a4386 Integrate Transformers.js + free NLP scoring engine: semantic consensus via MiniLM-L6-v2 embeddings, entity diversity via compromise, sentiment bias via sentiment, enhanced credibility with domain + neural hybrid, code-split to 201KB gzip chunk, graceful fallback to domain-only scoring when neural unavailable
+1191336 Make all premium scores real and accurate: remove Cross-Validation Score, create domain credibility dataset (200+ domains with MBFC bias + factual ratings), use real per-domain data for bias direction + source credibility, add historical trend tracking per topic cluster (localStorage), replace hardcoded analyst interpretation with LLM-generated per-report summary (cached), add Weighted composite for overall quality
+618d56f Replace thin premium score formulas with real per-source credibility data: Source Reliability Index = avg per-source credibility_score, Confidence Spread = std dev of credibility scores, Overall Quality = weighted composite (40% cred + 30% consensus + 15% relevance + 15% diversity), Cross-Validation = avg credibility penalized by conflicts
+6aafbe8 Sanitize intelligence_map in documentRagService: coerce types, ensure required fields, filter invalid edges — prevents PhysicsMap crash on malformed LLM output
+9c66b19 Guard Intelligence Map render: require central_node + non-empty nodes array to prevent PhysicsMap crash on document reports
+0da483c Restore Cognition Replay (ThoughtReplayEngine) that was incorrectly removed with reasoning timeline cleanup
+cc5d98e Fix deep research crash: add isJson to research.js destructure and pass to runSwarm, prevent double-serialization
+67ca8e1 Remove full reasoning timeline: store state, interfaces, all addReasoningStep calls (11 sites), ReasoningTimeline.tsx, ThoughtReplayEngine.tsx, store.ts/Sidebar.tsx cleanup, unused pdfGenerator.ts import
+fd20ec8 Remove ReasoningTimeline UI from report view
+afad004 Revert "Hide .md, .json, APA citation selector, and Premium Report button for document report results"
+78d77ff Hide .md, .json, APA citation selector, and Premium Report button for document report results
+8ec09ed Revert "Hide .md, .json, APA citation selector, and Premium Report button for document report results"
+db095cb Revert "Reapply "Replace Cognition Replay with animated Reasoning Timeline in sidebar""
+7bc5808 Reapply "Replace Cognition Replay with animated Reasoning Timeline in sidebar"
+6ae87b7 Revert "Replace Cognition Replay with animated Reasoning Timeline in sidebar"
+160538d Replace Cognition Replay with animated Reasoning Timeline in sidebar
+3dd1d6f Hide .md, .json, APA citation selector, and Premium Report button for document report results
+09833ed Revert "Fix document PDF export: add isDocument guards for TOC, premium sections, Consensus, Advanced, Timeline, Future, Citations; guard premium mock data; optional chain metadata refs"
+42c07d4 Fix document PDF export: add isDocument guards for TOC, premium sections, Consensus, Advanced, Timeline, Future, Citations; guard premium mock data; optional chain metadata refs
+28ba093 Use GENERATE: instructions in intel map schema so model doesn't copy placeholder labels literally
+46d8fa2 Add intelligence_map to doc analysis schema + hide Cognition Replay for document reports
+19e2bba Fix: send userId to /api/research (was missing, causing all cloud calls to fail) + fix 'Short title' hallucination
+005fede Hide Deep Analysis button for document reports
+bb43740 Sanitize extracted doc text + fallback report when JSON parse fails
+6ed940e Harden JSON instruction: 'output ONLY the JSON' + closing brace recovery
+2d4fdec Drop Groq JSON mode for doc analysis — use extractJson recovery instead
+770d9f7 Drastic doc analysis schema reduction: removed SWOT/intel map/conflicts/geo/timeline, capped doc at 10K chars, target 4K token output
+a043f56 Fix doc analysis JSON overflow: reduce expected output (150-300 word synthesis, concise throughout)
+f05f835 Include error detail in doc analysis response for debugging
+3529090 Fix doc analysis: restructure template (instructions first, doc text last) so prompt pruning preserves JSON schema
+a42d7e3 Fix document analysis timeout on Vercel: force 8B model, cap text at 25K chars
+7841410 Remove duplicate Archive toggle button (header already says Archive)
+1cea772 Remove Document Intelligence panel (replaced by upload-to-report in search bar)
+1b90661 Add document-to-research feature: upload any file, get standard research output in ReportView
+cb2f173 Fix RAG answer failures: add prompt pruning to generateRag, chunk truncation, composite index fallback
+f025161 Add composite index for document_chunks queries (documentId, userId, index)
+6eec5e1 Auto-select processed document so query input is enabled immediately
+a824f5b Fix 'Failed to store document content' - chunk base64 content into document_contents collection
+7552045 Fix ALL API endpoints crashing (FUNCTION_INVOCATION_FAILED) + complete Document Intelligence overhaul
+6ca881c Fix Document Intelligence pipeline end-to-end: pdfjs-dist, safe error strings
+343ba02 Fix Intelligence Query input stuck disabled after page refresh
+fbac8fb Remove sticky initFailed flag from Firebase Admin init
+8ffc708 Fix upload & list-documents: derive uid from auth, remove composite index requirement
+19bd4da Fix upload crash: missing crypto import + Storage fallback
+82fa181 Fix Vercel catch-all routing + lazy-load pdf-parse
+371a2a0 Fix broken import in consolidated router: remove unused isLocal from research.js
+8db6a01 Phase 3: Document intelligence, Gemini-to-Groq migration, bug fixes
+cb302b3 Reset deepResearch state and currentView on logout
+0be5df6 Replace hardcoded premium scores with real computation from report data
+49ccbeb Fix duplicate grid wrapper in ReportView, improve Live Source panel UX, reposition premium CTA with curiosity-gap copy
+d6f0843 Add theme & notebook walkthrough steps, remove SYSTEM: OPERATIONAL status bar, enable toggle/notebook during onboarding
+ee9b496 Fix second missing import in TechnicalDocs.tsx: add Lock to lucide-react import (was causing 'Illegal constructor' after Activity fix)
+7ce8fd1 Fix REAL root cause of 'Activity is not defined': missing Activity import in TechnicalDocs.tsx - was used in JSX but never imported from lucide-react
+680abc4 Fix 3 remaining no-duplicate-imports violations: ReportView.tsx (double types import), firebase.ts (double firestore import), ui/index.ts (double StatusDot export)
+2590e31 Add ESLint + no-duplicate-imports rule: prevent duplicate named imports from same module (catches lucide-react tree-shaking bugs at lint time)
+fa8d480 Fix duplicate lucide-react Activity import in DevDashboard.tsx — same esbuild tree-shaking conflict as OperativeStatus.tsx
+7620ba6 Fix production runtime error: remove duplicate lucide-react Activity import in OperativeStatus.tsx (caused esbuild tree-shaking to resolve Activity as undefined)
+3509fb1 Fix build errors: missing closing div in Navbar.tsx left-section wrapper + PhysicsMap.tsx footer nesting issue
+0cb703a Mobile optimization pass: responsive layout, touch targets, adaptive canvas rendering + security fixes: telemetry ingestion API, Firestore rules lockdown, doc corrections, toast system, PDF watermark, index.html cleanup
+0c675ae Ignore stray NUL file (Windows reserved name artifact)
+cc2a042 Raise Groq 8b temperature to 0.4 for more detailed output
+26e0763 Token counter: capture Groq token usage, store in Firestore, display in ops dashboard
+466aa66 Smart model routing: 8b for standard research, 70b for deep research
+fa6eb65 Add Clear Data API endpoint: batch-delete all ops_telemetry documents
+dad9c09 Fix telemetry API: ESM dynamic import bug, add OPS_TELEMETRY_API_KEY to sync script
+4b08304 Add telemetry pipeline: opsTelemetry service + ops-telemetry API endpoint + behavior tracking
+f2cc9a0 Security hardening, perf optimizations, config isolation
+b64ee0d Remove NLI feature completely; fix scoring; hide export panel for premium users
+b024be8 Replace Aura SDK with raw tracking script
+49d2802 Add Aura SDK and update CSP
+9c39138 Update Google Analytics Measurement ID
+e635137 Swap Vercel Analytics for Google Analytics 4
+2f19b08 Fix double scrollbars by migrating hardcoded heights to flex layout
+38e0909 Add automatic page reload on dynamic import chunk failure
+db2f372 Fix full page reload on legal footer links causing state wipe
+dd4e1eb Update background to Sonar Radar Scanner effect
+3980a94 Restore global NeuralBackground visibility
+1693c90 Production audit fixes: state optimizations, lazy loading, cleanup, and robustness
+540151b Ship production payments, secure APIs, and hub/status fixes.
+45eed8b Remove fork UI from shared research
+01908dc Remove intelligence boards and collaboration architecture
+5c1a365 Redesign intelligence boards workspace
+875158a Complete board and sharing product flows
+a440bf9 Add board invitation acceptance flow
+d32383c Add shared research boards and forks
+4be0946 fix: resolve TypeError forEach is not a function across multiple components with robust Array.isArray guards
+cad5508 style(premium): improve PremiumExportModal visibility and contrast in light mode
+cb2e58b feat: add secure serverless research backend handler and system favicon
+67f34e1 feat: implement secure API swarm routing, Vercel analytics integration, Firestore export telemetry, and navbar premium indicator badge
+b6fd03a Enforce global contrast accessibility overrides for ink and accent buttons across all themes
+20545e9 \Force white text contrast above dark ink buttons in light mode"
+45a6dab Implement Analyst Onboarding Lockouts to prevent manual walkthrough interruption
+fd8c6b5 Fix walkthrough protocol bugs: correct TTS pronunciation of COGNAPSE and fix Knowledge Hub navigation step
+849ecf3 Enhance Intelligence Feed prompt with dynamic datetime and randomized scenario vectors to ensure live dynamic news updates
+cd5cf3a Update sidebar title to Archive and optimize alignment
+bb919d2 Fix Research Analytics tab radar chart data parsing
+d1bab4f Log PDF exports to history on download
+aebac93 Optimize firestore limits by storing pdf_exports strictly on client localStorage
+528dff6 Remove playground message and launch button from MainContent loader
+0d2f7c7 Close premium modal when opening auth modal
+85312c4 Refactor premium trigger to Navbar for a minimal and elegant UI as requested
+c9e5ae4 Replace intelligence loader with Three.js 3D implementation
+397dcd3 Implement unified premium loading animation system across dashboard and extension
+3d98fca Remove process env debug line from check-premium
+f0017c9 Exempt cognapse-extension.zip from Vercel ignore
+80484b2 Fix syntax error inside extension popup.js by properly wrapping blocks in outer try-catch
+bb2a5dd Update chrome extension files and repackage zip with local session fallback logic
+7435250 temp debug process env
+34e2926 Use firebase-admin SDK inside serverless functions if credentials exist to bypass Firestore client-side security rules
+1bd2355 Fix Firebase missing environment variable fallback bug that caused 500 server error in serverless functions
+5064ed4 UI Polish: Improve dark mode typography contrast on accent components and refine navbar blur threshold
+e137d09 Expose detailed serverless error stack in verify-payment to enable instant diagnostic insights in browser console.
+708a9bd Trigger premium status write from client side after server-side cryptographic payment verification to resolve Firestore PERMISSION_DENIED on Vercel Node env.
+f306499 Implement extremely resilient payment signature verification that doesn't fail on database downtime or credentials mismatch.
+fde9be3 Fix Firestore quota exhaustion with robust hybrid localStorage fallbacks and resolve Razorpay payment 404 with local Sandbox simulator.
+3946071 Fix critical React useEffect infinite loop in App.tsx that exhausted Firestore daily quota
+c1c963d Refactor PremiumExportModal success state to focus entirely on 100% free direct Zip installation
+aafefcf Optimize manifest.json and PremiumExportModal for official Chrome Web Store production release
+e2ec10b Generate branded Neural Companion eye icons and implement visual layman Chrome Extension setup modal
+377f82e Auto-clear selectedText from storage on popup retrieve to prevent repeated analysis triggers
+1711c88 Limit maximum output tokens to 150 and optimize prompt for high-efficiency, credit-conserving summaries
+4e2bd30 Refactor Chrome extension to match COGNAPSE app Cyber Yellow and Solid Black branding, and cap summary size to 4-6 lines
+b7c3afe Refine prompt for comprehensive premium branding and customize popup scrollbars
+bc053e9 Integrate premium multi-node AI Swarm (Llama 3.3, Gemini 1.5, Llama 3.1) in serverless analyze gateway
+279767d Expose detailed serverless error message to client popup
+96382e4 Fix duplicate Firebase App initialization in check-premium and analyze serverless endpoints
+8ac9053 Build Chrome Extension Manifest V3 for COGNAPSE with highlight analysis, session syncing, and secure Vercel gateway
+75c5905 Implement Unified Premium Access layer with plans, Firebase integration, and API validation checker
+edc3005 fix: force vercel to rebuild functions with new test keys
+e28541c chore: switch back to test razorpay keys for testing
+5d65d46 feat: complete overhaul of pdf export to professional academic report structure
+9868892 style: simplify payment modal terminology to clear saas language
+9ede89f chore: switch to live razorpay keys for production
+3c97a0a chore: revert back to correct razorpay test keys
+971114d fix: add cdn.razorpay.com to csp script-src for risk detection script
+9b3fd67 chore: update razorpay keys to live environment
+830d6ff style: refine payment modal with analyst grade terminology and responsive layout
+6c7503d style: use professional analyst terminology for payment modal and unify button wording
+6d5e8a9 fix: resolve es module require errors in api endpoints and fix media CSP
+4084f7b fix: update Content Security Policy to allow razorpay checkout script
+509559d fix: remove crossOrigin attribute from razorpay script loader to prevent CORS issues
+01db900 fix: make razorpay script loader robust against re-injection and adblockers
+86f82ac chore: add real razorpay test API key
+b8f54b1 feat: replace mock QR payment with razorpay integration and refine export copy
+a17b5a7 feat: transform PDF export into premium analyst-grade intelligence dossier with psychological UX
+59ece5a fix: resolve PDF page-break split text/title cuts with auto-pagination engine
+4388bf9 fix: resolve PDF deep research column layout vertical stacking bug
+86e8ad9 style: upgrade PDF generator design to ultra-premium Cognapse dossier
+d5fcd14 feat: integrate premium PDF dossier export, Paytm checkout system, and My Exports history logger
+3d2883e feat: implement high-fidelity premium PDF export system with UPI scan-to-pay QR, local SQLite & Firestore logs, and dynamic A4 vector PDF compiler
+b641c01 perf: completely deactivate visualizer & particle canvases on mobile and optimize sidebar grid rendering
+ba77911 fix: resolve build syntax error in LandingPage tag comment
+e057223 perf: downgrade expensive blurs and disable heavy animations on mobile devices to prevent UI lag
+f7b1f95 feat: complete app-wide mobile responsiveness audit and UI optimization
+be4b3a1 fix: resolve mobile layout overlaps on navbar, search bar, and typography
+d1ea1cf feat: make UI responsive for mobile devices
+f5e4101 Optimize token consumption: extend Intelligence Hub refresh interval, add visibility guard, and refine research word count targets.
+ef2cd6a fix: restore standard Gemini model names and expand Groq fallback ecosystem
+4a20a54 fix: resolve AI node 404s and improve swarm fallback resilience
+9c1e87f fix: remove important flag overriding button text contrast
+9fa1a3d fix: restore full contrast for 'Enter Research' and 'Rabbit Hole' buttons in dark mode
+3c85ce1 fix: improve font visibility in dark mode and resolve Vercel deployment size limit
+d1c6024 feat: professionalize UI terminology, add live Knowledge Hub sync, enhance background animation
+7d3b93d docs: Shift distribution to Portable ZIP due to system constraints
+ef4e322 docs: Restore end-user installation protocols
+dfcdae1 feat: Intelligence OS V2.5 - Neural Protocol, Intelligence Hub, and Nuclear Purge Protocol
+a1d3ec5 feat: Integrated Intelligence Hub with user-specific cloud persistence and UI refinements
+dde902e Hardened Security Architecture, Smart Auto-Installer, and Tactical Documentation
+011bdc6 feat: implement highly secure Vercel Serverless Functions to hide API keys in production while preserving local development
+245ae1b fix: refactor spotify widget drag logic to fix auto-open on drag and allow closed state dragging
+5cfd0d9 feat: redesign Spotify widget with framer-motion and glassmorphism
+ea9f605 refactor: completely excise the Onboarding first-time user screen
+254033c feat: enforce in-memory auth and state persistence for absolute security
+07c6e64 fix: remove orderBy from Firestore queries to prevent index failure and sort locally
+d53c086 fix: resolve dbService loadStats crash causing history sync to abort
+d2f7935 fix: remove CustomCursor and resolve build errors
+afe4895 fix: remove games entirely and fix CustomCursor and DecisionHistory crashes
+d8f58e4 Merge remote changes and resolve conflicts by keeping DecisionMatrix excision
+9d1ad2b feat: upgrade UI to Tactical Intelligence OS with Universal Command Palette and Mechanical Blink
+d6034f6 Save state: Command Conduit Navbar and recent changes
+c61c5a6 Update README.md
+282fa4a Full system optimization: Global Notebook, Decision Vault, Firestore subcollections, and comprehensive README update
+52a88b3 Final Polish: Integrated Decision Matrix, Neural Intel OS Interface, and Intelligence Swarm optimizations
+fd4b86d refactor: restructure features, add full documentation and stabilize architecture
+2363226 Fix UI error state: Updated authentication module to correctly display Firebase Cloud errors instead of legacy local vault errors
+c0abc83 Fix Vercel deployment: Removed deprecated react-simple-maps causing React 19 peer dependency conflict
+abbf179 Production hardening for COGNAPSE public release. Added Neural Swarm, UI improvements, and Vercel routing.
+f7cb482 Initial commit
