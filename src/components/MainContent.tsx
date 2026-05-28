@@ -144,8 +144,8 @@ export default function MainContent() {
       }
 
       // Add to archive (logged-in users only)
-      const user = useStore.getState().user;
-      if (user) {
+      const storeUser = useStore.getState().user;
+      if (storeUser) {
         addToArchive({
           id: reportId,
           query: report.archive_entry?.query || targetQuery,
@@ -155,7 +155,7 @@ export default function MainContent() {
           summary_snippet: report.archive_entry?.summary_snippet || report.summary.bottom_line || "",
           report
         });
-        dbService.saveReport(reportId, user.id, targetQuery, report);
+        dbService.saveReport(reportId, storeUser.id, targetQuery, report);
       }
 
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -301,8 +301,8 @@ export default function MainContent() {
       setCurrentReport(report);
 
       updateGamification({ xpAcquired: 10, searchCountIncrease: 1 });
-      const user = useStore.getState().user;
-      if (user) {
+      const storeUser = useStore.getState().user;
+      if (storeUser) {
         addToArchive({
           id: reportId,
           query: report.archive_entry?.query || `Document: ${file.name}`,
