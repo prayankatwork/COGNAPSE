@@ -287,7 +287,10 @@ export async function executeCognapseResearch(
   if (user?.id && user?.premium) {
     try {
       const docs = await listDocuments(user.id, 50);
-      const indexedDocs = docs.filter(d => d.status === 'indexed');
+      const indexedDocs = docs.filter(d =>
+        d.status === 'indexed' &&
+        !d.originalName?.startsWith('cognapse_report_')
+      );
 
       if (indexedDocs.length > 0) {
         addReasoningStep(`Searching ${indexedDocs.length} indexed documents for relevant content...`);
