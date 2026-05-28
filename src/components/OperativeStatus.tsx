@@ -6,7 +6,7 @@ import {
   Flame, Star, Target, Cpu,
   BarChart3, PieChart,
   TrendingUp, Zap, ZapOff, History, Search, Link2, FileText, Download, Loader2,
-  Crown, Award, CheckCircle2, AlertCircle, CreditCard, Calendar, Chrome, FileJson, FileDown
+  Crown, Award, CheckCircle2, AlertCircle, CreditCard, Calendar, Chrome, FileJson, FileDown, Trash2
 } from 'lucide-react';
 import { toast } from '../utils/toast';
 import clsx from 'clsx';
@@ -181,9 +181,11 @@ function TacticalGauge({ label, value, icon, colorClass = "text-my-accent" }: { 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function OperativeStatus({ onClose }: OperativeStatusProps) {
-  const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user, deleteAccount, logout } = useStore();
+  const { xp, rank, searchCount, streak, archive, pdfExports, fetchExports, user, deleteAccount, logout, removeExport, clearExports } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'exports' | 'premium'>('overview');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [clearingExports, setClearingExports] = useState(false);
   const [purging, setPurging] = useState(false);
 
   useEffect(() => {
@@ -551,9 +553,25 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                      <h3 className="text-lg font-serif font-bold italic text-my-ink">Dossier Export History</h3>
                      <p className="text-[8px] text-my-muted uppercase tracking-[0.2em] mt-1">Authorized PDF credentials and download logs</p>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-my-accent font-mono uppercase bg-my-accent/5 px-3 py-1 border border-my-accent/10">
-                    <FileText size={12} />
-                    <span>{pdfExports?.length || 0} Exports</span>
+                  <div className="flex items-center gap-3">
+                    {pdfExports && pdfExports.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (!window.confirm('Delete ALL exported PDFs? This cannot be undone.')) return;
+                          setClearingExports(true);
+                          clearExports().finally(() => setClearingExports(false));
+                        }}
+                        disabled={clearingExports}
+                        className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-red-500/70 hover:text-red-500 transition-colors px-2 py-1 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 disabled:opacity-40"
+                      >
+                        <Trash2 size={10} />
+                        {clearingExports ? 'Clearing…' : 'Delete All'}
+                      </button>
+                    )}
+                    <div className="flex items-center gap-2 text-[10px] text-my-accent font-mono uppercase bg-my-accent/5 px-3 py-1 border border-my-accent/10">
+                      <FileText size={12} />
+                      <span>{pdfExports?.length || 0} Exports</span>
+                    </div>
                   </div>
                 </div>
 
@@ -577,21 +595,39 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleRedownload(exp)}
-                          disabled={downloadingId === exp.id}
-                          className="px-4 py-2 border border-my-border hover:border-my-accent text-[9px] font-black uppercase tracking-widest text-my-ink hover:text-my-accent transition-all flex items-center gap-2 self-stretch md:self-auto justify-center bg-my-bg disabled:opacity-50"
-                        >
-                          {downloadingId === exp.id ? (
-                            <>
-                              <Loader2 size={12} className="animate-spin" /> Packaging...
-                            </>
-                          ) : (
-                            <>
-                              <Download size={12} /> Get PDF
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2 self-stretch md:self-auto">
+                          <button
+                            onClick={() => {
+                              if (!window.confirm(`Delete this export for "${exp.query}"?`)) return;
+                              setDeletingId(exp.id);
+                              removeExport(exp.id).finally(() => setDeletingId(null));
+                            }}
+                            disabled={deletingId === exp.id}
+                            className="px-2 py-2 border border-my-border hover:border-red-500/40 text-my-muted hover:text-red-500 transition-all disabled:opacity-40 bg-my-bg"
+                            title="Delete export"
+                          >
+                            {deletingId === exp.id ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Trash2 size={12} />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleRedownload(exp)}
+                            disabled={downloadingId === exp.id}
+                            className="px-4 py-2 border border-my-border hover:border-my-accent text-[9px] font-black uppercase tracking-widest text-my-ink hover:text-my-accent transition-all flex items-center gap-2 justify-center bg-my-bg disabled:opacity-50"
+                          >
+                            {downloadingId === exp.id ? (
+                              <>
+                                <Loader2 size={12} className="animate-spin" /> Packaging...
+                              </>
+                            ) : (
+                              <>
+                                <Download size={12} /> Get PDF
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

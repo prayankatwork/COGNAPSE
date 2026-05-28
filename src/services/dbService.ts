@@ -450,6 +450,38 @@ export const dbService = {
     }
   },
 
+  async deleteExport(exportId: string, userId: string) {
+    // Remove from local storage
+    try {
+      const localExports = JSON.parse(localStorage.getItem(`cognapse_exports_${userId}`) || '[]');
+      const filtered = localExports.filter((e: any) => e.id !== exportId);
+      localStorage.setItem(`cognapse_exports_${userId}`, JSON.stringify(filtered));
+    } catch (e) {}
+
+    // Remove from Firestore
+    try {
+      await deleteDoc(doc(db, "pdf_exports", exportId));
+    } catch (error) {
+      console.warn("Firebase export deletion failed, local storage updated:", error);
+    }
+  },
+
+  async clearExports(userId: string) {
+    // Clear from local storage
+    localStorage.removeItem(`cognapse_exports_${userId}`);
+
+    // Clear from Firestore
+    try {
+      const exportsQ = query(collection(db, "pdf_exports"), where("userId", "==", userId));
+      const exportsSnap = await getDocs(exportsQ);
+      for (const d of exportsSnap.docs) {
+        await deleteDoc(d.ref);
+      }
+    } catch (error) {
+      console.warn("Firebase exports clear failed, local storage cleared:", error);
+    }
+  },
+
   async getUserExports(userId: string) {
     try {
       const q = query(

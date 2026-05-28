@@ -210,6 +210,8 @@ interface AppState {
   unlockReport: (researchId: string) => void;
   addExport: (exportData: any) => Promise<void>;
   fetchExports: () => Promise<void>;
+  removeExport: (exportId: string) => Promise<void>;
+  clearExports: () => Promise<void>;
 
   // #8: Premium chat history
   premiumChatHistory: ChatMessage[];
@@ -684,6 +686,20 @@ export const useStore = create<AppState>()(
         if (!user) return;
         const exports = await dbService.getUserExports(user.id);
         set({ pdfExports: exports });
+      },
+      removeExport: async (exportId: string) => {
+        const user = get().user;
+        if (!user) return;
+        await dbService.deleteExport(exportId, user.id);
+        set((state) => ({
+          pdfExports: state.pdfExports.filter(e => e.id !== exportId)
+        }));
+      },
+      clearExports: async () => {
+        const user = get().user;
+        if (!user) return;
+        await dbService.clearExports(user.id);
+        set({ pdfExports: [] });
       },
 
       // #8: Premium chat history
