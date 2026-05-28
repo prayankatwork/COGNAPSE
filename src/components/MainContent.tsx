@@ -86,6 +86,9 @@ export default function MainContent() {
 
   const handleSearch = async (targetQuery: string) => {
     if (!targetQuery.trim()) return;
+    
+    const benchmarkStart = performance.now();
+    console.log(`[Benchmark] Starting main search for query: "${targetQuery}"`);
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -170,11 +173,18 @@ export default function MainContent() {
       clearLoadingPhaseTimers();
       setLoading(false);
       setIsLoading(false);
+      const benchmarkEnd = performance.now();
+      console.log(`[Benchmark] Main search completed in ${((benchmarkEnd - benchmarkStart) / 1000).toFixed(3)} seconds.`);
     }
   };
 
   const handleSubSearch = async (targetQuery: string, retryCount = 0) => {
     if (!targetQuery.trim()) return;
+
+    const benchmarkStart = performance.now();
+    if (retryCount === 0) {
+      console.log(`[Benchmark] Starting sub-search for query: "${targetQuery}"`);
+    }
 
     if (retryCount === 0 && abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -210,6 +220,10 @@ export default function MainContent() {
       if (err.name === 'AbortError') return;
       setError(err.message || "Failed to expand investigation.");
     } finally {
+      if (retryCount === 0) {
+        const benchmarkEnd = performance.now();
+        console.log(`[Benchmark] Sub-search completed in ${((benchmarkEnd - benchmarkStart) / 1000).toFixed(3)} seconds.`);
+      }
       setLoading(false);
     }
   };
@@ -359,7 +373,8 @@ export default function MainContent() {
     const targetQuery = query.trim() || archiveEntry?.query || currentReport?.query_understood || "";
     if (!targetQuery) return;
 
-    console.log("Starting Deep Research Protocol for:", targetQuery);
+    const benchmarkStart = performance.now();
+    console.log(`[Benchmark] Starting Deep Research Protocol for: "${targetQuery}"`);
     setError(null);
     setQuery("");
 
@@ -398,6 +413,9 @@ export default function MainContent() {
       }
     } catch (err: any) {
       console.error("Deep Research Trigger Failed:", err);
+    } finally {
+      const benchmarkEnd = performance.now();
+      console.log(`[Benchmark] Deep Research completed in ${((benchmarkEnd - benchmarkStart) / 1000).toFixed(3)} seconds.`);
     }
   };
 
