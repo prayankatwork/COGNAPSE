@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { dbService } from './services/dbService';
 import { syncAuthSession } from './services/authSession';
+import { auth } from './services/firebase';
 import type { COGNAPSE_Output, DeepResearchThesis, ResearchScore } from './types';
 
 export interface UserBadge {
@@ -253,7 +254,6 @@ export const useStore = create<AppState>()(
         // Capture ID token before sign out so we can revoke it server-side
         let idToken: string | null = null;
         try {
-          const { auth } = await import('./services/firebase');
           const user = auth.currentUser;
           if (user) {
             idToken = await user.getIdToken(false);
