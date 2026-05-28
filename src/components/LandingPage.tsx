@@ -75,7 +75,7 @@ export default function LandingPage() {
                     transition={{ duration: 1.5, repeat: Infinity }}
                     className="w-2 h-2 bg-my-accent rounded-full"
                   />
-                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white dark:text-black">
+                  <span className="text-xs font-black uppercase tracking-[0.3em] text-white dark:text-black">
                     ENTER RESEARCH
                   </span>
                   <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300 text-white dark:text-black" />
@@ -97,7 +97,7 @@ export default function LandingPage() {
               <h2 className="text-4xl md:text-8xl font-serif font-bold mb-8 leading-none">The Research <br /> Ecosystem.</h2>
               <p className="text-xl text-my-muted font-light leading-relaxed">Every tool you need to extract objective insights from the noise of the digital age.</p>
             </div>
-            <div className="text-my-accent font-bold uppercase tracking-[0.5em] text-xs flex items-center gap-4">
+            <div className="text-my-accent font-bold uppercase tracking-[0.3em] text-xs flex items-center gap-4">
               <div className="w-16 h-px bg-my-accent" /> Full Feature Matrix
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-60">
-            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-6 py-2 rounded-[2px] bg-my-accent text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.5em] mb-12 shadow-accent">
+            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-6 py-2 rounded-[2px] bg-my-accent text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.3em] mb-12 shadow-accent">
               <Workflow size={14} className="animate-spin-slow" /> Research Protocol Walkthrough
             </motion.div>
             <h2 className="text-8xl md:text-[10rem] font-serif font-bold italic leading-tight tracking-tighter">The Analysis <br /> Flow.</h2>
@@ -167,13 +167,13 @@ export default function LandingPage() {
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--accent) 2px, transparent 2px)', backgroundSize: '100px 100px' }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl md:text-9xl font-serif font-bold mb-12 md:mb-20 leading-none tracking-tighter italic">Ready for <br /> clarity?</h2>
-          <button onClick={() => setView('research')} className="px-10 py-6 md:px-20 md:py-10 bg-my-accent text-white dark:text-black font-bold uppercase tracking-[0.5em] hover:bg-my-ink transition-all shadow-2xl transform hover:-translate-y-4 w-full md:w-auto text-sm md:text-base">
+          <button onClick={() => setView('research')} className="px-10 py-6 md:px-20 md:py-10 bg-my-accent text-white dark:text-black font-bold uppercase tracking-[0.3em] hover:bg-my-ink transition-all shadow-2xl transform hover:-translate-y-4 w-full md:w-auto text-sm md:text-base">
             ENTER COGNAPSE
           </button>
           <div className="mt-14 flex items-center justify-center gap-10">
             <button
               onClick={() => setView('documentation')}
-              className="text-[10px] font-bold uppercase tracking-[0.3em] text-my-muted hover:text-my-accent transition-colors flex items-center gap-2"
+              className="text-xs font-bold uppercase tracking-[0.3em] text-my-muted hover:text-my-accent transition-colors flex items-center gap-2"
             >
               Documentation <ChevronRight size={14} />
             </button>
@@ -183,7 +183,7 @@ export default function LandingPage() {
 
           {/* Student Developer Disclaimer - Compact & Visible */}
           <div className="mt-16 pt-8 border-t border-my-border max-w-xl mx-auto">
-            <p className="text-[11px] text-my-ink leading-relaxed font-semibold italic">
+            <p className="text-sm text-my-ink leading-relaxed font-semibold italic">
               I am a Student & built this using Gemini, Groq, and Ollama (free tiers).
               If limits are hit, results might be slower.
             </p>
@@ -221,7 +221,7 @@ function FeatureGrid() {
       <div className="mt-8 text-center">
         <button
           onClick={() => setShowAll(!showAll)}
-          className="px-8 py-3 border border-my-border text-[10px] font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
+          className="px-8 py-3 border border-my-border text-xs font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
         >
           {showAll ? 'Show Less' : `Show All Features (${features.length})`}
         </button>

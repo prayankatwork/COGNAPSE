@@ -40,7 +40,7 @@ export default function DevDashboard() {
             <div className="flex items-center gap-4">
               <Terminal size={20} className="text-my-accent" />
               <div>
-                <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white">COGNAPSE Intelligence Swarm</h2>
+                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-white">COGNAPSE Intelligence Swarm</h2>
                 <span className="text-[9px] text-my-accent/60 uppercase tracking-widest font-bold">Admin Level Access Required</span>
               </div>
             </div>
@@ -162,7 +162,7 @@ function MetricCard({ label, value, sub, icon }: { label: string, value: string 
         <div className="text-my-accent opacity-60 group-hover:opacity-100 transition-opacity">
           {icon}
         </div>
-        <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">{label}</span>
+        <span className="text-xs font-bold text-white/40 uppercase tracking-[0.2em]">{label}</span>
       </div>
       <div className="text-3xl font-bold text-white mb-1">{value}</div>
       <div className="text-[9px] text-white/30 uppercase tracking-widest">{sub}</div>

@@ -25,7 +25,7 @@ export default function ThoughtReplayEngine() {
 
   if (reasoningTimeline.length === 0) {
     return (
-      <div className="mt-8 p-6 border border-dashed border-my-border bg-black/5 rounded-[4px] font-mono">
+      <div className="mt-8 p-6 border border-dashed border-my-border bg-my-callout/50 rounded-[4px] font-mono">
         <div className="flex items-center gap-3 opacity-50">
           <Cpu className="text-my-muted" size={18} />
           <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-my-muted">
@@ -54,13 +54,13 @@ export default function ThoughtReplayEngine() {
               if (activeIndex >= reasoningTimeline.length - 1) setActiveIndex(-1);
               setIsPlaying(!isPlaying);
             }}
-            className="p-2 hover:bg-black/5 rounded-full transition-colors text-my-accent"
+            className="p-2 hover:bg-my-callout/80 rounded-full transition-colors text-my-accent"
           >
             <Play size={16} className={clsx(isPlaying && "fill-current")} />
           </button>
           <button
             onClick={() => setActiveIndex(reasoningTimeline.length - 1)}
-            className="p-2 hover:bg-black/5 rounded-full transition-colors text-my-muted"
+            className="p-2 hover:bg-my-callout/80 rounded-full transition-colors text-my-muted"
           >
             <SkipForward size={16} />
           </button>

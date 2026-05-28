@@ -317,7 +317,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 )}
 
                 {/* Premium Benefits List */}
-                <div className="border border-my-border bg-slate-50 dark:bg-black/30 p-4 rounded-md space-y-4">
+                <div className="border border-my-border bg-my-callout dark:bg-black/30 p-4 rounded-md space-y-4">
                   <div className="flex gap-3">
                     <div className="p-1.5 bg-my-accent/10 rounded text-my-accent h-fit shrink-0">
                       <FileText size={16} />
@@ -444,7 +444,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 </div>
 
                 {/* Chrome Extension Layman Installation Card */}
-                <div className="border border-my-border bg-slate-50 dark:bg-black/30 p-4 rounded-md space-y-4 text-left">
+                <div className="border border-my-border bg-my-callout dark:bg-black/30 p-4 rounded-md space-y-4 text-left">
                   <div className="flex items-center justify-between border-b border-my-border pb-2">
                     <div className="flex items-center gap-2 text-my-accent">
                       <Chrome size={16} />
@@ -471,14 +471,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     <div className="flex gap-2">
                       <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">2</span>
                       <p className="text-[10px] text-my-ink leading-normal">
-                        Open Google Chrome, navigate to <code className="bg-slate-100 dark:bg-black border border-slate-200 dark:border-my-border px-1.5 py-0.5 text-my-accent font-mono text-[9px] rounded-sm font-bold">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
+                        Open Google Chrome, navigate to <code className="bg-my-callout dark:bg-black border border-my-border px-1.5 py-0.5 text-my-accent font-mono text-[9px] rounded-sm font-bold">chrome://extensions/</code>, and enable <strong>Developer mode</strong> (top-right corner).
                       </p>
                     </div>
 
                     <div className="flex gap-2">
                       <span className="flex items-center justify-center w-4 h-4 bg-my-accent text-white dark:text-black rounded-full text-[9px] font-bold shrink-0">3</span>
                       <p className="text-[10px] text-my-ink leading-normal">
-                        Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-slate-100 dark:bg-black border border-slate-200 dark:border-my-border px-1.5 py-0.5 text-my-ink font-mono text-[9px] rounded-sm font-bold">extension</code> folder.
+                        Click the <strong>Load unpacked</strong> button (top-left corner), and select the unzipped <code className="bg-my-callout dark:bg-black border border-my-border px-1.5 py-0.5 text-my-ink font-mono text-[9px] rounded-sm font-bold">extension</code> folder.
                       </p>
                     </div>
 

@@ -35,10 +35,10 @@ function getSourceColor(type: string): string {
 
 function getSourceBg(type: string): string {
   switch (type) {
-    case 'academic': return 'bg-emerald-100 dark:bg-emerald-900/30';
-    case 'government': return 'bg-sky-100 dark:bg-sky-900/30';
-    case 'journalism': return 'bg-amber-100 dark:bg-amber-900/30';
-    case 'industry': return 'bg-violet-100 dark:bg-violet-900/30';
+    case 'academic': return 'bg-emerald-50 dark:bg-emerald-900/30';
+    case 'government': return 'bg-sky-50 dark:bg-sky-900/30';
+    case 'journalism': return 'bg-amber-50 dark:bg-amber-900/30';
+    case 'industry': return 'bg-violet-50 dark:bg-violet-900/30';
     default: return 'bg-my-callout';
   }
 }
@@ -99,7 +99,7 @@ export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerPr
                 <div key={source.id} className="border border-my-border bg-my-bg/50">
                   <button
                     onClick={() => setExpandedSource(expandedSource === source.id ? null : source.id)}
-                    className="w-full px-3 py-2.5 flex items-center justify-between gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+                    className="w-full px-3 py-2.5 flex items-center justify-between gap-3 hover:bg-my-callout/80 transition-colors text-left"
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <span className={clsx(

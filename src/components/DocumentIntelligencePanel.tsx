@@ -193,7 +193,7 @@ export default function DocumentIntelligencePanel() {
             <p className="text-[11px] font-bold text-my-ink uppercase tracking-wider">
               Premium Feature Locked
             </p>
-            <p className="text-[9px] text-my-muted mt-2 leading-relaxed max-w-xs mx-auto">
+            <p className="text-[9px] text-my-muted/90 mt-2 leading-relaxed max-w-xs mx-auto">
               Upload and analyze PDFs, documents, and images with AI-powered intelligence extraction.
               Activate COGNAPSE Premium to unlock enterprise-grade document processing.
             </p>
@@ -235,7 +235,7 @@ export default function DocumentIntelligencePanel() {
           <p className="text-[10px] text-my-muted uppercase tracking-wider">
             Cloud Account Required
           </p>
-          <p className="text-[9px] text-my-muted/70 mt-2">
+          <p className="text-[9px] text-my-muted/90 mt-2">
             Document Intelligence requires a cloud-connected account. Sign out and register with an email to enable document uploads.
           </p>
         </div>
@@ -421,7 +421,7 @@ export default function DocumentIntelligencePanel() {
                 <p className="text-[10px] text-my-muted uppercase tracking-wider">
                   No documents to query
                 </p>
-                <p className="text-[8px] text-my-muted/70">
+                <p className="text-[8px] text-my-muted/90">
                   Upload documents in the Upload tab first, then process text files to enable intelligence querying.
                 </p>
                 <button

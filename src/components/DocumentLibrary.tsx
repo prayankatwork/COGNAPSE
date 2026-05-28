@@ -104,7 +104,7 @@ export default function DocumentLibrary({
           <p className="text-[10px] text-my-muted uppercase tracking-wider">
             {searchQuery ? 'No documents match your search' : 'No documents uploaded yet'}
           </p>
-          <p className="text-[8px] text-my-muted/60 mt-1">
+          <p className="text-[8px] text-my-muted/80 mt-1">
             {searchQuery ? 'Try a different search term' : 'Drag & drop files above to begin'}
           </p>
         </div>
@@ -136,10 +136,10 @@ export default function DocumentLibrary({
                 {getStatusBadge(doc.status)}
               </div>
               <div className="flex items-center gap-3 mt-1">
-                <span className="text-[8px] text-my-muted/70 uppercase tracking-wider">
+                <span className="text-[8px] text-my-muted/90 uppercase tracking-wider">
                   {getDocumentTypeLabel(doc.documentType)}
                 </span>
-                <span className="text-[8px] text-my-muted/70">
+                <span className="text-[8px] text-my-muted/90">
                   {formatFileSize(doc.size)}
                 </span>
                 <span className="flex items-center gap-1 text-[8px] text-my-muted/70">

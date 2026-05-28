@@ -435,7 +435,7 @@ export default function MainContent() {
                   (!walkthroughCompleted && !currentReport)
                 }
                 className={clsx(
-                  "flex items-center gap-2 px-4 py-1.5 border text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
+                  "flex items-center gap-2 px-4 py-1.5 border text-xs font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30",
                   query.trim() && !currentReport 
                     ? "bg-my-accent text-white dark:text-black border-my-accent animate-pulse shadow-signal" 
                     : "border-my-accent/30 text-my-accent hover:bg-my-accent hover:text-white",
@@ -461,7 +461,7 @@ export default function MainContent() {
                     for (let i = 0; i < popCount; i++) popFromStack();
                   }}
                   className={clsx(
-                    "text-[10px] font-bold uppercase tracking-widest transition-colors",
+                    "text-xs font-bold uppercase tracking-widest transition-colors",
                     idx === investigationStack.length - 1 ? "text-my-accent" : "text-my-muted hover:text-my-ink"
                   )}
                 >
@@ -480,7 +480,7 @@ export default function MainContent() {
             <div className="sticky top-0 left-0 right-0 z-20 bg-my-accent text-my-bg py-2 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
                 <Loader2 size={14} className="animate-spin" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-xs font-bold uppercase tracking-widest">
                   Stage {deepResearch.stage}/4: {deepResearch.progress}
                 </span>
               </div>
@@ -496,7 +496,7 @@ export default function MainContent() {
             <div className="sticky top-0 left-0 right-0 z-20 bg-red-900 text-white py-3 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
                 <AlertCircle size={16} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-xs font-bold uppercase tracking-widest">
                   Deep Analysis Error: {deepResearch.error || 'System Failure'}
                 </span>
               </div>
@@ -697,7 +697,7 @@ export default function MainContent() {
                   <p className="opacity-80 text-sm">{deepResearch.error}</p>
                   <button
                     onClick={() => useStore.getState().resetDeepResearch()}
-                    className="mt-4 text-[10px] font-bold uppercase tracking-widest underline"
+                    className="mt-4 text-xs font-bold uppercase tracking-widest underline"
                   >
                     Clear Error & Reset
                   </button>
@@ -849,7 +849,7 @@ export default function MainContent() {
                 {/* Loading phase text with cursor */}
                 <div className="w-64">
                   <div className="flex items-center justify-center mb-3">
-                    <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-my-ink text-center">
+                    <p className="text-sm font-bold tracking-[0.2em] uppercase text-my-ink text-center">
                       {loadingPhase}
                     </p>
                     <motion.span

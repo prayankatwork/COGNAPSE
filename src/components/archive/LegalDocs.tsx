@@ -8,7 +8,7 @@ export default function LegalDocs() {
       {/* Overview Section */}
       <section id="legal-overview" className="scroll-mt-32 space-y-8">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_05
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold italic text-my-ink mb-6">Legal &amp; Compliance</h2>

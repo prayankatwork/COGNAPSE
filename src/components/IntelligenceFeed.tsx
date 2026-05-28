@@ -206,8 +206,8 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                    <Zap size={32} className="text-my-accent animate-pulse" />
                 </div>
              </div>
-             <h2 className="text-xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Preparing Analysis</h2>
-             <p className="text-[11px] text-my-muted uppercase tracking-[0.2em] max-w-md">
+             <h2 className="text-xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">Preparing Analysis</h2>
+             <p className="text-sm text-my-muted uppercase tracking-[0.2em] max-w-md">
                 Connecting to primary data sources for in-depth review. <br />
                 Initializing research framework for the selected topic.
              </p>
@@ -237,7 +237,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                 type="button"
                 onClick={() => setActiveTab('feed')}
                 className={clsx(
-                  'px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  'px-6 py-2 text-xs font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
                   activeTab === 'feed'
                     ? 'bg-my-accent text-white dark:text-black shadow-accent'
                     : 'text-my-muted hover:text-my-ink'
@@ -249,7 +249,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                 type="button"
                 onClick={() => setActiveTab('subscriptions')}
                 className={clsx(
-                  'px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  'px-6 py-2 text-xs font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
                   activeTab === 'subscriptions'
                     ? 'bg-my-accent text-white dark:text-black shadow-accent'
                     : 'text-my-muted hover:text-my-ink'
@@ -288,7 +288,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                           <p className="text-sm text-my-muted mb-8">Subscribe to intelligence categories to begin global monitoring.</p>
                           <button 
                             onClick={() => setActiveTab('subscriptions')}
-                            className="px-8 py-3 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-[2px] hover:scale-105 transition-all shadow-accent"
+                            className="px-8 py-3 bg-my-accent text-white dark:text-black text-xs font-black uppercase tracking-widest rounded-[2px] hover:scale-105 transition-all shadow-accent"
                           >
                             Set Subscriptions
                           </button>
@@ -298,7 +298,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                           <div key={category} className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${sectionIdx * 100}ms` }}>
                              <div className="flex items-center gap-4 mb-8">
                                 <div className="h-px flex-1 bg-gradient-to-r from-transparent to-my-border" />
-                                <h2 className="text-[12px] font-black text-my-accent uppercase tracking-[0.4em] px-4">
+                                <h2 className="text-sm font-black text-my-accent uppercase tracking-[0.3em] px-4">
                                    {CATEGORIES.find(c => c.id === category)?.label || category}
                                 </h2>
                                 <div className="h-px flex-1 bg-gradient-to-l from-transparent to-my-border" />

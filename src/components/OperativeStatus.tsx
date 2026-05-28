@@ -308,7 +308,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('overview')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'overview' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -318,7 +318,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('analytics')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'analytics' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -328,7 +328,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('exports')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'exports' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -338,7 +338,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
             <button 
               onClick={() => setActiveTab('premium')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
                 activeTab === 'premium' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
               )}
             >
@@ -384,7 +384,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                       <h2 className="text-4xl md:text-5xl font-serif font-bold italic text-my-ink leading-tight tracking-tight">
                          {rank?.replace(/[^\x00-\x7F]/g, "").trim() || "Analyst"}
                       </h2>
-                      <p className="text-[10px] font-bold text-my-accent uppercase tracking-[0.5em] mt-2">Verified Professional Identity</p>
+                      <p className="text-[10px] font-bold text-my-accent uppercase tracking-[0.3em] mt-2">Verified Professional Identity</p>
                    </div>
 
                    <div className="w-full space-y-3">
@@ -398,7 +398,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                 <div className="flex-1 w-full space-y-6">
                    <div className="p-8 bg-my-callout/50 border border-my-border backdrop-blur-sm relative overflow-hidden shadow-inner">
                       <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-my-muted flex items-center gap-2">
+                         <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-my-muted flex items-center gap-2">
                             <Cpu size={12} /> System Clearance
                          </h3>
                          <span className="text-[10px] font-mono text-my-accent font-bold tracking-tighter">{xp} / {nextRankXp} Score</span>
@@ -451,7 +451,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                       <h4 className="text-[9px] font-black text-my-accent uppercase tracking-[0.3em] mb-2">Activity Growth</h4>
                       <p className="text-[8px] text-my-muted mb-6">Aggregate research accumulation across active work sessions.</p>
                     </div>
-                    <div className="bg-black/5 dark:bg-white/5 p-4 border border-my-border/50">
+                    <div className="bg-my-callout/80 dark:bg-white/5 p-4 border border-my-border/50">
                       <VelocityChart data={growthData} />
                     </div>
                     <div className="flex justify-between mt-4">
@@ -665,7 +665,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                     {/* Upgrade CTA */}
                     <div className="text-center py-8">
                       <div className="relative inline-flex mb-6">
-                        <Award size={48} className="text-my-muted/30" />
+                        <Award size={48} className="text-my-muted/50" />
                       </div>
                       <h3 className="text-xl font-serif font-bold italic text-my-ink mb-2">Premium Tier Not Active</h3>
                       <p className="text-[10px] text-my-muted max-w-sm mx-auto leading-relaxed mb-8">

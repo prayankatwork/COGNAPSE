@@ -111,13 +111,13 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
         <div className="p-10">
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px]">
+            <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-xs">
               <div className="w-8 h-px bg-my-accent" /> Account Protocol
             </div>
             <BrandLogo size={32} />
           </div>
 
-          <h2 className="text-5xl font-serif font-bold italic mb-2 text-my-ink">
+          <h2 className="text-5xl type-page-title mb-2 text-my-ink">
             {isRegister ? 'Registration.' : 'Login.'}
           </h2>
           <p className="text-[11px] text-my-muted uppercase tracking-widest mb-10 leading-relaxed">
@@ -126,7 +126,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
              <div className="space-y-2">
-                <label className="text-[9px] font-bold uppercase tracking-widest text-my-muted flex items-center gap-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-my-muted flex items-center gap-2">
                    <User size={12} /> Username
                 </label>
                 <input 
@@ -135,12 +135,12 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-my-callout border border-my-border p-4 text-sm text-my-ink focus:border-my-accent outline-none transition-colors placeholder:text-my-muted/50 rounded-[2px]"
-                  placeholder="USERNAME"
+                  placeholder="Username"
                 />
              </div>
 
              <div className="space-y-2">
-                <label className="text-[9px] font-bold uppercase tracking-widest text-my-muted flex items-center gap-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-my-muted flex items-center gap-2">
                    <Lock size={12} /> Password
                 </label>
                 <input 
@@ -166,7 +166,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
                      {tosAccepted && <Check size={12} className="text-white dark:text-black" />}
                    </div>
                  </div>
-                 <span className="text-[10px] text-my-muted leading-relaxed">
+                 <span className="text-sm text-my-muted leading-relaxed">
                    I have read and agree to the{' '}
                    <button 
                      type="button"

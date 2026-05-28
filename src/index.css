@@ -45,14 +45,14 @@
 }
 
 :root {
-  --bg: #FDFCFB;
-  --sidebar: #F8F9FA;
-  --ink: #1A1A1A;
+  --bg: #FCFCFC;
+  --sidebar: #F8F8F8;
+  --ink: #000000;
   --accent: #2A4365;
   --border: #E2E8F0;
-  --muted: #718096;
-  --callout: #F1F5F9;
-  --syn: #334155;
+  --muted: #525252;
+  --callout: #F5F5F5;
+  --syn: #171717;
   --score: #EBF8FF;
   --conflict-bg: #FFF5F5;
   --conflict-border: #FEB2B2;
@@ -176,8 +176,17 @@
     background-size: 100% 3px;
     pointer-events: none;
     z-index: 100;
+    filter: contrast(100%) brightness(100%);
+  }
+
+  /* Light mode: subtle scanline */
+  html:not(.dark) body::before {
+    opacity: 0.12;
+  }
+
+  /* Dark mode: more prominent cinematic scanline */
+  html.dark body::before {
     opacity: 0.4;
-    filter: contrast(120%) brightness(100%);
   }
 
   /* Cinematic Vignette */
@@ -185,9 +194,16 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.02) 100%);
     pointer-events: none;
     z-index: 99;
+  }
+
+  html:not(.dark) body::after {
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.01) 100%);
+  }
+
+  html.dark body::after {
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
   }
 }
 
@@ -300,9 +316,73 @@
   border-radius: 12px 12px 0 0;
   z-index: 50;
   padding-bottom: env(safe-area-inset-bottom, 16px);
-}
+}  /* ==========================================
+   TYPOGRAPHY HIERARCHY UTILITY CLASSES
+   ========================================== */
 
-/* Reduced motion preferences */
+  /* Hero Title — landing page only */
+  .type-hero {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+  }
+
+  /* Page Title — auth, docs, legal pages */
+  .type-page-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -0.01em;
+    line-height: var(--leading-heading);
+  }
+
+  /* Section Title — block section headers */
+  .type-section-title {
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  /* Card Title — card/panel headings */
+  .type-card-title {
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  /* Body text — paragraphs, reading content */
+  .type-body {
+    line-height: var(--leading-body);
+  }
+
+  /* Caption — footnotes, timestamps, metadata values */
+  .type-caption {
+    line-height: var(--leading-caption);
+  }
+
+  /* Label — uppercase meta labels (section labels, form labels, badges) */
+  .type-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Section Label — uppercase prominent labels (panel headers) */
+  .type-section-label {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+  }
+
+  /* Mono label — code-style timestamps, technical meta */
+  .type-mono-label {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

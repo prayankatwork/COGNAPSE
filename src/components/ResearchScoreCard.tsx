@@ -22,7 +22,7 @@ function ScoreMeter({ value, max = 1, label, icon, color }: {
           {max === 10 ? `${value}/10` : `${Math.round(value * 100)}%`}
         </span>
       </div>
-      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-my-border/40 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${pct}%`, background: color }}
@@ -112,7 +112,7 @@ export default function ResearchScoreCard({ scores }: Props) {
   } : null;
 
   return (
-    <div className="mt-8 p-6 border border-my-border bg-white/5 space-y-5">
+    <div className="mt-8 p-6 border border-my-border bg-my-callout/50 space-y-5">
       <div className="flex items-center gap-3 mb-2">
         <TrendingUp size={16} className="text-my-accent" />
         <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-my-accent">

@@ -173,7 +173,7 @@ export default function DocumentUploadZone({
                   or click to browse — PDF, DOCX, PPTX, images
                 </p>
               </div>
-              <span className="text-[8px] text-my-muted/60 uppercase tracking-widest border border-my-border px-2 py-0.5">
+              <span className="text-[8px] text-my-muted/80 uppercase tracking-widest border border-my-border px-2 py-0.5">
                 Premium Feature
               </span>
             </motion.div>

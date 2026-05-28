@@ -344,7 +344,7 @@ export default function NeuralWalkthrough() {
                   {currentStep?.icon}
                </div>
                <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-my-accent mb-1">System Setup</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-accent mb-1">System Setup</h3>
                   <h2 className="text-xl font-serif font-bold italic text-my-ink leading-tight">{currentStep?.title}</h2>
                </div>
             </div>

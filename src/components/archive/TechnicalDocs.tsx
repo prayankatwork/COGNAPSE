@@ -9,7 +9,7 @@ export default function TechnicalDocs() {
       {/* Overview Section */}
       <section id="tech-overview" className="scroll-mt-32 space-y-8">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_04
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold italic text-my-ink mb-6">Technical Stack</h2>
@@ -23,19 +23,19 @@ export default function TechnicalDocs() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
               <Layers className="text-blue-500" size={24} />
-              <div className="text-[10px] font-bold uppercase tracking-widest text-my-ink">Vite + React 18</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Vite + React 18</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
               <Database className="text-emerald-500" size={24} />
-              <div className="text-[10px] font-bold uppercase tracking-widest text-my-ink">Zustand + IndexedDB</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Zustand + IndexedDB</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
               <Cpu className="text-purple-500" size={24} />
-              <div className="text-[10px] font-bold uppercase tracking-widest text-my-ink">WASM (Transformers.js)</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-my-ink">WASM (Transformers.js)</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
               <Zap className="text-yellow-500" size={24} />
-              <div className="text-[10px] font-bold uppercase tracking-widest text-my-ink">Firebase Auth / Firestore</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Firebase Auth / Firestore</div>
            </div>
         </div>
       </section>
@@ -48,7 +48,7 @@ export default function TechnicalDocs() {
               The application processes compute-intensive tasks on the user's local hardware where possible. This approach 
               reduces server latency for state changes and minimizes the storage of user data on external servers.
             </p>
-            <div className="p-6 border border-my-border bg-my-sidebar/5 font-mono text-[11px] leading-relaxed text-my-muted">
+            <div className="p-6 border border-my-border bg-my-sidebar/5 font-mono text-sm leading-relaxed text-my-muted">
                <span className="text-my-accent">Client Application [Browser]</span><br/>
                ├── UI Framework: React 18, Tailwind CSS v4, Framer Motion<br/>
                ├── State Management: Zustand with persist middleware (LocalForage/IndexedDB)<br/>
@@ -88,7 +88,7 @@ export default function TechnicalDocs() {
               <div className="flex items-center justify-between gap-4 border-b border-my-border px-5 py-3">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-[0.25em] text-my-ink">Current Research Pipeline</h4>
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-my-muted">Anonymized technical flow</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-widest text-my-muted">Anonymized technical flow</p>
                 </div>
                 <a
                   href={researchPipelineDiagram}

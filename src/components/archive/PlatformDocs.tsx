@@ -9,7 +9,7 @@ export default function PlatformDocs() {
       {/* Overview Section */}
       <section id="overview" className="scroll-mt-32 space-y-8">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_01
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold italic text-my-ink mb-6">Platform Overview</h2>
@@ -41,7 +41,7 @@ export default function PlatformDocs() {
       {/* Product Systems Section */}
       <section id="product-systems" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_02
           </div>
           <h2 className="text-3xl font-serif font-bold italic text-my-ink mb-6">Product Features</h2>
@@ -196,7 +196,7 @@ export default function PlatformDocs() {
       {/* Research Workflow Section */}
       <section id="workflow" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_03
           </div>
           <h2 className="text-3xl font-serif font-bold italic text-my-ink mb-6">Research Workflow</h2>
@@ -276,7 +276,7 @@ export default function PlatformDocs() {
       {/* Collaboration Governance */}
       <section id="collaboration" className="scroll-mt-32 pt-16 border-t border-my-border">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_07
           </div>
           <h2 className="text-3xl font-serif font-bold italic text-my-ink mb-6">Collaboration &amp; Governance</h2>
@@ -308,7 +308,7 @@ export default function PlatformDocs() {
       {/* Enterprise Governance */}
       <section id="enterprise-governance" className="scroll-mt-32 pt-16 border-t border-my-border">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_08
           </div>
           <h2 className="text-3xl font-serif font-bold italic text-my-ink mb-6">Enterprise Governance</h2>
@@ -360,7 +360,7 @@ export default function PlatformDocs() {
       {/* Responsible AI */}
       <section id="responsible-ai" className="scroll-mt-32 pt-16 border-t border-my-border">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_09
           </div>
           <h2 className="text-3xl font-serif font-bold italic text-my-ink mb-6">Responsible AI Usage</h2>

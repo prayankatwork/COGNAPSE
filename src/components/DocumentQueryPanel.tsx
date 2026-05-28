@@ -223,7 +223,7 @@ export default function DocumentQueryPanel({
                 >
                   Select All
                 </button>
-                <span className="text-my-muted/30">|</span>
+                <span className="text-my-muted/60">|</span>
                 <button
                   onClick={clearSelection}
                   className="text-[8px] text-my-muted hover:text-my-ink uppercase tracking-wider transition-colors"
@@ -238,7 +238,7 @@ export default function DocumentQueryPanel({
         {/* Document list with checkboxes */}
         <div className="space-y-1 max-h-32 overflow-y-auto scrollbar-thin">
           {documents.length === 0 && (
-            <p className="text-[9px] text-my-muted/60 py-2 text-center">
+            <p className="text-[9px] text-my-muted/80 py-2 text-center">
               Upload documents first to enable intelligence querying.
             </p>
           )}
@@ -300,7 +300,7 @@ export default function DocumentQueryPanel({
                       Process
                     </button>
                   ) : (
-                    <span className="text-[7px] text-my-muted/50 uppercase tracking-widest">
+                    <span className="text-[7px] text-my-muted/70 uppercase tracking-widest">
                       {doc.documentType.toUpperCase()}
                     </span>
                   )}
@@ -340,7 +340,7 @@ export default function DocumentQueryPanel({
                 </div>
               )}
               {indexedDocs.length === 0 && processableDocs.length > 0 && (
-                <p className="text-[8px] text-my-muted/70">
+                <p className="text-[8px] text-my-muted/90">
                   Click <span className="text-my-accent font-bold">Process</span> on your documents to index them for search.
                 </p>
               )}
@@ -403,10 +403,10 @@ export default function DocumentQueryPanel({
                         )}
 
                         {/* Metadata */}
-                        <div className="flex items-center gap-2 mt-2 text-[7px] text-my-muted/60 uppercase tracking-widest">
+                        <div className="flex items-center gap-2 mt-2 text-[7px] text-my-muted/80 uppercase tracking-widest">
                           <Clock size={7} />
                           {entry.answer.latencyMs}ms
-                          <span className="text-my-muted/30">|</span>
+                          <span className="text-my-muted/60">|</span>
                           {entry.answer.chunksUsed} chunks
                         </div>
                       </div>
@@ -497,7 +497,7 @@ export default function DocumentQueryPanel({
 
           {/* Bottom metadata */}
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[7px] text-my-muted/50 uppercase tracking-widest">
+            <span className="text-[7px] text-my-muted/70 uppercase tracking-widest">
               {indexedDocs.length} indexed &middot; {selectedDocIds.size} selected
             </span>
             {chatHistory.length > 0 && (

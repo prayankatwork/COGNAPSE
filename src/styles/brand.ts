@@ -4,23 +4,25 @@
 export const brandClasses = {
   panel: 'border border-my-border bg-my-callout/90 backdrop-blur-md md:backdrop-blur-xl rounded-[6px] p-4',
   panelFlush: 'border border-my-border bg-my-callout/30 backdrop-blur-md md:backdrop-blur-xl rounded-[6px]',
+  /* Use type-section-label class for prominent panel headers */
   sectionLabel:
     'text-[10px] font-black uppercase tracking-[0.3em] text-my-muted',
+  /* Use type-label for form/meta labels */
   controlLabel:
-    'text-[9px] font-black uppercase tracking-widest text-my-muted',
-  meta: 'text-[9px] font-bold uppercase tracking-widest text-my-muted',
+    'text-xs font-black uppercase tracking-widest text-my-muted',
+  meta: 'text-xs font-bold uppercase tracking-widest text-my-muted',
   synthesis: 'text-sm leading-[1.7] text-my-syn',
-  displayTitle: 'font-serif font-bold italic tracking-tight text-my-ink leading-[1.15]',
-  reportTitle: 'font-serif text-[32px] leading-[1.15] text-my-ink',
-  bodyCopy: 'text-[14px] leading-[1.7] text-my-syn max-w-[65ch]',
-  bodyCaption: 'text-[12px] leading-[1.5] text-my-muted',
+  displayTitle: 'type-page-title text-my-ink',
+  reportTitle: 'type-page-title text-[32px] md:text-[40px] text-my-ink',
+  bodyCopy: 'text-base leading-body text-my-syn max-w-[65ch]',
+  bodyCaption: 'text-sm leading-caption text-my-muted',
   hairline: 'border-b border-my-border',
-  readingProse: 'text-[14px] leading-[1.7] text-my-syn space-y-[1.25em]',
+  readingProse: 'text-base leading-body text-my-syn space-y-[1.25em]',
   signalGlow: 'shadow-[0_0_20px_rgba(var(--signal-rgb),0.15)]',
   accentGlow: 'shadow-[0_0_20px_rgba(var(--accent-rgb),0.12)]',
 
   /* Readability-optimised paragraph */
-  para: 'mb-[1.25em] leading-[1.7] text-my-syn',
+  para: 'mb-[1.25em] leading-body text-my-syn',
 } as const;
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'signal' | 'danger';
@@ -39,7 +41,7 @@ export const buttonVariants: Record<ButtonVariant, string> = {
 };
 
 export const buttonBase =
-  'inline-flex items-center justify-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-[4px]';
+  'inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-[4px] leading-none';
 
 /** Chart / canvas fills — read from CSS variables at runtime when possible */
 export const chartColors = {

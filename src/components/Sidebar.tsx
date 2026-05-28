@@ -114,7 +114,7 @@ export default function Sidebar() {
               <div className="flex items-center justify-between gap-4 mb-8">
                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-1.5 h-1.5 bg-my-signal rounded-full animate-pulse shrink-0" />
-                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.4em] truncate">Archive</h2>
+                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.3em] truncate">Archive</h2>
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
                     <ClearAllButton />
@@ -123,7 +123,7 @@ export default function Sidebar() {
                       disabled={!walkthroughCompleted}
                       className={clsx(
                         "p-1 transition-colors shrink-0",
-                        walkthroughCompleted ? "text-my-muted hover:text-my-ink cursor-pointer" : "text-my-muted/30 cursor-not-allowed"
+                        walkthroughCompleted ? "text-my-muted hover:text-my-ink cursor-pointer" : "text-my-muted/50 cursor-not-allowed"
                       )}
                     >
                        <ChevronLeft size={18} />

@@ -8,7 +8,7 @@ export default function TrustDocs() {
       {/* ─── OVERVIEW ─── */}
       <section id="trust-overview" className="scroll-mt-32 space-y-8">
         <div>
-          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
+          <div className="flex items-center gap-3 text-my-accent font-bold uppercase tracking-[0.3em] text-[10px] mb-4">
             <div className="w-10 h-px bg-my-accent" /> Section_06
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold italic text-my-ink mb-6">Trust &amp; Security Center</h2>
@@ -76,19 +76,19 @@ export default function TrustDocs() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                <div>
                   <div className="text-2xl font-bold text-my-ink">TLS 1.3</div>
-                  <div className="text-[10px] text-my-muted font-bold uppercase tracking-widest mt-1">Encryption in Transit</div>
+                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">Encryption in Transit</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">SOC 2</div>
-                  <div className="text-[10px] text-my-muted font-bold uppercase tracking-widest mt-1">Firebase Compliance</div>
+                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">Firebase Compliance</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">RBAC</div>
-                  <div className="text-[10px] text-my-muted font-bold uppercase tracking-widest mt-1">Role-Based Access Controls</div>
+                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">Role-Based Access Controls</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">CCPA / GDPR</div>
-                  <div className="text-[10px] text-my-muted font-bold uppercase tracking-widest mt-1">Privacy Framework Alignment</div>
+                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">Privacy Framework Alignment</div>
                </div>
             </div>
          </div>
@@ -406,19 +406,19 @@ export default function TrustDocs() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-my-accent/10 pt-6 mt-6">
                <div>
                   <div className="text-2xl font-bold text-my-ink">99.9%</div>
-                  <div className="text-[10px] text-my-accent font-bold uppercase tracking-widest mt-1">Vercel Uptime Target</div>
+                  <div className="text-xs text-my-accent font-bold uppercase tracking-widest mt-1">Vercel Uptime Target</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">Multi-Reg</div>
-                  <div className="text-[10px] text-my-accent font-bold uppercase tracking-widest mt-1">Firestore Config</div>
+                  <div className="text-xs text-my-accent font-bold uppercase tracking-widest mt-1">Firestore Config</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">Auto-Failover</div>
-                  <div className="text-[10px] text-my-accent font-bold uppercase tracking-widest mt-1">AI Swarm Resiliency</div>
+                  <div className="text-xs text-my-accent font-bold uppercase tracking-widest mt-1">AI Swarm Resiliency</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">TLS 1.3</div>
-                  <div className="text-[10px] text-my-accent font-bold uppercase tracking-widest mt-1">Transit Encryption</div>
+                  <div className="text-xs text-my-accent font-bold uppercase tracking-widest mt-1">Transit Encryption</div>
                </div>
             </div>
          </div>

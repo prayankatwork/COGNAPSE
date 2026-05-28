@@ -1,6 +1,6 @@
 <div align="center">
   <img src="./public/vite.svg" width="120" height="120" alt="COGNAPSE Logo">
-  <h1>C O G N A P S E  //  V 2 . 5</h1>
+  <h1>C O G N A P S E  //  V 1 . 0</h1>
   <p><strong>Cognitive Network Analysis & Processing Synthesis Engine</strong></p>
   <p><i>A Sovereign Intelligence Terminal for High-Stakes Forensic Research.</i></p>
   <br />

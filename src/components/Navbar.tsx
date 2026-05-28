@@ -106,7 +106,7 @@ export default function Navbar() {
             <BrandLogo size={32} />
             <div className="flex flex-col items-start leading-none">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-my-ink group-hover:text-my-accent transition-colors">Cognapse</span>
+                <span className="text-sm font-black uppercase tracking-[0.3em] text-my-ink group-hover:text-my-accent transition-colors">Cognapse</span>
                 {walkthroughCompleted ? (
                   <span className={clsx("text-[6px] font-bold uppercase tracking-widest px-1 py-0.5 rounded transition-all duration-300", isHoveringLogo ? "opacity-0" : "text-my-accent/70 border border-my-accent/30 animate-pulse")}>Hover</span>
                 ) : (
@@ -143,7 +143,7 @@ export default function Navbar() {
                     <div className={clsx("transition-transform", currentView === mod.id ? "scale-110" : "group-hover:scale-110 group-hover:text-my-ink")}>
                       {mod.icon}
                     </div>
-                    <span className={clsx("text-[11px] font-bold tracking-wide", currentView === mod.id ? "text-my-accent" : "group-hover:text-my-ink")}>
+                    <span className={clsx("text-sm font-bold tracking-wide", currentView === mod.id ? "text-my-accent" : "group-hover:text-my-ink")}>
                       {mod.label}
                     </span>
                   </button>
@@ -169,7 +169,7 @@ export default function Navbar() {
           >
             <div className="flex items-center gap-2 text-my-muted group-hover:text-my-ink transition-colors">
               <Search size={14} />
-              <span className="text-[11px] font-semibold opacity-70">
+              <span className="text-sm font-semibold opacity-70">
                 {walkthroughCompleted ? "Search or jump to module..." : "Lockout Active (Training)"}
               </span>
             </div>

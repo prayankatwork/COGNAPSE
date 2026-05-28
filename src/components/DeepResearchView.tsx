@@ -125,7 +125,7 @@ export default function DeepResearchView() {
           <div key={section.id} className="border border-my-border bg-my-callout shadow-sm overflow-hidden">
             <button 
               onClick={() => toggleSection(section.id)}
-              className="w-full px-4 py-3 md:px-6 md:py-4 flex items-center justify-between hover:bg-black/5 transition-colors text-left"
+              className="w-full px-4 py-3 md:px-6 md:py-4 flex items-center justify-between hover:bg-my-callout/80 transition-colors text-left"
             >
               <h3 className="text-sm font-bold uppercase tracking-widest text-my-ink flex items-center gap-3">
                 <span className="text-my-accent opacity-50 font-mono">
@@ -167,7 +167,7 @@ export default function DeepResearchView() {
             "px-6 py-3 border text-[11px] font-bold uppercase tracking-widest transition-all",
             walkthroughCompleted 
               ? "border-my-border text-my-muted hover:text-my-ink hover:border-my-accent cursor-pointer" 
-              : "border-my-border/30 text-my-muted/30 cursor-not-allowed"
+              : "border-my-border/50 text-my-muted/50 cursor-not-allowed"
           )}
         >
           {walkthroughCompleted ? "Back to Main Dashboard" : "Lockout Active (Training)"}

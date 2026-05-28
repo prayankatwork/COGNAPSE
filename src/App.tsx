@@ -379,7 +379,7 @@ export default function App() {
                 <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
                   <LockIcon size={32} />
                 </div>
-                <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Access Restricted</h1>
+                <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">Access Restricted</h1>
                 <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-10">
                   The Knowledge Hub requires an <br />
                   <span className="text-my-accent font-bold">Authorized Analyst Profile</span> <br />
@@ -387,7 +387,7 @@ export default function App() {
                 </p>
                 <button
                   onClick={() => setAuthOpen(true)}
-                  className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
+                  className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-xs font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
                 >
                   Sign In to Access
                 </button>
@@ -448,14 +448,14 @@ export default function App() {
             <SharedResearchPage shareId={shareRoute} />
           </ErrorBoundary>
         ) : (
-          <Suspense fallback={<div className="h-full flex items-center justify-center bg-my-bg text-my-muted text-[10px] tracking-[0.3em] uppercase animate-pulse">Loading Subsystems...</div>}>
+          <Suspense fallback={<div className="h-full flex items-center justify-center bg-my-bg text-my-muted text-xs tracking-[0.3em] uppercase animate-pulse">Loading Subsystems...</div>}>
             {renderContent()}
           </Suspense>
         )}
       </div>
 
       {!shareRoute && !legalPage && (
-        <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 items-center justify-center text-[9px] font-bold uppercase tracking-[0.25em] text-my-muted">
+        <footer className="border-t border-my-border px-6 py-4 flex flex-wrap gap-4 items-center justify-center text-[9px] font-bold uppercase tracking-[0.2em] text-my-muted">
           <a href="/policies" onClick={(e) => handleLegalNav(e, 'legal-overview')} className="hover:text-my-accent">Privacy & Policies</a>
           <span className="text-my-border/50">|</span>
           <span className="tracking-[0.15em]">Telemetry: Operational only. No personal data collected.</span>
@@ -481,11 +481,11 @@ export default function App() {
             <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
               <Ban size={32} />
             </div>
-            <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.4em] mb-4">Account Terminated</h1>
+            <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">Account Terminated</h1>
             <p className="text-xs text-my-muted uppercase tracking-[0.2em] leading-relaxed mb-6">
               Your access to COGNAPSE has been revoked.
             </p>
-            <p className="text-[10px] text-my-muted/60 leading-relaxed mb-10">
+            <p className="text-xs text-my-muted/80 leading-relaxed mb-10">
               If you believe this is in error, please contact the administrator.
             </p>
           </div>
