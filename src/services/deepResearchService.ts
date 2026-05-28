@@ -94,11 +94,12 @@ export async function executeDeepResearch(query: string) {
   const { setDeepResearch, clearCognition, addReasoningStep } = useStore.getState();
 
   try {
+    const deepT0 = performance.now();
+    console.log(`[BENCH:deep] START query="${query.slice(0, 40)}..."`);
+
     addReasoningStep('Expanding research objective...');
     setDeepResearch({ status: 'running', stage: 1, progress: 'Expanding research objective...' });
     clearCognition();
-
-    const stepTime = Date.now();
 
     addReasoningStep('Retrieving real-time sources from web...');
     setDeepResearch({ stage: 2, progress: 'Retrieving real-time sources from web...' });
@@ -106,12 +107,14 @@ export async function executeDeepResearch(query: string) {
     // ─── REAL SOURCE RETRIEVAL ───
     let groundedSources: GroundedSource[] = [];
     let retrievalTrace: RetrievalTrace | null = null;
+    let searchMs = 0;
 
     try {
+      const searchT0 = performance.now();
       const searchResult = await searchWeb(query, 12);
+      searchMs = Math.round(performance.now() - searchT0);
       groundedSources = searchResult.sources;
       retrievalTrace = searchResult.trace;
-
     } catch (e: any) {
     }
 
@@ -130,7 +133,9 @@ ${compressSourcesForLLM(groundedSources, 3000)}
 `
       : 'Note: Real-time web search was unavailable for this query. Base your thesis on your training knowledge, but mark areas of uncertainty.';
 
+    const llmT0 = performance.now();
     const rawThesis = await callCloudAI(THESIS_PROMPT(query, sourcesContext), true, RESEARCH_MODEL);
+    const llmMs = Math.round(performance.now() - llmT0);
 
     let thesis: DeepResearchThesis;
     try {
@@ -155,6 +160,9 @@ ${compressSourcesForLLM(groundedSources, 3000)}
       thesis,
       scores
     });
+
+    const deepTotalMs = Math.round(performance.now() - deepT0);
+    console.log(`[BENCH:deep] DONE | search=${searchMs}ms llm=${llmMs}ms total=${deepTotalMs}ms sources=${groundedSources.length}`);
 
     return { thesis, scores };
 

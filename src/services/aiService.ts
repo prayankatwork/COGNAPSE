@@ -102,6 +102,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
           );
         }
 
+        const t0 = performance.now();
         const response = await apiFetch('/api/research', {
           method: 'POST',
           body: JSON.stringify({ prompt, isJson, estTokens, requestedModel, userId: auth.currentUser?.uid || '', groqKey, modelOverride }),
@@ -109,10 +110,16 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
         });
 
         const data = await response.json();
+        const roundTripMs = Math.round(performance.now() - t0);
 
         if (!response.ok) {
+          console.log(`[BENCH] round-trip=${roundTripMs}ms ERROR | ${data.error}`);
           throw new Error(data.error || 'Serverless backend failed');
         }
+
+        const benchInfo = data._bench ? ` swarm=${data._bench.swarmMs}ms total=${data._bench.totalMs}ms` : '';
+        const tokenInfo = data.usage ? ` tokens=${data.usage.total_tokens || '?'}` : '';
+        console.log(`[BENCH] round-trip=${roundTripMs}ms${benchInfo}${tokenInfo} model=${data.usage?.model || requestedModel || '?'}`);
 
         // Track token consumption from Groq for ops dashboard
         if (data.usage && data.usage.total_tokens > 0) {

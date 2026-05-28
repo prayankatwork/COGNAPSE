@@ -36,7 +36,7 @@ export async function handleResearch(req, res) {
   const decoded = await requireUser(req, res);
   if (decoded === false) return;
 
-  const rl = rateLimit(req, { key: 'research', limit: 30, windowMs: 60_000 });
+  const rl = rateLimit(req, { key: 'research', limit: 60, windowMs: 60_000 });
   if (!rl.allowed) return res.status(429).json({ error: 'Research rate limit exceeded. Please wait before starting a new investigation.' });
 
   const { userId, prompt, mode, requestedModel, isJson, isDeep, reportId, targetLanguage, username, groqKey, modelOverride } = req.body || {};
@@ -49,7 +49,12 @@ export async function handleResearch(req, res) {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   const rlKey = `research_${uid}`;
 
+  const benchId = `res_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+  const queryPreview = ((prompt || '').slice(0, 60) + '...').replace(/\n/g, ' ');
+  console.log(`[BENCH:${benchId}] START research | query="${queryPreview}"`);
+
   try {
+    const t0 = Date.now();
     const wantsJson = isJson === true || mode === 'json';
     const raw = await runSwarm({
       prompt, isJson: wantsJson,
@@ -58,20 +63,28 @@ export async function handleResearch(req, res) {
       groqKey: groqKey || 'primary',
       modelOverride,
     });
+    const swarmMs = Date.now() - t0;
 
     let result = raw.result;
-    // When isJson, runSwarm already returns a JSON-stringified result.
-    // Only parse if the caller explicitly asked for a JS object via mode.
     if (mode === 'research') {
       try { result = JSON.parse(result); } catch { }
     }
+
+    const totalMs = Date.now() - t0;
+    const tokenInfo = raw.usage ? `${raw.usage.total_tokens || '?'}t` : 'no-usage';
+
+    console.log(
+      `[BENCH:${benchId}] DONE | swarm=${swarmMs}ms total=${totalMs}ms tokens=${tokenInfo} model=${raw.usage?.model || requestedModel || '?'}`
+    );
 
     return res.status(200).json({
       result,
       usage: raw.usage,
       model: raw.usage?.model || requestedModel || 'groq-llama-3.1-8b-instant',
+      _bench: { benchId, swarmMs, totalMs },
     });
   } catch (error) {
+    console.log(`[BENCH:${benchId}] ERROR | ${error.message || error}`);
     return sendSafeError(res, 500, error.message || 'Research service failed.', error);
   }
 }
