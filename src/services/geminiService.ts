@@ -272,75 +272,81 @@ export async function executeCognapseResearch(
   let groundedSources: GroundedSource[] = [];
   let retrievalTrace: RetrievalTrace | null = null;
 
-  try {
-    const searchResult = await searchWeb(query, 10);
+  const { user } = useStore.getState();
+
+  const webSearchPromise = searchWeb(query, 10).catch(e => {
+    console.warn('Web search failed, proceeding without real sources:', e);
+    return null;
+  });
+
+  const docSearchPromise = (async () => {
+    if (user?.id && user?.premium) {
+      try {
+        const docs = await listDocuments(user.id, 50);
+        const indexedDocs = docs.filter(d =>
+          d.status === 'indexed' &&
+          !d.originalName?.startsWith('cognapse_report_')
+        );
+
+        if (indexedDocs.length > 0) {
+          addReasoningStep(`Searching ${indexedDocs.length} indexed documents for relevant content...`);
+
+          const docSearchResults = await queryDocuments(
+            user.id,
+            query,
+            indexedDocs.map(d => d.id),
+            5 // top K chunks
+          );
+
+          if (docSearchResults.length > 0) {
+            const docNameMap = new Map<string, string>();
+            for (const d of indexedDocs) { docNameMap.set(d.id, d.originalName); }
+            return docSearchResults.map((r, i) => ({
+              id: 0, // Will be updated during merge
+              title: docNameMap.get(r.chunk.documentId) || 'Uploaded Document',
+              url: '',
+              domain: 'document',
+              type: 'Document',
+              snippet: r.chunk.content.substring(0, 400),
+              credibility_score: Math.round(r.score * 100),
+              relevance_score: Math.round(r.score * 100),
+              key_finding: r.chunk.content.substring(0, 200),
+              published_date: '',
+              bias_flag: null,
+              retrieval_timestamp: new Date().toISOString(),
+            }));
+          } else {
+            return [];
+          }
+        }
+      } catch (e) {
+        console.warn('Document search unavailable:', e);
+      }
+    }
+    return null;
+  })();
+
+  const [searchResult, rawDocSources] = await Promise.all([webSearchPromise, docSearchPromise]);
+
+  if (searchResult) {
     groundedSources = searchResult.sources;
     retrievalTrace = searchResult.trace;
     addReasoningStep(`Collected ${groundedSources.length} relevant sources`);
-  } catch (e) {
-    console.warn('Web search failed, proceeding without real sources:', e);
+  } else {
     addReasoningStep('Web search unavailable, using synthetic generation');
   }
 
-  // ─── PHASE 1B: DOCUMENT SOURCE RETRIEVAL (Premium users with indexed docs) ───
-  const { user } = useStore.getState();
-  if (user?.id && user?.premium) {
-    try {
-      const docs = await listDocuments(user.id, 50);
-      const indexedDocs = docs.filter(d =>
-        d.status === 'indexed' &&
-        !d.originalName?.startsWith('cognapse_report_')
-      );
-
-      if (indexedDocs.length > 0) {
-        addReasoningStep(`Searching ${indexedDocs.length} indexed documents for relevant content...`);
-
-        const docSearchResults = await queryDocuments(
-          user.id,
-          query,
-          indexedDocs.map(d => d.id),
-          5 // top K chunks
-        );
-
-        if (docSearchResults.length > 0) {
-          addReasoningStep(`Found ${docSearchResults.length} relevant excerpts from your documents`);
-
-          // Build a lookup: documentId → originalName
-          const docNameMap = new Map<string, string>();
-          for (const d of indexedDocs) {
-            docNameMap.set(d.id, d.originalName);
-          }
-
-          // Map document chunks to GroundedSource format
-          let nextId = 0;
-          for (const s of groundedSources) {
-            if (s.id > nextId) nextId = s.id;
-          }
-
-          const docSources: GroundedSource[] = docSearchResults.map((r, i) => ({
-            id: nextId + i + 1,
-            title: docNameMap.get(r.chunk.documentId) || 'Uploaded Document',
-            url: '',
-            domain: 'document',
-            type: 'Document',
-            snippet: r.chunk.content.substring(0, 400),
-            credibility_score: Math.round(r.score * 100),
-            relevance_score: Math.round(r.score * 100),
-            key_finding: r.chunk.content.substring(0, 200),
-            published_date: '',
-            bias_flag: null,
-            retrieval_timestamp: new Date().toISOString(),
-          }));
-
-          // Append document sources AFTER web sources
-          groundedSources.push(...docSources);
-        } else {
-          addReasoningStep('No relevant content found in your uploaded documents for this query');
-        }
+  if (rawDocSources !== null) {
+    if (rawDocSources.length > 0) {
+      addReasoningStep(`Found ${rawDocSources.length} relevant excerpts from your documents`);
+      let nextId = 0;
+      for (const s of groundedSources) {
+        if (s.id > nextId) nextId = s.id;
       }
-    } catch (e) {
-      // Document search is a bonus — don't break research if it fails
-      console.warn('Document search unavailable:', e);
+      const finalDocSources = rawDocSources.map((s, i) => ({ ...s, id: nextId + i + 1 }));
+      groundedSources.push(...finalDocSources as GroundedSource[]);
+    } else {
+      addReasoningStep('No relevant content found in your uploaded documents for this query');
     }
   }
 
@@ -374,7 +380,23 @@ If a source citation is needed, use the format [1], [2], etc. matching the sourc
 If you cannot find supporting evidence in the provided sources, state uncertainty explicitly.`;
 
   addReasoningStep('Synthesizing intelligence report from sources...');
-  const rawResponse = await callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
+  
+  // Fire both models concurrently
+  const primaryResponsePromise = callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
+  
+  const secondaryResponsePromise = callCloudAI(
+    prompt,
+    true,
+    CONSENSUS_MODEL,
+    abortSignal,
+    'secondary',
+    CONSENSUS_MODEL
+  ).catch(e => {
+    console.warn('Multi-model consensus unavailable (secondary model failed):', e);
+    return null;
+  });
+
+  const rawResponse = await primaryResponsePromise;
   
   try {
     // callCloudAI already returns JSON.stringify output — parse once
@@ -415,31 +437,25 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       (parsed as COGNAPSE_Output)._retrieval_trace = retrievalTrace;
     }
 
-    addReasoningStep('Running multi-model consensus validation...');
-
     // ─── PHASE 3: SECOND MODEL SYNTHESIS (Multi-Model Consensus) ───
-    try {
-      const secondaryResponse = await callCloudAI(
-        prompt,
-        true,
-        CONSENSUS_MODEL,
-        abortSignal,
-        'secondary',     // use GROQ_API_KEY_2
-        CONSENSUS_MODEL  // force Mixtral
-      );
+    addReasoningStep('Running multi-model consensus validation...');
+    const secondaryResponse = await secondaryResponsePromise;
+    if (secondaryResponse) {
+      try {
+        const secondaryParsed = typeof secondaryResponse === 'string'
+          ? JSON.parse(secondaryResponse)
+          : secondaryResponse;
 
-      const secondaryParsed = typeof secondaryResponse === 'string'
-        ? JSON.parse(secondaryResponse)
-        : secondaryResponse;
+        // Diff the two reports
+        const consensus = diffReports(parsed, secondaryParsed);
+        (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
 
-      // Diff the two reports
-      const consensus = diffReports(parsed, secondaryParsed);
-      (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
-
-      addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);
-    } catch (e) {
-      // Second model is optional — if it fails, proceed with single-model report
-      console.warn('Multi-model consensus unavailable (secondary model failed):', e);
+        addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);
+      } catch (e) {
+        console.warn('Multi-model consensus parse failed:', e);
+        addReasoningStep('Multi-model consensus unavailable — proceeding with single-model report');
+      }
+    } else {
       addReasoningStep('Multi-model consensus unavailable — proceeding with single-model report');
     }
 
