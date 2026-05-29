@@ -223,13 +223,13 @@ class AudioSystem {
 
     // Set parameters based on state
     const subFreq = state === 'deep-research' ? 27.5 : 55; // A0 vs A1
-    const subGainTarget = state === 'deep-research' ? 0.06 : state === 'focus' ? 0.025 : 0.04;
-    const sub2GainTarget = state === 'deep-research' ? 0.025 : 0;
-    const noiseGainTarget = state === 'research' ? 0.025 : state === 'deep-research' ? 0.03 : state === 'focus' ? 0.008 : 0.015;
+    const subGainTarget = state === 'deep-research' ? 0.25 : state === 'focus' ? 0.12 : 0.18;
+    const sub2GainTarget = state === 'deep-research' ? 0.12 : 0;
+    const noiseGainTarget = state === 'research' ? 0.12 : state === 'deep-research' ? 0.15 : state === 'focus' ? 0.05 : 0.08;
     const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : state === 'focus' ? 300 : 400;
     const lfoRateTarget = state === 'focus' ? 0.01 : state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
     const lfoDepthTarget = state === 'focus' ? 0.001 : state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
-    const busGainTarget = state === 'deep-research' ? 0.65 : state === 'research' ? 0.55 : state === 'focus' ? 0.35 : 0.5;
+    const busGainTarget = state === 'deep-research' ? 0.75 : state === 'research' ? 0.7 : state === 'focus' ? 0.55 : 0.65;
 
     const fadeSec = 3;
 
@@ -290,7 +290,7 @@ class AudioSystem {
 
     // ── Subharmonic drone (A1 = 55 Hz) ──
     this.ambientSub = this.ctx.createOscillator();
-    this.ambientSub.type = 'sine';
+    this.ambientSub.type = 'triangle'; // triangle has harmonics — audible on laptop speakers
     this.ambientSub.frequency.setValueAtTime(55, now);
     this.ambientSubGain = this.ctx.createGain();
     this.ambientSubGain.gain.setValueAtTime(0, now);
@@ -300,7 +300,7 @@ class AudioSystem {
 
     // ── Second sub (A0 = 27.5 Hz, used by deep-research) ──
     this.ambientSub2 = this.ctx.createOscillator();
-    this.ambientSub2.type = 'sine';
+    this.ambientSub2.type = 'triangle';
     this.ambientSub2.frequency.setValueAtTime(27.5, now);
     this.ambientSub2Gain = this.ctx.createGain();
     this.ambientSub2Gain.gain.setValueAtTime(0, now);
