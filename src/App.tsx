@@ -263,6 +263,8 @@ export default function App() {
 
         if (settings && typeof settings.walkthroughCompleted !== 'undefined') {
           useStore.getState().setWalkthroughCompleted(settings.walkthroughCompleted);
+        } else if (settings) {
+          useStore.getState().setWalkthroughCompleted(false);
         }
 
         if (stats) {
