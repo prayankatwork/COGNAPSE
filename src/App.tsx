@@ -47,6 +47,8 @@ import ToastContainer from './components/ui/ToastContainer';
 
 import { audioSystem } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
+import SoundWaveform from './components/SoundWaveform';
+import type { WaveformState } from './components/SoundWaveform';
 import { apiFetch } from './services/apiClient';
 import { toast } from './utils/toast';
 
@@ -489,6 +491,13 @@ export default function App() {
 
   const isDashboard = currentView === 'research' || currentView === 'news';
 
+  // Derive waveform visual state from app state
+  const waveformState: WaveformState =
+    !soundEnabled ? 'silent'
+    : isLoading && deepResearch.status === 'running' ? 'deep-research'
+    : isLoading ? 'research'
+    : 'idle';
+
   return (
     <div className={clsx(
       "bg-my-bg text-my-ink font-sans selection:bg-my-accent selection:text-white overflow-x-hidden relative pt-16 flex flex-col",
@@ -542,25 +551,32 @@ export default function App() {
       <UnifiedCanvas />
       <ToastContainer />
 
-      {/* Sound Toggle — positioned bottom-right, only when dashboard is active */}
+      {/* Sound Controls — positioned bottom-right, only when dashboard is active */}
       {isDashboard && !legalPage && !shareRoute && (
-        <button
-          onClick={() => {
-            const next = !soundEnabled;
-            setSoundEnabled(next);
-            if (next) {
-              audioSystem.init();
-              audioSystem.setMuted(false);
-              audioSystem.setState('idle');
-            } else {
-              audioSystem.setMuted(true);
-            }
-          }}
-          className="fixed bottom-4 right-4 z-50 w-8 h-8 flex items-center justify-center bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px] text-[9px] font-black uppercase tracking-widest text-my-muted hover:text-my-ink hover:border-my-accent/40 transition-all"
-          title={soundEnabled ? 'Sound On' : 'Sound Off'}
-        >
-          {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-        </button>
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          {/* Waveform visual indicator */}
+          <div className="h-8 flex items-center px-2 bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px]">
+            <SoundWaveform state={waveformState} />
+          </div>
+          {/* Sound Toggle */}
+          <button
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              if (next) {
+                audioSystem.init();
+                audioSystem.setMuted(false);
+                audioSystem.setState('idle');
+              } else {
+                audioSystem.setMuted(true);
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px] text-[9px] font-black uppercase tracking-widest text-my-muted hover:text-my-ink hover:border-my-accent/40 transition-all"
+            title={soundEnabled ? 'Sound On' : 'Sound Off'}
+          >
+            {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+          </button>
+        </div>
       )}
 
       {/* Suspended User Overlay */}
