@@ -10,7 +10,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import clsx from 'clsx';
-import { audioService } from '../services/audioService';
+import { audioSystem } from '../services/audioService';
 
 interface WalkthroughStep {
   title: string;
@@ -45,7 +45,7 @@ export default function NeuralWalkthrough() {
       } else {
         setIsReplay(false);
       }
-      audioService.playWalkthroughTick();
+      // no sound needed
     }
   }, [walkthroughCompleted]);
 
@@ -187,8 +187,7 @@ export default function NeuralWalkthrough() {
       currentStep.onEnter();
     }
 
-    audioService.speakProtocol(currentStep.title);
-    audioService.playNeuralHum(true);
+    audioSystem.speakProtocol(currentStep.title);
 
     const updateSpotlight = () => {
       if (currentStep.anchorId) {
@@ -217,8 +216,7 @@ export default function NeuralWalkthrough() {
 
   if (walkthroughCompleted) return null;
 
-  const handleNext = () => {
-    audioService.playWalkthroughTick();
+  const handleNext = () => {      // subtle click
     if (currentStepIdx < steps.length - 1) {
       setCurrentStepIdx(prev => prev + 1);
     } else {
@@ -228,7 +226,7 @@ export default function NeuralWalkthrough() {
   };
 
   const handlePrev = () => {
-    audioService.playWalkthroughTick();
+    // subtle click
     if (currentStepIdx > 0) {
       setCurrentStepIdx(prev => prev - 1);
     }
@@ -358,7 +356,7 @@ export default function NeuralWalkthrough() {
                  {categoryOptions.map(cat => (
                    <button 
                      key={cat.id}
-                     onClick={() => { toggleCategory(cat.id); audioService.playWalkthroughTick(); }}
+                     onClick={() => { toggleCategory(cat.id); }}
                      className={clsx(
                        "flex items-center justify-between p-4 border transition-all",
                        subscribedCategories.includes(cat.id) 

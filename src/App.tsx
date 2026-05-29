@@ -13,7 +13,7 @@ import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
 import React, { useEffect, useRef, useState, Suspense } from 'react';
-import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon, Ban } from 'lucide-react';
+import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon, Ban, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -45,7 +45,7 @@ import DevDashboard from './components/DevDashboard';
 import CommandPalette from './components/CommandPalette';
 import ToastContainer from './components/ui/ToastContainer';
 
-import { audioService } from './services/audioService';
+import { audioSystem } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
 import { apiFetch } from './services/apiClient';
 import { toast } from './utils/toast';
@@ -69,6 +69,8 @@ export default function App() {
     isLoading,
     currentReport,
     deepResearch,
+    soundEnabled,
+    setSoundEnabled,
   } = useStore(useShallow((state) => ({
     currentView: state.currentView,
     theme: state.theme,
@@ -76,7 +78,28 @@ export default function App() {
     isLoading: state.isLoading,
     currentReport: state.currentReport,
     deepResearch: state.deepResearch,
+    soundEnabled: state.soundEnabled,
+    setSoundEnabled: state.setSoundEnabled,
   })));
+
+  // Initialise audio system on first user interaction
+  const audioInited = useRef(false);
+  useEffect(() => {
+    const initAudio = () => {
+      if (audioInited.current) return;
+      audioInited.current = true;
+      audioSystem.init();
+      audioSystem.setState('idle');
+      window.removeEventListener('click', initAudio);
+      window.removeEventListener('keydown', initAudio);
+    };
+    window.addEventListener('click', initAudio, { once: true });
+    window.addEventListener('keydown', initAudio, { once: true });
+    return () => {
+      window.removeEventListener('click', initAudio);
+      window.removeEventListener('keydown', initAudio);
+    };
+  }, []);
 
   // Sound Trigger: Normal Research
   const lastPlayedReportId = useRef<string | null>(null);
@@ -85,7 +108,7 @@ export default function App() {
       const isDeep = !!currentReport.deep_research;
       if (!isDeep) {
         lastPlayedReportId.current = currentReport.id;
-        audioService.playCompletionSound(false);
+        audioSystem.play('research-complete');
       }
     }
   }, [isLoading, currentReport]);
@@ -94,7 +117,7 @@ export default function App() {
   const prevDeepStatus = useRef<string>('idle');
   useEffect(() => {
     if (deepResearch.status === 'completed' && prevDeepStatus.current === 'running') {
-      audioService.playCompletionSound(true);
+      audioSystem.play('deep-research-complete');
     }
     prevDeepStatus.current = deepResearch.status;
   }, [deepResearch.status]);
@@ -475,6 +498,27 @@ export default function App() {
       {!shareRoute && !legalPage && <SelectionCapture />}
       <UnifiedCanvas />
       <ToastContainer />
+
+      {/* Sound Toggle — positioned bottom-right, only when dashboard is active */}
+      {isDashboard && !legalPage && !shareRoute && (
+        <button
+          onClick={() => {
+            const next = !soundEnabled;
+            setSoundEnabled(next);
+            if (next) {
+              audioSystem.init();
+              audioSystem.setMuted(false);
+              audioSystem.setState('idle');
+            } else {
+              audioSystem.setMuted(true);
+            }
+          }}
+          className="fixed bottom-4 right-4 z-50 w-8 h-8 flex items-center justify-center bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px] text-[9px] font-black uppercase tracking-widest text-my-muted hover:text-my-ink hover:border-my-accent/40 transition-all"
+          title={soundEnabled ? 'Sound On' : 'Sound Off'}
+        >
+          {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+        </button>
+      )}
 
       {/* Suspended User Overlay */}
       {suspendedUser && (

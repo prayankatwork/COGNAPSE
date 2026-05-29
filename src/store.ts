@@ -218,6 +218,9 @@ interface AppState {
   };
   clearSessionMemory: () => void;
 
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
+
   pdfExports: any[];
   unlockedReports: Record<string, boolean>;
   unlockReport: (researchId: string) => void;
@@ -683,6 +686,9 @@ export const useStore = create<AppState>()(
         }
       }),
 
+      soundEnabled: false,
+      setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
+
       pdfExports: [],
       unlockedReports: {},
       unlockReport: (researchId) => set((state) => ({
@@ -738,6 +744,7 @@ export const useStore = create<AppState>()(
 subscribedCategories: state.subscribedCategories,
           isSidebarOpen: state.isSidebarOpen,
           lastReportId: state.lastReportId,
+          soundEnabled: state.soundEnabled,
         };
         // Persist chat history only for premium users
         if (state.user?.premium) {
