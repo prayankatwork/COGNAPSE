@@ -49,7 +49,10 @@ export function getGroqClient2() {
  * within Groq's free tier (30 req/min, 14,400 req/day for open models).
  */
 export function getCerebrasClient() {
-  const cerebrasKey = process.env.CEREBRAS_API_KEY || 'csk-fhkrdjc9dcwtmp9trx9edf8e5f233yr45556m8pp628ptjcr';
+  const cerebrasKey = process.env.CEREBRAS_API_KEY;
+  if (!cerebrasKey) {
+    throw new Error('CEREBRAS_API_KEY not configured. Set CEREBRAS_API_KEY in your environment variables.');
+  }
   return new Groq({ 
     apiKey: cerebrasKey, 
     baseURL: 'https://api.cerebras.ai/v1' 
