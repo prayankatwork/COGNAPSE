@@ -85,6 +85,10 @@ export async function handleResearch(req, res) {
     });
   } catch (error) {
     console.log(`[BENCH:${benchId}] ERROR | ${error.message || error}`);
+    if (res.headersSent) {
+      res.write(JSON.stringify({ error: error.message || 'Research service failed.' }));
+      return res.end();
+    }
     return sendSafeError(res, 500, error.message || 'Research service failed.', error);
   }
 }

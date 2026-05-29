@@ -5,6 +5,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   const response = await fetch(path, {
     ...init,
     headers: {
+      'x-cognapse-client': 'true',
       ...authHeaders,
       ...(init.headers || {}),
     },

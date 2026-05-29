@@ -1,5 +1,18 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+
+const idbStorage: StateStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    return (await idbGet(name)) || null;
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    await idbSet(name, value);
+  },
+  removeItem: async (name: string): Promise<void> => {
+    await idbDel(name);
+  },
+};
 import { dbService } from './services/dbService';
 import { syncAuthSession } from './services/authSession';
 import { auth } from './services/firebase';
@@ -712,6 +725,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'cognapse-storage',
+      storage: createJSONStorage(() => idbStorage),
       partialize: (state) => {
         const partial: Record<string, any> = {
           xp: state.xp,

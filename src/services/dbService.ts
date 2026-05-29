@@ -1,11 +1,11 @@
 import { auth, db } from './firebase';
+import { get as idbGet, set as idbSet, del as idbDel, keys as idbKeys } from 'idb-keyval';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signOut
 } from "firebase/auth";
-import { 
-  doc, 
+import { doc, limit, 
   setDoc, 
   getDoc, 
   getDocs, 
@@ -38,74 +38,36 @@ const allowLocalVault =
 export const dbService = {
   // Auth (Map username to virtual email for seamless transition)
   async register(username: string, password: string) {
+    const email = `${username.toLowerCase().replace(/\s/g, '')}@cognapse.vault`;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = { id: userCredential.user.uid, username };
+    
     try {
-      const email = `${username.toLowerCase().replace(/\s/g, '')}@cognapse.vault`;
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = { id: userCredential.user.uid, username };
-      
-      try {
-        // Initialize stats
-        await setDoc(doc(db, "user_stats", user.id), {
-          xp: 0,
-          search_count: 0,
-          rank: "ANALYST"
-        });
-      } catch (statsErr) {
-        console.warn("Firebase stats init failed, using local storage fallback:", statsErr);
-        localStorage.setItem(`cognapse_stats_${user.id}`, JSON.stringify({
-          xp: 0,
-          search_count: 0,
-          rank: "ANALYST",
-          user_id: user.id
-        }));
-      }
-
-      return { success: true, user };
-    } catch (error: any) {
-      if (!allowLocalVault) throw error;
-      console.warn("Firebase Auth registration failed, falling back to local vault:", error);
-      const localUsers = JSON.parse(localStorage.getItem('cognapse_local_users') || '{}');
-      const lowerName = username.toLowerCase().replace(/\s/g, '');
-      if (localUsers[lowerName]) {
-        throw new Error("Username already registered in local vault.");
-      }
-      const localId = `local_${Date.now()}`;
-      localUsers[lowerName] = { id: localId, username, password };
-      localStorage.setItem('cognapse_local_users', JSON.stringify(localUsers));
-      
-      localStorage.setItem(`cognapse_stats_${localId}`, JSON.stringify({
+      await setDoc(doc(db, "user_stats", user.id), {
+        xp: 0,
+        search_count: 0,
+        rank: "ANALYST"
+      });
+    } catch (statsErr) {
+      console.warn("Firebase stats init failed, using local storage fallback:", statsErr);
+      await idbSet(`cognapse_stats_${user.id}`, JSON.stringify({
         xp: 0,
         search_count: 0,
         rank: "ANALYST",
-        user_id: localId
+        user_id: user.id
       }));
-
-      return { success: true, user: { id: localId, username } };
     }
+
+    return { success: true, user };
   },
 
   async login(username: string, password: string) {
-    try {
-      const email = `${username.toLowerCase().replace(/\s/g, '')}@cognapse.vault`;
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return { 
-        success: true, 
-        user: { id: userCredential.user.uid, username } 
-      };
-    } catch (error: any) {
-      if (!allowLocalVault) throw error;
-      console.warn("Firebase Auth login failed, checking local vault:", error);
-      const localUsers = JSON.parse(localStorage.getItem('cognapse_local_users') || '{}');
-      const lowerName = username.toLowerCase().replace(/\s/g, '');
-      const localUser = localUsers[lowerName];
-      if (localUser && localUser.password === password) {
-        return {
-          success: true,
-          user: { id: localUser.id, username: localUser.username }
-        };
-      }
-      throw error;
-    }
+    const email = `${username.toLowerCase().replace(/\s/g, '')}@cognapse.vault`;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return { 
+      success: true, 
+      user: { id: userCredential.user.uid, username } 
+    };
   },
 
   async logout() {
@@ -128,10 +90,10 @@ export const dbService = {
     
     // Always keep a local copy as a backup/cache
     try {
-      const localReports = JSON.parse(localStorage.getItem(`cognapse_reports_${userId}`) || '[]');
+      const localReports = JSON.parse((await idbGet<string>(`cognapse_reports_${userId}`) ?? null) || '[]');
       const filtered = localReports.filter((r: any) => r.id !== id);
       filtered.unshift(reportItem);
-      localStorage.setItem(`cognapse_reports_${userId}`, JSON.stringify(filtered.slice(0, 100)));
+      await idbSet(`cognapse_reports_${userId}`, JSON.stringify(filtered.slice(0, 100)));
     } catch (e) {
       console.warn("Failed to write report to local storage cache:", e);
     }
@@ -147,7 +109,9 @@ export const dbService = {
     try {
       const q = query(
         collection(db, "intelligence_reports"), 
-        where("user_id", "==", userId)
+        where("user_id", "==", userId),
+        orderBy('timestamp', 'desc'),
+        limit(15)
       );
       const querySnapshot = await getDocs(q);
       const reports = querySnapshot.docs.map(doc => {
@@ -160,12 +124,12 @@ export const dbService = {
       
       // Update local storage cache
       if (reports.length > 0) {
-        localStorage.setItem(`cognapse_reports_${userId}`, JSON.stringify(querySnapshot.docs.map(doc => doc.data())));
+        await idbSet(`cognapse_reports_${userId}`, JSON.stringify(querySnapshot.docs.map(doc => doc.data())));
       }
       return reports;
     } catch (error) {
       console.warn("Firebase load reports failed, loading from local storage cache:", error);
-      const local = localStorage.getItem(`cognapse_reports_${userId}`);
+      const local = (await idbGet<string>(`cognapse_reports_${userId}`) ?? null);
       if (local) {
         try {
           const parsed = JSON.parse(local);
@@ -187,7 +151,7 @@ export const dbService = {
       ...stats,
       user_id: userId
     };
-    localStorage.setItem(`cognapse_stats_${userId}`, JSON.stringify(statsItem));
+    await idbSet(`cognapse_stats_${userId}`, JSON.stringify(statsItem));
 
     try {
       await setDoc(doc(db, "user_stats", userId), statsItem, { merge: true });
@@ -202,14 +166,14 @@ export const dbService = {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        localStorage.setItem(`cognapse_stats_${userId}`, JSON.stringify(data));
+        await idbSet(`cognapse_stats_${userId}`, JSON.stringify(data));
         return data;
       }
     } catch (error) {
       console.warn("Firebase load stats failed, loading from local storage:", error);
     }
     
-    const local = localStorage.getItem(`cognapse_stats_${userId}`);
+    const local = (await idbGet<string>(`cognapse_stats_${userId}`) ?? null);
     if (local) {
       try { return JSON.parse(local); } catch (e) { return null; }
     }
@@ -225,11 +189,11 @@ export const dbService = {
       );
       const querySnapshot = await getDocs(q);
       const notes = querySnapshot.docs.map(doc => doc.data());
-      localStorage.setItem(`cognapse_notebook_${userId}`, JSON.stringify(notes));
+      await idbSet(`cognapse_notebook_${userId}`, JSON.stringify(notes));
       return notes;
     } catch (error) {
       console.warn("Firebase load notes failed, loading from local storage:", error);
-      const local = localStorage.getItem(`cognapse_notebook_${userId}`);
+      const local = (await idbGet<string>(`cognapse_notebook_${userId}`) ?? null);
       if (local) {
         try { return JSON.parse(local); } catch (e) { return []; }
       }
@@ -247,10 +211,10 @@ export const dbService = {
     };
 
     try {
-      const localNotes = JSON.parse(localStorage.getItem(`cognapse_notebook_${userId}`) || '[]');
+      const localNotes = JSON.parse((await idbGet<string>(`cognapse_notebook_${userId}`) ?? null) || '[]');
       const filtered = localNotes.filter((n: any) => n.id !== id);
       filtered.unshift(noteItem);
-      localStorage.setItem(`cognapse_notebook_${userId}`, JSON.stringify(filtered));
+      await idbSet(`cognapse_notebook_${userId}`, JSON.stringify(filtered));
     } catch (e) {}
 
     try {
@@ -265,10 +229,10 @@ export const dbService = {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('cognapse_notebook_')) {
-          const notes = JSON.parse(localStorage.getItem(key) || '[]');
+          const notes = JSON.parse((await idbGet<string>(key) ?? null) || '[]');
           const filtered = notes.filter((n: any) => n.id !== noteId);
           if (filtered.length !== notes.length) {
-            localStorage.setItem(key, JSON.stringify(filtered));
+            await idbSet(key, JSON.stringify(filtered));
             break;
           }
         }
@@ -283,7 +247,7 @@ export const dbService = {
   },
 
   async clearNotebook(userId: string) {
-    localStorage.removeItem(`cognapse_notebook_${userId}`);
+    await idbDel(`cognapse_notebook_${userId}`);
     try {
       const q = query(collection(db, "notebook"), where("user_id", "==", userId));
       const querySnapshot = await getDocs(q);
@@ -302,10 +266,10 @@ export const dbService = {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('cognapse_reports_')) {
-          const reports = JSON.parse(localStorage.getItem(key) || '[]');
+          const reports = JSON.parse((await idbGet<string>(key) ?? null) || '[]');
           const filtered = reports.filter((r: any) => r.id !== id);
           if (filtered.length !== reports.length) {
-            localStorage.setItem(key, JSON.stringify(filtered));
+            await idbSet(key, JSON.stringify(filtered));
             break;
           }
         }
@@ -340,7 +304,7 @@ export const dbService = {
         );
         const sharedSnap = await getDocs(sharedQ);
         for (const d of sharedSnap.docs) {
-          localStorage.removeItem(`cognapse_shared_${d.id}`);
+          await idbDel(`cognapse_shared_${d.id}`);
           await deleteDoc(d.ref);
         }
       } catch (e) {
@@ -350,7 +314,7 @@ export const dbService = {
   },
 
   async clearHistory(userId: string) {
-    localStorage.removeItem(`cognapse_reports_${userId}`);
+    await idbDel(`cognapse_reports_${userId}`);
     try {
       const q = query(collection(db, "intelligence_reports"), where("user_id", "==", userId));
       const querySnapshot = await getDocs(q);
@@ -379,7 +343,7 @@ export const dbService = {
       const sharedQ = query(collection(db, "shared_research"), where("ownerId", "==", userId));
       const sharedSnap = await getDocs(sharedQ);
       for (const d of sharedSnap.docs) {
-        localStorage.removeItem(`cognapse_shared_${d.id}`);
+        await idbDel(`cognapse_shared_${d.id}`);
         await deleteDoc(d.ref);
       }
     } catch (e) {
@@ -390,9 +354,9 @@ export const dbService = {
   // News Feed Subscriptions & Walkthrough Status
   async saveSettings(userId: string, settings: { subscribedCategories?: string[], walkthroughCompleted?: boolean }) {
     try {
-      const current = JSON.parse(localStorage.getItem(`cognapse_settings_${userId}`) || '{}');
+      const current = JSON.parse((await idbGet<string>(`cognapse_settings_${userId}`) ?? null) || '{}');
       const updated = { ...current, ...settings, user_id: userId, updated_at: new Date().toISOString() };
-      localStorage.setItem(`cognapse_settings_${userId}`, JSON.stringify(updated));
+      await idbSet(`cognapse_settings_${userId}`, JSON.stringify(updated));
     } catch (e) {}
 
     try {
@@ -412,14 +376,14 @@ export const dbService = {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        localStorage.setItem(`cognapse_settings_${userId}`, JSON.stringify(data));
+        await idbSet(`cognapse_settings_${userId}`, JSON.stringify(data));
         return data;
       }
     } catch (error) {
       console.warn("Firebase load settings failed, using local storage cache:", error);
     }
     
-    const local = localStorage.getItem(`cognapse_settings_${userId}`);
+    const local = (await idbGet<string>(`cognapse_settings_${userId}`) ?? null);
     if (local) {
       try { return JSON.parse(local); } catch (e) { return null; }
     }
@@ -437,10 +401,10 @@ export const dbService = {
     timestamp: string;
   }) {
     try {
-      const localExports = JSON.parse(localStorage.getItem(`cognapse_exports_${exportData.userId}`) || '[]');
+      const localExports = JSON.parse((await idbGet<string>(`cognapse_exports_${exportData.userId}`) ?? null) || '[]');
       const filtered = localExports.filter((e: any) => e.id !== exportData.id);
       filtered.unshift(exportData);
-      localStorage.setItem(`cognapse_exports_${exportData.userId}`, JSON.stringify(filtered));
+      await idbSet(`cognapse_exports_${exportData.userId}`, JSON.stringify(filtered));
     } catch (e) {}
 
     try {
@@ -453,9 +417,9 @@ export const dbService = {
   async deleteExport(exportId: string, userId: string) {
     // Remove from local storage
     try {
-      const localExports = JSON.parse(localStorage.getItem(`cognapse_exports_${userId}`) || '[]');
+      const localExports = JSON.parse((await idbGet<string>(`cognapse_exports_${userId}`) ?? null) || '[]');
       const filtered = localExports.filter((e: any) => e.id !== exportId);
-      localStorage.setItem(`cognapse_exports_${userId}`, JSON.stringify(filtered));
+      await idbSet(`cognapse_exports_${userId}`, JSON.stringify(filtered));
     } catch (e) {}
 
     // Remove from Firestore
@@ -468,7 +432,7 @@ export const dbService = {
 
   async clearExports(userId: string) {
     // Clear from local storage
-    localStorage.removeItem(`cognapse_exports_${userId}`);
+    await idbDel(`cognapse_exports_${userId}`);
 
     // Clear from Firestore
     try {
@@ -491,11 +455,11 @@ export const dbService = {
       const querySnapshot = await getDocs(q);
       const exports = querySnapshot.docs.map(doc => doc.data() as any);
       const sorted = exports.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      localStorage.setItem(`cognapse_exports_${userId}`, JSON.stringify(sorted));
+      await idbSet(`cognapse_exports_${userId}`, JSON.stringify(sorted));
       return sorted;
     } catch (error) {
       console.warn("Firebase load exports failed, loading from local storage:", error);
-      const local = localStorage.getItem(`cognapse_exports_${userId}`);
+      const local = (await idbGet<string>(`cognapse_exports_${userId}`) ?? null);
       if (local) {
         try { return JSON.parse(local); } catch (e) { return []; }
       }
@@ -531,11 +495,11 @@ export const dbService = {
     };
 
     const localKey = `cognapse_shared_${id}`;
-    localStorage.setItem(localKey, JSON.stringify(record));
+    await idbSet(localKey, JSON.stringify(record));
     if (input.ownerId) {
       const ownerKey = `cognapse_shared_index_${input.ownerId}`;
-      const existing = safeParse<string[]>(localStorage.getItem(ownerKey), []);
-      localStorage.setItem(ownerKey, JSON.stringify(Array.from(new Set([id, ...existing]))));
+      const existing = safeParse<string[]>((await idbGet<string>(ownerKey) ?? null), []);
+      await idbSet(ownerKey, JSON.stringify(Array.from(new Set([id, ...existing]))));
     }
 
     try {
@@ -551,10 +515,10 @@ export const dbService = {
 
   async updateSharedResearchVisibility(shareId: string, visibility: ResearchVisibility) {
     const localKey = `cognapse_shared_${shareId}`;
-    const local = safeParse<SharedResearchRecord | null>(localStorage.getItem(localKey), null);
+    const local = safeParse<SharedResearchRecord | null>((await idbGet<string>(localKey) ?? null), null);
     const updatedAt = new Date().toISOString();
     if (local) {
-      localStorage.setItem(localKey, JSON.stringify({ ...local, visibility, updatedAt }));
+      await idbSet(localKey, JSON.stringify({ ...local, visibility, updatedAt }));
     }
     try {
       await setDoc(doc(db, "shared_research", shareId), { visibility, updatedAt }, { merge: true });
@@ -574,13 +538,13 @@ export const dbService = {
           disabledAt: data.disabledAt || null,
           report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
         } as SharedResearchRecord;
-        localStorage.setItem(`cognapse_shared_${shareId}`, JSON.stringify(record));
+        await idbSet(`cognapse_shared_${shareId}`, JSON.stringify(record));
         return record;
       }
     } catch (error) {
       console.warn("Firebase shared research load failed, checking local cache:", error);
     }
-    return safeParse<SharedResearchRecord | null>(localStorage.getItem(`cognapse_shared_${shareId}`), null);
+    return safeParse<SharedResearchRecord | null>((await idbGet<string>(`cognapse_shared_${shareId}`) ?? null), null);
   },
 
   async getUserSharedResearch(ownerId: string) {
@@ -596,15 +560,14 @@ export const dbService = {
           report: typeof data.report === "string" ? JSON.parse(data.report) : data.report
         } as SharedResearchRecord;
       });
-      shares.forEach(share => localStorage.setItem(`cognapse_shared_${share.id}`, JSON.stringify(share)));
-      localStorage.setItem(`cognapse_shared_index_${ownerId}`, JSON.stringify(shares.map(s => s.id)));
+      for (const share of shares) { await idbSet(`cognapse_shared_${share.id}`, JSON.stringify(share)); }
+      await idbSet(`cognapse_shared_index_${ownerId}`, JSON.stringify(shares.map(s => s.id)));
       return shares.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     } catch (error) {
       console.warn("Firebase shared research index failed, loading local shares:", error);
-      const ids = safeParse<string[]>(localStorage.getItem(`cognapse_shared_index_${ownerId}`), []);
-      return ids
-        .map(id => safeParse<SharedResearchRecord | null>(localStorage.getItem(`cognapse_shared_${id}`), null))
-        .filter(Boolean) as SharedResearchRecord[];
+      const ids = safeParse<string[]>((await idbGet<string>(`cognapse_shared_index_${ownerId}`) ?? null), []);
+      const records = await Promise.all(ids.map(async id => safeParse<SharedResearchRecord | null>((await idbGet<string>(`cognapse_shared_${id}`) ?? null), null)));
+      return records.filter(Boolean) as SharedResearchRecord[];
     }
   },
 
@@ -615,7 +578,7 @@ export const dbService = {
       active: record.active !== false,
       updatedAt: new Date().toISOString()
     };
-    localStorage.setItem(`cognapse_shared_${record.id}`, JSON.stringify(updated));
+    await idbSet(`cognapse_shared_${record.id}`, JSON.stringify(updated));
     try {
       await setDoc(doc(db, "shared_research", record.id), {
         ...updated,
@@ -634,7 +597,7 @@ export const dbService = {
       disabledAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    localStorage.setItem(`cognapse_shared_${record.id}`, JSON.stringify(updated));
+    await idbSet(`cognapse_shared_${record.id}`, JSON.stringify(updated));
     try {
       await setDoc(doc(db, "shared_research", record.id), {
         active: false,
@@ -648,10 +611,10 @@ export const dbService = {
   },
 
   async deleteSharedResearch(record: SharedResearchRecord) {
-    localStorage.removeItem(`cognapse_shared_${record.id}`);
+    await idbDel(`cognapse_shared_${record.id}`);
     const ownerKey = `cognapse_shared_index_${record.ownerId}`;
-    const existing = safeParse<string[]>(localStorage.getItem(ownerKey), []);
-    localStorage.setItem(ownerKey, JSON.stringify(existing.filter(id => id !== record.id)));
+    const existing = safeParse<string[]>((await idbGet<string>(ownerKey) ?? null), []);
+    await idbSet(ownerKey, JSON.stringify(existing.filter(id => id !== record.id)));
     try {
       await deleteDoc(doc(db, "shared_research", record.id));
     } catch (error) {
@@ -673,7 +636,7 @@ export const dbService = {
             premiumActivatedAt: data.premiumActivatedAt || null,
             premiumExpiresAt: data.premiumExpiresAt || null,
           };
-          localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(result));
+          await idbSet(`cognapse_premium_${userId}`, JSON.stringify(result));
           return result;
         }
       }
@@ -696,7 +659,7 @@ export const dbService = {
           premiumActivatedAt: expired ? null : data.premiumActivatedAt || null,
           premiumExpiresAt: expired ? null : data.premiumExpiresAt || null,
         };
-        localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(result));
+        await idbSet(`cognapse_premium_${userId}`, JSON.stringify(result));
         return result;
       }
     } catch (error) {
@@ -704,7 +667,7 @@ export const dbService = {
     }
     
     // Final fallback: localStorage with client-side expiry check
-    const local = localStorage.getItem(`cognapse_premium_${userId}`);
+    const local = (await idbGet<string>(`cognapse_premium_${userId}`) ?? null);
     if (local) {
       try {
         const data = JSON.parse(local);
@@ -731,13 +694,13 @@ export const dbService = {
         ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
-    localStorage.setItem(`cognapse_premium_${userId}`, JSON.stringify(premiumData));
+    await idbSet(`cognapse_premium_${userId}`, JSON.stringify(premiumData));
   },
 
   // #8: Premium chat history persistence
   async saveChatHistory(userId: string, history: any[]) {
     try {
-      localStorage.setItem(`cognapse_chat_${userId}`, JSON.stringify(history));
+      await idbSet(`cognapse_chat_${userId}`, JSON.stringify(history));
     } catch (e) {
       console.warn('Failed to save chat history to local storage:', e);
     }
@@ -759,13 +722,13 @@ export const dbService = {
       if (docSnap.exists()) {
         const data = docSnap.data();
         const messages = safeParse<any[]>(data.messages || '[]', []);
-        localStorage.setItem(`cognapse_chat_${userId}`, JSON.stringify(messages));
+        await idbSet(`cognapse_chat_${userId}`, JSON.stringify(messages));
         return messages;
       }
     } catch (error) {
       console.warn('Firebase load chat history failed, loading from local storage:', error);
     }
-    const local = localStorage.getItem(`cognapse_chat_${userId}`);
+    const local = (await idbGet<string>(`cognapse_chat_${userId}`) ?? null);
     if (local) {
       try { return JSON.parse(local); } catch { return []; }
     }
@@ -777,7 +740,7 @@ export const dbService = {
     const cluster = report.archive_entry?.topic_cluster || report.query_understood?.substring(0, 60);
     if (!cluster) return;
     const key = `cognapse_score_history_${userId}`;
-    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    const history = JSON.parse((await idbGet<string>(key) ?? null) || '[]');
     history.push({
       cluster,
       scores: {
@@ -787,16 +750,16 @@ export const dbService = {
         timestamp: new Date().toISOString(),
       },
     });
-    localStorage.setItem(key, JSON.stringify(history.slice(-50)));
+    await idbSet(key, JSON.stringify(history.slice(-50)));
   },
 
-  getScoreHistory(userId: string, cluster: string): any[] {
+  async getScoreHistory(userId: string, cluster: string): Promise<any[]> {
     const key = `cognapse_score_history_${userId}`;
-    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    const history = JSON.parse((await idbGet<string>(key) ?? null) || '[]');
     return history.filter((h: any) => h.cluster === cluster).slice(-5);
   },
 
-  clearLocalUserData(userId: string) {
+  async clearLocalUserData(userId: string) {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -809,22 +772,22 @@ export const dbService = {
         keys.push(key);
       }
     }
-    keys.forEach((k) => localStorage.removeItem(k));
+    await Promise.all(keys.map(k => idbDel(k)));
 
     if (userId.startsWith('local_')) {
       const localUsers = safeParse<Record<string, { id: string }>>(
-        localStorage.getItem('cognapse_local_users'),
+        (await idbGet<string>('cognapse_local_users') ?? null),
         {}
       );
       const next = Object.fromEntries(
         Object.entries(localUsers).filter(([, u]) => u.id !== userId)
       );
-      localStorage.setItem('cognapse_local_users', JSON.stringify(next));
+      await idbSet('cognapse_local_users', JSON.stringify(next));
     }
   },
 
   async deleteUserAccount(userId: string) {
-    this.clearLocalUserData(userId);
+    await this.clearLocalUserData(userId);
 
     if (userId.startsWith('local_')) {
       try {
@@ -896,7 +859,7 @@ export const dbService = {
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       console.error('Account excision failed:', err);
-      this.clearLocalUserData(userId);
+      await this.clearLocalUserData(userId);
       if (err?.code === 'auth/requires-recent-login') {
         const e = new Error('REAUTH_REQUIRED');
         (e as Error & { code: string }).code = 'auth/requires-recent-login';

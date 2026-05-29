@@ -1,6 +1,7 @@
 import { COGNAPSE_SYSTEM_PROMPT } from '../systemPrompt';
 import type { COGNAPSE_Output, GroundedSource, RetrievalTrace, MultiModelConsensus, CitationVerification } from '../types';
 import { callCloudAI } from './aiService';
+import { getEmbedder, cosineSimilarity } from '../utils/scoringEngine';
 import { searchWeb, compressSourcesForLLM } from './searchService';
 import { useStore } from '../store';
 import { listDocuments } from './documentService';
@@ -11,18 +12,30 @@ const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for con
 
 /* ─── Multi-Model Consensus ─── */
 
+
 /**
- * Simple sentence-level similarity using word overlap (Jaccard).
- * Returns 0–1 where 1 = identical word composition.
+ * Semantic sentence-level similarity using Transformers.js Embeddings.
+ * Falls back to Jaccard if embedder is unavailable.
  */
-function sentenceSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  if (wordsA.size === 0 || wordsB.size === 0) return 0;
-  let intersection = 0;
-  for (const w of wordsA) if (wordsB.has(w)) intersection++;
-  return intersection / Math.min(wordsA.size, wordsB.size);
+async function semanticSimilarity(a: string, b: string): Promise<number> {
+  const pipe = await getEmbedder();
+  if (!pipe) {
+    const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    if (wordsA.size === 0 || wordsB.size === 0) return 0;
+    let intersection = 0;
+    for (const w of wordsA) if (wordsB.has(w)) intersection++;
+    return intersection / Math.min(wordsA.size, wordsB.size);
+  }
+  try {
+    const embA = await pipe(a, { pooling: 'mean', normalize: true });
+    const embB = await pipe(b, { pooling: 'mean', normalize: true });
+    return cosineSimilarity(embA.data as number[], embB.data as number[]);
+  } catch {
+    return 0;
+  }
 }
+
 
 /**
  * Split text into sentences.
@@ -42,10 +55,10 @@ function splitSentences(text: string): string[] {
  *   - conflicts
  *   - actionable_takeaways
  */
-function diffReports(
+async function diffReports(
   primary: COGNAPSE_Output,
   secondary: COGNAPSE_Output
-): MultiModelConsensus {
+): Promise<MultiModelConsensus> {
   const agreementPoints: string[] = [];
   const divergentPoints: { from: 'unique_to_a' | 'unique_to_b'; claim: string }[] = [];
 
@@ -53,7 +66,7 @@ function diffReports(
   const blA = (primary.summary?.bottom_line || '').trim();
   const blB = (secondary.summary?.bottom_line || '').trim();
   if (blA && blB) {
-    const sim = sentenceSimilarity(blA, blB);
+    const sim = await semanticSimilarity(blA, blB);
     if (sim > 0.35) {
       agreementPoints.push(blA.length > blB.length ? blB : blA);
     } else {
@@ -72,7 +85,7 @@ function diffReports(
     let bestScore = 0;
     for (let i = 0; i < synB.length; i++) {
       if (matchedB.has(i)) continue;
-      const score = sentenceSimilarity(sA, synB[i]);
+      const score = await semanticSimilarity(sA, synB[i]);
       if (score > bestScore) {
         bestScore = score;
         bestMatchIdx = i;
@@ -447,7 +460,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           : secondaryResponse;
 
         // Diff the two reports
-        const consensus = diffReports(parsed, secondaryParsed);
+        const consensus = await diffReports(parsed, secondaryParsed);
         (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
 
         addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);

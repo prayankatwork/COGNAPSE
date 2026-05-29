@@ -5,7 +5,7 @@ let embedder: any = null;
 let embedderLoading = false;
 let embedderReady = false;
 
-async function getEmbedder(): Promise<any> {
+export async function getEmbedder(): Promise<any> {
   if (embedderReady) return embedder;
   if (embedderLoading) {
     while (embedderLoading) await new Promise(r => setTimeout(r, 100));
@@ -70,7 +70,7 @@ async function analyzeSentiment(text: string): Promise<{ comparative: number }> 
   }
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
+export function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0, na = 0, nb = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
