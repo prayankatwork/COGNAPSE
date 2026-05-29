@@ -3,7 +3,6 @@ import { useStore } from '../store';
 
 export default function MusicVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const vibe = useStore((s) => s.vibe);
   const consensus = useStore((s) => s.currentReport?.scores?.evidence_consensus || 'insufficient');
 
   // Skip visualizer completely on mobile to prevent canvas redrawing lag
@@ -33,7 +32,7 @@ export default function MusicVisualizer() {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const isHighEnergy = vibe === 'energy';
+      const isHighEnergy = false;
       const isConflicted = consensus === 'mixed' || consensus === 'contested';
 
       // Speed up time and calculate BPM-based pulse
@@ -66,9 +65,7 @@ export default function MusicVisualizer() {
       } else {
         // --- SLOW CALMING WAVES ---
         // Color shifts based on vibe
-        const waveColor = vibe === 'focus'
-          ? 'rgba(42, 67, 101, 0.12)' // Deep ink/blue
-          : 'rgba(242, 125, 38, 0.15)'; // Soft orange
+        const waveColor = 'rgba(42, 67, 101, 0.12)'; // Deep ink/blue
 
         ctx.fillStyle = waveColor;
 
@@ -96,7 +93,7 @@ export default function MusicVisualizer() {
       window.removeEventListener('resize', resize);
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [vibe, consensus]);
+  }, [consensus]);
 
   return (
     <canvas

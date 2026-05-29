@@ -206,19 +206,6 @@ export default function App() {
     prevModalStates.current = { ...modalStates };
   }, [isAuthOpen, isNotebookOpen, isStatusOpen, isCommandPaletteOpen]);
 
-  // ── Phase 3: Focus mode atmosphere ──
-  const { vibe, setVibe } = useStore(useShallow((state) => ({ vibe: state.vibe, setVibe: state.setVibe })));
-  useEffect(() => {
-    // Don't override active research or deep-research ambience
-    if (isLoading || deepResearch.status === 'running') return;
-
-    if (vibe === 'focus' && audioSystem.state !== 'focus') {
-      audioSystem.setState('focus');
-    } else if (vibe === 'energy' && audioSystem.state === 'focus') {
-      audioSystem.setState('idle');
-    }
-  }, [vibe, isLoading, deepResearch.status]);
-
   useEffect(() => {
     const state = useStore.getState() as any;
     if (state._hydrateCleanup) state._hydrateCleanup();
@@ -586,22 +573,6 @@ export default function App() {
           <div className="h-8 flex items-center px-2 bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px]">
             <SoundWaveform state={waveformState} />
           </div>
-          {/* Vibe Toggle — Focus / Energy */}
-          <button
-            onClick={() => setVibe(vibe === 'focus' ? 'energy' : 'focus')}
-            className="h-8 px-2.5 flex items-center gap-1.5 bg-my-bg/80 backdrop-blur border border-my-border rounded-[4px] text-[9px] font-black uppercase tracking-widest transition-all hover:border-my-accent/40"
-            title={`Mood: ${vibe === 'focus' ? 'Focus' : 'Energy'}`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                vibe === 'focus' ? 'bg-my-accent' : 'bg-my-muted'
-              }`}
-            />
-            <span className={vibe === 'focus' ? 'text-my-accent' : 'text-my-muted'}>
-              {vibe === 'focus' ? 'Focus' : 'Energy'}
-            </span>
-          </button>
-
           {/* Sound Toggle */}
           <button
             onClick={() => {

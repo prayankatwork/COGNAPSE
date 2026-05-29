@@ -172,9 +172,6 @@ interface AppState {
   setInitialQuery: (q: string | null) => void;
 
 
-  vibe: 'focus' | 'energy';
-  setVibe: (vibe: 'focus' | 'energy') => void;
-
   deepResearch: DeepResearchState;
   setDeepResearch: (update: Partial<DeepResearchState>) => void;
   resetDeepResearch: () => void;
@@ -513,9 +510,6 @@ export const useStore = create<AppState>()(
             lastSearchDate: searchCountIncrease > 0 ? new Date().toISOString() : state.lastSearchDate,
           };
         }),
-
-      vibe: 'focus',
-      setVibe: (vibe) => set({ vibe }),
 
       deepResearch: {
         status: 'idle',

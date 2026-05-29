@@ -19,7 +19,7 @@
  *   error
  */
 
-type AudioState = 'idle' | 'research' | 'deep-research' | 'focus' | 'silent';
+type AudioState = 'idle' | 'research' | 'deep-research' | 'silent';
 
 type SoundEvent =
   | 'research-start'
@@ -118,7 +118,7 @@ class AudioSystem {
     const prev = this._state;
     this._state = state;
 
-    if (state === 'idle' || state === 'research' || state === 'deep-research' || state === 'focus') {
+    if (state === 'idle' || state === 'research' || state === 'deep-research') {
       this.setAmbient(state);
     } else if (state === 'silent') {
       this.stopAmbient();
@@ -223,13 +223,13 @@ class AudioSystem {
 
     // Set parameters based on state
     const subFreq = state === 'deep-research' ? 27.5 : 55; // A0 vs A1
-    const subGainTarget = state === 'deep-research' ? 0.25 : state === 'focus' ? 0.12 : 0.18;
+    const subGainTarget = state === 'deep-research' ? 0.25 : 0.18;
     const sub2GainTarget = state === 'deep-research' ? 0.12 : 0;
-    const noiseGainTarget = state === 'research' ? 0.12 : state === 'deep-research' ? 0.15 : state === 'focus' ? 0.05 : 0.08;
-    const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : state === 'focus' ? 300 : 400;
-    const lfoRateTarget = state === 'focus' ? 0.01 : state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
-    const lfoDepthTarget = state === 'focus' ? 0.001 : state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
-    const busGainTarget = state === 'deep-research' ? 0.75 : state === 'research' ? 0.7 : state === 'focus' ? 0.55 : 0.65;
+    const noiseGainTarget = state === 'research' ? 0.12 : state === 'deep-research' ? 0.15 : 0.08;
+    const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : 400;
+    const lfoRateTarget = state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
+    const lfoDepthTarget = state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
+    const busGainTarget = state === 'deep-research' ? 0.75 : state === 'research' ? 0.7 : 0.65;
 
     const fadeSec = 3;
 
