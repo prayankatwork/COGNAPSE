@@ -19,7 +19,7 @@
  *   error
  */
 
-type AudioState = 'idle' | 'research' | 'deep-research' | 'silent';
+type AudioState = 'idle' | 'research' | 'deep-research' | 'focus' | 'silent';
 
 type SoundEvent =
   | 'research-start'
@@ -31,7 +31,12 @@ type SoundEvent =
   | 'verification-start'
   | 'verification-complete'
   | 'consensus-complete'
-  | 'error';
+  | 'error'
+  | 'notification-success'
+  | 'notification-error'
+  | 'notification-info'
+  | 'modal-open'
+  | 'modal-close';
 
 class AudioSystem {
   private ctx: AudioContext | null = null;
@@ -113,7 +118,7 @@ class AudioSystem {
     const prev = this._state;
     this._state = state;
 
-    if (state === 'idle' || state === 'research' || state === 'deep-research') {
+    if (state === 'idle' || state === 'research' || state === 'deep-research' || state === 'focus') {
       this.setAmbient(state);
     } else if (state === 'silent') {
       this.stopAmbient();
@@ -154,6 +159,21 @@ class AudioSystem {
         break;
       case 'error':
         this.playError();
+        break;
+      case 'notification-success':
+        this.playNotificationSuccess();
+        break;
+      case 'notification-error':
+        this.playNotificationError();
+        break;
+      case 'notification-info':
+        this.playNotificationInfo();
+        break;
+      case 'modal-open':
+        this.playModalOpen();
+        break;
+      case 'modal-close':
+        this.playModalClose();
         break;
     }
   }
@@ -203,13 +223,13 @@ class AudioSystem {
 
     // Set parameters based on state
     const subFreq = state === 'deep-research' ? 27.5 : 55; // A0 vs A1
-    const subGainTarget = state === 'deep-research' ? 0.06 : 0.04;
+    const subGainTarget = state === 'deep-research' ? 0.06 : state === 'focus' ? 0.025 : 0.04;
     const sub2GainTarget = state === 'deep-research' ? 0.025 : 0;
-    const noiseGainTarget = state === 'research' ? 0.025 : state === 'deep-research' ? 0.03 : 0.015;
-    const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : 400;
-    const lfoRateTarget = state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
-    const lfoDepthTarget = state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
-    const busGainTarget = state === 'deep-research' ? 0.65 : state === 'research' ? 0.55 : 0.5;
+    const noiseGainTarget = state === 'research' ? 0.025 : state === 'deep-research' ? 0.03 : state === 'focus' ? 0.008 : 0.015;
+    const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : state === 'focus' ? 300 : 400;
+    const lfoRateTarget = state === 'focus' ? 0.01 : state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
+    const lfoDepthTarget = state === 'focus' ? 0.001 : state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
+    const busGainTarget = state === 'deep-research' ? 0.65 : state === 'research' ? 0.55 : state === 'focus' ? 0.35 : 0.5;
 
     const fadeSec = 3;
 
@@ -482,6 +502,56 @@ class AudioSystem {
     // Descending minor third: A3 (220 Hz) → F#3 (185 Hz)
     this.playTone(220.00, 'triangle', 0.18, 0.35);
     this.playTone(184.99, 'triangle', 0.14, 0.35, 0.15);
+  }
+
+  /* ─── Phase 3: Notification sounds ─── */
+
+  /**
+   * Notification Success — Single bright chime (C5=523.25, ~150ms)
+   * Quick, positive, confident. Nothing exuberant — just a clean "done" signal.
+   */
+  private playNotificationSuccess() {
+    if (!this.ctx) return;
+    this.playTone(523.25, 'triangle', 0.08, 0.15);
+  }
+
+  /**
+   * Notification Error — Soft descending two-note (E4→C4, ~250ms)
+   * E4=329.63, C4=261.63. Muted minor third descent — subdued "didn't work".
+   */
+  private playNotificationError() {
+    if (!this.ctx) return;
+    this.playTone(329.63, 'triangle', 0.07, 0.1);
+    this.playTone(261.63, 'triangle', 0.06, 0.15, 0.1);
+  }
+
+  /**
+   * Notification Info — Gentle single tone (A4=440, ~100ms)
+   * Pure sine, very quiet — neutral awareness, not an alert.
+   */
+  private playNotificationInfo() {
+    if (!this.ctx) return;
+    this.playTone(440.00, 'sine', 0.04, 0.1);
+  }
+
+  /* ─── Phase 3: Modal sounds ─── */
+
+  /**
+   * Modal Open — Soft "lift" (A3 swell, ~200ms)
+   * A3=220. A single gentle sine that rises briefly — like lifting a hatch.
+   */
+  private playModalOpen() {
+    if (!this.ctx) return;
+    this.playTone(220.00, 'sine', 0.06, 0.2);
+  }
+
+  /**
+   * Modal Close — Gentle "settle" (C4, ~150ms)
+   * C4=261.63. A quick, soft thud — like a latch clicking closed.
+   */
+  private playModalClose() {
+    if (!this.ctx) return;
+    this.playTone(261.63, 'sine', 0.04, 0.15);
   }
 }
 

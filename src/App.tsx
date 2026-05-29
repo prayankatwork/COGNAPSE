@@ -167,6 +167,36 @@ export default function App() {
     prevDeepStage.current = stage;
   }, [deepResearch.stage, deepResearch.status]);
 
+  // ── Phase 3: Modal open/close sounds ──
+  const prevModalStates = useRef({ isAuthOpen: false, isNotebookOpen: false, isStatusOpen: false, isCommandPaletteOpen: false });
+  // Destructure modal states
+  const modalStates = { isAuthOpen, isNotebookOpen, isStatusOpen, isCommandPaletteOpen };
+  useEffect(() => {
+    const prev = prevModalStates.current;
+    // Check each modal — if it just opened or closed, play the appropriate sound
+    (Object.keys(modalStates) as Array<keyof typeof modalStates>).forEach(key => {
+      if (modalStates[key] && !prev[key]) {
+        audioSystem.play('modal-open');
+      } else if (!modalStates[key] && prev[key]) {
+        audioSystem.play('modal-close');
+      }
+    });
+    prevModalStates.current = { ...modalStates };
+  }, [isAuthOpen, isNotebookOpen, isStatusOpen, isCommandPaletteOpen]);
+
+  // ── Phase 3: Focus mode atmosphere ──
+  const { vibe } = useStore(useShallow((state) => ({ vibe: state.vibe })));
+  useEffect(() => {
+    // Don't override active research or deep-research ambience
+    if (isLoading || deepResearch.status === 'running') return;
+
+    if (vibe === 'focus' && audioSystem.state !== 'focus') {
+      audioSystem.setState('focus');
+    } else if (vibe === 'energy' && audioSystem.state === 'focus') {
+      audioSystem.setState('idle');
+    }
+  }, [vibe, isLoading, deepResearch.status]);
+
   useEffect(() => {
     const state = useStore.getState() as any;
     if (state._hydrateCleanup) state._hydrateCleanup();

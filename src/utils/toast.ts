@@ -5,6 +5,8 @@
  *        toast.show('Message', 'success' | 'error' | 'info');
  */
 
+import { audioSystem } from '../services/audioService';
+
 type ToastType = 'success' | 'error' | 'info';
 
 interface Toast {
@@ -50,6 +52,12 @@ export const toast = {
     toasts = [...toasts, { id, message: safeString(message), type }];
     notify();
     setTimeout(() => remove(id), duration);
+
+    // Play corresponding notification sound
+    const event = type === 'success' ? 'notification-success'
+      : type === 'error' ? 'notification-error'
+      : 'notification-info';
+    audioSystem.play(event);
   },
 
   success(message: unknown) {
