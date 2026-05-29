@@ -48,8 +48,17 @@ export function getGroqClient2() {
  * Gemini was removed to eliminate API key dependency and stay fully
  * within Groq's free tier (30 req/min, 14,400 req/day for open models).
  */
+export function getCerebrasClient() {
+  const cerebrasKey = process.env.CEREBRAS_API_KEY || 'csk-fhkrdjc9dcwtmp9trx9edf8e5f233yr45556m8pp628ptjcr';
+  return new Groq({ 
+    apiKey: cerebrasKey, 
+    baseURL: 'https://api.cerebras.ai/v1' 
+  });
+}
+
 export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel = 'groq-llama-3.1-8b-instant', groqKey = 'primary', modelOverride }) {
   const groq = groqKey === 'secondary' ? getGroqClient2() : getGroqClient();
+  const cerebras = getCerebrasClient();
 
   if (!groq) {
     const keyName = groqKey === 'secondary' ? 'GROQ_API_KEY_2' : 'GROQ_API_KEY';
@@ -61,12 +70,13 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   if (modelOverride) {
     const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
 
-    const response = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: modelOverride,
-      temperature,
-      response_format: isJson ? { type: 'json_object' } : undefined,
-    });
+    const activeClient = node.provider === 'cerebras' ? cerebras : groq;
+      const response = await activeClient.chat.completions.create({
+        messages: [{ role: 'user', content: finalPrompt }],
+        model: node.model,
+        temperature,
+        response_format: isJson ? { type: 'json_object' } : undefined,
+      });
 
     const content = response.choices[0]?.message?.content || '';
     if (content) {
@@ -89,14 +99,16 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
 
   const swarmNodes = isDeepResearch
     ? [
-        { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile' },
-        { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' },
+        { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile', provider: 'groq' },
+        { name: 'cerebras-llama-3.1', model: 'llama3.1-70b', provider: 'cerebras' },
+        { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant', provider: 'groq' },
       ]
     : estTokens > 15000
-      ? [{ name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' }]
+      ? [{ name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant', provider: 'groq' }]
       : [
-          { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant' },
-          { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile' },
+          { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant', provider: 'groq' },
+          { name: 'cerebras-llama-3.1', model: 'llama3.1-8b', provider: 'cerebras' },
+          { name: 'groq-llama-3.3', model: 'llama-3.3-70b-versatile', provider: 'groq' },
         ];
 
   let lastError = null;

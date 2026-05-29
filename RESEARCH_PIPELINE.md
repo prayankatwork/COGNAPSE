@@ -44,7 +44,7 @@ flowchart TB
         D1["Parallel callCloudAI()<br/>with secondary API key"]
         D2["Secondary model generates<br/>independent report<br/>(different architecture)"]
         D3["diffReports(primary, secondary)"]
-        D4["Sentence-by-sentence<br/>Jaccard similarity"]
+        D4["Transformers.js Embeddings<br/>(Semantic Cosine Similarity)"]
         D5["Generate consensus:<br/>• Agreement %<br/>• Agreement points<br/>• Divergent points<br/>• Score comparison"]
         D6{"Secondary model<br/>succeeded?"}
         D7["Attach MultiModelConsensus<br/>to report"]
