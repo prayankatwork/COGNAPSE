@@ -196,7 +196,7 @@ function extractCitations(synthesis: string): { sourceId: number; claimText: str
  */
 async function verifyCitations(
   citations: { sourceId: number; claimText: string }[],
-  sources: { id: number; snippet: string; title: string; domain: string }[],
+  sources: { id: number; snippet: string; title: string; domain: string; key_finding?: string }[],
   abortSignal?: AbortSignal
 ): Promise<CitationVerification[]> {
   if (citations.length === 0 || sources.length === 0) return [];

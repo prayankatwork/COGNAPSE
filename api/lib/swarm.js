@@ -24,7 +24,7 @@ export const extractJson = (text) => {
  * Falls back to null if GROQ_API_KEY is not set.
  */
 export function getGroqClient() {
-  const groqKey = process.env.GROQ_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
   return groqKey ? new Groq({ apiKey: groqKey }) : null;
 }
 
@@ -33,7 +33,7 @@ export function getGroqClient() {
  * Uses GROQ_API_KEY_2 — a separate Groq account for running a different model in parallel.
  */
 export function getGroqClient2() {
-  const groqKey = process.env.GROQ_API_KEY_2;
+  const groqKey = process.env.GROQ_API_KEY_2 || process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
   return groqKey ? new Groq({ apiKey: groqKey }) : null;
 }
 
@@ -51,7 +51,7 @@ export function getGroqClient2() {
 export function getCerebrasClient() {
   const cerebrasKey = process.env.CEREBRAS_API_KEY;
   if (!cerebrasKey) {
-    throw new Error('CEREBRAS_API_KEY not configured. Set CEREBRAS_API_KEY in your environment variables.');
+    return null;
   }
   return new Groq({ 
     apiKey: cerebrasKey, 
@@ -71,15 +71,28 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   // If modelOverride is provided, use it directly — no fallback chain
   // Used for multi-model consensus where we want a specific secondary model
   if (modelOverride) {
-    const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
+    let finalPrompt = prompt;
+    // Prune very long prompts for 8b model context limits
+    if (modelOverride.includes('8b') && estTokens > 5500) {
+      finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
+    }
 
-    const activeClient = node.provider === 'cerebras' ? cerebras : groq;
-      const response = await activeClient.chat.completions.create({
-        messages: [{ role: 'user', content: finalPrompt }],
-        model: node.model,
-        temperature,
-        response_format: isJson ? { type: 'json_object' } : undefined,
-      });
+    const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
+    const isCerebras = modelOverride.startsWith('llama3.1') && !modelOverride.includes('instant');
+    const provider = isCerebras ? 'cerebras' : 'groq';
+
+    // Select the active client and active model with fallback
+    const activeClient = provider === 'cerebras' ? (cerebras || groq) : groq;
+    const activeModel = (provider === 'cerebras' && !cerebras)
+      ? (modelOverride.includes('70b') ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant')
+      : modelOverride;
+
+    const response = await activeClient.chat.completions.create({
+      messages: [{ role: 'user', content: finalPrompt }],
+      model: activeModel,
+      temperature,
+      response_format: isJson ? { type: 'json_object' } : undefined,
+    });
 
     const content = response.choices[0]?.message?.content || '';
     if (content) {
@@ -89,7 +102,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
           prompt_tokens: response.usage?.prompt_tokens || 0,
           completion_tokens: response.usage?.completion_tokens || 0,
           total_tokens: response.usage?.total_tokens || 0,
-          model: modelOverride,
+          model: activeModel,
         },
       };
     }
@@ -127,9 +140,18 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
       // Higher temperature for 8b model encourages more detailed output
       const temperature = node.model.includes('8b') ? 0.4 : 0.1;
 
-      const response = await groq.chat.completions.create({
+      // Select client and model with graceful fallback
+      const useCerebras = node.provider === 'cerebras' && cerebras;
+      const activeClient = useCerebras ? cerebras : groq;
+      const activeModel = useCerebras
+        ? node.model
+        : (node.provider === 'cerebras'
+            ? (node.model.includes('70b') ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant')
+            : node.model);
+
+      const response = await activeClient.chat.completions.create({
         messages: [{ role: 'user', content: finalPrompt }],
-        model: node.model,
+        model: activeModel,
         temperature,
         response_format: isJson ? { type: 'json_object' } : undefined,
       });
@@ -142,7 +164,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
             prompt_tokens: response.usage?.prompt_tokens || 0,
             completion_tokens: response.usage?.completion_tokens || 0,
             total_tokens: response.usage?.total_tokens || 0,
-            model: node.model,
+            model: activeModel,
           },
         };
       }
@@ -152,7 +174,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   }
 
   throw new Error(
-    `INTELLIGENCE OVERLOAD: All Groq nodes saturated. Last error: ${lastError?.message || 'Unknown'}`
+    `INTELLIGENCE OVERLOAD: All Groq and Cerebras nodes saturated. Last error: ${lastError?.message || 'Unknown'}`
   );
 }
 
