@@ -168,12 +168,34 @@ export default function App() {
   }, [deepResearch.stage, deepResearch.status]);
 
   // ── Phase 3: Modal open/close sounds ──
+  const {
+    setAuthOpen,
+    isNotebookOpen,
+    setNotebookOpen,
+    isStatusOpen,
+    setStatusOpen,
+    isDevOpen,
+    setDevOpen,
+    isCommandPaletteOpen,
+    setCommandPaletteOpen,
+    restoreLastReport,
+  } = useStore(useShallow((state) => ({
+    setAuthOpen: state.setAuthOpen,
+    isNotebookOpen: state.isNotebookOpen,
+    setNotebookOpen: state.setNotebookOpen,
+    isStatusOpen: state.isStatusOpen,
+    setStatusOpen: state.setStatusOpen,
+    isDevOpen: state.isDevOpen,
+    setDevOpen: state.setDevOpen,
+    isCommandPaletteOpen: state.isCommandPaletteOpen,
+    setCommandPaletteOpen: state.setCommandPaletteOpen,
+    restoreLastReport: state.restoreLastReport,
+  })));
+
   const prevModalStates = useRef({ isAuthOpen: false, isNotebookOpen: false, isStatusOpen: false, isCommandPaletteOpen: false });
-  // Destructure modal states
   const modalStates = { isAuthOpen, isNotebookOpen, isStatusOpen, isCommandPaletteOpen };
   useEffect(() => {
     const prev = prevModalStates.current;
-    // Check each modal — if it just opened or closed, play the appropriate sound
     (Object.keys(modalStates) as Array<keyof typeof modalStates>).forEach(key => {
       if (modalStates[key] && !prev[key]) {
         audioSystem.play('modal-open');
@@ -247,30 +269,6 @@ export default function App() {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
-
-  const {
-    setAuthOpen,
-    isNotebookOpen,
-    setNotebookOpen,
-    isStatusOpen,
-    setStatusOpen,
-    isDevOpen,
-    setDevOpen,
-    isCommandPaletteOpen,
-    setCommandPaletteOpen,
-    restoreLastReport,
-  } = useStore(useShallow((state) => ({
-    setAuthOpen: state.setAuthOpen,
-    isNotebookOpen: state.isNotebookOpen,
-    setNotebookOpen: state.setNotebookOpen,
-    isStatusOpen: state.isStatusOpen,
-    setStatusOpen: state.setStatusOpen,
-    isDevOpen: state.isDevOpen,
-    setDevOpen: state.setDevOpen,
-    isCommandPaletteOpen: state.isCommandPaletteOpen,
-    setCommandPaletteOpen: state.setCommandPaletteOpen,
-    restoreLastReport: state.restoreLastReport,
-  })));
 
   // Global Dev Command
   useEffect(() => {
