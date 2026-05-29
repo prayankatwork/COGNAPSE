@@ -101,7 +101,23 @@ export default function App() {
     };
   }, []);
 
-  // Sound Trigger: Normal Research
+  // ── Audio state management: Research Start ──
+  const prevLoading = useRef(false);
+  useEffect(() => {
+    if (isLoading && !prevLoading.current) {
+      // Research just started — set ambient to 'research' for normal, 'deep-research' for deep
+      if (deepResearch.status === 'running') {
+        audioSystem.play('deep-research-start');
+        audioSystem.setState('deep-research');
+      } else {
+        audioSystem.play('research-start');
+        audioSystem.setState('research');
+      }
+    }
+    prevLoading.current = isLoading;
+  }, [isLoading, deepResearch.status]);
+
+  // Sound Trigger: Normal Research Complete
   const lastPlayedReportId = useRef<string | null>(null);
   useEffect(() => {
     if (!isLoading && currentReport && currentReport.id !== lastPlayedReportId.current) {
@@ -109,18 +125,45 @@ export default function App() {
       if (!isDeep) {
         lastPlayedReportId.current = currentReport.id;
         audioSystem.play('research-complete');
+        audioSystem.setState('idle');
       }
     }
   }, [isLoading, currentReport]);
 
-  // Sound Trigger: Deep Research Completion
+  // Sound Trigger: Deep Research Status Changes
   const prevDeepStatus = useRef<string>('idle');
   useEffect(() => {
     if (deepResearch.status === 'completed' && prevDeepStatus.current === 'running') {
       audioSystem.play('deep-research-complete');
+      audioSystem.setState('idle');
+    }
+    if (deepResearch.status === 'error') {
+      audioSystem.setState('idle');
+    }
+    // Deep research already running on mount (e.g. page refresh with active research)
+    if (deepResearch.status === 'running' && prevDeepStatus.current === 'idle' && !isLoading) {
+      audioSystem.play('deep-research-start');
+      audioSystem.setState('deep-research');
     }
     prevDeepStatus.current = deepResearch.status;
-  }, [deepResearch.status]);
+  }, [deepResearch.status, isLoading]);
+
+  // Sound Trigger: Deep Research Pipeline Stages
+  const prevDeepStage = useRef<number>(0);
+  useEffect(() => {
+    const stage = deepResearch.stage;
+    const prev = prevDeepStage.current;
+    if (stage !== prev && deepResearch.status === 'running') {
+      if (stage === 2 && prev === 1) {
+        // Stage 2: Retrieving real-time sources
+        audioSystem.play('retrieval-start');
+      } else if (stage === 3 && prev === 2) {
+        // Stage 3: Synthesizing evidence (sources collected)
+        audioSystem.play('retrieval-complete');
+      }
+    }
+    prevDeepStage.current = stage;
+  }, [deepResearch.stage, deepResearch.status]);
 
   useEffect(() => {
     const state = useStore.getState() as any;

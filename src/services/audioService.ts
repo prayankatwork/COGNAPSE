@@ -1,25 +1,36 @@
 /**
- * COGNAPSE AudioSystem — Phase 1
+ * COGNAPSE AudioSystem — Phase 2
  *
- * State-driven audio engine with ambient atmospheres and event sounds.
- * All sounds are synthesized via Web Audio API (zero audio files).
+ * State-driven audio engine with ambient atmospheres, pipeline micro-sounds,
+ * and event-driven feedback. All sounds synthesized via Web Audio API.
  *
- * Phase 1 scope:
- *   - State machine: idle | silent
- *   - Ambient idle atmosphere (continuous subharmonic + filtered noise)
- *   - Research Start / Complete (existing sounds preserved)
- *   - Deep Research Complete (existing sound preserved)
- *   - Error sound
- *   - Master mute toggle
- *   - Speak protocol (kept from previous version)
+ * States:
+ *   idle          — calm workspace ambience (sub 55Hz + filtered noise)
+ *   research      — subtle shift (slightly higher noise floor, gentle pulse)
+ *   deep-research — deeper atmosphere (sub 27.5Hz + harmonic overtones)
+ *   silent        — all audio stopped
+ *
+ * Sound events:
+ *   research-start / research-complete
+ *   deep-research-start / deep-research-complete
+ *   retrieval-start / retrieval-complete
+ *   verification-start / verification-complete
+ *   consensus-complete
+ *   error
  */
 
-type AudioState = 'idle' | 'silent';
+type AudioState = 'idle' | 'research' | 'deep-research' | 'silent';
 
 type SoundEvent =
   | 'research-start'
   | 'research-complete'
+  | 'deep-research-start'
   | 'deep-research-complete'
+  | 'retrieval-start'
+  | 'retrieval-complete'
+  | 'verification-start'
+  | 'verification-complete'
+  | 'consensus-complete'
   | 'error';
 
 class AudioSystem {
@@ -36,9 +47,14 @@ class AudioSystem {
 
   /* ─── Ambient oscillator references ─── */
   private ambientSub: OscillatorNode | null = null;
+  private ambientSubGain: GainNode | null = null;
+  private ambientSub2: OscillatorNode | null = null; // deep-research harmonic
   private ambientNoiseSource: AudioBufferSourceNode | null = null;
   private ambientNoiseGain: GainNode | null = null;
+  private ambientLfo: OscillatorNode | null = null;
   private ambientActive = false;
+  private currentAmbientState: AudioState | null = null;
+  private lfoScheduled = false;
 
   /* ─── Initialisation guard ─── */
   private _initialised = false;
@@ -97,9 +113,9 @@ class AudioSystem {
     const prev = this._state;
     this._state = state;
 
-    if (state === 'idle' && prev === 'silent') {
-      this.startAmbientIdle();
-    } else if (state === 'silent' && prev === 'idle') {
+    if (state === 'idle' || state === 'research' || state === 'deep-research') {
+      this.setAmbient(state);
+    } else if (state === 'silent') {
       this.stopAmbient();
     }
   }
@@ -115,8 +131,26 @@ class AudioSystem {
       case 'research-complete':
         this.playResearchComplete(false);
         break;
+      case 'deep-research-start':
+        this.playDeepResearchStart();
+        break;
       case 'deep-research-complete':
         this.playResearchComplete(true);
+        break;
+      case 'retrieval-start':
+        this.playRetrievalStart();
+        break;
+      case 'retrieval-complete':
+        this.playRetrievalComplete();
+        break;
+      case 'verification-start':
+        this.playVerificationStart();
+        break;
+      case 'verification-complete':
+        this.playVerificationComplete();
+        break;
+      case 'consensus-complete':
+        this.playConsensusComplete();
         break;
       case 'error':
         this.playError();
@@ -150,32 +184,116 @@ class AudioSystem {
   }
 
   /* ══════════════════════════════════════════════
-     INTERNAL — AMBIENT IDLE ATMOSPHERE
+     INTERNAL — AMBIENT ATMOSPHERE ENGINE
      ══════════════════════════════════════════════ */
 
-  private startAmbientIdle() {
-    if (!this.ctx || this.ambientActive) return;
-    this.ambientActive = true;
+  /**
+   * Transition ambient to match the given state, with smooth crossfade.
+   * Creates oscillator/noise nodes once, then adjusts parameters per state.
+   */
+  private setAmbient(state: AudioState) {
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
 
-    // ── Subharmonic drone (55 Hz, A1) ──
+    if (state === this.currentAmbientState) return;
+    this.currentAmbientState = state;
+
+    // Ensure ambient nodes exist
+    this.ensureAmbientNodes(now);
+
+    // Set parameters based on state
+    const subFreq = state === 'deep-research' ? 27.5 : 55; // A0 vs A1
+    const subGainTarget = state === 'deep-research' ? 0.06 : 0.04;
+    const sub2GainTarget = state === 'deep-research' ? 0.025 : 0;
+    const noiseGainTarget = state === 'research' ? 0.025 : state === 'deep-research' ? 0.03 : 0.015;
+    const lpFreqTarget = state === 'deep-research' ? 250 : state === 'research' ? 500 : 400;
+    const lfoRateTarget = state === 'deep-research' ? 0.04 : state === 'research' ? 0.12 : 0.08;
+    const lfoDepthTarget = state === 'deep-research' ? 0.01 : state === 'research' ? 0.008 : 0.005;
+    const busGainTarget = state === 'deep-research' ? 0.65 : state === 'research' ? 0.55 : 0.5;
+
+    const fadeSec = 3;
+
+    // Sub oscillator
+    if (this.ambientSub) {
+      this.ambientSub.frequency.linearRampToValueAtTime(subFreq, now + fadeSec);
+    }
+    if (this.ambientSubGain) {
+      this.ambientSubGain.gain.linearRampToValueAtTime(subGainTarget, now + fadeSec);
+    }
+
+    // Second sub (deep-research harmonic overtone)
+    if (this.ambientSub2) {
+      if (sub2GainTarget > 0 && this.ambientSub2Gain) {
+        this.ambientSub2Gain.gain.linearRampToValueAtTime(sub2GainTarget, now + fadeSec);
+        try { this.ambientSub2.start(now); } catch { /* already started */ }
+      } else if (this.ambientSub2Gain) {
+        this.ambientSub2Gain.gain.linearRampToValueAtTime(0, now + fadeSec);
+      }
+    }
+
+    // Noise filter
+    if (this.ambientLpFilter) {
+      this.ambientLpFilter.frequency.linearRampToValueAtTime(lpFreqTarget, now + fadeSec);
+    }
+
+    // Noise gain
+    if (this.ambientNoiseGain) {
+      this.ambientNoiseGain.gain.linearRampToValueAtTime(noiseGainTarget, now + fadeSec);
+    }
+
+    // LFO rate + depth
+    if (this.ambientLfo) {
+      this.ambientLfo.frequency.linearRampToValueAtTime(lfoRateTarget, now + fadeSec);
+    }
+    if (this.ambientLfoDepth) {
+      this.ambientLfoDepth.gain.linearRampToValueAtTime(lfoDepthTarget, now + fadeSec);
+    }
+
+    // Master ambient bus
+    if (this.ambientGain) {
+      this.ambientGain.gain.linearRampToValueAtTime(busGainTarget, now + fadeSec);
+    }
+
+    // Start ambient if not active
+    if (!this.ambientActive) {
+      this.ambientActive = true;
+    }
+  }
+
+  /** Create ambient nodes once, silent until setAmbient fades them in. */
+  private ambientSub2Gain: GainNode | null = null;
+  private ambientLpFilter: BiquadFilterNode | null = null;
+  private ambientLfoDepth: GainNode | null = null;
+
+  private ensureAmbientNodes(now: number) {
+    if (!this.ctx || this.ambientSub) return; // already created
+
+    // ── Subharmonic drone (A1 = 55 Hz) ──
     this.ambientSub = this.ctx.createOscillator();
     this.ambientSub.type = 'sine';
     this.ambientSub.frequency.setValueAtTime(55, now);
-
-    const subGain = this.ctx.createGain();
-    subGain.gain.setValueAtTime(0, now);
-    subGain.gain.linearRampToValueAtTime(0.04, now + 3); // slow fade-in
-    this.ambientSub.connect(subGain);
-    subGain.connect(this.ambientGain!);
+    this.ambientSubGain = this.ctx.createGain();
+    this.ambientSubGain.gain.setValueAtTime(0, now);
+    this.ambientSub.connect(this.ambientSubGain);
+    this.ambientSubGain.connect(this.ambientGain!);
     this.ambientSub.start(now);
 
-    // ── Filtered noise bed (simulating ventilation / command-centre air) ──
-    const bufferSize = this.ctx.sampleRate * 4; // 4-second loop
+    // ── Second sub (A0 = 27.5 Hz, used by deep-research) ──
+    this.ambientSub2 = this.ctx.createOscillator();
+    this.ambientSub2.type = 'sine';
+    this.ambientSub2.frequency.setValueAtTime(27.5, now);
+    this.ambientSub2Gain = this.ctx.createGain();
+    this.ambientSub2Gain.gain.setValueAtTime(0, now);
+    this.ambientSub2.connect(this.ambientSub2Gain);
+    this.ambientSub2Gain.connect(this.ambientGain!);
+    // Don't start yet — will start when setAmbient activates it
+    try { this.ambientSub2.start(now); } catch {}
+
+    // ── Filtered noise bed ──
+    const bufferSize = this.ctx.sampleRate * 4;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      // Slightly coloured noise — tilt toward low frequencies
       data[i] = (Math.random() * 2 - 1) * 0.6;
     }
 
@@ -183,38 +301,37 @@ class AudioSystem {
     this.ambientNoiseSource.buffer = noiseBuffer;
     this.ambientNoiseSource.loop = true;
 
-    // Low-pass filter — roll off above 400 Hz for warmth
-    const lpFilter = this.ctx.createBiquadFilter();
-    lpFilter.type = 'lowpass';
-    lpFilter.frequency.setValueAtTime(400, now);
-    lpFilter.Q.setValueAtTime(0.5, now);
+    this.ambientLpFilter = this.ctx.createBiquadFilter();
+    this.ambientLpFilter.type = 'lowpass';
+    this.ambientLpFilter.frequency.setValueAtTime(400, now);
+    this.ambientLpFilter.Q.setValueAtTime(0.5, now);
 
     this.ambientNoiseGain = this.ctx.createGain();
     this.ambientNoiseGain.gain.setValueAtTime(0, now);
-    this.ambientNoiseGain.gain.linearRampToValueAtTime(0.015, now + 4);
 
-    // LFO for subtle movement — amplitude modulation on the noise
-    const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.08, now); // very slow pulse (~12s cycle)
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(0.005, now);
-    lfo.connect(lfoGain);
-    lfoGain.connect(this.ambientNoiseGain.gain);
-    lfo.start(now);
-
-    this.ambientNoiseSource.connect(lpFilter);
-    lpFilter.connect(this.ambientNoiseGain);
+    this.ambientNoiseSource.connect(this.ambientLpFilter);
+    this.ambientLpFilter.connect(this.ambientNoiseGain);
     this.ambientNoiseGain.connect(this.ambientGain!);
     this.ambientNoiseSource.start(now);
 
-    // Fade ambient bus in
+    // ── LFO for subtle movement ──
+    this.ambientLfo = this.ctx.createOscillator();
+    this.ambientLfo.type = 'sine';
+    this.ambientLfo.frequency.setValueAtTime(0.08, now);
+    this.ambientLfoDepth = this.ctx.createGain();
+    this.ambientLfoDepth.gain.setValueAtTime(0.005, now);
+    this.ambientLfo.connect(this.ambientLfoDepth);
+    this.ambientLfoDepth.connect(this.ambientNoiseGain.gain);
+    this.ambientLfo.start(now);
+
+    // Fade in ambient bus
     this.ambientGain!.gain.setValueAtTime(0, now);
     this.ambientGain!.gain.linearRampToValueAtTime(0.5, now + 4);
   }
 
   private stopAmbient() {
     this.ambientActive = false;
+    this.currentAmbientState = null;
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
 
@@ -229,90 +346,142 @@ class AudioSystem {
       try { this.ambientSub.stop(now + 1.6); } catch {}
       this.ambientSub = null;
     }
+    this.ambientSubGain = null;
+    if (this.ambientSub2) {
+      try { this.ambientSub2.stop(now + 1.6); } catch {}
+      this.ambientSub2 = null;
+    }
+    this.ambientSub2Gain = null;
     if (this.ambientNoiseSource) {
       try { this.ambientNoiseSource.stop(now + 1.6); } catch {}
       this.ambientNoiseSource = null;
     }
+    if (this.ambientLfo) {
+      try { this.ambientLfo.stop(now + 1.6); } catch {}
+      this.ambientLfo = null;
+    }
+    this.ambientLfoDepth = null;
     this.ambientNoiseGain = null;
+    this.ambientLpFilter = null;
   }
 
   /* ══════════════════════════════════════════════
      INTERNAL — EVENT SOUND GENERATORS
      ══════════════════════════════════════════════ */
 
-  private playResearchStart() {
+  private playTone(
+    freq: number,
+    type: OscillatorType,
+    volume: number,
+    duration: number,
+    startDelay = 0,
+    rampType: 'linear' | 'exponential' = 'exponential'
+  ) {
     if (!this.ctx) return;
-    const now = this.ctx.currentTime;
+    const now = this.ctx.currentTime + startDelay;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(660, now); // E5
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-
+    gain.gain.linearRampToValueAtTime(volume, now + 0.015);
+    if (rampType === 'exponential') {
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    } else {
+      gain.gain.linearRampToValueAtTime(0, now + duration);
+    }
     osc.connect(gain);
     gain.connect(this.sfxGain!);
     osc.start(now);
-    osc.stop(now + 0.45);
+    osc.stop(now + duration + 0.05);
+  }
+
+  private playResearchStart() {
+    if (!this.ctx) return;
+    // Triangle pulse at E5 (660 Hz), 400ms — signals investigation begins
+    this.playTone(660, 'triangle', 0.12, 0.4);
+  }
+
+  private playDeepResearchStart() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Deep swell: A2 (110 Hz) subharmonic swell, 800ms — signals depth
+    this.playTone(110, 'sine', 0.1, 0.8);
+    // Plus a soft harmonic at A4 (440 Hz) that fades in gradually
+    this.playTone(440, 'sine', 0.06, 1.0, 0.15);
   }
 
   private playResearchComplete(isDeep: boolean) {
     if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-
     if (isDeep) {
       // Deep Research: Two-note ascending chime (D5 → A5), ~350ms
-      const notes = [587.33, 880.00]; // D5, A5
+      const notes = [587.33, 880.00];
       notes.forEach((freq, i) => {
-        const osc = this.ctx!.createOscillator();
-        const gain = this.ctx!.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + i * 0.12);
-        gain.gain.setValueAtTime(0, now + i * 0.12);
-        gain.gain.linearRampToValueAtTime(0.18, now + i * 0.12 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.12 + 0.25);
-        osc.connect(gain);
-        gain.connect(this.sfxGain!);
-        osc.start(now + i * 0.12);
-        osc.stop(now + i * 0.12 + 0.3);
+        this.playTone(freq, 'sine', 0.18, 0.25, i * 0.12);
       });
     } else {
       // Normal Research: Single soft bell ping (A5), ~200ms
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880.00, now); // A5
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.15, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-      osc.connect(gain);
-      gain.connect(this.sfxGain!);
-      osc.start(now);
-      osc.stop(now + 0.25);
+      this.playTone(880, 'sine', 0.15, 0.22);
     }
+  }
+
+  /**
+   * Retrieval Start — Rising micro-interval (E4→A4, ~300ms)
+   * E4=329.63, A4=440. Two quick ascending tones, calm & curious.
+   * Signals: "sources are being gathered"
+   */
+  private playRetrievalStart() {
+    if (!this.ctx) return;
+    this.playTone(329.63, 'triangle', 0.07, 0.12);
+    this.playTone(440.00, 'triangle', 0.09, 0.18, 0.1);
+  }
+
+  /**
+   * Retrieval Complete — Soft descending confirmation (A4→E4, ~200ms)
+   * Signals: "sources collected successfully"
+   */
+  private playRetrievalComplete() {
+    if (!this.ctx) return;
+    this.playTone(440.00, 'sine', 0.08, 0.08);
+    this.playTone(329.63, 'sine', 0.06, 0.15, 0.08);
+  }
+
+  /**
+   * Verification Start — Quick bright ping (C5=523.25, ~100ms)
+   * Signals: "checking claims against sources"
+   */
+  private playVerificationStart() {
+    if (!this.ctx) return;
+    this.playTone(523.25, 'triangle', 0.06, 0.1);
+  }
+
+  /**
+   * Verification Complete — Gentle two-note chime (C5→E5, ~200ms)
+   * C5=523.25, E5=659.25. Warm confirmation.
+   * Signals: "citations verified"
+   */
+  private playVerificationComplete() {
+    if (!this.ctx) return;
+    this.playTone(523.25, 'sine', 0.07, 0.15);
+    this.playTone(659.25, 'sine', 0.09, 0.2, 0.1);
+  }
+
+  /**
+   * Consensus Complete — Soft chord (A3+E4, ~300ms)
+   * A3=220, E4=329.63. Two notes simultaneously — agreement.
+   * Signals: "models agree"
+   */
+  private playConsensusComplete() {
+    if (!this.ctx) return;
+    this.playTone(220.00, 'sine', 0.05, 0.3);
+    this.playTone(329.63, 'sine', 0.07, 0.25, 0.03);
   }
 
   private playError() {
     if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-
     // Descending minor third: A3 (220 Hz) → F#3 (185 Hz)
-    const notes = [220.00, 184.99];
-    notes.forEach((freq, i) => {
-      const osc = this.ctx!.createOscillator();
-      const gain = this.ctx!.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + i * 0.15);
-      gain.gain.setValueAtTime(0, now + i * 0.15);
-      gain.gain.linearRampToValueAtTime(0.18, now + i * 0.15 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.15 + 0.35);
-      osc.connect(gain);
-      gain.connect(this.sfxGain!);
-      osc.start(now + i * 0.15);
-      osc.stop(now + i * 0.15 + 0.4);
-    });
+    this.playTone(220.00, 'triangle', 0.18, 0.35);
+    this.playTone(184.99, 'triangle', 0.14, 0.35, 0.15);
   }
 }
 

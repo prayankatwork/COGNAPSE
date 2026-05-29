@@ -3,6 +3,7 @@ import type { COGNAPSE_Output, GroundedSource, RetrievalTrace, MultiModelConsens
 import { callCloudAI } from './aiService';
 import { getEmbedder, cosineSimilarity } from '../utils/scoringEngine';
 import { searchWeb, compressSourcesForLLM } from './searchService';
+import { audioSystem } from './audioService';
 import { useStore } from '../store';
 import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
@@ -363,6 +364,11 @@ export async function executeCognapseResearch(
     }
   }
 
+  // Micro-sound: retrieval complete (sources collected from web and/or docs)
+  if (groundedSources.length > 0) {
+    audioSystem.play('retrieval-complete');
+  }
+
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
   // Compress sources into token-efficient context
   const sourcesContext = groundedSources.length > 0
@@ -452,6 +458,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
 
     // ─── PHASE 3: SECOND MODEL SYNTHESIS (Multi-Model Consensus) ───
     addReasoningStep('Running multi-model consensus validation...');
+    audioSystem.play('consensus-complete');
     const secondaryResponse = await secondaryResponsePromise;
     if (secondaryResponse) {
       try {
@@ -473,6 +480,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     }
 
     addReasoningStep('Verifying citations against source material...');
+    audioSystem.play('verification-start');
 
     // ─── PHASE 4: CITATION VERIFICATION ───
     if (groundedSources.length > 0 && parsed.summary?.full_synthesis) {
@@ -494,6 +502,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
 
           if (verifications.length > 0) {
             (parsed as COGNAPSE_Output).citation_verifications = verifications;
+            audioSystem.play('verification-complete');
             const supported = verifications.filter(v => v.verdict === 'supported').length;
             const partial = verifications.filter(v => v.verdict === 'partial').length;
             const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
