@@ -1,6 +1,7 @@
 import nlp from 'compromise';
 import { lookupDomain, factualToScore, biasToBiasScore } from './domainCredibility';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let embedder: any = null;
 let embedderLoading = false;
 let embedderReady = false;
@@ -13,6 +14,7 @@ export async function getEmbedder(): Promise<any> {
   }
   embedderLoading = true;
   try {
+    // @ts-expect-error - CDN module has no type declarations
     const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
@@ -41,6 +43,7 @@ async function getSentimentModel(): Promise<any> {
   }
   sentimentLoading = true;
   try {
+    // @ts-expect-error - CDN module has no type declarations
     const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
@@ -204,12 +207,12 @@ export function computeEntityDiversity(sources: { domain?: string; key_finding?:
 
 export async function computeBiasFromSentiment(
   sources: { domain?: string; key_finding?: string; title?: string }[]
-): {
+): Promise<{
   averageSentiment: number;
   emotionalIntensity: number;
   biasScore: number;
   hasDomainOverride: boolean;
-} {
+}> {
   if (sources.length === 0) return { averageSentiment: 0, emotionalIntensity: 0, biasScore: 0.1, hasDomainOverride: false };
 
   let totalComparative = 0;

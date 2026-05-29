@@ -36,7 +36,7 @@ vi.mock('../lib/errors.js', () => ({
 import { requireUser } from '../lib/auth.js';
 import { getPremiumStatus } from '../lib/premium.js';
 import { getDocumentMetadata, deleteDocumentMetadata } from '../lib/storage.js';
-import handler from '../delete-document.js';
+import { handleDeleteDocument } from '../lib/handlers/documents.js';
 
 /* ─── Helpers ─── */
 
@@ -65,7 +65,7 @@ describe('POST /api/delete-document', () => {
   it('returns 405 for non-POST methods', async () => {
     const req = { method: 'GET' };
     const res = createRes();
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
   });
 
@@ -74,7 +74,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1' }); // missing documentId
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1', documentId: 'doc_123' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -103,7 +103,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1', documentId: 'doc_123' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.status().json).toHaveBeenCalledWith({ error: 'Document not found.' });
@@ -116,7 +116,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1', documentId: 'doc_123' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -135,7 +135,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1', documentId: 'doc_123' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(deleteDocumentMetadata).toHaveBeenCalledWith('doc_123');
     expect(res.status).toHaveBeenCalledWith(200);
@@ -163,7 +163,7 @@ describe('POST /api/delete-document', () => {
     const req = createReq({ userId: 'user1', documentId: 'doc_123' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleDeleteDocument(req, res);
 
     expect(mockBucket.file).toHaveBeenCalledWith('documents/user1/doc.pdf');
     expect(mockDeleteFile).toHaveBeenCalled();

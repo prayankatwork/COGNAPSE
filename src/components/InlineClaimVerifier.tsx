@@ -68,10 +68,10 @@ export default function InlineClaimVerifier({
         if (citationIds.length > 0 && sources.length > 0) {
           // Use specific cited sources
           const citedSources = sources.filter(s => citationIds.includes(s.id));
-          premise = citedSources.map(s => s.summary || s.key_finding || s.title).join(' ');
+          premise = citedSources.map(s => (s as Record<string, unknown>).summary as string || s.key_finding || s.title).join(' ');
         } else if (sources.length > 0) {
           // Fallback: AI forgot to cite inline. Use all available sources as the premise.
-          premise = sources.map(s => s.summary || s.key_finding || s.title).join(' ');
+          premise = sources.map(s => (s as Record<string, unknown>).summary as string || s.key_finding || s.title).join(' ');
         } else {
           // No sources available at all in this report
           isOrphan = true;

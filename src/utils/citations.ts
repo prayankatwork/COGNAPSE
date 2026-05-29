@@ -1,4 +1,5 @@
 import type { GroundedSource, CitationFormat } from '../types';
+export type { CitationFormat };
 
 /**
  * Strip inline citation markers like [1], [2], [1, 3] from display text.
@@ -15,7 +16,7 @@ export function formatCitation(source: Partial<GroundedSource>, format: Citation
   const title = source.title || 'Untitled';
   const url = source.url || '';
   const date = source.published_date || 'n.d.';
-  const author = source.author || domain || 'Unknown';
+  const author = (source as Record<string, unknown>).author as string || domain || 'Unknown';
 
   switch (format) {
     case 'mla':

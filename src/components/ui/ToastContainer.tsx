@@ -25,7 +25,7 @@ export default function ToastContainer() {
 
   useEffect(() => {
     const unsub = toast.subscribe((toasts) => setItems(toasts));
-    return unsub;
+    return () => { unsub(); };
   }, []);
 
   if (items.length === 0) return null;

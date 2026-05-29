@@ -295,15 +295,15 @@ export const useStore = create<AppState>()(
           rank: 'ANALYST',
           archive: [],
           currentReport: null,
-          notes: [],
-          deepResearch: {
-            status: 'idle',
-            stage: 0,
-            progress: '',
-            thesis: null,
-            error: null,
-            scores: null
-          },
+          notes: [],            deepResearch: {
+                status: 'idle',
+                stage: 0,
+                progress: '',
+                thesis: null,
+                error: null,
+                scores: null,
+                reasoningTimeline: []
+            },
           currentView: 'landing'
         });
       },
@@ -443,7 +443,8 @@ export const useStore = create<AppState>()(
               progress: '',
               thesis: null,
               error: null,
-              scores: null
+              scores: null,
+              reasoningTimeline: []
             }
           };
         }),
@@ -474,13 +475,13 @@ export const useStore = create<AppState>()(
         set((state) => {
           let bonusXp = 0;
           let currentStreak = state.streak || 0;
-          let dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-          let storedDate = state.lastSearchDate ? state.lastSearchDate.split('T')[0] : null;
+          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+          const storedDate = state.lastSearchDate ? state.lastSearchDate.split('T')[0] : null;
 
           if (searchCountIncrease > 0 && storedDate !== dateStr) {
-             let yesterday = new Date();
+             const yesterday = new Date();
              yesterday.setDate(yesterday.getDate() - 1);
-             let yesterdayStr = yesterday.toISOString().split('T')[0];
+             const yesterdayStr = yesterday.toISOString().split('T')[0];
 
              if (storedDate === yesterdayStr) {
                currentStreak += 1;

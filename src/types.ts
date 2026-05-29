@@ -47,6 +47,7 @@ export interface COGNAPSE_Output {
     key_finding: string;
     published_date: string;
     bias_flag: string | null;
+    retrieval_timestamp?: string;
   }[];
   conflicts?: {
     claim_a: string;
@@ -245,6 +246,8 @@ export interface RagAnswerRequest {
   query: string;
   documentIds: string[];
 }
+
+export type CitationFormat = 'apa' | 'mla' | 'chicago';
 
 export type ResearchVisibility = "private" | "unlisted" | "public";
 

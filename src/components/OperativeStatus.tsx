@@ -200,7 +200,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
       
       if (!reportToExport) {
         const fetchedReports = await dbService.getAllReports(user?.id || '');
-        const target = fetchedReports.find(r => r.id === exp.researchId);
+        const target = fetchedReports.find((r: { id: string }) => r.id === exp.researchId);
         if (target) {
           reportToExport = target.data;
         }

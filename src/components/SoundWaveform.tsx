@@ -43,7 +43,7 @@ const PROFILES: Record<WaveformState, { heights: number[]; speed: number; amp: n
     speed: 1.2,
     amp: 0.15,
   },
-  deep_research: {
+  'deep-research': {
     // Deep, slow, expansive — tallest bars with wide spacing
     heights: [0.50, 0.75, 0.95, 0.65, 0.40],
     speed: 0.25,
@@ -52,9 +52,7 @@ const PROFILES: Record<WaveformState, { heights: number[]; speed: number; amp: n
 };
 
 export default function SoundWaveform({ state, className = '' }: SoundWaveformProps) {
-  // Normalise state key
-  const profileKey = state === 'deep-research' ? 'deep_research' : state;
-  const profile = PROFILES[profileKey] ?? PROFILES.silent;
+  const profile = PROFILES[state] ?? PROFILES.silent;
 
   const barRefs = useRef<(HTMLDivElement | null)[]>([]);
   // Time offset per bar for staggered animation

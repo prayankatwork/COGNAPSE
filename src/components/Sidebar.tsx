@@ -229,7 +229,7 @@ export default function Sidebar() {
                     ) : (
                       Object.entries(topicGroups).map(([topic, items], groupIdx) => (
                         <motion.div
-              key={group}
+              key={topic}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(groupIdx, 5) * 0.04 }}

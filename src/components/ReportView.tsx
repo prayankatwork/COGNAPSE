@@ -498,7 +498,7 @@ export default function ReportView({
               sources={report.sources.map((s: any) => ({
                 ...s,
                 snippet: s.key_finding || s.snippet || '',
-                retrieval_timestamp: new Date().toISOString()
+                retrieval_timestamp: s.retrieval_timestamp || new Date().toISOString()
               }))}
               retrievalTrace={report._retrieval_trace || null}
             />

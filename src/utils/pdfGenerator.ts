@@ -95,7 +95,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
   // ════════════════════════════════════════════
   // 1. COVER PAGE
   // ════════════════════════════════════════════
-  let coverPage = `
+  const coverPage = `
     <div style="height: 1000px; display: flex; flex-direction: column; padding: 0; box-sizing: border-box; background: white;">
       <div style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); padding: 45px 50px; margin: 0;">
         <div style="display: flex; align-items: flex-start; justify-content: space-between;">
@@ -220,7 +220,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
     tocEntries.push(`${sectionNum++}. Appendix &amp; Report Metadata`);
 
-    let tocHTML = `
+    const tocHTML = `
       <div style="${cardStyle}">
         <h3 style="${sectionTitleStyle}">Table of Contents</h3>
         <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #334155; line-height: 2.2;">
@@ -261,7 +261,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       `);
 
       // Sub-card 2: Methodology + Findings + Comparative Insights
-      let subCard2 = `
+      const subCard2 = `
         <div style="${cardStyle};">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 4px; grid-column: span 2;">
@@ -310,7 +310,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // ════════════════════════════════════════════
     // EXECUTIVE SUMMARY — real data
     // ════════════════════════════════════════════
-    let execHTML = `
+    const execHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.exec};">
         <h3 style="${sectionTitleStyle}">${deepThesis ? '2' : '1'}. Executive Summary</h3>
 
@@ -350,7 +350,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // ════════════════════════════════════════════
     // KEY FINDINGS & CRITICAL INSIGHTS — separate section for proper pagination
     // ════════════════════════════════════════════
-    let findingsHTML = `
+    const findingsHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.exec};">
         <h3 style="${sectionTitleStyle}">${secNum++}. Key Findings &amp; Critical Insights</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -383,7 +383,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
         })();
     const consensusColor = consensusScore >= 85 ? '#10B981' : consensusScore >= 70 ? '#F59E0B' : '#EF4444';
 
-    let consensusHTML = `
+    const consensusHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.consensus};">
         <h3 style="${sectionTitleStyle}">${secNum++}. Multi-Model Consensus</h3>
 
@@ -469,7 +469,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // DEEP ANALYSIS — SWOT / Bias / Conflicts (real data)
     // ════════════════════════════════════════════
     if (report.swot || report.bias_alert || (report.conflicts && report.conflicts.length > 0)) {
-      let analysisHTML = `
+      const analysisHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.analysis};">
           <h3 style="${sectionTitleStyle}">${secNum++}. Deep Analysis</h3>
 
@@ -533,7 +533,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // TIMELINE
     // ════════════════════════════════════════════
     if (report.timeline_events && report.timeline_events.length > 0) {
-      let timelineHTML = `
+      const timelineHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.timeline};">
           <h3 style="${sectionTitleStyle}">${secNum++}. Timeline Mapping</h3>
           <div style="position: relative; padding-left: 28px; border-left: 2px solid #E2E8F0; margin-left: 10px; margin-top: 20px;">
@@ -561,7 +561,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // ════════════════════════════════════════════
     if (report.actionable_takeaways) {
       const take = report.actionable_takeaways;
-      let highlightsHTML = `
+      const highlightsHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.highlights};">
           <h3 style="${sectionTitleStyle}">Key Observations &amp; Risk Indicators</h3>
           <div style="margin-bottom: 20px;">
@@ -589,7 +589,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // REFERENCES with citation verification badges
     // ════════════════════════════════════════════
     if (report.sources && report.sources.length > 0) {
-      let sourcesHTML = `
+      const sourcesHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.references};">
           <h3 style="${sectionTitleStyle}">${secNum++}. References &amp; Bibliography</h3>
           <table style="width: 100%; border-collapse: collapse; text-align: left; border: 1px solid #E2E8F0; border-radius: 4px; overflow: hidden;">
@@ -629,7 +629,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // 8. FORMATTED CITATIONS (APA)
     // ════════════════════════════════════════════
     if (report.sources && report.sources.length > 0) {
-      let citationsHTML = `
+      const citationsHTML = `
         <div style="${cardStyle}; border-top: 4px solid #0F172A;">
           <h3 style="${sectionTitleStyle}">${secNum++}. References (APA)</h3>
           <div style="font-size: 11px; color: #334155; line-height: 1.8;">
@@ -648,7 +648,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     // FUTURE RESEARCH DIRECTIONS — real follow_up_suggestions
     // ════════════════════════════════════════════
     if (report.follow_up_suggestions && report.follow_up_suggestions.length > 0) {
-      let futureHTML = `
+      const futureHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.future};">
           <h3 style="${sectionTitleStyle}">${secNum++}. Future Research Directions</h3>
           <p style="font-size: 12px; color: #475569; margin-bottom: 14px; line-height: 1.6;">Based on the findings and limitations of the current analysis, the following areas are recommended for continuation topics and deeper investigation:</p>
@@ -676,7 +676,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       ? `${consensusFromReal!.model_a.provider} (${consensusFromReal!.model_a.model}) + ${consensusFromReal!.model_b.provider} (${consensusFromReal!.model_b.model})`
       : `${actualProvider} (Primary)`;
 
-    let appendixHTML = `
+    const appendixHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.appendix};">
         <h3 style="${sectionTitleStyle}">${secNum++}. Appendix &amp; Report Metadata</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">

@@ -13,11 +13,11 @@ import Navbar from './components/Navbar';
 import AuthPortal from './components/AuthPortal';
 import OperativeStatus from './components/OperativeStatus';
 import React, { useEffect, useRef, useState, Suspense } from 'react';
-import { PanelLeftOpen, Activity, Zap, Compass, ArrowRight, Lock as LockIcon, Ban, Volume2, VolumeX } from 'lucide-react';
+import { Lock as LockIcon, Ban, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 
-const lazyWithReload = (componentImport: () => Promise<any>) =>
+const lazyWithReload = (componentImport: () => Promise<{ default: React.ComponentType<any> }>) =>
   React.lazy(async () => {
     try {
       return await componentImport();
@@ -47,8 +47,7 @@ import ToastContainer from './components/ui/ToastContainer';
 
 import { audioSystem } from './services/audioService';
 import ErrorBoundary from './components/ErrorBoundary';
-import SoundWaveform from './components/SoundWaveform';
-import type { WaveformState } from './components/SoundWaveform';
+import SoundWaveform, { type WaveformState } from './components/SoundWaveform';
 import { apiFetch } from './services/apiClient';
 import { toast } from './utils/toast';
 
@@ -125,7 +124,7 @@ export default function App() {
     if (!isLoading && currentReport && currentReport.id !== lastPlayedReportId.current) {
       const isDeep = !!currentReport.deep_research;
       if (!isDeep) {
-        lastPlayedReportId.current = currentReport.id;
+        lastPlayedReportId.current = currentReport.id ?? null;
         audioSystem.play('research-complete');
         audioSystem.setState('idle');
       }
@@ -207,8 +206,8 @@ export default function App() {
   }, [isAuthOpen, isNotebookOpen, isStatusOpen, isCommandPaletteOpen]);
 
   useEffect(() => {
-    const state = useStore.getState() as any;
-    if (state._hydrateCleanup) state._hydrateCleanup();
+    const state = useStore.getState() as unknown as Record<string, unknown>;
+    if (typeof state._hydrateCleanup === 'function') (state._hydrateCleanup as () => void)();
   }, []);
 
   const [suspendedUser, setSuspendedUser] = useState<{ username: string } | null>(null);
@@ -359,11 +358,11 @@ export default function App() {
         }
 
         if (notes) {
-          const sortedNotes = (notes as any[]).sort(
-            (a: any, b: any) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          const sortedNotes = (notes as Array<Record<string, unknown>>).sort(
+            (a: Record<string, unknown>, b: Record<string, unknown>) =>
+              new Date(b.timestamp as string).getTime() - new Date(a.timestamp as string).getTime()
           );
-          setNotes(sortedNotes);
+          setNotes(sortedNotes as never);
         }
 
         setArchive(reportsToArchiveEntries(reports || []));
@@ -398,7 +397,7 @@ export default function App() {
         const newPremium = data.premium === true;
         const oldPremium = !!currentUser.premium;
         if (newPremium !== oldPremium) {
-          useStore.setState({
+          (useStore.setState as (partial: Record<string, unknown>) => void)({
             user: {
               ...currentUser,
               premium: newPremium,
@@ -480,7 +479,7 @@ export default function App() {
             </div>
           );
         }
-        return <ErrorBoundary name="IntelligenceFeed"><IntelligenceFeed onTriggerResearch={(q) => useStore.setState({ initialQuery: q })} /></ErrorBoundary>;
+        return <ErrorBoundary name="IntelligenceFeed"><IntelligenceFeed onTriggerResearch={(q: string) => useStore.setState({ initialQuery: q } as Record<string, unknown>)} /></ErrorBoundary>;
       case 'research':
       default:
         return (

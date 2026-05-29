@@ -60,7 +60,7 @@ export default function DeepResearchView() {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const safeText = (val: any) => {
+  const safeText = (val: unknown) => {
     if (typeof val === 'string') return val;
     if (val === null || val === undefined) return "";
     return JSON.stringify(val);

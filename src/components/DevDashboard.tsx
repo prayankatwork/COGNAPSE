@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import {
-  X, Activity, Cpu, Zap,
+  X, Activity, Cpu,
   Terminal, Shield, Database, RefreshCw,
-  HardDrive, AlertCircle
+  AlertCircle
 } from 'lucide-react';
 import { getSwarmHealth, resetSwarmHealth } from '../services/aiService';
 import clsx from 'clsx';
@@ -155,7 +155,7 @@ export default function DevDashboard() {
   );
 }
 
-function MetricCard({ label, value, sub, icon }: { label: string, value: string | number, sub: string, icon: any }) {
+function MetricCard({ label, value, sub, icon }: { label: string, value: string | number, sub: string, icon: React.ReactNode }) {
   return (
     <div className="p-6 bg-white/5 border border-white/10 hover:border-my-accent/20 transition-all group">
       <div className="flex items-center gap-4 mb-4">

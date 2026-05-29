@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Image, File, Trash2, Search, Calendar, Clock, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { FileText, Image, File, Trash2, Search, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import type { DocumentRecord } from '../types';
 import { formatFileSize, getDocumentTypeLabel } from '../services/documentService';
 

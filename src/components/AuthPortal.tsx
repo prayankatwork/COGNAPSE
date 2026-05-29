@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { dbService } from '../services/dbService';
 import { syncAuthSession } from '../services/authSession';
-import { Shield, Fingerprint, Lock, User, Terminal, ArrowRight, Loader2, X, Check } from 'lucide-react';
+import { Fingerprint, Lock, User, ArrowRight, Loader2, X, Check } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
 import { Button } from './ui';
@@ -72,17 +72,18 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
       }
 
       onClose();
-    } catch (err: any) {
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
         setError("Invalid credentials detected. Please check your password.");
-      } else if (err.code === 'auth/user-not-found') {
+      } else if (code === 'auth/user-not-found') {
         setError("User account not found. Please create a new profile.");
-      } else if (err.code === 'auth/email-already-in-use') {
+      } else if (code === 'auth/email-already-in-use') {
         setError("Username already registered. Please login instead.");
-      } else if (err.code === 'auth/weak-password') {
+      } else if (code === 'auth/weak-password') {
         setError("Password too weak. Minimum 6 characters required.");
       } else {
-        setError(err.message || "Database connection failure. Please try again.");
+        setError(err instanceof Error ? err.message : "Database connection failure. Please try again.");
       }
     } finally {
       setLoading(false);

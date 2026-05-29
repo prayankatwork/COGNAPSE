@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, X, Image, File } from 'lucide-react';
+import { Upload, FileText, AlertCircle, Loader2, X, Image, File } from 'lucide-react';
 import { formatFileSize } from '../services/documentService';
 
 interface DocumentUploadZoneProps {

@@ -10,13 +10,12 @@ import {
   BookOpen,
   MessageSquare,
   Sparkles,
-  ChevronRight,
   X,
   Clock,
   BrainCircuit,
 } from 'lucide-react';
 import type { DocumentRecord, RagAnswer } from '../types';
-import { getRagAnswer, queryDocuments, processDocument } from '../services/documentRagService';
+import { getRagAnswer, processDocument } from '../services/documentRagService';
 import { extractDocumentText } from '../services/documentService';
 import { useStore } from '../store';
 

@@ -8,8 +8,6 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  AlertCircle,
-  Loader2,
   Search,
   X,
   Sparkles,
@@ -120,7 +118,7 @@ export default function DocumentIntelligencePanel() {
             if (!text) {
               text = `[${file.name} — No extractable text found. This file may contain only images.]`;
             }
-          } catch (extractErr) {
+          } catch {
             // Fallback to client-side placeholder
             text = await extractFileText(file);
           }

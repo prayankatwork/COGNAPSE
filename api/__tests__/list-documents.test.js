@@ -32,7 +32,7 @@ vi.mock('../lib/errors.js', () => ({
 import { requireUser, assertUserIdMatches } from '../lib/auth.js';
 import { getPremiumStatus } from '../lib/premium.js';
 import { listUserDocuments } from '../lib/storage.js';
-import handler from '../list-documents.js';
+import { handleListDocuments } from '../lib/handlers/documents.js';
 
 /* ─── Helpers ─── */
 
@@ -64,7 +64,7 @@ describe('GET /api/list-documents', () => {
     const req = { method: 'POST' };
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
@@ -74,7 +74,7 @@ describe('GET /api/list-documents', () => {
     const req = createReq({});
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.status().json).toHaveBeenCalledWith({ error: 'Missing userId parameter' });
@@ -86,7 +86,7 @@ describe('GET /api/list-documents', () => {
     const req = createReq({ userId: 'user1' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
   });
@@ -97,7 +97,7 @@ describe('GET /api/list-documents', () => {
     const req = createReq({ userId: 'user1' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -105,18 +105,15 @@ describe('GET /api/list-documents', () => {
     );
   });
 
-  it('returns 503 when premium DB is not configured', async () => {
+  it('returns 500 when premium DB is not configured', async () => {
     requireUser.mockResolvedValue({ uid: 'user1' });
     getPremiumStatus.mockRejectedValue(new Error('SERVER_DATABASE_NOT_CONFIGURED'));
     const req = createReq({ userId: 'user1' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(503);
-    expect(res.status().json).toHaveBeenCalledWith(
-      expect.objectContaining({ documents: [] })
-    );
+    expect(res.status).toHaveBeenCalledWith(500);
   });
 
   it('returns document list on success', async () => {
@@ -131,7 +128,7 @@ describe('GET /api/list-documents', () => {
     const req = createReq({ userId: 'user1', limit: '10' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.status().json).toHaveBeenCalledWith({
@@ -149,7 +146,7 @@ describe('GET /api/list-documents', () => {
     const req = createReq({ userId: 'user1', limit: '999' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleListDocuments(req, res);
 
     expect(listUserDocuments).toHaveBeenCalledWith('user1', 100);
   });

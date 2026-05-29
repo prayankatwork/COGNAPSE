@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
+import type { COGNAPSE_Output } from '../types';
 import { Search, X, History, FileText, ChevronRight } from 'lucide-react';
 
 export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
@@ -27,9 +28,9 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean, o
     entry.tags?.some(tag => tag.toLowerCase().includes(searchLower))
   );
 
-  const handleArchiveClick = (entry: any) => {
-    setCurrentReport(entry.report);
-    pushToStack(entry.report);
+  const handleArchiveClick = (entry: { report: unknown; query: string; topic_cluster?: string; summary_snippet?: string; tags?: string[]; id: string }) => {
+    setCurrentReport(entry.report as COGNAPSE_Output);
+    pushToStack(entry.report as COGNAPSE_Output);
     setView('research');
     onClose();
   };

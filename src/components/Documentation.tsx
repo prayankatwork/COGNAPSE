@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Terminal, Database, Shield, Globe2, Code2,
-  ChevronRight, Scale, BookOpen, AlertCircle
+  Search, Terminal, Shield, Globe2, Code2,
+  Scale, AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import PlatformDocs from './archive/PlatformDocs';

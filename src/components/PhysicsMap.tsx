@@ -87,8 +87,8 @@ export default function PhysicsMap({
   }, []);
 
   const graphData = useMemo(() => {
-    let nodes: NodeData[] = [];
-    let links: LinkData[] = [];
+    const nodes: NodeData[] = [];
+    const links: LinkData[] = [];
 
     const isDark = theme === 'dark';
     

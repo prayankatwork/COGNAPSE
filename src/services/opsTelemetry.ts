@@ -167,7 +167,7 @@ class OpsTelemetryEngine {
     });
 
     // Subscribe to Zustand store
-    this.unsubStore = useStore.subscribe((state) => this.onStateChange(state));
+    this.unsubStore = useStore.subscribe((state, _prevState) => this.onStateChange(state as unknown as Record<string, unknown>));
 
     // Lifecycle hooks
     this.boundHandleUnload = () => this.handleUnload();
@@ -694,7 +694,7 @@ class OpsTelemetryEngine {
 
   private log(...args: unknown[]): void {
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.debug(...args);
     }
   }

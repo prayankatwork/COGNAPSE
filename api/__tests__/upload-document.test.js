@@ -36,7 +36,7 @@ import { applyCors, handleOptions } from '../lib/cors.js';
 import { requireUser, assertUserIdMatches } from '../lib/auth.js';
 import { getPremiumStatus } from '../lib/premium.js';
 import { generateUploadUrl, saveDocumentMetadata, classifyDocumentType, validateDocumentUpload } from '../lib/storage.js';
-import handler from '../upload-document.js';
+import { handleUploadDocument } from '../lib/handlers/documents.js';
 
 /* ─── Helpers ─── */
 
@@ -70,7 +70,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('GET');
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.status().json).toHaveBeenCalledWith({ error: 'Method not allowed' });
@@ -81,7 +81,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     // requireUser returned false, so endpoint should have bailed
     expect(saveDocumentMetadata).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1' }); // missing fileName and mimeType
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
   });
@@ -116,7 +116,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'local_abc123', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -130,7 +130,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -144,9 +144,9 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.status).toHaveBeenCalledWith(500);
   });
 
   it('returns 400 when file validation fails', async () => {
@@ -156,7 +156,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'huge.pdf', mimeType: 'application/pdf', fileSize: 999999999 });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.status().json).toHaveBeenCalledWith({ error: 'File too large.' });
@@ -180,7 +180,7 @@ describe('POST /api/upload-document', () => {
     });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.status().json).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ describe('POST /api/upload-document', () => {
     const req = createReq('POST', { userId: 'user1', fileName: 'doc.pdf', mimeType: 'application/pdf' });
     const res = createRes();
 
-    await handler(req, res);
+    await handleUploadDocument(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
   });

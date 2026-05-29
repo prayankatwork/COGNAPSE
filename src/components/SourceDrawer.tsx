@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ExternalLink, Globe, Search, Clock, 
-  Building2, Newspaper, Hash
+  Building2, Newspaper, Hash, GraduationCap
 } from 'lucide-react';
 import type { GroundedSource, RetrievalTrace } from '../types';
 import clsx from 'clsx';

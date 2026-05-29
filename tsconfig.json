@@ -23,5 +23,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "strict": true
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "dist-electron"]
 }

@@ -1,14 +1,11 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Fingerprint, Shield, Cpu, Zap, 
-  Terminal, Globe, Github, Linkedin, 
-  Mail, Award, Users 
+import {
+  Fingerprint, Shield, Cpu, Zap,
+  Terminal, Globe, Github, Linkedin,
+  Mail, Award, Users
 } from 'lucide-react';
-import { useStore } from '../store';
 
 export default function CreatorProfile() {
-  const { theme } = useStore();
 
   const skills = [
     { name: "Intelligent Systems", icon: BrainIcon },
