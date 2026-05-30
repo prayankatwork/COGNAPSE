@@ -4,9 +4,20 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 
 // Skip local model check since we are running in the browser and fetching from huggingface
 env.allowLocalModels = false;
-// Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-// NOTE: Template does NOT include {file} — library appends filename separately
-env.remotePathTemplate = '{model}/raw/{revision}/';
+
+/**
+ * Patch fetch in this worker to rewrite Hugging Face /resolve/ URLs to /raw/.
+ * This avoids 307 redirects that break CORS in the browser.
+ */
+{
+  const origFetch = self.fetch.bind(self);
+  self.fetch = (input, init) => {
+    if (typeof input === 'string' && input.includes('huggingface.co/') && input.includes('/resolve/')) {
+      input = input.replace('/resolve/', '/raw/');
+    }
+    return origFetch(input, init);
+  };
+}
 
 // We use a singleton pattern for the pipeline
 let classifierPromise: Promise<any> | null = null;

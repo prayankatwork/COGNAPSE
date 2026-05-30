@@ -6,6 +6,25 @@ let embedder: any = null;
 let embedderLoading = false;
 let embedderReady = false;
 
+/**
+ * Patch global fetch to rewrite Hugging Face /resolve/ URLs to /raw/.
+ * This avoids 307 redirects that break CORS in the browser.
+ * Transformers.js env.remotePathTemplate is unreliable, so we intercept at the network level.
+ */
+let hfFetchPatched = false;
+function patchHuggingFaceFetch() {
+  if (hfFetchPatched) return;
+  hfFetchPatched = true;
+
+  const origFetch = globalThis.fetch.bind(globalThis);
+  globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    if (typeof input === 'string' && input.includes('huggingface.co/') && input.includes('/resolve/')) {
+      input = input.replace('/resolve/', '/raw/');
+    }
+    return origFetch(input, init);
+  };
+}
+
 export async function getEmbedder(): Promise<any> {
   if (embedderReady) return embedder;
   if (embedderLoading) {
@@ -13,12 +32,11 @@ export async function getEmbedder(): Promise<any> {
     return embedder;
   }
   embedderLoading = true;
+  // Patch fetch so model file requests use /raw/ instead of /resolve/
+  patchHuggingFaceFetch();
   try {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
-    // Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-    // NOTE: Template does NOT include {file} — library appends filename separately
-    env.remotePathTemplate = '{model}/raw/{revision}/';
     env.allowLocalModels = false;
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
@@ -46,12 +64,11 @@ async function getSentimentModel(): Promise<any> {
     return sentimentModel;
   }
   sentimentLoading = true;
+  // Patch fetch so model file requests use /raw/ instead of /resolve/
+  patchHuggingFaceFetch();
   try {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
-    // Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-    // NOTE: Template does NOT include {file} — library appends filename separately
-    env.remotePathTemplate = '{model}/raw/{revision}/';
     env.allowLocalModels = false;
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
