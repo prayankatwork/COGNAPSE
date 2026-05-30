@@ -15,7 +15,10 @@ export async function getEmbedder(): Promise<any> {
   embedderLoading = true;
   try {
     // @ts-expect-error - CDN module has no type declarations
-    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+    // Use /raw/ path to avoid the 307 redirect to /api/resolve-cache/ which breaks CORS in browser
+    env.remotePathTemplate = '/{model}/raw/{revision}/{file}';
+    env.allowLocalModels = false;
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
     });
@@ -44,7 +47,10 @@ async function getSentimentModel(): Promise<any> {
   sentimentLoading = true;
   try {
     // @ts-expect-error - CDN module has no type declarations
-    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+    // Use /raw/ path to avoid the 307 redirect to /api/resolve-cache/ which breaks CORS in browser
+    env.remotePathTemplate = '/{model}/raw/{revision}/{file}';
+    env.allowLocalModels = false;
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
     });

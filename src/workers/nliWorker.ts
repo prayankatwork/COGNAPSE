@@ -1,9 +1,11 @@
 // We use the CDN import to completely bypass Vite's bundler and its dynamic 'fs' require bugs.
 // @ts-ignore
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
 // Skip local model check since we are running in the browser and fetching from huggingface
 env.allowLocalModels = false;
+// Use /raw/ path to avoid the 307 redirect to /api/resolve-cache/ which breaks CORS in browser
+env.remotePathTemplate = '/{model}/raw/{revision}/{file}';
 
 // We use a singleton pattern for the pipeline
 let classifierPromise: Promise<any> | null = null;
