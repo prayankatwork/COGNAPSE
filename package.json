@@ -17,6 +17,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit && eslint src/",
     "lint:tsc": "tsc --noEmit",
+    "test": "vitest run",
     "lint:eslint": "eslint src/"
   },
   "dependencies": {
