@@ -18,8 +18,24 @@ function patchHuggingFaceFetch() {
 
   const origFetch = globalThis.fetch.bind(globalThis);
   globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-    if (typeof input === 'string' && input.includes('huggingface.co/') && input.includes('/resolve/')) {
-      input = input.replace('/resolve/', '/raw/');
+    // Extract URL string from Request object or string — Transformers.js hub.js
+    // constructs Request objects internally, so typeof-input check is insufficient.
+    const urlStr = typeof input === 'string'
+      ? input
+      : input instanceof Request
+        ? (input as Request).url
+        : String(input);
+    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/')) {
+      const rewritten = urlStr.replace('/resolve/', '/raw/');
+      // Preserve original input type: reconstruct Request if input was a Request;
+      // fall back to string for URL objects or unknown types.
+      if (typeof input === 'string') {
+        input = rewritten;
+      } else if (input instanceof Request) {
+        input = new Request(rewritten, input);
+      } else {
+        input = rewritten;
+      }
     }
     return origFetch(input, init);
   };

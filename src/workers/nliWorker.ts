@@ -12,8 +12,22 @@ env.allowLocalModels = false;
 {
   const origFetch = self.fetch.bind(self);
   self.fetch = (input, init) => {
-    if (typeof input === 'string' && input.includes('huggingface.co/') && input.includes('/resolve/')) {
-      input = input.replace('/resolve/', '/raw/');
+    // Extract URL string from Request object or string — Transformers.js hub.js
+    // constructs Request objects internally, so typeof-input check is insufficient.
+    const urlStr = typeof input === 'string'
+      ? input
+      : input instanceof Request
+        ? input.url
+        : String(input);
+    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/')) {
+      const rewritten = urlStr.replace('/resolve/', '/raw/');
+      if (typeof input === 'string') {
+        input = rewritten;
+      } else if (input instanceof Request) {
+        input = new Request(rewritten, input);
+      } else {
+        input = rewritten;
+      }
     }
     return origFetch(input, init);
   };
