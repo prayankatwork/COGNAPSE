@@ -142,6 +142,10 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
   const deduped = deduplicateSources(data.sources);
   const ranked = rankSources(deduped);
 
+  // Renumber sequentially to prevent gaps from dedup — the AI uses these IDs for inline citations
+  // and non-sequential IDs (e.g., 1, 3, 5) cause confusing citation output
+  const renumbered = ranked.map((s, i) => ({ ...s, id: i + 1 }));
+
   const trace: RetrievalTrace = data.trace || {
     query,
     sources_retrieved: data.sources.length,
@@ -153,11 +157,14 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
   };
 
   // Step 4: Cache and return
-  setCache(query, ranked, trace);
+  setCache(query, renumbered, trace);
 
   return {
-    sources: ranked.slice(0, count),
-    trace,
+    sources: renumbered.slice(0, count),
+    trace: {
+      ...trace,
+      sources_used: Math.min(renumbered.length, count),
+    },
     fromCache: false,
   };
 }
