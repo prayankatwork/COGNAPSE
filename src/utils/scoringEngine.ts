@@ -58,6 +58,9 @@ export async function getEmbedder(): Promise<any> {
     // NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
     // separately via pathJoin(). Default: '{model}/resolve/{revision}/'
     env.remotePathTemplate = '{model}/raw/{revision}/';
+    // Disable browser cache to avoid stale HTML error responses that may have been
+    // cached by the Cache API from earlier failed /resolve/ requests.
+    env.useBrowserCache = false;
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
     });
@@ -92,6 +95,8 @@ async function getSentimentModel(): Promise<any> {
     env.allowLocalModels = false;
     // Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS
     env.remotePathTemplate = '{model}/raw/{revision}/';
+    // Disable browser cache to avoid stale HTML error responses
+    env.useBrowserCache = false;
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
     });

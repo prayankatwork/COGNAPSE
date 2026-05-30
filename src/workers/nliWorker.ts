@@ -8,6 +8,9 @@ env.allowLocalModels = false;
 // NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
 // separately via pathJoin(). Default: '{model}/resolve/{revision}/'
 env.remotePathTemplate = '{model}/raw/{revision}/';
+// Disable browser cache to avoid stale HTML error responses that may have been
+// cached by the Cache API from earlier failed /resolve/ requests.
+env.useBrowserCache = false;
 
 /**
  * Patch fetch in this worker to rewrite Hugging Face /resolve/ URLs to /raw/.
