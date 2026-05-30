@@ -50,6 +50,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import SoundWaveform, { type WaveformState } from './components/SoundWaveform';
 import { apiFetch } from './services/apiClient';
 import { toast } from './utils/toast';
+import { claimSessionLock } from './services/sessionLock';
+import SessionTakeoverOverlay from './components/SessionTakeoverOverlay';
 
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
@@ -211,10 +213,19 @@ export default function App() {
   }, []);
 
   const [suspendedUser, setSuspendedUser] = useState<{ username: string } | null>(null);
+  const [takenOver, setTakenOver] = useState(false);
+  const sessionLockRef = useRef<{ release: () => void } | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) return;
+      if (!firebaseUser) {
+        // No authenticated user — release Firestore lock if any
+        if (sessionLockRef.current) {
+          sessionLockRef.current.release();
+          sessionLockRef.current = null;
+        }
+        return;
+      }
 
       // Check if user is suspended via custom claims
       try {
@@ -231,15 +242,51 @@ export default function App() {
       }
 
       const current = useStore.getState().user;
+      let username: string;
       if (current?.id === firebaseUser.uid) {
         await syncAuthSession(current);
-        return;
+        username = current.username;
+      } else {
+        username =
+          firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative';
+        await syncAuthSession({ id: firebaseUser.uid, username });
       }
-      const username =
-        firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative';
-      await syncAuthSession({ id: firebaseUser.uid, username });
+
+      // Claim the session lock (single-instance enforcement)
+      if (sessionLockRef.current) sessionLockRef.current.release();
+      sessionLockRef.current = claimSessionLock(
+        firebaseUser.uid,
+        username,
+        () => setTakenOver(true),
+      );
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      if (sessionLockRef.current) {
+        sessionLockRef.current.release();
+        sessionLockRef.current = null;
+      }
+    };
+  }, []);
+
+  // Session lock for unauthenticated users (BroadcastChannel-only enforcement)
+  useEffect(() => {
+    const user = useStore.getState().user;
+    if (user?.id) return; // authenticated users handled above
+
+    if (sessionLockRef.current) sessionLockRef.current.release();
+    sessionLockRef.current = claimSessionLock(
+      null,
+      'guest',
+      () => setTakenOver(true),
+    );
+
+    return () => {
+      if (sessionLockRef.current) {
+        sessionLockRef.current.release();
+        sessionLockRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -592,6 +639,9 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {/* Single-Instance Enforcement: Session Takeover Overlay */}
+      <SessionTakeoverOverlay visible={takenOver} />
 
       {/* Suspended User Overlay */}
       {suspendedUser && (

@@ -68,5 +68,10 @@ service cloud.firestore {
       allow create: if false;
       allow read, update, delete: if false;
     }
+
+    // Active Sessions — single-instance enforcement (last writer wins)
+    match /activeSessions/{userId} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }
