@@ -125,7 +125,9 @@ export default function ReportView({
   const hasConflicts = report.conflicts && report.conflicts.length > 0;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
-  const [hoveredCitation, setHoveredCitation] = useState<number | null>(null);
+  // Use a unique citation instance key (paragraphIdx-partIdx) instead of just source ID
+  // to prevent duplicate EvidencePreview panels from stacking when the same source is cited multiple times
+  const [hoveredCitation, setHoveredCitation] = useState<string | null>(null);
   const { updateGamification, user, setAuthOpen, deepResearch } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -443,11 +445,12 @@ export default function ReportView({
                             if (citeMatch) {
                               const sourceId = parseInt(citeMatch[1]);
                               const source = report.sources?.find(s => s.id === sourceId);
+                              const instanceKey = `${i}-${j}`; // unique per citation instance to prevent stacking
                               return (
                                 <span
                                   key={j}
                                   className="relative inline"
-                                  onMouseEnter={() => setHoveredCitation(sourceId)}
+                                  onMouseEnter={() => setHoveredCitation(instanceKey)}
                                   onMouseLeave={() => setHoveredCitation(null)}
                                 >
                                   <sup className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative">
@@ -469,7 +472,7 @@ export default function ReportView({
                                         bias_flag: source.bias_flag || null,
                                         retrieval_timestamp: source.retrieval_timestamp || new Date().toISOString()
                                       }}
-                                      isVisible={hoveredCitation === source.id}
+                                      isVisible={hoveredCitation === instanceKey}
                                     />
                                   )}
                                 </span>
