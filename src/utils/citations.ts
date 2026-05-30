@@ -7,7 +7,7 @@ export type { CitationFormat };
  * Citations are preserved in the raw data for PDF/Markdown export.
  */
 export function stripCitationMarkers(text: string): string {
-  return text.replace(/\[\d+(?:\s*,\s*\d+)*\]/g, '').trim();
+  return text.replace(/\[\d+(?:\s*,\s*\d+)*\]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 /** Format a single source as a citation string in the requested format */
@@ -39,10 +39,10 @@ export function formatAllCitations(sources: Partial<GroundedSource>[], format: C
 /** Get a domain badge for display */
 export function getDomainBadge(domain: string): string {
   if (!domain) return 'web';
-  if (domain.includes('.edu') || domain.endsWith('.edu')) return 'academic';
-  if (domain.includes('.gov') || domain.endsWith('.gov')) return 'government';
-  if (domain.includes('.mil') || domain.endsWith('.mil')) return 'military';
-  if (domain.includes('.org') || domain.endsWith('.org')) return 'organization';
+  if (domain.endsWith('.edu')) return 'academic';
+  if (domain.endsWith('.gov')) return 'government';
+  if (domain.endsWith('.mil')) return 'military';
+  if (domain.endsWith('.org')) return 'organization';
   return 'web';
 }
 
