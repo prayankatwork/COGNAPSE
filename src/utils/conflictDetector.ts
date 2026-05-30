@@ -193,18 +193,9 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
   // generate any conflicts from source stance or synthesis analysis, create
   // a conflict that explains the consensus gap. This catches cases where the
   // AI recognized disagreement in its reasoning but didn't surface it.
-  console.log('[CONFLICT-DEBUG] Consensus-label fallback check:', {
-    conflictsLen: report.conflicts?.length,
-    hasScores: !!report.scores,
-    evidence_consensus: report.scores?.evidence_consensus,
-    hasSynthesis: !!(report.summary?.full_synthesis),
-    synthesisLen: report.summary?.full_synthesis?.length,
-  });
   if ((report.conflicts?.length ?? 0) === 0 && report.scores) {
     const consensus = report.scores.evidence_consensus;
-    console.log('[CONFLICT-DEBUG] Checking consensus value:', consensus);
     if (consensus === 'mixed' || consensus === 'contested') {
-      console.log('[CONFLICT-DEBUG] CONSENSUS MATCHED! Creating conflict...');
       const synthesis = report.summary?.full_synthesis;
       const bottomLine = report.summary?.bottom_line || '';
 
