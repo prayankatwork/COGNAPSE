@@ -54,6 +54,10 @@ export async function getEmbedder(): Promise<any> {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     env.allowLocalModels = false;
+    // Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS.
+    // NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
+    // separately via pathJoin(). Default: '{model}/resolve/{revision}/'
+    env.remotePathTemplate = '{model}/raw/{revision}/';
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
     });
@@ -86,6 +90,8 @@ async function getSentimentModel(): Promise<any> {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     env.allowLocalModels = false;
+    // Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS
+    env.remotePathTemplate = '{model}/raw/{revision}/';
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
     });

@@ -4,6 +4,10 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 
 // Skip local model check since we are running in the browser and fetching from huggingface
 env.allowLocalModels = false;
+// Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS.
+// NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
+// separately via pathJoin(). Default: '{model}/resolve/{revision}/'
+env.remotePathTemplate = '{model}/raw/{revision}/';
 
 /**
  * Patch fetch in this worker to rewrite Hugging Face /resolve/ URLs to /raw/.
