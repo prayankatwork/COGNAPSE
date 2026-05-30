@@ -7,6 +7,8 @@ import { audioSystem } from './audioService';
 import { useStore } from '../store';
 import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
+import { generateMissingConflicts } from '../utils/conflictDetector';
+import { detectUncertaintyQuery, detectAdversarialQuery } from '../utils/scoringEngine';
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
@@ -432,6 +434,35 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     // Ensure conflicts field always exists (AI often skips optional fields)
     if (!parsed.conflicts) {
       parsed.conflicts = [];
+    }
+
+    // ─── Consensus Accuracy Override ───
+    // Post-process: if the query is about an uncertain/debated topic or an adversarial
+    // conspiracy theory, override the AI's self-reported consensus label.
+    // The AI tends to report "strong" consensus even for inherently ambiguous topics.
+    if (parsed.scores) {
+      const isUncertain = detectUncertaintyQuery(query);
+      const adversarial = detectAdversarialQuery(query);
+
+      if (adversarial.isAdversarial && parsed.scores.evidence_consensus !== 'contested') {
+        // Conspiracy/pseudoscience queries: the AI may frame debunking as "strong" consensus
+        parsed.scores.evidence_consensus = 'contested';
+        parsed.scores.confidence_label = '🔴 Low';
+      } else if (isUncertain && parsed.scores.evidence_consensus === 'strong') {
+        // Ambiguous/debated topics: downgrade "strong" → "mixed" to reflect genuine uncertainty
+        parsed.scores.evidence_consensus = 'mixed';
+        // Only lower confidence if it was high
+        if (parsed.scores.confidence_label === '🟢 High') {
+          parsed.scores.confidence_label = '🟡 Medium';
+        }
+      }
+    }
+
+    // Post-process: detect missing contradictions from source stance analysis
+    try {
+      generateMissingConflicts(parsed);
+    } catch (e) {
+      // Non-critical — conflicts are optional
     }
 
     // Attach real sources and retrieval trace to the output

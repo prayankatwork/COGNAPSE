@@ -311,6 +311,67 @@ export async function computeBiasFromSentiment(
   };
 }
 
+/**
+ * Known conspiracy / pseudoscience keywords for adversarial query detection.
+ * When a query matches these patterns, the scoring engine applies a topic-level
+ * credibility penalty and confidence reduction to prevent debunking sources from
+ * inflating the overall score for pseudoscientific claims.
+ *
+ * Matches full query text (lowercased) — no partial substring matches to avoid
+ * false positives on legitimate scientific queries (e.g., "flat earth's orbit").
+ */
+const ADVERSARIAL_PATTERNS: { pattern: RegExp; label: string }[] = [
+  // Classic conspiracy theories
+  { pattern: /\bflat\s*earth\b/i, label: 'flat_earth' },
+  { pattern: /\bchem(trails?|trail)\b/i, label: 'chemtrails' },
+  { pattern: /\bmoon\s*landing\s*(was\s*)?(fake|hoax|staged)\.*?$/i, label: 'moon_landing_hoax' },
+  { pattern: /\b(aliens?|extraterrestrial)\s*(built|made|constructed)\s*(the\s*)?pyramids?\b/i, label: 'ancient_aliens' },
+  { pattern: /\b(earth\s+is|earth\s+be)\s+(round|sphere|globe)\b.*evidence.*against/i, label: 'flat_earth' },
+  { pattern: /\bevolution\s*(is\s*)?(a\s*)?(lie|hoax|fake)\b/i, label: 'evolution_denial' },
+  { pattern: /\bvaccines?\s*cause\s*(autism|infertility|diseases?)\b/i, label: 'anti_vax' },
+  { pattern: /\b(9.?11|september\s*11)\s*(was\s*)?(an?\s*)?inside\s*(job|attack)\b/i, label: '911_inside_job' },
+  // Pseudoscience triggers
+  { pattern: /\bperpetual\s*motion\s*machine\b/i, label: 'perpetual_motion' },
+  { pattern: /\b(psychic|telepathy|clairvoyance)\s*(is\s*)?real\b/i, label: 'psychic_claims' },
+];
+
+/**
+ * Known "debate" / "uncertainty" keywords for medium-uncertainty detection.
+ * When a query matches, the system knows to expect mixed evidence and should
+ * avoid reporting "strong" consensus.
+ */
+const UNCERTAINTY_PATTERNS: RegExp[] = [
+  /\b(will|will\s+we|will\s+there)\s+(ever\s+)?(achieve|reach|see|have|get|be)\b/i,
+  /\b(is\s+(it\s+)?possible\b|can\s+we\b)/i,
+  /\b(controversy|debate|disputed|uncertain|unknowns?|unclear)\b/i,
+  /\b(future\s+(of|outlook)|predictions?|forecast|prospects?)\b/i,
+  /\b(risk|benefit|trade.off|pro\s*(v|v\s*s?|\.\s*v\s*\.)\s*con)\b/i,
+  /\b(should|whether)\s+.*\s+(is|are|be)\b/i,
+  // Effects/impact on something — inherently uncertain as outcomes vary by methodology
+  /\b(effects?|impact|implications?|outcomes?|consequences?)\s+(of|on)\b/i,
+  // Trend/scenario projections — future-oriented and inherently speculative
+  /\b(trends?|outlook|projections?|scenarios?|trajectory)\b/i,
+  // Academic disagreements across studies
+  /\b(studies?\s+(differ|conflict|disagree|vary|contradict)|literature\s+(is\s+)?(mixed|divided|inconclusive))\b/i,
+  // Productivity/performance/adoption impact — a common class of uncertain topics
+  /\b(productivity|efficiency|adoption|performance)\s+(effects?|impact|outcomes?|rates?|levels?)\b/i,
+];
+
+export function detectAdversarialQuery(query: string): { isAdversarial: boolean; label: string | null } {
+  if (!query) return { isAdversarial: false, label: null };
+  for (const p of ADVERSARIAL_PATTERNS) {
+    if (p.pattern.test(query)) {
+      return { isAdversarial: true, label: p.label };
+    }
+  }
+  return { isAdversarial: false, label: null };
+}
+
+export function detectUncertaintyQuery(query: string): boolean {
+  if (!query) return false;
+  return UNCERTAINTY_PATTERNS.some((p) => p.test(query));
+}
+
 export function normalizeCredScore(raw?: number): number | null {
   if (raw == null) return null;
   return raw > 10 ? raw / 10 : raw;
@@ -361,6 +422,8 @@ export async function computeAllScores(
   credibilityStdDev: number;
   overallQuality: number;
   usingEmbeddings: boolean;
+  _adversarial?: { label: string | null; penalty: number };
+  _uncertainty?: { penalty: number };
 }> {
   const sourceTexts = sources.map((s) => `${s.title || ''} ${s.key_finding || ''}`).filter(Boolean);
   const conflictPenalty = Math.min((conflicts?.length || 0) * 0.15, 0.45);
@@ -378,7 +441,20 @@ export async function computeAllScores(
 
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[evidenceConsensus || ''] ?? 0.5;
 
-  const avgCredibility = credibility.average;
+  // ─── Adversarial / Uncertainty Detection ───
+  // Detect if the query is about a known conspiracy/pseudoscience topic.
+  // When detected, apply a topic-level credibility penalty and confidence reduction
+  // so that debunking sources don't inflate the overall score.
+  const adversarial = detectAdversarialQuery(query);
+  const isUncertain = detectUncertaintyQuery(query);
+
+  // For adversarial queries: reduce effective credibility by 40%,
+  // increase bias substantially (the topic itself is unscientific),
+  // and floor confidence to prevent false "strong" consensus.
+  const adversarialPenalty = adversarial.isAdversarial ? 0.4 : 0;
+  const uncertaintyPenalty = (!adversarial.isAdversarial && isUncertain) ? 0.15 : 0;
+
+  const avgCredibility = credibility.average * (1 - adversarialPenalty);
   const stdDev = sources.length > 1
     ? Math.sqrt(credibility.perSource.reduce((sum, s) => sum + (s - avgCredibility) ** 2, 0) / credibility.perSource.length)
     : 0;
@@ -387,18 +463,27 @@ export async function computeAllScores(
 
   const accuracy = Math.round(Math.min(avgCredibility, 10) * 10) / 10;
 
-  const finalBias = sentimentResult.hasDomainOverride
+  // Adversarial queries get a bias bump (topic itself is misleading)
+  let finalBias = sentimentResult.hasDomainOverride
     ? sentimentResult.biasScore
     : existingScores.bias;
+  if (adversarial.isAdversarial) {
+    finalBias = Math.min(finalBias + 0.3, 0.9);
+  } else if (isUncertain) {
+    finalBias = Math.min(finalBias + 0.1, 0.8);
+  }
 
   const sourceDiversity = Math.round(
     (entityDiversity.diversityScore * 0.4 + existingScores.sourceDiversity * 0.6) * 100
   ) / 100;
 
+  // For adversarial queries, confidence is capped at 0.4 (prevents "strong" consensus)
+  // For uncertainty queries, confidence is slightly reduced
+  const maxConfidence = adversarial.isAdversarial ? 0.4 : isUncertain ? 0.75 : 0.99;
   const confidenceInterval = Math.round(
     Math.min(
-      (consensus.score * 0.3 + consensusBase * 0.4 + (1 - conflictPenalty) * 0.3),
-      0.99
+      (consensus.score * 0.3 + consensusBase * 0.4 + (1 - conflictPenalty) * 0.3) * (1 - adversarialPenalty * 0.5),
+      maxConfidence
     ) * 100
   ) / 100;
 
@@ -428,5 +513,8 @@ export async function computeAllScores(
     credibilityStdDev: Math.round(stdDev * 100) / 100,
     overallQuality,
     usingEmbeddings: useEmbeddings,
+    // Return detection metadata for downstream reporting
+    _adversarial: adversarial.isAdversarial ? { label: adversarial.label, penalty: adversarialPenalty } : undefined,
+    _uncertainty: isUncertain ? { penalty: uncertaintyPenalty } : undefined,
   };
 }
