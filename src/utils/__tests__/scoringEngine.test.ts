@@ -455,21 +455,21 @@ describe('computeConsensusScore (fallback)', () => {
     resetMocks();
   });
 
-  it('returns fallback 0.5 when models unavailable', async () => {
+  it('returns fallback score 0 when models unavailable', async () => {
     const result = await computeConsensusScore(['text a', 'text b']);
-    expect(result.score).toBe(0.5);
+    expect(result.score).toBe(0);
     expect(result.agreementRate).toBe(1);
   });
 
-  it('returns fallback for a single source', async () => {
+  it('returns fallback score 0 for a single source', async () => {
     const result = await computeConsensusScore(['only one source']);
-    expect(result.score).toBe(0.5);
+    expect(result.score).toBe(0);
     expect(result.agreementRate).toBe(1);
   });
 
   it('handles empty source texts', async () => {
     const result = await computeConsensusScore([]);
-    expect(result.score).toBe(0.5);
+    expect(result.score).toBe(0);
     expect(result.agreementRate).toBe(1);
   });
 });
@@ -652,11 +652,11 @@ describe('computeAllScores (integration)', () => {
     expect(result.credibilityStdDev).toBeLessThanOrEqual(3);
   });
 
-  it('reports usingEmbeddings=true even in fallback path (consensus.score is 0.5 > 0)', async () => {
+  it('reports usingEmbeddings=false when models are unavailable', async () => {
     const result = await computeAllScores('test', baseScores, baseSources, [], undefined);
-    // Note: the fallback consensus score is 0.5, and the condition is `consensus.score > 0`,
-    // so usingEmbeddings is true even when models are unavailable.
-    expect(result.usingEmbeddings).toBe(true);
+    // Fix: consensus fallback now returns score 0, so `consensus.score > 0` is false,
+    // and `relevance.average !== 0.5` is also false → usingEmbeddings = false.
+    expect(result.usingEmbeddings).toBe(false);
   });
 });
 

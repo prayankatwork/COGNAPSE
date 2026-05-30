@@ -173,7 +173,7 @@ export async function computeConsensusScore(
 ): Promise<{ score: number; agreementRate: number }> {
   const pipe = await getEmbedder();
   if (!pipe || sourceTexts.length < 2) {
-    return { score: 0.5, agreementRate: 1 };
+    return { score: 0, agreementRate: 1 };
   }
 
   try {
@@ -197,7 +197,7 @@ export async function computeConsensusScore(
     const score = Math.round(agreementRate * 100) / 100;
     return { score, agreementRate };
   } catch {
-    return { score: 0.5, agreementRate: 0.5 };
+    return { score: 0, agreementRate: 0.5 };
   }
 }
 
