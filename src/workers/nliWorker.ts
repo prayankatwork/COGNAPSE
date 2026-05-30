@@ -4,8 +4,9 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 
 // Skip local model check since we are running in the browser and fetching from huggingface
 env.allowLocalModels = false;
-// Use /raw/ path (no leading slash) to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-env.remotePathTemplate = '{model}/raw/{revision}/{file}';
+// Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
+// NOTE: Template does NOT include {file} — library appends filename separately
+env.remotePathTemplate = '{model}/raw/{revision}/';
 
 // We use a singleton pattern for the pipeline
 let classifierPromise: Promise<any> | null = null;

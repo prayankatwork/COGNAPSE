@@ -16,8 +16,9 @@ export async function getEmbedder(): Promise<any> {
   try {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
-    // Use /raw/ path (no leading slash) to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-    env.remotePathTemplate = '{model}/raw/{revision}/{file}';
+    // Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
+    // NOTE: Template does NOT include {file} — library appends filename separately
+    env.remotePathTemplate = '{model}/raw/{revision}/';
     env.allowLocalModels = false;
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       quantized: true,
@@ -48,8 +49,9 @@ async function getSentimentModel(): Promise<any> {
   try {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
-    // Use /raw/ path (no leading slash) to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
-    env.remotePathTemplate = '{model}/raw/{revision}/{file}';
+    // Use /raw/ path to avoid 307 redirects — Hugging Face allows CORS from our domain on /raw/
+    // NOTE: Template does NOT include {file} — library appends filename separately
+    env.remotePathTemplate = '{model}/raw/{revision}/';
     env.allowLocalModels = false;
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
       quantized: true,
