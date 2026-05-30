@@ -4,13 +4,13 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 
 // Skip local model check since we are running in the browser and fetching from huggingface
 env.allowLocalModels = false;
-// Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS.
-// NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
-// separately via pathJoin(). Default: '{model}/resolve/{revision}/'
-env.remotePathTemplate = '{model}/raw/{revision}/';
 // Disable browser cache to avoid stale HTML error responses that may have been
 // cached by the Cache API from earlier failed /resolve/ requests.
 env.useBrowserCache = false;
+// NOTE: We intentionally do NOT set env.remotePathTemplate here because ONNX model
+// files are stored with Git LFS — /raw/ returns LFS pointer files (text) instead of
+// actual binary, causing ONNX Runtime to fail. The fetch patch below selectively
+// rewrites only non-ONNX files to /raw/ while leaving .onnx files on /resolve/.
 
 /**
  * Patch fetch in this worker to rewrite Hugging Face /resolve/ URLs to /raw/.
@@ -26,7 +26,11 @@ env.useBrowserCache = false;
       : input instanceof Request
         ? input.url
         : String(input);
-    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/')) {
+    // Only rewrite non-ONNX files to /raw/. ONNX model files are stored with Git LFS,
+    // and /raw/ returns LFS pointer files (text) instead of actual binary, which causes
+    // ONNX Runtime to fail with "protobuf parsing failed". ONNX files must use /resolve/
+    // which redirects to a CDN with proper binary content and CORS headers.
+    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/') && !urlStr.includes('.onnx')) {
       const rewritten = urlStr.replace('/resolve/', '/raw/');
       if (typeof input === 'string') {
         input = rewritten;

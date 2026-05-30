@@ -25,7 +25,11 @@ function patchHuggingFaceFetch() {
       : input instanceof Request
         ? (input as Request).url
         : String(input);
-    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/')) {
+    // Only rewrite non-ONNX files to /raw/. ONNX model files are stored with Git LFS,
+    // and /raw/ returns LFS pointer files (text) instead of actual binary, which causes
+    // ONNX Runtime to fail with "protobuf parsing failed". ONNX files must use /resolve/
+    // which redirects to a CDN with proper binary content and CORS headers.
+    if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/') && !urlStr.includes('.onnx')) {
       const rewritten = urlStr.replace('/resolve/', '/raw/');
       // Preserve original input type: reconstruct Request if input was a Request;
       // fall back to string for URL objects or unknown types.
@@ -54,10 +58,6 @@ export async function getEmbedder(): Promise<any> {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     env.allowLocalModels = false;
-    // Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS.
-    // NOTE: remotePathTemplate has NO leading slash, and the library appends the filename
-    // separately via pathJoin(). Default: '{model}/resolve/{revision}/'
-    env.remotePathTemplate = '{model}/raw/{revision}/';
     // Disable browser cache to avoid stale HTML error responses that may have been
     // cached by the Cache API from earlier failed /resolve/ requests.
     env.useBrowserCache = false;
@@ -93,8 +93,6 @@ async function getSentimentModel(): Promise<any> {
     // @ts-expect-error - CDN module has no type declarations
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
     env.allowLocalModels = false;
-    // Route model file requests through /raw/ URLs to avoid 307 redirects that fail CORS
-    env.remotePathTemplate = '{model}/raw/{revision}/';
     // Disable browser cache to avoid stale HTML error responses
     env.useBrowserCache = false;
     sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
