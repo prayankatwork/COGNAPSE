@@ -56,7 +56,6 @@ export type TelemetryEventType =
   | 'ai_provider_failure'
   | 'sync_error'
   | 'extension_failure'
-  | 'electron_crash'
   | 'error_encountered'
   | 'feature_used'
   | 'behavior_snapshot'

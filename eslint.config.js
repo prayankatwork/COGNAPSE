@@ -23,7 +23,6 @@ export default tseslint.config(
   {
     ignores: [
       'dist/',
-      'dist-electron/',
       'node_modules/',
       '*.mjs',
       'scripts/',

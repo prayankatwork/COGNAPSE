@@ -6,7 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-dist-electron/
 release/
 scratch/
 

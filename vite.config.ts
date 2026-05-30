@@ -1,40 +1,23 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { defineConfig } from 'vite';
-import electron from 'vite-plugin-electron/simple';
 
 export default defineConfig({
   base: '/',
   plugins: [
-    react(), 
+    react(),
     tailwindcss(),
-    electron({
-      main: {
-        // Shortcut of `build.lib.entry`.
-        entry: 'electron/main.ts',
-      },
-      preload: {
-        // Shortcut of `build.rollupOptions.input`.
-        input: path.join(__dirname, 'electron/preload.ts'),
-      },
-      // Optional: Use Node.js API in the Renderer process
-      renderer: {},
-    }),
   ],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, '.'),
-    },
+    alias: {},
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // Hides source code internals in production
+    sourcemap: false,
   },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
     proxy: {
-      // Forward /api/* to Vercel dev server (run npm run dev:vercel in parallel)
       '/api': {
         target: process.env.VITE_API_TARGET || 'http://localhost:4000',
         changeOrigin: true,
