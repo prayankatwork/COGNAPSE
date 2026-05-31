@@ -1148,6 +1148,36 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     }
 
     addReasoningStep('Finalizing report structure...');
+
+    // ─── Consensus Variance Alignment (final pass) ───
+    // Ensure consensus_variance aligns with evidence_consensus regardless of
+    // whether the secondary model succeeded. This catches cases where:
+    // - The secondary model failed (no variance computed)
+    // - The variance was computed but alignment inside the handler didn't fire
+    // - evidence_consensus was overridden after variance was already set
+    //
+    // IMPORTANT: Only promote, never demote. If the secondary model computed
+    // a legitimate 'high' variance from genuine score disagreement, preserve it.
+    if (parsed.scores) {
+      const ec = parsed.scores.evidence_consensus;
+      const current = (parsed as COGNAPSE_Output).consensus_variance;
+      const currentLevel = current?.level;
+      
+      if (ec === 'contested' && currentLevel !== 'high') {
+        // Topic-level mandation: contested queries always get high variance
+        (parsed as COGNAPSE_Output).consensus_variance = {
+          level: 'high',
+          narrative: 'Models disagree significantly on this controversial topic — exercise caution',
+        };
+      } else if (ec === 'mixed' && (!current || currentLevel === 'low')) {
+        // Only promote from low/undefined to moderate — don't downgrade high
+        (parsed as COGNAPSE_Output).consensus_variance = {
+          level: 'moderate',
+          narrative: 'Models show moderate disagreement reflecting genuine topic complexity',
+        };
+      }
+    }
+
     return parsed;
   } catch (error) {
     throw new Error("Intelligence synthesis format error. Please retry — cloud nodes may have returned partial data.");

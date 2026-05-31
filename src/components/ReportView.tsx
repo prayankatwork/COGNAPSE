@@ -599,6 +599,26 @@ export default function ReportView({
             </div>
           )}
 
+          {/* Bias Alert Panel */}
+          {hasBias && (
+            <div className="border border-amber-400/30 bg-amber-50/40 dark:bg-amber-950/20">
+              <div className="w-full px-4 py-3 flex items-center gap-3 border-b border-amber-400/20">
+                <ShieldAlert size={14} className="text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-300">
+                  Bias Alert
+                </span>
+                <span className="text-[8px] font-mono text-amber-600/60 dark:text-amber-400/60 ml-auto">
+                  {report.bias_alert?.direction || 'Potential bias detected'}
+                </span>
+              </div>
+              <div className="px-4 py-3">
+                <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-200/90">
+                  {report.bias_alert?.recommendation || 'Review sources carefully for potential bias.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Contradictions Panel */}
           {hasConflicts && (
             <div className="border border-my-border bg-my-callout/50">
