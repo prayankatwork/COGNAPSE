@@ -39,58 +39,73 @@ async function fillMissingStrategicFields(
       ? 'generate a SWOT analysis'
       : 'generate actionable takeaways';
 
-  const swotSchema = needsSwot
-    ? `{
+  // Build a single combined JSON schema to avoid confusing the LLM with two top-level objects
+  let jsonSchema = '{';
+  if (needsSwot) {
+    jsonSchema += `
   "perspective": "From whose perspective this SWOT is framed",
   "strengths": ["3-5 items, max 12 words each"],
   "weaknesses": ["3-5 items, max 12 words each"],
   "opportunities": ["3-5 items, max 12 words each"],
-  "threats": ["3-5 items, max 12 words each"]
-}`
-    : '';
-
-  const takeawaysSchema = needsTakeaways
-    ? `{
+  "threats": ["3-5 items, max 12 words each"]`;
+  }
+  if (needsTakeaways) {
+    if (needsSwot) jsonSchema += ',';
+    jsonSchema += `
   "key_insight": "The single most important thing to understand",
   "watch_out_for": "The biggest risk or misconception to avoid",
-  "next_step": "The most useful concrete action to take"
-}`
-    : '';
+  "next_step": "The most useful concrete action to take"`;
+  }
+  jsonSchema += '\n}';
 
   const prompt = `Given the following research synthesis, ${taskDesc}.
 
 SYNTHESIS:
 "${synthesis.substring(0, 2500)}"
 
-Return valid JSON:
-${swotSchema}${needsSwot && needsTakeaways ? '\n' : ''}${takeawaysSchema}
+Return ONLY valid JSON with NO markdown formatting, NO code blocks, NO backticks:
+${jsonSchema}
 
-Output ONLY valid JSON. No markdown. No explanation.`;
+Output raw JSON only. No wrapping. No explanation.`;
 
   try {
     const raw = await callCloudAI(prompt, true, UTILITY_MODEL, abortSignal);
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    
+    // Robust JSON extraction: strip markdown code fences, handle multiple JSON blocks
+    let jsonStr = typeof raw === 'string' ? raw : JSON.stringify(raw);
+    // Remove markdown code fences (```json ... ``` or ``` ... ```)
+    jsonStr = jsonStr.replace(/```(?:json)?\s*/gi, '').replace(/\s*```/g, '').trim();
+    // If there are multiple JSON objects, try to extract the first complete one
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    }
+    
+    const parsed = JSON.parse(jsonStr);
 
-    if (needsSwot && parsed.strengths && parsed.weaknesses) {
+    if (needsSwot && (parsed.strengths || parsed.swot?.strengths)) {
+      const src = parsed.strengths ? parsed : (parsed.swot || {});
       report.swot = {
-        perspective: parsed.perspective || "User's perspective",
-        strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
-        weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
-        opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : [],
-        threats: Array.isArray(parsed.threats) ? parsed.threats : [],
+        perspective: src.perspective || "User's perspective",
+        strengths: Array.isArray(src.strengths) ? src.strengths : [],
+        weaknesses: Array.isArray(src.weaknesses) ? src.weaknesses : [],
+        opportunities: Array.isArray(src.opportunities) ? src.opportunities : [],
+        threats: Array.isArray(src.threats) ? src.threats : [],
       };
     }
 
-    if (needsTakeaways && parsed.key_insight) {
+    if (needsTakeaways && (parsed.key_insight || parsed.actionable_takeaways?.key_insight)) {
+      const src = parsed.key_insight ? parsed : (parsed.actionable_takeaways || {});
       report.actionable_takeaways = {
-        key_insight: parsed.key_insight,
-        watch_out_for: parsed.watch_out_for || '',
-        next_step: parsed.next_step || '',
+        key_insight: src.key_insight,
+        watch_out_for: src.watch_out_for || '',
+        next_step: src.next_step || '',
         professional_referral: null,
       };
     }
   } catch (e) {
-    console.warn('Strategic fields generation unavailable:', e);
+    console.warn('[COGNAPSE] Strategic fields fallback failed — LLM returned unparseable response:', e);
   }
 }
 
