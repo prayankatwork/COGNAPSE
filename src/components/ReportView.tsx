@@ -526,6 +526,36 @@ export default function ReportView({
             </div>
           )}
 
+          {/* SWOT Analysis */}
+          {report.swot && (
+            <div className="border border-my-border bg-my-callout/50">
+              <SectionTitle>Strategic Analysis</SectionTitle>
+              {report.swot.perspective && (
+                <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
+                  Perspective: {report.swot.perspective}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-[1px] bg-my-border">
+                <SwotQuadrant title="Strengths" items={report.swot.strengths} />
+                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
+                <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
+                <SwotQuadrant title="Threats" items={report.swot.threats} />
+              </div>
+            </div>
+          )}
+
+          {/* Actionable Takeaways */}
+          {report.actionable_takeaways && (
+            <div className="border border-my-border bg-my-callout/50">
+              <SectionTitle>Key Takeaways</SectionTitle>
+              <div className="divide-y divide-my-border">
+                <TakeawayCard title="Key Insight" content={report.actionable_takeaways.key_insight} />
+                <TakeawayCard title="Watch Out For" content={report.actionable_takeaways.watch_out_for} />
+                <TakeawayCard title="Next Step" content={report.actionable_takeaways.next_step} />
+              </div>
+            </div>
+          )}
+
           {/* Contradictions Panel */}
           {hasConflicts && (
             <div className="border border-my-border bg-my-callout/50">
@@ -734,7 +764,11 @@ function TakeawayCard({ title, content }: { title: string, content: string }) {
       <h4 className="font-bold text-[9px] uppercase tracking-wide mb-1.5 text-my-muted">
         {title}
       </h4>
-      <p className="text-[12px] leading-[1.5] text-my-ink font-medium">{content}</p>
+      {content?.trim() ? (
+        <p className="text-[12px] leading-[1.5] text-my-ink font-medium">{content}</p>
+      ) : (
+        <p className="text-[10px] text-my-border italic">N/A</p>
+      )}
     </div>
   );
 }

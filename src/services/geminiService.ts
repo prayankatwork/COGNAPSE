@@ -14,6 +14,86 @@ const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b 
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
 
+/* ─── Strategic Fields Fallback ─── */
+
+
+/**
+ * If the LLM skipped SWOT or actionable_takeaways, generate them from the synthesis text
+ * using the fast utility model. This ensures every report has strategic analysis even when
+ * the primary model cuts corners.
+ */
+async function fillMissingStrategicFields(
+  report: COGNAPSE_Output,
+  abortSignal?: AbortSignal
+): Promise<void> {
+  const synthesis = report.summary?.full_synthesis || report.summary?.bottom_line;
+  if (!synthesis || synthesis.length < 50) return;
+
+  const needsSwot = !report.swot;
+  const needsTakeaways = !report.actionable_takeaways;
+  if (!needsSwot && !needsTakeaways) return;
+
+  const taskDesc = needsSwot && needsTakeaways
+    ? 'generate a SWOT analysis AND actionable takeaways'
+    : needsSwot
+      ? 'generate a SWOT analysis'
+      : 'generate actionable takeaways';
+
+  const swotSchema = needsSwot
+    ? `{
+  "perspective": "From whose perspective this SWOT is framed",
+  "strengths": ["3-5 items, max 12 words each"],
+  "weaknesses": ["3-5 items, max 12 words each"],
+  "opportunities": ["3-5 items, max 12 words each"],
+  "threats": ["3-5 items, max 12 words each"]
+}`
+    : '';
+
+  const takeawaysSchema = needsTakeaways
+    ? `{
+  "key_insight": "The single most important thing to understand",
+  "watch_out_for": "The biggest risk or misconception to avoid",
+  "next_step": "The most useful concrete action to take"
+}`
+    : '';
+
+  const prompt = `Given the following research synthesis, ${taskDesc}.
+
+SYNTHESIS:
+"${synthesis.substring(0, 2500)}"
+
+Return valid JSON:
+${swotSchema}${needsSwot && needsTakeaways ? '\n' : ''}${takeawaysSchema}
+
+Output ONLY valid JSON. No markdown. No explanation.`;
+
+  try {
+    const raw = await callCloudAI(prompt, true, UTILITY_MODEL, abortSignal);
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+    if (needsSwot && parsed.strengths && parsed.weaknesses) {
+      report.swot = {
+        perspective: parsed.perspective || "User's perspective",
+        strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
+        weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
+        opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : [],
+        threats: Array.isArray(parsed.threats) ? parsed.threats : [],
+      };
+    }
+
+    if (needsTakeaways && parsed.key_insight) {
+      report.actionable_takeaways = {
+        key_insight: parsed.key_insight,
+        watch_out_for: parsed.watch_out_for || '',
+        next_step: parsed.next_step || '',
+        professional_referral: null,
+      };
+    }
+  } catch (e) {
+    console.warn('Strategic fields generation unavailable:', e);
+  }
+}
+
 /* ─── Multi-Model Consensus ─── */
 
 
@@ -469,6 +549,14 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           parsed.scores.confidence_label = '🟡 Medium';
         }
       }
+    }
+
+    // Post-process: fill missing strategic fields (SWOT, takeaways) from synthesis
+    // This ensures every model's output has SWOT and takeaways even if the LLM skipped them
+    try {
+      await fillMissingStrategicFields(parsed, abortSignal);
+    } catch (e) {
+      // Non-critical — strategic fields are optional
     }
 
     // Post-process: detect missing contradictions from source stance analysis
