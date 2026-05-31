@@ -180,36 +180,60 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
     }
   }
 
-  // ─── Synthesis Text Analysis ───
-  // If source-stance analysis didn't produce conflicts, scan the synthesis
+  // ─── Priority 1: Source-Stance Analysis ───
+  // If both positive and negative stances are found among sources, generate
+  // a conflict based on the actual source titles and domains. This is the
+  // most specific and useful type of conflict.
+  if (positiveSources.length > 0 && negativeSources.length > 0) {
+    const posSamples = positiveSources.slice(0, 3);
+    const negSamples = negativeSources.slice(0, 3);
+
+    report.conflicts = [
+      {
+        claim_a: posSamples.map(s => s.title).join('; '),
+        source_a: posSamples.map(s => s.domain).join(', '),
+        claim_b: negSamples.map(s => s.title).join('; '),
+        source_b: negSamples.map(s => s.domain).join(', '),
+        explanation:
+          `Source analysis detected divergent stances on this topic. ` +
+          `${positiveSources.length} source(s) present supporting or optimistic evidence ` +
+          `while ${negativeSources.length} source(s) highlight concerns, risks, or counter-evidence. ` +
+          `This suggests mixed or contested findings that warrant further investigation.`,
+      },
+    ];
+    return; // Best possible signal — done
+  }
+
+  // ─── Priority 2: Synthesis Text Analysis ───
+  // If source-stance analysis didn't find opposing sides, scan the synthesis
   // text for hedging/contrastive language that indicates the AI itself
   // detected disagreement but didn't report it as a conflict.
   if (positiveSources.length === 0 || negativeSources.length === 0) {
     detectSynthesisConflicts(report);
   }
 
-  // ─── Consensus-Label Fallback ───
+  // If synthesis analysis generated conflicts, we're done
+  if ((report.conflicts?.length ?? 0) > 0) return;
+
+  // ─── Priority 3: Consensus-Label Fallback ───
   // If the AI itself reported "mixed" or "contested" consensus but we didn't
   // generate any conflicts from source stance or synthesis analysis, create
   // a conflict that explains the consensus gap. This catches cases where the
   // AI recognized disagreement in its reasoning but didn't surface it.
-  if ((report.conflicts?.length ?? 0) === 0 && report.scores) {
+  if (report.scores) {
     const consensus = report.scores.evidence_consensus;
     if (consensus === 'mixed' || consensus === 'contested') {
       const synthesis = report.summary?.full_synthesis;
       const bottomLine = report.summary?.bottom_line || '';
 
-      // If we have synthesis text, use first few sentences as contrasting claims
       let claimA = bottomLine.substring(0, 200);
       let claimB = 'See synthesis text for details on divergent evidence.';
 
       if (synthesis && synthesis.length > 50) {
         const synSentences = splitSentences(synthesis);
         if (synSentences.length >= 2) {
-          // First sentence as claim_a, middle-ish sentence as counterpoint
           const mid = Math.floor(synSentences.length / 2);
           claimA = synSentences[0].substring(0, 200);
-          // Pick a sentence from the second half that contrasts
           for (let i = mid; i < synSentences.length; i++) {
             if (synSentences[i].length > 30) {
               claimB = synSentences[i].substring(0, 200);
@@ -235,25 +259,5 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
         },
       ];
     }
-  }
-
-  // Generate conflict if we have both positive and negative stances
-  if (positiveSources.length > 0 && negativeSources.length > 0) {
-    const posSamples = positiveSources.slice(0, 3);
-    const negSamples = negativeSources.slice(0, 3);
-
-    report.conflicts = [
-      {
-        claim_a: posSamples.map(s => s.title).join('; '),
-        source_a: posSamples.map(s => s.domain).join(', '),
-        claim_b: negSamples.map(s => s.title).join('; '),
-        source_b: negSamples.map(s => s.domain).join(', '),
-        explanation:
-          `Source analysis detected divergent stances on this topic. ` +
-          `${positiveSources.length} source(s) present supporting or optimistic evidence ` +
-          `while ${negativeSources.length} source(s) highlight concerns, risks, or counter-evidence. ` +
-          `This suggests mixed or contested findings that warrant further investigation.`,
-      },
-    ];
   }
 }
