@@ -392,12 +392,16 @@ async function verifyCitations(
   // Build the batch prompt — include full text label when available
   const pairsText = verifiable.map((c, i) => {
     const content = sourceMap.get(c.sourceId)!;
-    const isFullText = sources.find(s => s.id === c.sourceId)?.full_text ? true : false;
-    const label = isFullText ? 'FULL SOURCE TEXT' : 'SOURCE SNIPPET';
-    return `PAIR ${i + 1}:\nCLAIM: "${c.claimText}"\n${label}: "${content}"\n`;
+    const sourceInfo = sources.find(s => s.id === c.sourceId);
+    const isFullText = sourceInfo?.full_text ? true : false;
+    const label = isFullText ? 'FULL SOURCE TEXT' : 'SOURCE CONTENT';
+    const titleInfo = sourceInfo?.title ? `[Source: ${sourceInfo.title}]` : '';
+    return `PAIR ${i + 1}:\nCLAIM: "${c.claimText}"\n${titleInfo}\n${label}: "${content}"\n`;
   }).join('\n');
 
-  const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE CONTENT, determine for each pair whether the source supports the claim.
+  const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE CONTENT, determine whether each source reasonably supports the claim made about it.
+
+Be generous: a claim is "supported" if the source discusses the same general topic or finding, even if exact wording differs. Only use "contradicted" if the source explicitly says the opposite of the claim. Use "unrelated" only if the source is about a completely different subject.
 
 For each pair, return:
 - verdict: "supported" (source clearly supports the claim) | "partial" (source partially supports but missing key details) | "contradicted" (source contradicts the claim) | "unrelated" (source doesn't address the claim)
@@ -943,13 +947,34 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           s.type === 'academic' || s.type === 'government'
         ).length;
         const structuralImbalance = commercialCount > academicOrGovCount * 3 && commercialCount >= 3;
-        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance) {
+
+        // Topic-level bias heuristic: detect emotionally charged topics that tend to
+        // attract advocacy-oriented framing even from credible sources.
+        // Topics like teen mental health, social media effects, vaccine safety, etc.
+        // trigger an auto-alert regardless of source sentiment.
+        const emotionallyChargedTopics = [
+          /\b(mental\s*health|depression|anxiety|suicide|self.\s*harm|eating\s*disorder)\b/i,
+          /\b(addiction|substance\s*abuse|drug\s*overdose|alcoholism)\b/i,
+          /\b(vaccine\s*safety|vaccines?\s*cause|vaccines?\s*autism)\b/i,
+          /\b(teen\s*social\s*media|social\s*media\s*(effects?|impact|harm|danger|addiction))\b/i,
+          /\b(racial\s*(bias|discrimination|inequality|injustice)|systemic\s*racism)\b/i,
+          /\b(political\s*polarization|election\s*integrity|voter\s*suppression|gerrymandering)\b/i,
+          /\b(climate\s*change\s*(denial|skeptic|hoax)|global\s*warming\s*(hoax|myth|lie))\b/i,
+          /\b(gun\s*control|gun\s*violence|school\s*shooting|mass\s*shooting)\b/i,
+          /\b(abortion|pro.\s*life|pro.\s*choice|reproductive\s*rights)\b/i,
+          /\b(conspiracy|hoax|cover.up|psyop|deep\s*state|shadow\s*government)\b/i,
+        ];
+        const hasEmotionalTopic = emotionallyChargedTopics.some(p => p.test(query));
+
+        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasEmotionalTopic) {
           let direction = 'slight';
           if (sentimentResult.biasScore > 0.6) direction = 'moderate';
           if (sentimentResult.biasScore > 0.8) direction = 'strong';
           // Build specific alert narrative based on what triggered it
           let alertNarrative = '';
-          if (hasCommercialHealthSource) {
+          if (hasEmotionalTopic) {
+            alertNarrative = 'This topic often attracts advocacy-oriented content with strong emotional framing. Even sources from credible institutions may present selective evidence. Cross-reference findings across multiple perspectives and check for funding disclosures.';
+          } else if (hasCommercialHealthSource) {
             alertNarrative = 'Some sources are commercial health sites that may prioritize engagement over neutral reporting. Cross-reference findings with independent academic or government sources.';
           } else if (structuralImbalance) {
             alertNarrative = 'The source set is heavily weighted toward commercial/industry sources with limited academic or government representation. This may introduce a structural bias toward certain perspectives.';
@@ -957,10 +982,10 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             alertNarrative = 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.';
           }
           parsed.bias_alert = {
-            direction: `${direction} emotional language detected in sources`,
+            direction: `${direction} potential bias detected`,
             recommendation: alertNarrative,
           };
-          addReasoningStep(`Bias alert generated: ${direction} emotional language detected (score: ${sentimentResult.biasScore})`);
+          addReasoningStep(`Bias alert generated: topic-based or sentiment-based signal detected (score: ${sentimentResult.biasScore})`);
         }
       } catch (e) {
         // Non-critical
@@ -1018,7 +1043,9 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             const consensusDiff = parsed.scores.evidence_consensus !== secondaryParsed.scores.evidence_consensus ? 0.3 : 0;
             // Boost variance for uncertain/debated queries to reflect genuine topic complexity
             const queryIsDebated = detectUncertaintyQuery(query);
-            const uncertaintyBoost = queryIsDebated ? 0.1 : 0;
+            // Increased from 0.1 to 0.2 to make consensus variance more sensitive
+            // to genuinely debated topics like "health effects of social media on teens"
+            const uncertaintyBoost = queryIsDebated ? 0.2 : 0;
             const variance = Math.min(1, (credDiff * 0.4 + relDiff * 0.3 + consensusDiff * 0.3) + uncertaintyBoost);
             let level: 'low' | 'moderate' | 'high' = 'low';
             let narrative = 'Models closely agree on credibility and relevance assessments';
@@ -1028,6 +1055,21 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             } else if (variance > 0.15) {
               level = 'moderate';
               narrative = 'Models show moderate disagreement on some quality dimensions — cross-check critical claims';
+            }
+            // Align consensus_variance with evidence_consensus override:
+            // If the query triggered the uncertainty detector and evidence_consensus
+            // was overridden to 'mixed' or 'contested', the variance should reflect that.
+            // This prevents the report from showing "evidence_consensus: mixed" at the top
+            // but "Multi-Model Consensus: low" at the bottom — they should agree.
+            if (parsed.scores) {
+              const ec = parsed.scores.evidence_consensus;
+              if (ec === 'contested' && level !== 'high') {
+                level = 'high';
+                narrative = 'Models disagree significantly on this controversial topic — exercise caution';
+              } else if (ec === 'mixed' && level === 'low') {
+                level = 'moderate';
+                narrative = 'Models show moderate disagreement reflecting genuine topic complexity';
+              }
             }
             (parsed as COGNAPSE_Output).consensus_variance = { level, narrative };
           }
