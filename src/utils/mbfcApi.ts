@@ -202,6 +202,10 @@ function inferFromDomain(domain: string): MbfcResult {
   if (domain.endsWith('.org')) {
     return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
   }
+  // .net domains: neutral by default, higher factual than default
+  if (domain.endsWith('.net')) {
+    return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
+  }
   if (domain.includes('academic') || domain.includes('research') || domain.includes('scien')) {
     return { domain, bias: 'pro-science', biasScore: 0.05, factual: 'high', factualScore: 8, source: 'inferred' };
   }
@@ -297,11 +301,25 @@ export async function batchLookupDomains(
         const cleanDomain = domain.replace(/^www\./, '').toLowerCase().trim();
         const mbfcResult: MbfcResult = {
           domain: cleanDomain,
-          bias: mlResult.biasScore <= 0.15 ? 'center'
-            : mlResult.biasScore <= 0.25 ? 'left-center'
-            : mlResult.biasScore <= 0.45 ? 'left'
-            : mlResult.biasScore <= 0.65 ? 'conspiracy'
-            : 'pseudoscience',
+          // Use the actual ML label, not a threshold on biasScore.
+          // This prevents false positives (e.g., 'satirical' → biasScore 0.60 → 'conspiracy').
+          bias: mlResult.label === 'reliable scientific evidence' || mlResult.label === 'government official information'
+            ? 'pro-science'
+            : mlResult.label === 'neutral factual reporting'
+              ? 'center'
+              : mlResult.label === 'advocacy or opinion content'
+                ? 'left'
+                : mlResult.label === 'commercial or promotional'
+                  ? 'right-center'
+                  : mlResult.label === 'satirical or humorous'
+                    ? 'satire'
+                    : mlResult.label === 'misleading or false claims'
+                      ? 'conspiracy'
+                      // Fallback: use biasScore as numeric approximation (unlikely to reach here)
+                      : mlResult.biasScore <= 0.25 ? 'center'
+                      : mlResult.biasScore <= 0.45 ? 'left'
+                      : mlResult.biasScore <= 0.65 ? 'conspiracy'
+                      : 'pseudoscience',
           biasScore: mlResult.biasScore,
           factual: mlResult.factualScore >= 8 ? 'high'
             : mlResult.factualScore >= 5 ? 'mixed'

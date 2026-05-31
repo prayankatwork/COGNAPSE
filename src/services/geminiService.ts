@@ -965,8 +965,12 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           );
           mbfcSourceLabel = isMbfcConfigured() ? 'api' : 'hardcoded';
           const results = Array.from(mbfcResults.values());
+          // Only flag conspiracy/pseudoscience from VERIFIED sources (hardcoded or api),
+          // not from ML model (inferred) — the ML can misclassify historical/academic content.
+          // ML-based classifications use 'inferred' as their source field.
           hasConspiracySource = results.some(r =>
-            r.bias === 'conspiracy' || r.bias === 'pseudoscience'
+            (r.bias === 'conspiracy' || r.bias === 'pseudoscience') &&
+            (r.source === 'hardcoded' || r.source === 'api')
           );
           hasLowFactualSource = results.some(r =>
             r.factual === 'low' || r.factual === 'very-low'

@@ -168,6 +168,27 @@ const domainData: Record<string, DomainEntry> = {
   'autismspeaks.org': { bias: 'center', factual: 'high' },
   'kidshealth.org': { bias: 'pro-science', factual: 'high' },
 
+  // Web platforms / reference
+  'wikipedia.org': { bias: 'center', factual: 'high' },
+  'reddit.com': { bias: 'center', factual: 'mixed' },
+  'stackexchange.com': { bias: 'center', factual: 'high' },
+  'stackoverflow.com': { bias: 'center', factual: 'high' },
+  'quora.com': { bias: 'center', factual: 'mixed' },
+  'github.com': { bias: 'center', factual: 'high' },
+  'youtube.com': { bias: 'center', factual: 'mixed' },
+  'twitter.com': { bias: 'center', factual: 'low' },
+  'x.com': { bias: 'center', factual: 'low' },
+  'facebook.com': { bias: 'center', factual: 'low' },
+  'instagram.com': { bias: 'center', factual: 'low' },
+  'tiktok.com': { bias: 'center', factual: 'low' },
+  'linkedin.com': { bias: 'center', factual: 'mixed' },
+  'medium.com': { bias: 'center', factual: 'mixed' },
+  'substack.com': { bias: 'center', factual: 'mixed' },
+  'wordpress.com': { bias: 'center', factual: 'mixed' },
+  'blogger.com': { bias: 'center', factual: 'mixed' },
+  'tumblr.com': { bias: 'center', factual: 'low' },
+  'pinterest.com': { bias: 'center', factual: 'low' },
+
   // Tech / specialized
   'wired.com': { bias: 'left-center', factual: 'high' },
   'arstechnica.com': { bias: 'center', factual: 'high' },
@@ -181,10 +202,6 @@ const domainData: Record<string, DomainEntry> = {
   'discovermagazine.com': { bias: 'pro-science', factual: 'high' },
   'popularmechanics.com': { bias: 'center', factual: 'high' },
   'popsci.com': { bias: 'center', factual: 'high' },
-  'medium.com': { bias: 'center', factual: 'mixed' },
-  'substack.com': { bias: 'center', factual: 'mixed' },
-  'wordpress.com': { bias: 'center', factual: 'mixed' },
-
   // International
   'aljazeera.com': { bias: 'left-center', factual: 'high' },
   'france24.com': { bias: 'center', factual: 'high' },
