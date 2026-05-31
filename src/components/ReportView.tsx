@@ -280,6 +280,8 @@ export default function ReportView({
           {!readOnly && (
             <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout min-touch-h">
               <select
+                id="share-visibility"
+                name="share-visibility"
                 value={shareVisibility}
                 onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
                 className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
@@ -338,6 +340,8 @@ export default function ReportView({
                 <div className="flex items-center gap-1 px-2 py-2 border border-my-border bg-my-callout">
                   <BookOpen size={10} className="text-my-muted" />
                   <select
+                    id="citation-format"
+                    name="citation-format"
                     value={citationFormat}
                     onChange={(e) => setCitationFormat(e.target.value as CitationFormat)}
                     className="bg-transparent text-[8px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
@@ -495,6 +499,13 @@ export default function ReportView({
             </div>
           )}
 
+          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
+            <>
+              {/* Forensic Reasoning Replay — before sources */}
+              <ThoughtReplayEngine />
+            </>
+          )}
+
           {/* Source Drawer — standalone if no SWOT, side-by-side grid if both present */}
           {report.sources && report.sources.length > 0 && report.swot ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -640,12 +651,6 @@ export default function ReportView({
             </div>
           )}
 
-          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
-            <>
-              {/* Forensic Reasoning Replay */}
-              <ThoughtReplayEngine />
-            </>
-          )}
         </motion.div>
       </motion.div>
 
