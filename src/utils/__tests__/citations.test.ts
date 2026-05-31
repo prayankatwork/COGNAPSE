@@ -6,6 +6,7 @@ import {
   getDomainBadge,
   getDaysSincePublished,
   getDaysLabel,
+  redistributeBatchCitations,
 } from '../citations';
 import type { GroundedSource } from '../../types';
 
@@ -221,6 +222,93 @@ describe('getDaysSincePublished', () => {
     const today = new Date().toISOString().split('T')[0];
     const days = getDaysSincePublished(today);
     expect(days).toBe(0);
+  });
+});
+
+/* ===================================================================
+ * TESTS: redistributeBatchCitations
+ * =================================================================== */
+
+describe('redistributeBatchCitations', () => {
+  it('redistributes batched citations across sentences', () => {
+    const input = 'MKUltra was a CIA program that aimed to develop procedures for mind control and behavior modification. The program involved the use of psychoactive drugs, hypnosis, and other methods to manipulate human behavior. The program was conducted under the guise of research at over 80 institutions, including colleges and universities, hospitals, and pharmaceutical companies. The program was revealed to the public in 1975 by the Church Committee. [1] [2] [3] [4] [5] [6] [7]';
+    const result = redistributeBatchCitations(input);
+    // Each sentence should now have at least one citation, not all at the end
+    expect(result).not.toContain('[1] [2] [3] [4] [5] [6] [7]');
+    // First sentence should now have a citation before its period
+    expect(result).toMatch(/behavior modification \[1\]\./);
+    // Second sentence should have [2] before its period
+    expect(result).toMatch(/human behavior \[2\]\./);
+    // Third sentence should have [3] before its period
+    expect(result).toMatch(/pharmaceutical companies \[3\]\./);
+    // Last sentence should have [4] before period, then trailing [5][6][7]
+    expect(result).toMatch(/Church Committee \[4\]\. \[5\] \[6\] \[7\]/);
+  });
+
+  it('does not modify text with already-inline citations', () => {
+    const input = 'Claim one [1] is supported. Claim two [2] is also supported. Claim three [3] is conclusive.';
+    const result = redistributeBatchCitations(input);
+    expect(result).toBe(input);
+  });
+
+  it('does not modify text with no citation markers', () => {
+    const input = 'Just some plain text without any citations at all.';
+    const result = redistributeBatchCitations(input);
+    expect(result).toBe(input);
+  });
+
+  it('does not modify text with only one real sentence', () => {
+    const input = 'This is a single sentence with citations at the end. [1] [2] [3]';
+    const result = redistributeBatchCitations(input);
+    // Citations are in a trailing chunk with no real sentence text —
+    // only one real sentence exists, so no redistribution is needed.
+    // The text is returned as-is because we can't redistribute across one sentence.
+    expect(result).toBe(input);
+  });
+
+  it('handles multiple paragraphs independently', () => {
+    const input = 'First para sentence one. First para sentence two. [1] [2]\n\nSecond para sentence one. Second para sentence two. [3] [4]';
+    const result = redistributeBatchCitations(input);
+    // Both paragraphs should be redistributed
+    expect(result).toMatch(/sentence one \[1\]\./);
+    expect(result).toMatch(/sentence two \[2\]\./);
+    expect(result).toMatch(/sentence one \[3\]\./);
+    expect(result).toMatch(/sentence two \[4\]\./);
+  });
+
+  it('does not redistribute if >60% of citations are not in the last real sentence', () => {
+    const input = 'First sentence [1]. Second sentence [2]. Third sentence [3] [4] [5].';
+    const result = redistributeBatchCitations(input);
+    // 3/5 = 60% in last sentence — threshold is >60% not >=60% to avoid edge cases
+    expect(result).toBe(input);
+  });
+
+  it('handles empty and whitespace-only input', () => {
+    expect(redistributeBatchCitations('')).toBe('');
+    expect(redistributeBatchCitations('   ').trim()).toBe('');
+  });
+
+  it('handles citation batch at end of last sentence (no extra period after)', () => {
+    const input = 'Sentence one. Sentence two [1] [2]';
+    const result = redistributeBatchCitations(input);
+    expect(result).toMatch(/Sentence one \[1\]\./);
+    expect(result).toMatch(/Sentence two \[2\]$/);
+  });
+
+  it('skips very short sentences when distributing', () => {
+    const input = 'Short. Longer sentence that has enough content for a citation. Another long sentence here. [1] [2] [3]';
+    const result = redistributeBatchCitations(input);
+    // 'Short.' should be skipped (len < 10) — citations go to longer sentences
+    expect(result).toContain('[1]');
+    expect(result).toContain('[2]');
+    expect(result).toContain('[3]');
+  });
+
+  it('distributes comma-separated citation groups correctly', () => {
+    const input = 'First sentence about topic A. Second sentence about topic B. Third sentence about topic C. [1, 2] [3, 4]';
+    const result = redistributeBatchCitations(input);
+    expect(result).toMatch(/topic A \[1, 2\]\./);
+    expect(result).toMatch(/topic B \[3, 4\]\./);
   });
 });
 

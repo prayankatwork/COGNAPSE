@@ -126,37 +126,67 @@ export function redistributeBatchCitations(text: string): string {
     const sentences = splitSentences(para);
     if (sentences.length < 2) return para;
 
-    // Count citations per sentence
-    const perSentence = sentences.map(s => {
-      const ms = s.match(citationRegex);
-      return ms ? ms.length : 0;
-    });
+    // Determine which sentences are "real" (have text beyond citation markers)
+    const realSentences: string[] = [];
+    const perSentence: number[] = [];
+    for (const s of sentences) {
+      const stripped = s.replace(citationRegex, '').replace(/\s{2,}/g, ' ').trim();
+      if (stripped.length > 0) {
+        realSentences.push(s);
+        const ms = s.match(citationRegex);
+        perSentence.push(ms ? ms.length : 0);
+      }
+    }
 
-    // Detection: is the last sentence carrying ≥ 60% of citations?
-    const lastSentenceCount = perSentence[perSentence.length - 1];
+    if (realSentences.length < 2) return para; // only one real sentence
+
+    // Detection: look at citations carried by the last REAL sentence + any
+    // trailing citation-only chunks that were filtered out above.
+    // These "phantom" chunks (e.g. "[1] [2] [3]") are citations the model
+    // dumped at the end — they're batched in spirit even if no real text is there.
+    const lastRealIdx = sentences.lastIndexOf(realSentences[realSentences.length - 1]);
+    const trailingChunks = sentences.slice(lastRealIdx + 1);
+    const trailingCitations = trailingChunks.reduce((sum, chunk) => {
+      const ms = chunk.match(citationRegex);
+      return sum + (ms ? ms.length : 0);
+    }, 0);
+
+    const lastRealAndTrailing = perSentence[perSentence.length - 1] + trailingCitations;
     const totalCount = allMarkers.length;
-    const batchedRatio = lastSentenceCount / totalCount;
+    const batchedRatio = lastRealAndTrailing / totalCount;
 
-    if (batchedRatio < 0.6) return para; // not batched enough
+    if (batchedRatio <= 0.6) return para; // not batched enough
 
     // ─── Redistribute ───
-    // Remove all citation markers from all sentences
-    const cleanSentences = sentences.map(s => s.replace(citationRegex, '').trim()).filter(Boolean);
+    // Remove all citation markers from all sentences, clean up spacing
+    const cleanSentences = realSentences
+      .map(s => s.replace(citationRegex, '').replace(/\s{2,}/g, ' ').trim())
+      .filter(Boolean);
     if (cleanSentences.length === 0) return para;
+
+    // Helper: strips trailing punctuation so citation can go before it
+    const trailingPunc = /([.!?]+)$/;
 
     // Distribute citations: one per sentence first, then remainder on last
     const redistributed: string[] = [];
     let markerIdx = 0;
 
     for (let i = 0; i < cleanSentences.length && markerIdx < allMarkers.length; i++) {
-      const s = cleanSentences[i];
+      let s = cleanSentences[i];
       if (s.length < 10) {
         // Very short sentences (likely a heading or fragment) — skip citation assignment
         redistributed.push(s);
         continue;
       }
-      // Give this sentence one citation
-      redistributed.push(`${s} ${allMarkers[markerIdx++]}`);
+      // Strip trailing punctuation, append citation, then restore punctuation
+      const puncMatch = s.match(trailingPunc);
+      if (puncMatch) {
+        s = s.slice(0, -puncMatch[1].length);
+        redistributed.push(`${s} ${allMarkers[markerIdx++]}${puncMatch[1]}`);
+      } else {
+        // Give this sentence one citation
+        redistributed.push(`${s} ${allMarkers[markerIdx++]}`);
+      }
     }
 
     // Any remaining citations go on the last sentence
