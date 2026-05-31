@@ -506,61 +506,16 @@ export default function ReportView({
             </>
           )}
 
-          {/* Source Drawer — standalone if no SWOT, side-by-side grid if both present */}
-          {report.sources && report.sources.length > 0 && report.swot ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <SourceDrawer 
-                sources={report.sources.map((s: any) => ({
-                  ...s,
-                  snippet: s.key_finding || s.snippet || '',
-                  retrieval_timestamp: s.retrieval_timestamp || new Date().toISOString()
-                }))}
-                retrievalTrace={report._retrieval_trace || null}
-              />
-              <div className="border border-my-border bg-my-callout/50">
-                <SectionTitle>Strategic Analysis</SectionTitle>
-                {report.swot.perspective && (
-                  <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
-                    Perspective: {report.swot.perspective}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-[1px] bg-my-border">
-                  <SwotQuadrant title="Strengths" items={report.swot.strengths} />
-                  <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
-                  <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
-                  <SwotQuadrant title="Threats" items={report.swot.threats} />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {report.sources && report.sources.length > 0 && (
-                <SourceDrawer 
-                  sources={report.sources.map((s: any) => ({
-                    ...s,
-                    snippet: s.key_finding || s.snippet || '',
-                    retrieval_timestamp: s.retrieval_timestamp || new Date().toISOString()
-                  }))}
-                  retrievalTrace={report._retrieval_trace || null}
-                />
-              )}
-              {report.swot && (
-                <div className="border border-my-border bg-my-callout/50">
-                  <SectionTitle>Strategic Analysis</SectionTitle>
-                  {report.swot.perspective && (
-                    <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
-                      Perspective: {report.swot.perspective}
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 gap-[1px] bg-my-border">
-                    <SwotQuadrant title="Strengths" items={report.swot.strengths} />
-                    <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
-                    <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
-                    <SwotQuadrant title="Threats" items={report.swot.threats} />
-                  </div>
-                </div>
-              )}
-            </>
+          {/* Source Drawer */}
+          {report.sources && report.sources.length > 0 && (
+            <SourceDrawer 
+              sources={report.sources.map((s: any) => ({
+                ...s,
+                snippet: s.key_finding || s.snippet || '',
+                retrieval_timestamp: s.retrieval_timestamp || new Date().toISOString()
+              }))}
+              retrievalTrace={report._retrieval_trace || null}
+            />
           )}
 
           {/* Actionable Takeaways — full width below the grid */}
@@ -634,6 +589,24 @@ export default function ReportView({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* SWOT Analysis */}
+          {report.swot && (
+            <div className="border border-my-border bg-my-callout/50">
+              <SectionTitle>Strategic Analysis</SectionTitle>
+              {report.swot.perspective && (
+                <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
+                  Perspective: {report.swot.perspective}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-[1px] bg-my-border">
+                <SwotQuadrant title="Strengths" items={report.swot.strengths} />
+                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
+                <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
+                <SwotQuadrant title="Threats" items={report.swot.threats} />
               </div>
             </div>
           )}
