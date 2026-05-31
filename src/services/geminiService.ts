@@ -955,7 +955,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         const emotionallyChargedTopics = [
           /\b(mental\s*health|depression|anxiety|suicide|self.\s*harm|eating\s*disorder)\b/i,
           /\b(addiction|substance\s*abuse|drug\s*overdose|alcoholism)\b/i,
-          /\b(vaccine\s*safety|vaccines?\s*cause|vaccines?\s*autism)\b/i,
+          /\b(vaccine\s*safety|vaccines?\s*(cause|causes|caused|autism|link|risk|danger|injury|side.effect|harm)|vaccination\s*(cause|causes|autism|link|risk|danger)|mmr\s*(cause|causes|autism|link|risk)|thimerosal\s*autism|vaccinated\s*autism|mercury\s*in\s*vaccines|wakefield\s*study|vaccine.autism.\s*link|anti.\s*vacc)\b/i,
           /\b(teen\s*social\s*media|social\s*media\s*(effects?|impact|harm|danger|addiction))\b/i,
           /\b(racial\s*(bias|discrimination|inequality|injustice)|systemic\s*racism)\b/i,
           /\b(political\s*polarization|election\s*integrity|voter\s*suppression|gerrymandering)\b/i,
@@ -964,7 +964,13 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           /\b(abortion|pro.\s*life|pro.\s*choice|reproductive\s*rights)\b/i,
           /\b(conspiracy|hoax|cover.up|psyop|deep\s*state|shadow\s*government)\b/i,
         ];
-        const hasEmotionalTopic = emotionallyChargedTopics.some(p => p.test(query));
+        // Also do a broader stem+keyword fallback for queries like 'do vaccines cause autism'
+        // that may not match the specific phrase patterns above
+        const queryLower = query.toLowerCase();
+        const containsVaccineStem = /\b(vaccin|mmr|thimerosal|wakefield|anti.vax)/i.test(queryLower);
+        const containsControversyKeyword = /\b(autism|cause|causes|caused|link|risk|danger|side effect|side\s*effect|injury|harm|unsafe|debate|controversy)/i.test(queryLower);
+        const hasVaccineControversy = containsVaccineStem && containsControversyKeyword;
+        const hasEmotionalTopic = emotionallyChargedTopics.some(p => p.test(query)) || hasVaccineControversy;
 
         if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasEmotionalTopic) {
           let direction = 'slight';
