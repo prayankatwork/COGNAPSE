@@ -99,6 +99,11 @@ const domainData: Record<string, DomainEntry> = {
   'wakingtimes.com': { bias: 'conspiracy', factual: 'very-low' },
   'globalresearch.ca': { bias: 'conspiracy', factual: 'very-low' },
   'activistpost.com': { bias: 'conspiracy', factual: 'very-low' },
+  'autismsciencefoundation.org': { bias: 'pro-science', factual: 'high' },
+  'vaccineinjury.info': { bias: 'conspiracy', factual: 'very-low' },
+  'vaxxed.com': { bias: 'conspiracy', factual: 'very-low' },
+  'childrenshealthdefense.org': { bias: 'conspiracy', factual: 'very-low' },
+  'healthfreedom.org': { bias: 'conspiracy', factual: 'low' },
 
   // Satire
   'theonion.com': { bias: 'satire', factual: 'low' },
@@ -146,6 +151,22 @@ const domainData: Record<string, DomainEntry> = {
   'berkeley.edu': { bias: 'pro-science', factual: 'very-high' },
   'ox.ac.uk': { bias: 'pro-science', factual: 'very-high' },
   'cam.ac.uk': { bias: 'pro-science', factual: 'very-high' },
+  'chop.edu': { bias: 'pro-science', factual: 'very-high' },
+
+  // Health / medical
+  'mayoclinic.org': { bias: 'pro-science', factual: 'very-high' },
+  'clevelandclinic.org': { bias: 'pro-science', factual: 'very-high' },
+  'hopkinsmedicine.org': { bias: 'pro-science', factual: 'very-high' },
+  'webmd.com': { bias: 'center', factual: 'mixed' },
+  'healthline.com': { bias: 'center', factual: 'mixed' },
+  'medscape.com': { bias: 'pro-science', factual: 'high' },
+  'everydayhealth.com': { bias: 'center', factual: 'mixed' },
+  'verywellhealth.com': { bias: 'center', factual: 'high' },
+  'goodrx.com': { bias: 'center', factual: 'mixed' },
+  'drugs.com': { bias: 'pro-science', factual: 'high' },
+  'pubmedhealth.com': { bias: 'pro-science', factual: 'very-high' },
+  'autismspeaks.org': { bias: 'center', factual: 'high' },
+  'kidshealth.org': { bias: 'pro-science', factual: 'high' },
 
   // Tech / specialized
   'wired.com': { bias: 'left-center', factual: 'high' },

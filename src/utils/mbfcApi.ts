@@ -60,10 +60,16 @@ const FACTUAL_SCORE_MAP: Record<string, number> = {
 
 const cache = new Map<string, MbfcResult>();
 
+/**
+ * Global rate-limit flag.
+ * Once set, ALL future API calls are skipped for the rest of the session
+ * to avoid wasted requests on the (usually very low) free-tier quota.
+ */
+let rateLimited = false;
+
 function normalizeBiasLabel(raw: string | undefined | null): string {
   if (!raw) return 'center';
   const s = raw.toLowerCase().trim();
-  // Normalise common variants
   if (s === 'left') return 'left';
   if (s === 'left-center' || s === 'left center' || s === 'leans left') return 'left-center';
   if (s === 'right') return 'right';
@@ -73,7 +79,6 @@ function normalizeBiasLabel(raw: string | undefined | null): string {
   if (s.includes('pseudo') || s.includes('junk')) return 'pseudoscience';
   if (s === 'satire') return 'satire';
   if (s === 'pro-science') return 'pro-science';
-  // Default fallback
   return 'center';
 }
 
@@ -93,7 +98,7 @@ function normalizeFactualLabel(raw: string | undefined | null): string {
  * Steps:
  *   1. Check in-memory cache.
  *   2. Fall back to the hardcoded domainData map (from domainCredibility.ts).
- *   3. Try the MBFC API (only if RAPIDAPI_KEY is configured).
+ *   3. Try the MBFC API (only if RAPIDAPI_KEY is configured and not rate-limited).
  *   4. Infer from TLD as a last resort.
  */
 export async function lookupDomainMBFC(domain: string): Promise<MbfcResult> {
@@ -118,8 +123,8 @@ export async function lookupDomainMBFC(domain: string): Promise<MbfcResult> {
     return result;
   }
 
-  // 3. Try MBFC API (only if key is available)
-  if (RAPIDAPI_KEY) {
+  // 3. Try MBFC API (only if key is available and not rate-limited)
+  if (RAPIDAPI_KEY && !rateLimited) {
     try {
       const apiResult = await fetchFromMbfcApi(cleanDomain);
       if (apiResult) {
@@ -140,9 +145,11 @@ export async function lookupDomainMBFC(domain: string): Promise<MbfcResult> {
 /**
  * Fetch bias data from the MBFC RapidAPI for a specific domain.
  * Returns null if the API call fails or the domain is not found.
+ * Sets the global rateLimited flag on 429 responses.
  */
 async function fetchFromMbfcApi(domain: string): Promise<MbfcResult | null> {
   if (!RAPIDAPI_KEY) return null;
+  if (rateLimited) return null;
 
   const url = `https://${RAPIDAPI_HOST}/source?domain=${encodeURIComponent(domain)}`;
 
@@ -151,16 +158,16 @@ async function fetchFromMbfcApi(domain: string): Promise<MbfcResult | null> {
       'X-RapidAPI-Key': RAPIDAPI_KEY,
       'X-RapidAPI-Host': RAPIDAPI_HOST,
     },
-    signal: AbortSignal.timeout(5000), // 5s timeout
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      // Domain not found in MBFC database — cache as inferred
       return null;
     }
     if (response.status === 429) {
-      console.warn('[MBFC] Rate limited — will use fallback for rest of this session');
+      rateLimited = true;
+      console.warn('[MBFC] Rate limited by RapidAPI — falling back to cache + inference for rest of session');
     }
     return null;
   }
@@ -203,7 +210,6 @@ function inferFromDomain(domain: string): MbfcResult {
   if (domain.includes('blog') || domain.includes('wordpress') || domain.includes('medium') || domain.includes('substack')) {
     return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
   }
-  // Default: neutral with mixed factual
   return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
 }
 
@@ -216,6 +222,20 @@ function factualScoreFromEntry(factual: string): number {
  */
 export function clearMbfcCache(): void {
   cache.clear();
+}
+
+/**
+ * Get the current rate-limit state.
+ */
+export function isMbfcRateLimited(): boolean {
+  return rateLimited;
+}
+
+/**
+ * Reset the rate-limit flag (useful for testing or session reset).
+ */
+export function resetMbfcRateLimit(): void {
+  rateLimited = false;
 }
 
 /**
@@ -245,7 +265,7 @@ export async function batchLookupDomains(domains: string[]): Promise<Map<string,
         };
         cache.set(domain, result);
         results.set(domain, result);
-      } else if (RAPIDAPI_KEY) {
+      } else if (RAPIDAPI_KEY && !rateLimited) {
         toFetch.push(domain);
       } else {
         const inferred = inferFromDomain(domain);
@@ -256,7 +276,7 @@ export async function batchLookupDomains(domains: string[]): Promise<Map<string,
   }
 
   // Fetch remaining from API (concurrency: 3 at a time)
-  if (toFetch.length > 0 && RAPIDAPI_KEY) {
+  if (toFetch.length > 0 && RAPIDAPI_KEY && !rateLimited) {
     const concurrency = 3;
     for (let i = 0; i < toFetch.length; i += concurrency) {
       const batch = toFetch.slice(i, i + concurrency);
@@ -275,6 +295,8 @@ export async function batchLookupDomains(domains: string[]): Promise<Map<string,
           results.set(domain, inferred);
         }
       }
+      // If we got rate-limited mid-batch, skip remaining batches
+      if (rateLimited) break;
     }
   }
 
