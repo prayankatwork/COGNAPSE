@@ -780,13 +780,18 @@ export async function executeCognapseResearch(
 
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
   // Compress sources into token-efficient context
-  const sourcesContext = groundedSources.length > 0
+  // Limit sources to top 10 by credibility to stay within model token limits
+  const topSources = groundedSources
+    .sort((a, b) => (b.credibility_score || 0) - (a.credibility_score || 0))
+    .slice(0, 10);
+
+  const sourcesContext = topSources.length > 0
     ? `
 ---PROVIDED SOURCES---
 Below are REAL search results retrieved from the live web, plus relevant content from your uploaded documents.
 You MUST base your analysis on these sources. Each source has an ID. You MUST cite sources inline using [ID] format for every claim.
 
-${compressSourcesForLLM(groundedSources)}
+${compressSourcesForLLM(topSources)}
 
 ---END OF PROVIDED SOURCES---
 

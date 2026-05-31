@@ -191,7 +191,7 @@ export function getSearchCacheStats(): { size: number; keys: string[] } {
  * Extract key findings from sources — the top insights for AI context building.
  * Compresses source content into a token-efficient format for LLM consumption.
  */
-export function compressSourcesForLLM(sources: GroundedSource[], maxTokens = 2000): string {
+export function compressSourcesForLLM(sources: GroundedSource[], maxTokens = 1000): string {
   const estimatedTokens = (text: string) => Math.ceil(text.length / 4);
   let context = '';
   let totalTokens = 0;

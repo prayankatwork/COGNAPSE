@@ -73,8 +73,9 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   if (modelOverride) {
     let finalPrompt = prompt;
     // Prune very long prompts for 8b model context limits
-    if (modelOverride.includes('8b') && estTokens > 5500) {
-      finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
+    // Conservative threshold: 14000 chars ≈ 4500-5000 tokens (well under 6000 TPM limit)
+    if (modelOverride.includes('8b') && estTokens > 4500) {
+      finalPrompt = `${prompt.substring(0, 14000)}\n[System: Content Pruned for Stability]`;
     }
 
     const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
@@ -133,8 +134,9 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
     try {
       let finalPrompt = prompt;
       // Prune very long prompts for 8b model context limits
-      if (node.model.includes('8b') && estTokens > 5500) {
-        finalPrompt = `${prompt.substring(0, 20000)}\n[System: Content Pruned for Stability]`;
+      // Conservative threshold: 14000 chars ≈ 4500-5000 tokens (well under 6000 TPM limit)
+      if (node.model.includes('8b') && estTokens > 4500) {
+        finalPrompt = `${prompt.substring(0, 14000)}\n[System: Content Pruned for Stability]`;
       }
 
       // Higher temperature for 8b model encourages more detailed output
