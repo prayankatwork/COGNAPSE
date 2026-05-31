@@ -1,0 +1,289 @@
+/**
+ * MBFC (Media Bias Fact Check) API Integration
+ *
+ * Uses the RapidAPI-hosted MBFC API to look up bias and factual ratings for news domains.
+ * Falls back to the existing hardcoded domainData map when the API is unavailable.
+ *
+ * Environment variable: VITE_RAPIDAPI_KEY
+ */
+
+import { lookupDomain, biasToBiasScore } from './domainCredibility';
+
+/* ─── Types ─── */
+
+export interface MbfcResult {
+  domain: string;
+  bias: string;
+  biasScore: number;
+  factual: string;
+  factualScore: number;
+  source: 'cache' | 'api' | 'hardcoded' | 'inferred';
+}
+
+interface MbfcApiResponse {
+  name?: string;
+  url?: string;
+  bias?: string;
+  factual_reporting?: string;
+  country?: string;
+  [key: string]: unknown;
+}
+
+/* ─── Constants ─── */
+
+const RAPIDAPI_HOST = 'media-bias-fact-check-ratings-api2.p.rapidapi.com';
+const RAPIDAPI_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_RAPIDAPI_KEY) as string | undefined;
+
+const BIAS_SCORE_MAP: Record<string, number> = {
+  'pro-science': 0.05,
+  center: 0.1,
+  'left-center': 0.2,
+  'right-center': 0.2,
+  left: 0.4,
+  right: 0.4,
+  'extreme left': 0.5,
+  'extreme right': 0.5,
+  conspiracy: 0.7,
+  pseudoscience: 0.7,
+  satire: 0.6,
+};
+
+const FACTUAL_SCORE_MAP: Record<string, number> = {
+  'very-high': 10,
+  high: 8,
+  mixed: 5,
+  low: 3,
+  'very-low': 1,
+};
+
+/* ─── In-Memory Cache ─── */
+
+const cache = new Map<string, MbfcResult>();
+
+function normalizeBiasLabel(raw: string | undefined | null): string {
+  if (!raw) return 'center';
+  const s = raw.toLowerCase().trim();
+  // Normalise common variants
+  if (s === 'left') return 'left';
+  if (s === 'left-center' || s === 'left center' || s === 'leans left') return 'left-center';
+  if (s === 'right') return 'right';
+  if (s === 'right-center' || s === 'right center' || s === 'leans right') return 'right-center';
+  if (s === 'center' || s === 'least biased') return 'center';
+  if (s.includes('conspiracy')) return 'conspiracy';
+  if (s.includes('pseudo') || s.includes('junk')) return 'pseudoscience';
+  if (s === 'satire') return 'satire';
+  if (s === 'pro-science') return 'pro-science';
+  // Default fallback
+  return 'center';
+}
+
+function normalizeFactualLabel(raw: string | undefined | null): string {
+  if (!raw) return 'mixed';
+  const s = raw.toLowerCase().trim();
+  if (s === 'very-high' || s === 'very high') return 'very-high';
+  if (s === 'high') return 'high';
+  if (s === 'mixed') return 'mixed';
+  if (s === 'low') return 'low';
+  if (s === 'very-low' || s === 'very low') return 'very-low';
+  return 'mixed';
+}
+
+/**
+ * Look up a domain via the MBFC RapidAPI.
+ * Steps:
+ *   1. Check in-memory cache.
+ *   2. Fall back to the hardcoded domainData map (from domainCredibility.ts).
+ *   3. Try the MBFC API (only if RAPIDAPI_KEY is configured).
+ *   4. Infer from TLD as a last resort.
+ */
+export async function lookupDomainMBFC(domain: string): Promise<MbfcResult> {
+  const cleanDomain = domain.replace(/^www\./, '').toLowerCase().trim();
+
+  // 1. Check cache
+  const cached = cache.get(cleanDomain);
+  if (cached) return cached;
+
+  // 2. Check hardcoded map
+  const hardcoded = lookupDomain(cleanDomain);
+  if (hardcoded) {
+    const result: MbfcResult = {
+      domain: cleanDomain,
+      bias: hardcoded.bias,
+      biasScore: biasToBiasScore(hardcoded.bias),
+      factual: hardcoded.factual,
+      factualScore: factualScoreFromEntry(hardcoded.factual),
+      source: 'hardcoded',
+    };
+    cache.set(cleanDomain, result);
+    return result;
+  }
+
+  // 3. Try MBFC API (only if key is available)
+  if (RAPIDAPI_KEY) {
+    try {
+      const apiResult = await fetchFromMbfcApi(cleanDomain);
+      if (apiResult) {
+        cache.set(cleanDomain, apiResult);
+        return apiResult;
+      }
+    } catch (e) {
+      console.warn(`[MBFC] API lookup failed for ${cleanDomain}:`, e);
+    }
+  }
+
+  // 4. Infer from TLD
+  const inferred = inferFromDomain(cleanDomain);
+  cache.set(cleanDomain, inferred);
+  return inferred;
+}
+
+/**
+ * Fetch bias data from the MBFC RapidAPI for a specific domain.
+ * Returns null if the API call fails or the domain is not found.
+ */
+async function fetchFromMbfcApi(domain: string): Promise<MbfcResult | null> {
+  if (!RAPIDAPI_KEY) return null;
+
+  const url = `https://${RAPIDAPI_HOST}/source?domain=${encodeURIComponent(domain)}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'X-RapidAPI-Key': RAPIDAPI_KEY,
+      'X-RapidAPI-Host': RAPIDAPI_HOST,
+    },
+    signal: AbortSignal.timeout(5000), // 5s timeout
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      // Domain not found in MBFC database — cache as inferred
+      return null;
+    }
+    if (response.status === 429) {
+      console.warn('[MBFC] Rate limited — will use fallback for rest of this session');
+    }
+    return null;
+  }
+
+  const data: MbfcApiResponse = await response.json();
+  if (!data) return null;
+
+  const bias = normalizeBiasLabel(data.bias);
+  const factual = normalizeFactualLabel(data.factual_reporting);
+
+  return {
+    domain,
+    bias,
+    biasScore: BIAS_SCORE_MAP[bias] ?? 0.3,
+    factual,
+    factualScore: FACTUAL_SCORE_MAP[factual] ?? 5,
+    source: 'api',
+  };
+}
+
+/**
+ * Infer bias/factual from domain TLD and common patterns.
+ */
+function inferFromDomain(domain: string): MbfcResult {
+  if (domain.endsWith('.edu')) {
+    return { domain, bias: 'pro-science', biasScore: 0.05, factual: 'very-high', factualScore: 10, source: 'inferred' };
+  }
+  if (domain.endsWith('.gov') || domain.endsWith('.mil')) {
+    return { domain, bias: 'center', biasScore: 0.1, factual: 'high', factualScore: 8, source: 'inferred' };
+  }
+  if (domain.endsWith('.org')) {
+    return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
+  }
+  if (domain.includes('academic') || domain.includes('research') || domain.includes('scien')) {
+    return { domain, bias: 'pro-science', biasScore: 0.05, factual: 'high', factualScore: 8, source: 'inferred' };
+  }
+  if (domain.includes('news') || domain.includes('times') || domain.includes('post') || domain.includes('tribune')) {
+    return { domain, bias: 'center', biasScore: 0.1, factual: 'high', factualScore: 8, source: 'inferred' };
+  }
+  if (domain.includes('blog') || domain.includes('wordpress') || domain.includes('medium') || domain.includes('substack')) {
+    return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
+  }
+  // Default: neutral with mixed factual
+  return { domain, bias: 'center', biasScore: 0.1, factual: 'mixed', factualScore: 5, source: 'inferred' };
+}
+
+function factualScoreFromEntry(factual: string): number {
+  return FACTUAL_SCORE_MAP[factual.toLowerCase()] ?? 5;
+}
+
+/**
+ * Clear the in-memory cache (useful for testing or session reset).
+ */
+export function clearMbfcCache(): void {
+  cache.clear();
+}
+
+/**
+ * Batch-lookup multiple domains — runs them in parallel with a concurrency limit.
+ * Returns a Map<domain, MbfcResult>.
+ */
+export async function batchLookupDomains(domains: string[]): Promise<Map<string, MbfcResult>> {
+  const results = new Map<string, MbfcResult>();
+  const unique = [...new Set(domains.map(d => d.replace(/^www\./, '').toLowerCase().trim()))];
+
+  // Check cache + hardcoded first (instant)
+  const toFetch: string[] = [];
+  for (const domain of unique) {
+    const cached = cache.get(domain);
+    if (cached) {
+      results.set(domain, cached);
+    } else {
+      const hardcoded = lookupDomain(domain);
+      if (hardcoded) {
+        const result: MbfcResult = {
+          domain,
+          bias: hardcoded.bias,
+          biasScore: biasToBiasScore(hardcoded.bias),
+          factual: hardcoded.factual,
+          factualScore: factualScoreFromEntry(hardcoded.factual),
+          source: 'hardcoded',
+        };
+        cache.set(domain, result);
+        results.set(domain, result);
+      } else if (RAPIDAPI_KEY) {
+        toFetch.push(domain);
+      } else {
+        const inferred = inferFromDomain(domain);
+        cache.set(domain, inferred);
+        results.set(domain, inferred);
+      }
+    }
+  }
+
+  // Fetch remaining from API (concurrency: 3 at a time)
+  if (toFetch.length > 0 && RAPIDAPI_KEY) {
+    const concurrency = 3;
+    for (let i = 0; i < toFetch.length; i += concurrency) {
+      const batch = toFetch.slice(i, i + concurrency);
+      const batchResults = await Promise.allSettled(
+        batch.map(d => fetchFromMbfcApi(d))
+      );
+      for (let j = 0; j < batch.length; j++) {
+        const domain = batch[j];
+        const apiResult = batchResults[j];
+        if (apiResult.status === 'fulfilled' && apiResult.value) {
+          cache.set(domain, apiResult.value);
+          results.set(domain, apiResult.value);
+        } else {
+          const inferred = inferFromDomain(domain);
+          cache.set(domain, inferred);
+          results.set(domain, inferred);
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Check whether the MBFC API is configured (has a valid key).
+ */
+export function isMbfcConfigured(): boolean {
+  return !!RAPIDAPI_KEY;
+}

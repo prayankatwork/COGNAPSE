@@ -11,6 +11,7 @@ import { generateMissingConflicts } from '../utils/conflictDetector';
 import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentiment } from '../utils/scoringEngine';
 import { redistributeBatchCitations } from '../utils/citations';
 import { apiFetch } from './apiClient';
+import { batchLookupDomains, isMbfcConfigured } from '../utils/mbfcApi';
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
@@ -948,6 +949,35 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         ).length;
         const structuralImbalance = commercialCount > academicOrGovCount * 3 && commercialCount >= 3;
 
+        // ─── MBFC Domain Bias Lookup ───
+        // Batch-lookup all source domains for pre-computed bias & factual ratings
+        // via the Media Bias Fact Check API (or local hardcoded map).
+        // This replaces the manual domain list with a much richer dataset.
+        let hasConspiracySource = false;
+        let hasSkewedBias = false;
+        let hasLowFactualSource = false;
+        let mbfcAvgBiasScore = 0;
+        let mbfcSourceLabel = 'unavailable';
+        try {
+          const mbfcResults = await batchLookupDomains(
+            groundedSources.map(s => s.domain || '')
+          );
+          mbfcSourceLabel = isMbfcConfigured() ? 'api' : 'hardcoded';
+          const results = Array.from(mbfcResults.values());
+          hasConspiracySource = results.some(r =>
+            r.bias === 'conspiracy' || r.bias === 'pseudoscience'
+          );
+          hasLowFactualSource = results.some(r =>
+            r.factual === 'low' || r.factual === 'very-low'
+          );
+          const biasScores = results.map(r => r.biasScore);
+          const avgDomainBias = biasScores.reduce((a, b) => a + b, 0) / biasScores.length;
+          hasSkewedBias = avgDomainBias > 0.25; // Average bias leans away from center
+          mbfcAvgBiasScore = avgDomainBias;
+        } catch (e) {
+          // Non-critical — MBFC lookup is additive; code continues with existing signals
+        }
+
         // Generic query-level signals: use existing detectors (adversarial, uncertainty)
         // rather than hardcoded topic regexes — works for ANY controversial topic.
         const queryIsAdversarial = detectAdversarialQuery(query);
@@ -962,16 +992,22 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         const credVariance = Math.sqrt(credScores.reduce((sum, c) => sum + (c - avgCred) ** 2, 0) / credScores.length);
         const hasHighCredVariance = credScores.length >= 3 && credVariance > 20;
 
-        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasControversialQuery || hasHighCredVariance) {
+        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasControversialQuery || hasHighCredVariance || hasConspiracySource || hasSkewedBias || hasLowFactualSource) {
           let direction = 'slight';
-          if (sentimentResult.biasScore > 0.6 || queryIsAdversarial.isAdversarial) direction = 'moderate';
+          if (sentimentResult.biasScore > 0.6 || queryIsAdversarial.isAdversarial || hasConspiracySource) direction = 'moderate';
           if (sentimentResult.biasScore > 0.8 && queryIsAdversarial.isAdversarial) direction = 'strong';
           // Build specific alert narrative based on what triggered it
           let alertNarrative = '';
           if (queryIsAdversarial.isAdversarial) {
             alertNarrative = 'This query touches on a topic known to attract misinformation or pseudoscientific claims. Sources may include debunking content with strong rhetorical framing. Cross-reference with authoritative scientific bodies and peer-reviewed literature.';
+          } else if (hasConspiracySource) {
+            alertNarrative = 'Some sources are from domains known for conspiracy or pseudoscience content (per Media Bias Fact Check). Verify claims against authoritative scientific bodies and peer-reviewed research before relying on them.';
           } else if (queryIsUncertain) {
             alertNarrative = 'This topic involves genuine scientific debate or uncertainty. Sources may reflect differing methodologies or interpretations. Cross-reference findings across multiple perspectives and check for funding disclosures.';
+          } else if (hasSkewedBias) {
+            alertNarrative = 'The domain set leans toward a particular bias direction (per Media Bias Fact Check ratings). Consider seeking sources from the opposite perspective for a more balanced view.';
+          } else if (hasLowFactualSource) {
+            alertNarrative = 'Some sources have low factual reporting ratings (per Media Bias Fact Check). Prioritize findings from domains with high or very-high factual ratings.';
           } else if (hasCommercialHealthSource) {
             alertNarrative = 'Some sources are commercial health sites that may prioritize engagement over neutral reporting. Cross-reference findings with independent academic or government sources.';
           } else if (structuralImbalance) {
@@ -985,7 +1021,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             direction: `${direction} potential bias detected`,
             recommendation: alertNarrative,
           };
-          addReasoningStep(`Bias alert generated: generic signal detected (adversarial: ${queryIsAdversarial.isAdversarial}, uncertainty: ${queryIsUncertain}, sentiment: ${sentimentResult.biasScore}, credVariance: ${credVariance.toFixed(1)})`);
+          addReasoningStep(`Bias alert generated: generic signals (adversarial: ${queryIsAdversarial.isAdversarial}, uncertainty: ${queryIsUncertain}, sentiment: ${sentimentResult.biasScore.toFixed(2)}, credVariance: ${credVariance.toFixed(1)}) + MBFC (${mbfcSourceLabel}, avgBias: ${mbfcAvgBiasScore.toFixed(2)}, conspiracy: ${hasConspiracySource}, skewed: ${hasSkewedBias}, lowFactual: ${hasLowFactualSource})`);
         }
       } catch (e) {
         // Non-critical
