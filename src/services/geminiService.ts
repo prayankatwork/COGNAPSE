@@ -410,7 +410,19 @@ ${pairsText}`;
 
   try {
     const raw = await callCloudAI(verifierPrompt, true, CONSENSUS_MODEL, abortSignal, 'secondary', CONSENSUS_MODEL);
-    const results = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    // Robust JSON extraction: handle markdown-wrapped responses
+    let rawStr = typeof raw === 'string' ? raw : JSON.stringify(raw);
+    rawStr = rawStr.replace(/```(?:json)?\s*/gi, '').replace(/\s*```/g, '').trim();
+    // Try to extract the first JSON array or object
+    const firstBracket = rawStr.indexOf('[');
+    const lastBracket = rawStr.lastIndexOf(']');
+    const firstBrace = rawStr.indexOf('{');
+    if (firstBracket >= 0 && lastBracket > firstBracket) {
+      rawStr = rawStr.substring(firstBracket, lastBracket + 1);
+    } else if (firstBrace >= 0) {
+      rawStr = rawStr.substring(firstBrace);
+    }
+    const results = JSON.parse(rawStr);
     const arr = Array.isArray(results) ? results : (results.verifications || results.results || []);
 
     return arr.map((r: any, i: number) => ({
@@ -701,23 +713,54 @@ export async function executeCognapseResearch(
   // ─── Merge Academic Sources ───
   // Await the parallel academic search and merge results at the front
   // with high credibility scores (PubMed=95, arXiv=88, DOI=92)
+  // Apply a keyword relevance filter to catch off-topic academic results
+  // (e.g. PCSK9 inhibitor studies returned for a statins query)
   academicSources = await academicPromise;
   if (academicSources.length > 0) {
-    addReasoningStep(`Cross-referenced ${academicSources.length} authoritative academic sources (PubMed/arXiv/CrossRef)`);
-    // Assign IDs after the last web source
-    let nextId = 0;
-    for (const s of groundedSources) {
-      if (s.id > nextId) nextId = s.id;
+    // Extract meaningful keywords from the query (words > 3 chars, excluding common stopwords)
+    const queryWords = query.toLowerCase().split(/\s+/).filter(w =>
+      w.length > 3 && !['this','that','with','from','what','which','their','there','about','would','could','should','have','been','were','being','does','they','them','then','than','also','just','more','some','into','over','such','only','other','after','before','between','through','during','because','without','under','above','where','while','until','since','against','these','those','each','very','your','will'].includes(w)
+    );
+    // Filter out academic sources that don't share enough keywords with the query
+    // Dynamic threshold: single-word queries need 1 match, 2-3 word queries need 1 match,
+    // 4+ word queries need 2 matches. This prevents off-topic results like PCSK9 inhibitor
+    // studies from leaking into a statins query without being too strict for short queries.
+    const requiredMatches = Math.min(2, Math.max(1, Math.floor(queryWords.length / 2)));
+    const filtered = academicSources.filter(s => {
+      const titleLower = (s.title || '').toLowerCase();
+      const snippetLower = (s.snippet || '').toLowerCase();
+      // Check for exact keyword match OR stem match (e.g. "vaccine" matches "vaccines")
+      const matchCount = queryWords.filter(w => {
+        if (titleLower.includes(w) || snippetLower.includes(w)) return true;
+        // Also check if word without trailing 's'/'es' matches (basic stemming)
+        const stem = w.replace(/(?:e?s|ing|ed)$/, '');
+        return stem.length > 3 && (titleLower.includes(stem) || snippetLower.includes(stem));
+      }).length;
+      return matchCount >= requiredMatches;
+    });
+    const filteredCount = academicSources.length - filtered.length;
+    if (filteredCount > 0) {
+      console.log(`[AcademicSearch] Filtered ${filteredCount} off-topic academic sources`);
     }
-    const mergedAcademia = academicSources.map((s, i) => ({
-      ...s,
-      id: nextId + i + 1,
-      // The credibility score already signals authority — no prefix needed
-    }));
-    // Insert academic sources at the front (they have highest credibility)
-    groundedSources = [...mergedAcademia, ...groundedSources];
-    // Re-number all sources sequentially
-    groundedSources = groundedSources.map((s, i) => ({ ...s, id: i + 1 }));
+    academicSources = filtered;
+    
+    if (academicSources.length > 0) {
+      addReasoningStep(`Cross-referenced ${academicSources.length} authoritative academic sources (PubMed/arXiv/CrossRef)`);
+      // Assign IDs after the last web source
+      let nextId = 0;
+      for (const s of groundedSources) {
+        if (s.id > nextId) nextId = s.id;
+      }
+      const mergedAcademia = academicSources.map((s, i) => ({
+        ...s,
+        id: nextId + i + 1,
+        // The credibility score already signals authority — no prefix needed
+      }));
+      // Insert academic sources at the front (they have highest credibility)
+      groundedSources = [...mergedAcademia, ...groundedSources];
+      // Re-number all sources sequentially
+      groundedSources = groundedSources.map((s, i) => ({ ...s, id: i + 1 }));
+    }
   }
 
   // ─── Source Reranking ───
@@ -878,16 +921,44 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     // ─── Auto Bias Alert from Sentiment Analysis ───
     // If the AI didn't generate a bias_alert, but our sentiment analysis detects
     // above-average emotional language in sources, auto-generate one.
+    // Also check for known high-bias commercial health domains that tend to have
+    // promotional rather than neutral framing.
     if (!parsed.bias_alert && groundedSources.length > 0) {
       try {
         const sentimentResult = await computeBiasFromSentiment(groundedSources);
-        if (sentimentResult.biasScore > 0.4) {
+        // Lowered threshold from 0.4 to 0.3 to catch subtler emotional language
+        const biasThreshold = 0.3;
+        // Domain-level heuristic: check if any source is a commercial health site
+        // that may prioritize engagement over accuracy
+        const highBiasHealthDomains = ['webmd.com', 'goodrx.com', 'healthline.com', 'verywellhealth.com', 'medscape.com', 'everydayhealth.com'];
+        const hasCommercialHealthSource = groundedSources.some(s =>
+          highBiasHealthDomains.some(d => s.domain?.toLowerCase().includes(d))
+        );
+        // Also check for overall domain mix: if most sources are industry/commercial
+        // and none are academic/government, add a structural source bias alert
+        const commercialCount = groundedSources.filter(s =>
+          s.type === 'industry' || s.type === 'web'
+        ).length;
+        const academicOrGovCount = groundedSources.filter(s =>
+          s.type === 'academic' || s.type === 'government'
+        ).length;
+        const structuralImbalance = commercialCount > academicOrGovCount * 3 && commercialCount >= 3;
+        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance) {
           let direction = 'slight';
           if (sentimentResult.biasScore > 0.6) direction = 'moderate';
           if (sentimentResult.biasScore > 0.8) direction = 'strong';
+          // Build specific alert narrative based on what triggered it
+          let alertNarrative = '';
+          if (hasCommercialHealthSource) {
+            alertNarrative = 'Some sources are commercial health sites that may prioritize engagement over neutral reporting. Cross-reference findings with independent academic or government sources.';
+          } else if (structuralImbalance) {
+            alertNarrative = 'The source set is heavily weighted toward commercial/industry sources with limited academic or government representation. This may introduce a structural bias toward certain perspectives.';
+          } else {
+            alertNarrative = 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.';
+          }
           parsed.bias_alert = {
             direction: `${direction} emotional language detected in sources`,
-            recommendation: 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.',
+            recommendation: alertNarrative,
           };
           addReasoningStep(`Bias alert generated: ${direction} emotional language detected (score: ${sentimentResult.biasScore})`);
         }
@@ -937,26 +1008,29 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
 
         // Diff the two reports
         const consensus = await diffReports(parsed, secondaryParsed);
-        (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
-
-        // Compute variance signal: disagreement between models on key scores
-        // Higher variance = less confidence in results
-        if (parsed.scores && secondaryParsed.scores) {
-          const credDiff = Math.abs((parsed.scores.overall_credibility || 0) - (secondaryParsed.scores.overall_credibility || 0)) / 100;
-          const relDiff = Math.abs((parsed.scores.overall_relevance || 0) - (secondaryParsed.scores.overall_relevance || 0)) / 100;
-          const consensusDiff = parsed.scores.evidence_consensus !== secondaryParsed.scores.evidence_consensus ? 0.3 : 0;
-          const variance = Math.min(1, (credDiff * 0.4 + relDiff * 0.3 + consensusDiff * 0.3));
-          let level: 'low' | 'moderate' | 'high' = 'low';
-          let narrative = 'Models closely agree on credibility and relevance assessments';
-          if (variance > 0.6) {
-            level = 'high';
-            narrative = 'Significant disagreement between models on core scores — exercise caution with results';
-          } else if (variance > 0.3) {
-            level = 'moderate';
-            narrative = 'Models show moderate disagreement on some quality dimensions — cross-check critical claims';
+        (parsed as COGNAPSE_Output).multi_model_consensus = consensus;          // Compute variance signal: disagreement between models on key scores
+          // Higher variance = less confidence in results
+          // Thresholds widened: moderate at 0.15 (was 0.3), high at 0.4 (was 0.6)
+          // This makes the signal more sensitive to genuine disagreement
+          if (parsed.scores && secondaryParsed.scores) {
+            const credDiff = Math.abs((parsed.scores.overall_credibility || 0) - (secondaryParsed.scores.overall_credibility || 0)) / 100;
+            const relDiff = Math.abs((parsed.scores.overall_relevance || 0) - (secondaryParsed.scores.overall_relevance || 0)) / 100;
+            const consensusDiff = parsed.scores.evidence_consensus !== secondaryParsed.scores.evidence_consensus ? 0.3 : 0;
+            // Boost variance for uncertain/debated queries to reflect genuine topic complexity
+            const queryIsDebated = detectUncertaintyQuery(query);
+            const uncertaintyBoost = queryIsDebated ? 0.1 : 0;
+            const variance = Math.min(1, (credDiff * 0.4 + relDiff * 0.3 + consensusDiff * 0.3) + uncertaintyBoost);
+            let level: 'low' | 'moderate' | 'high' = 'low';
+            let narrative = 'Models closely agree on credibility and relevance assessments';
+            if (variance > 0.4) {
+              level = 'high';
+              narrative = 'Significant disagreement between models on core scores — exercise caution with results';
+            } else if (variance > 0.15) {
+              level = 'moderate';
+              narrative = 'Models show moderate disagreement on some quality dimensions — cross-check critical claims';
+            }
+            (parsed as COGNAPSE_Output).consensus_variance = { level, narrative };
           }
-          (parsed as COGNAPSE_Output).consensus_variance = { level, narrative };
-        }
 
         addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);
       } catch (e) {
