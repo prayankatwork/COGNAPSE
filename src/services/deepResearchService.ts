@@ -2,6 +2,7 @@ import { useStore } from '../store';
 import { callCloudAI } from './aiService';
 import { searchWeb, compressSourcesForLLM } from './searchService';
 import { dbService } from './dbService';
+import { benchmarkTracker } from './benchmarkTracker';
 import type { DeepResearchThesis, ResearchScore, GroundedSource, RetrievalTrace } from '../types';
 
 function classifyDomain(domain: string): string {
@@ -95,7 +96,7 @@ export async function executeDeepResearch(query: string) {
 
   try {
     const deepT0 = performance.now();
-    console.log(`[BENCH:deep] START query="${query.slice(0, 40)}..."`);
+    console.log(`[BENCH:deep] START | query="${query.slice(0, 40)}..."`);
 
     addReasoningStep('Expanding research objective...');
     setDeepResearch({ status: 'running', stage: 1, progress: 'Expanding research objective...' });
@@ -162,7 +163,19 @@ ${compressSourcesForLLM(groundedSources, 3000)}
     });
 
     const deepTotalMs = Math.round(performance.now() - deepT0);
-    console.log(`[BENCH:deep] DONE | search=${searchMs}ms llm=${llmMs}ms total=${deepTotalMs}ms sources=${groundedSources.length}`);
+    console.log(`[BENCH:deep] DONE | round-trip=${deepTotalMs}ms search=${searchMs}ms llm=${llmMs}ms sources=${groundedSources.length} model=${RESEARCH_MODEL}`);
+
+    // Track benchmark data
+    benchmarkTracker.init();
+    benchmarkTracker.track({
+      category: 'deep_research',
+      roundTripMs: deepTotalMs,
+      swarmMs: 0,
+      totalTokens: 0,
+      model: RESEARCH_MODEL,
+      isRetry: false,
+      queryPreview: query.slice(0, 40),
+    });
 
     return { thesis, scores };
 

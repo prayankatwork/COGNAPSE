@@ -60,7 +60,8 @@ export type TelemetryEventType =
   | 'feature_used'
   | 'behavior_snapshot'
   | 'tokens_consumed'
-  | 'abuse_report';
+  | 'abuse_report'
+  | 'benchmark_snapshot';
 
 export interface TelemetryPayload {
   type: TelemetryEventType;

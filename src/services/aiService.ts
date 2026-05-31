@@ -53,6 +53,7 @@ const getLocalOllamaModel = async () => {
 import { apiFetch } from './apiClient';
 import { auth } from './firebase';
 import { trackOperationalEvent } from './opsTelemetry';
+import { benchmarkTracker } from './benchmarkTracker';
 
 /**
  * PRODUCTION-READY INTELLIGENCE SWARM
@@ -113,13 +114,27 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
         const roundTripMs = Math.round(performance.now() - t0);
 
         if (!response.ok) {
-          console.log(`[BENCH] round-trip=${roundTripMs}ms ERROR | ${data.error}`);
+          const errBenchId = data._bench?.benchId || '?';
+          console.log(`[BENCH:${errBenchId}] ERROR | round-trip=${roundTripMs}ms error=${data.error}`);
           throw new Error(data.error || 'Serverless backend failed');
         }
 
         const benchInfo = data._bench ? ` swarm=${data._bench.swarmMs}ms total=${data._bench.totalMs}ms` : '';
         const tokenInfo = data.usage ? ` tokens=${data.usage.total_tokens || '?'}` : '';
-        console.log(`[BENCH] round-trip=${roundTripMs}ms${benchInfo}${tokenInfo} model=${data.usage?.model || requestedModel || '?'}`);
+        const benchId = data._bench?.benchId || '?';
+        console.log(`[BENCH:${benchId}] DONE | round-trip=${roundTripMs}ms${benchInfo}${tokenInfo} model=${data.usage?.model || requestedModel || '?'}`);
+
+        // Track benchmark data
+        benchmarkTracker.init();
+        benchmarkTracker.track({
+          category: requestedModel === 'ollama' ? 'deep_research' : 'research',
+          roundTripMs,
+          swarmMs: data._bench?.swarmMs || 0,
+          totalTokens: data.usage?.total_tokens || 0,
+          model: data.usage?.model || requestedModel || '?',
+          isRetry: attempt > 0,
+          queryPreview: (prompt || '').slice(0, 40),
+        });
 
         // Track token consumption from Groq for ops dashboard
         if (data.usage && data.usage.total_tokens > 0) {
