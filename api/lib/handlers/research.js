@@ -370,7 +370,7 @@ export async function handleAcademicSearch(req, res) {
 
       const titles = [...xml.matchAll(/<title>([^<]+)<\/title>/g)].map(m => m[1]);
       const summaries = [...xml.matchAll(/<summary>([^<]*)<\/summary>/g)].map(m => m[1]);
-      const ids = [...xml.matchAll(/<id>https?:\\/\\/arxiv\\.org\\/abs\\/([^<]+)<\\/id>/g)].map(m => m[1]);
+      const ids = [...xml.matchAll(/<id>https?:\/\/arxiv\.org\/abs\/([^<]+)<\/id>/g)].map(m => m[1]);
       const published = [...xml.matchAll(/<published>(\\d{4})/g)].map(m => m[1]);
 
       // First <title> is the feed title; skip it
