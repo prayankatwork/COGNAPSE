@@ -372,7 +372,7 @@ export function detectUncertaintyQuery(query: string): boolean {
   return UNCERTAINTY_PATTERNS.some((p) => p.test(query));
 }
 
-export function normalizeCredScore(raw?: number): number | null {
+export function normalizeCredScore(raw?: number | null): number | null {
   if (raw == null) return null;
   return raw > 10 ? raw / 10 : raw;
 }

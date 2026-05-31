@@ -11,11 +11,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('compromise', () => ({
   default: vi.fn(() => ({
-    organizations: () => ({ out: () => ['NASA', 'CERN'] }),
-    places: () => ({ out: () => ['Geneva', 'Moon'] }),
-    people: () => ({ out: () => ['Einstein'] }),
-    nouns: () => ({ out: () => ['physics', 'space', 'research'] }),
-  })),
+    organizations: () => ({ out: () => ['NASA', 'CERN'] }) as any,
+    places: () => ({ out: () => ['Geneva', 'Moon'] }) as any,
+    people: () => ({ out: () => ['Einstein'] }) as any,
+    nouns: () => ({ out: () => ['physics', 'space', 'research'] }) as any,
+  }) as any),
 }));
 
 vi.mock('../domainCredibility', () => ({
@@ -194,11 +194,11 @@ describe('computeEntityDiversity', () => {
   beforeEach(() => {
     resetMocks();
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => ['NASA', 'CERN'] }),
-      places: () => ({ out: () => ['Geneva', 'Moon'] }),
-      people: () => ({ out: () => ['Einstein'] }),
-      nouns: () => ({ out: () => ['physics', 'space', 'research'] }),
-    }));
+      organizations: () => ({ out: () => ['NASA', 'CERN'] }) as any,
+      places: () => ({ out: () => ['Geneva', 'Moon'] }) as any,
+      people: () => ({ out: () => ['Einstein'] }) as any,
+      nouns: () => ({ out: () => ['physics', 'space', 'research'] }) as any,
+    }) as any);
   });
 
   it('returns zeros for empty sources', () => {
@@ -236,17 +236,17 @@ describe('computeEntityDiversity', () => {
   it('aggregates unique entities from sources with different content', () => {
     mockNlp
       .mockImplementationOnce(() => ({
-        organizations: () => ({ out: () => ['NASA'] }),
-        places: () => ({ out: () => ['Mars'] }),
-        people: () => ({ out: () => ['Einstein'] }),
-        nouns: () => ({ out: () => ['physics'] }),
-      }))
+        organizations: () => ({ out: () => ['NASA'] }) as any,
+        places: () => ({ out: () => ['Mars'] }) as any,
+        people: () => ({ out: () => ['Einstein'] }) as any,
+        nouns: () => ({ out: () => ['physics'] }) as any,
+      }) as any)
       .mockImplementationOnce(() => ({
-        organizations: () => ({ out: () => ['ESA', 'NASA'] }),
-        places: () => ({ out: () => ['Mars', 'Venus'] }),
-        people: () => ({ out: () => ['Einstein', 'Newton'] }),
-        nouns: () => ({ out: () => ['physics', 'astronomy'] }),
-      }));
+        organizations: () => ({ out: () => ['ESA', 'NASA'] }) as any,
+        places: () => ({ out: () => ['Mars', 'Venus'] }) as any,
+        people: () => ({ out: () => ['Einstein', 'Newton'] }) as any,
+        nouns: () => ({ out: () => ['physics', 'astronomy'] }) as any,
+      }) as any);
 
     const sources = [
       createSource({ title: 'Source A', key_finding: 'First source' }),
@@ -264,11 +264,11 @@ describe('computeEntityDiversity', () => {
 
   it('incorporates domain diversity into the score', () => {
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => ['NASA'] }),
-      places: () => ({ out: () => ['Mars'] }),
-      people: () => ({ out: () => ['Einstein'] }),
-      nouns: () => ({ out: () => ['physics'] }),
-    }));
+      organizations: () => ({ out: () => ['NASA'] }) as any,
+      places: () => ({ out: () => ['Mars'] }) as any,
+      people: () => ({ out: () => ['Einstein'] }) as any,
+      nouns: () => ({ out: () => ['physics'] }) as any,
+    }) as any);
 
     const sources = [
       createSource({ domain: 'reuters.com', title: 'A' }),
@@ -282,11 +282,11 @@ describe('computeEntityDiversity', () => {
 
   it('rewards higher domain variety', () => {
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => ['NASA'] }),
-      places: () => ({ out: () => ['Mars'] }),
-      people: () => ({ out: () => ['Einstein'] }),
-      nouns: () => ({ out: () => ['physics'] }),
-    }));
+      organizations: () => ({ out: () => ['NASA'] }) as any,
+      places: () => ({ out: () => ['Mars'] }) as any,
+      people: () => ({ out: () => ['Einstein'] }) as any,
+      nouns: () => ({ out: () => ['physics'] }) as any,
+    }) as any);
 
     const singleDomain = computeEntityDiversity([
       createSource({ domain: 'reuters.com', title: 'A' }),
@@ -303,11 +303,11 @@ describe('computeEntityDiversity', () => {
 
   it('handles sources with empty text gracefully', () => {
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => [] }),
-      places: () => ({ out: () => [] }),
-      people: () => ({ out: () => [] }),
-      nouns: () => ({ out: () => [] }),
-    }));
+      organizations: () => ({ out: () => [] }) as any,
+      places: () => ({ out: () => [] }) as any,
+      people: () => ({ out: () => [] }) as any,
+      nouns: () => ({ out: () => [] }) as any,
+    }) as any);
 
     const result = computeEntityDiversity([createSource({ title: '', key_finding: '' })]);
     expect(result.entityCount).toBe(0);
@@ -555,11 +555,11 @@ describe('computeAllScores (integration)', () => {
 
     // Default compromise mock
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => ['NASA'] }),
-      places: () => ({ out: () => ['Mars'] }),
-      people: () => ({ out: () => ['Einstein'] }),
-      nouns: () => ({ out: () => ['physics'] }),
-    }));
+      organizations: () => ({ out: () => ['NASA'] }) as any,
+      places: () => ({ out: () => ['Mars'] }) as any,
+      people: () => ({ out: () => ['Einstein'] }) as any,
+      nouns: () => ({ out: () => ['physics'] }) as any,
+    }) as any);
   });
 
   it('produces a complete score object with all fields', async () => {
@@ -668,11 +668,11 @@ describe('edge cases', () => {
   beforeEach(() => {
     resetMocks();
     mockNlp.mockImplementation(() => ({
-      organizations: () => ({ out: () => [] }),
-      places: () => ({ out: () => [] }),
-      people: () => ({ out: () => [] }),
-      nouns: () => ({ out: () => [] }),
-    }));
+      organizations: () => ({ out: () => [] }) as any,
+      places: () => ({ out: () => [] }) as any,
+      people: () => ({ out: () => [] }) as any,
+      nouns: () => ({ out: () => [] }) as any,
+    }) as any);
     vi.mocked(lookupDomain).mockReturnValue(null);
   });
 
