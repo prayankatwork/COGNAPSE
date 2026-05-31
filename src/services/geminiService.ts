@@ -948,42 +948,36 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         ).length;
         const structuralImbalance = commercialCount > academicOrGovCount * 3 && commercialCount >= 3;
 
-        // Topic-level bias heuristic: detect emotionally charged topics that tend to
-        // attract advocacy-oriented framing even from credible sources.
-        // Topics like teen mental health, social media effects, vaccine safety, etc.
-        // trigger an auto-alert regardless of source sentiment.
-        const emotionallyChargedTopics = [
-          /\b(mental\s*health|depression|anxiety|suicide|self.\s*harm|eating\s*disorder)\b/i,
-          /\b(addiction|substance\s*abuse|drug\s*overdose|alcoholism)\b/i,
-          /\b(vaccine\s*safety|vaccines?\s*(cause|causes|caused|autism|link|risk|danger|injury|side.effect|harm)|vaccination\s*(cause|causes|autism|link|risk|danger)|mmr\s*(cause|causes|autism|link|risk)|thimerosal\s*autism|vaccinated\s*autism|mercury\s*in\s*vaccines|wakefield\s*study|vaccine.autism.\s*link|anti.\s*vacc)\b/i,
-          /\b(teen\s*social\s*media|social\s*media\s*(effects?|impact|harm|danger|addiction))\b/i,
-          /\b(racial\s*(bias|discrimination|inequality|injustice)|systemic\s*racism)\b/i,
-          /\b(political\s*polarization|election\s*integrity|voter\s*suppression|gerrymandering)\b/i,
-          /\b(climate\s*change\s*(denial|skeptic|hoax)|global\s*warming\s*(hoax|myth|lie))\b/i,
-          /\b(gun\s*control|gun\s*violence|school\s*shooting|mass\s*shooting)\b/i,
-          /\b(abortion|pro.\s*life|pro.\s*choice|reproductive\s*rights)\b/i,
-          /\b(conspiracy|hoax|cover.up|psyop|deep\s*state|shadow\s*government)\b/i,
-        ];
-        // Also do a broader stem+keyword fallback for queries like 'do vaccines cause autism'
-        // that may not match the specific phrase patterns above
-        const queryLower = query.toLowerCase();
-        const containsVaccineStem = /\b(vaccin|mmr|thimerosal|wakefield|anti.vax)/i.test(queryLower);
-        const containsControversyKeyword = /\b(autism|cause|causes|caused|link|risk|danger|side effect|side\s*effect|injury|harm|unsafe|debate|controversy)/i.test(queryLower);
-        const hasVaccineControversy = containsVaccineStem && containsControversyKeyword;
-        const hasEmotionalTopic = emotionallyChargedTopics.some(p => p.test(query)) || hasVaccineControversy;
+        // Generic query-level signals: use existing detectors (adversarial, uncertainty)
+        // rather than hardcoded topic regexes — works for ANY controversial topic.
+        const queryIsAdversarial = detectAdversarialQuery(query);
+        const queryIsUncertain = detectUncertaintyQuery(query);
+        const hasControversialQuery = queryIsAdversarial.isAdversarial || queryIsUncertain;
 
-        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasEmotionalTopic) {
+        // Source credibility variance: high std dev means sources disagree on quality,
+        // suggesting the topic attracts mixed-quality content from both authoritative
+        // and unreliable sources.
+        const credScores = groundedSources.map(s => s.credibility_score || 50);
+        const avgCred = credScores.reduce((a, b) => a + b, 0) / credScores.length;
+        const credVariance = Math.sqrt(credScores.reduce((sum, c) => sum + (c - avgCred) ** 2, 0) / credScores.length);
+        const hasHighCredVariance = credScores.length >= 3 && credVariance > 20;
+
+        if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasControversialQuery || hasHighCredVariance) {
           let direction = 'slight';
-          if (sentimentResult.biasScore > 0.6) direction = 'moderate';
-          if (sentimentResult.biasScore > 0.8) direction = 'strong';
+          if (sentimentResult.biasScore > 0.6 || queryIsAdversarial.isAdversarial) direction = 'moderate';
+          if (sentimentResult.biasScore > 0.8 && queryIsAdversarial.isAdversarial) direction = 'strong';
           // Build specific alert narrative based on what triggered it
           let alertNarrative = '';
-          if (hasEmotionalTopic) {
-            alertNarrative = 'This topic often attracts advocacy-oriented content with strong emotional framing. Even sources from credible institutions may present selective evidence. Cross-reference findings across multiple perspectives and check for funding disclosures.';
+          if (queryIsAdversarial.isAdversarial) {
+            alertNarrative = 'This query touches on a topic known to attract misinformation or pseudoscientific claims. Sources may include debunking content with strong rhetorical framing. Cross-reference with authoritative scientific bodies and peer-reviewed literature.';
+          } else if (queryIsUncertain) {
+            alertNarrative = 'This topic involves genuine scientific debate or uncertainty. Sources may reflect differing methodologies or interpretations. Cross-reference findings across multiple perspectives and check for funding disclosures.';
           } else if (hasCommercialHealthSource) {
             alertNarrative = 'Some sources are commercial health sites that may prioritize engagement over neutral reporting. Cross-reference findings with independent academic or government sources.';
           } else if (structuralImbalance) {
             alertNarrative = 'The source set is heavily weighted toward commercial/industry sources with limited academic or government representation. This may introduce a structural bias toward certain perspectives.';
+          } else if (hasHighCredVariance) {
+            alertNarrative = 'Source credibility varies significantly across the results, suggesting the topic attracts mixed-quality content. Prioritize findings from academic and government sources.';
           } else {
             alertNarrative = 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.';
           }
@@ -991,7 +985,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             direction: `${direction} potential bias detected`,
             recommendation: alertNarrative,
           };
-          addReasoningStep(`Bias alert generated: topic-based or sentiment-based signal detected (score: ${sentimentResult.biasScore})`);
+          addReasoningStep(`Bias alert generated: generic signal detected (adversarial: ${queryIsAdversarial.isAdversarial}, uncertainty: ${queryIsUncertain}, sentiment: ${sentimentResult.biasScore}, credVariance: ${credVariance.toFixed(1)})`);
         }
       } catch (e) {
         // Non-critical
