@@ -8,6 +8,7 @@
  */
 
 import { lookupDomain, biasToBiasScore } from './domainCredibility';
+import { batchClassifySources, type LocalBiasResult } from './localBiasModel';
 
 /* ─── Types ─── */
 
@@ -239,15 +240,26 @@ export function resetMbfcRateLimit(): void {
 }
 
 /**
+/**
  * Batch-lookup multiple domains — runs them in parallel with a concurrency limit.
- * Returns a Map<domain, MbfcResult>.
+ * Uses a 4-tier lookup: cache → hardcoded map → local ML model → MBFC API → TLD inference.
+ *
+ * @param domains     - Array of domain strings to look up.
+ * @param sourceInfo  - Optional array of source objects with title/key_finding for local ML classification.
+ *                      If provided, the local ML model (Tier 3) will classify sources not found in cache or hardcoded map.
+ * @returns Map<domain, MbfcResult>
  */
-export async function batchLookupDomains(domains: string[]): Promise<Map<string, MbfcResult>> {
+export async function batchLookupDomains(
+  domains: string[],
+  sourceInfo?: { title?: string; key_finding?: string; domain?: string }[],
+): Promise<Map<string, MbfcResult>> {
   const results = new Map<string, MbfcResult>();
   const unique = [...new Set(domains.map(d => d.replace(/^www\./, '').toLowerCase().trim()))];
 
-  // Check cache + hardcoded first (instant)
+  // Pass 1: Check cache + hardcoded map (instant)
+  const needsLocalMl: string[] = [];
   const toFetch: string[] = [];
+
   for (const domain of unique) {
     const cached = cache.get(domain);
     if (cached) {
@@ -265,17 +277,59 @@ export async function batchLookupDomains(domains: string[]): Promise<Map<string,
         };
         cache.set(domain, result);
         results.set(domain, result);
-      } else if (RAPIDAPI_KEY && !rateLimited) {
-        toFetch.push(domain);
       } else {
-        const inferred = inferFromDomain(domain);
-        cache.set(domain, inferred);
-        results.set(domain, inferred);
+        // Tier 3: Try local ML model first (free, runs in-browser)
+        needsLocalMl.push(domain);
       }
     }
   }
 
-  // Fetch remaining from API (concurrency: 3 at a time)
+  // Pass 2: Local ML model — classify source content against bias labels
+  // Only runs if we have source info (title + key_finding) to classify
+  if (needsLocalMl.length > 0 && sourceInfo && sourceInfo.length > 0) {
+    try {
+      const mlResults = await batchClassifySources(
+        sourceInfo.filter(s => needsLocalMl.includes(
+          (s.domain || '').replace(/^www\./, '').toLowerCase().trim()
+        ))
+      );
+      for (const [domain, mlResult] of mlResults.entries()) {
+        const cleanDomain = domain.replace(/^www\./, '').toLowerCase().trim();
+        const mbfcResult: MbfcResult = {
+          domain: cleanDomain,
+          bias: mlResult.biasScore <= 0.15 ? 'center'
+            : mlResult.biasScore <= 0.25 ? 'left-center'
+            : mlResult.biasScore <= 0.45 ? 'left'
+            : mlResult.biasScore <= 0.65 ? 'conspiracy'
+            : 'pseudoscience',
+          biasScore: mlResult.biasScore,
+          factual: mlResult.factualScore >= 8 ? 'high'
+            : mlResult.factualScore >= 5 ? 'mixed'
+            : 'low',
+          factualScore: mlResult.factualScore,
+          source: 'inferred', // mark as inferred since it's ML-based
+        };
+        cache.set(cleanDomain, mbfcResult);
+        results.set(cleanDomain, mbfcResult);
+      }
+    } catch (e) {
+      console.warn('[MBFC] Local ML model failed — falling through to API/inference:', e);
+    }
+  }
+
+  // Remaining domains after local ML — send to API if available, else infer
+  const remaining = unique.filter(d => !results.has(d));
+  for (const domain of remaining) {
+    if (RAPIDAPI_KEY && !rateLimited) {
+      toFetch.push(domain);
+    } else {
+      const inferred = inferFromDomain(domain);
+      cache.set(domain, inferred);
+      results.set(domain, inferred);
+    }
+  }
+
+  // Pass 3: MBFC API (concurrency: 3 at a time)
   if (toFetch.length > 0 && RAPIDAPI_KEY && !rateLimited) {
     const concurrency = 3;
     for (let i = 0; i < toFetch.length; i += concurrency) {
@@ -290,9 +344,12 @@ export async function batchLookupDomains(domains: string[]): Promise<Map<string,
           cache.set(domain, apiResult.value);
           results.set(domain, apiResult.value);
         } else {
-          const inferred = inferFromDomain(domain);
-          cache.set(domain, inferred);
-          results.set(domain, inferred);
+          // If API failed and we already tried ML, fall back to inference
+          if (!results.has(domain)) {
+            const inferred = inferFromDomain(domain);
+            cache.set(domain, inferred);
+            results.set(domain, inferred);
+          }
         }
       }
       // If we got rate-limited mid-batch, skip remaining batches
