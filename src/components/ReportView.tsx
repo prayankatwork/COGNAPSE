@@ -586,24 +586,6 @@ export default function ReportView({
             </div>
           )}
 
-          {/* SWOT Analysis */}
-          {report.swot && (
-            <div className="border border-my-border bg-my-callout/50">
-              <SectionTitle>Strategic Analysis</SectionTitle>
-              {report.swot.perspective && (
-                <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
-                  Perspective: {report.swot.perspective}
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-[1px] bg-my-border">
-                <SwotQuadrant title="Strengths" items={report.swot.strengths} />
-                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
-                <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
-                <SwotQuadrant title="Threats" items={report.swot.threats} />
-              </div>
-            </div>
-          )}
-
           {/* Intelligence Map */}
           {report.intelligence_map && report.intelligence_map.central_node && Array.isArray(report.intelligence_map.nodes) && report.intelligence_map.nodes.length > 0 && (
             <div className="mt-6 lg:mt-0">
@@ -620,6 +602,24 @@ export default function ReportView({
           {/* Cognition Replay */}
           {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
             <ThoughtReplayEngine />
+          )}
+
+          {/* SWOT Analysis */}
+          {report.swot && (
+            <div className="border border-my-border bg-my-callout/50">
+              <SectionTitle>Strategic Analysis</SectionTitle>
+              {report.swot.perspective && (
+                <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
+                  Perspective: {report.swot.perspective}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-[1px] bg-my-border">
+                <SwotQuadrant title="Strengths" items={report.swot.strengths} />
+                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
+                <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
+                <SwotQuadrant title="Threats" items={report.swot.threats} />
+              </div>
+            </div>
           )}
 
         </motion.div>
