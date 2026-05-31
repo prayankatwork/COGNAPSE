@@ -499,13 +499,6 @@ export default function ReportView({
             </div>
           )}
 
-          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
-            <>
-              {/* Forensic Reasoning Replay — before sources */}
-              <ThoughtReplayEngine />
-            </>
-          )}
-
           {/* Source Drawer */}
           {report.sources && report.sources.length > 0 && (
             <SourceDrawer 
@@ -622,6 +615,11 @@ export default function ReportView({
                </ErrorBoundary>
               </div>
             </div>
+          )}
+
+          {/* Cognition Replay */}
+          {!readOnly && !report?.archive_entry?.tags?.includes('document') && (
+            <ThoughtReplayEngine />
           )}
 
         </motion.div>
