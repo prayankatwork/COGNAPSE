@@ -136,8 +136,9 @@ function splitSentences(text: string): string[] {
  * Compares:
  *   - bottom_line & full_synthesis (sentence overlap)
  *   - scores
+ *   - SWOT analysis (perspective + quadrants)
+ *   - actionable_takeaways (key_insight, watch_out_for, next_step)
  *   - conflicts
- *   - actionable_takeaways
  */
 async function diffReports(
   primary: COGNAPSE_Output,
@@ -213,6 +214,82 @@ async function diffReports(
       metric: 'Confidence Label',
       model_a: primary.scores.confidence_label ?? 'N/A',
       model_b: secondary.scores.confidence_label ?? 'N/A',
+    });
+  }
+
+  // ─── Compare SWOT ───
+  const swotA = primary.swot;
+  const swotB = secondary.swot;
+  if (swotA && swotB) {
+    const perspectiveSim = await semanticSimilarity(
+      swotA.perspective || '',
+      swotB.perspective || ''
+    );
+    scoreComparison.push({
+      metric: 'SWOT Perspective',
+      model_a: perspectiveSim > 0.35 ? 'Aligned' : swotA.perspective || 'N/A',
+      model_b: perspectiveSim > 0.35 ? 'Aligned' : swotB.perspective || 'N/A',
+    });
+    scoreComparison.push({
+      metric: 'SWOT Quadrants (S/W/O/T)',
+      model_a: [swotA.strengths.length, swotA.weaknesses.length, swotA.opportunities.length, swotA.threats.length].join('/'),
+      model_b: [swotB.strengths.length, swotB.weaknesses.length, swotB.opportunities.length, swotB.threats.length].join('/'),
+    });
+    if (perspectiveSim > 0.35 && swotA.perspective) {
+      agreementPoints.push(`SWOT perspective: ${swotA.perspective}`);
+    } else if (swotA.perspective || swotB.perspective) {
+      if (swotA.perspective) divergentPoints.push({ from: 'unique_to_a', claim: `SWOT perspective: ${swotA.perspective}` });
+      if (swotB.perspective) divergentPoints.push({ from: 'unique_to_b', claim: `SWOT perspective: ${swotB.perspective}` });
+    }
+  } else {
+    scoreComparison.push({
+      metric: 'SWOT Analysis',
+      model_a: swotA ? 'Generated' : 'Missing',
+      model_b: swotB ? 'Generated' : 'Missing',
+    });
+  }
+
+  // ─── Compare Actionable Takeaways ───
+  const takeA = primary.actionable_takeaways;
+  const takeB = secondary.actionable_takeaways;
+  if (takeA && takeB) {
+    const insightSim = await semanticSimilarity(
+      takeA.key_insight || '',
+      takeB.key_insight || ''
+    );
+    scoreComparison.push({
+      metric: 'Key Insight',
+      model_a: insightSim > 0.35 ? 'Aligned' : 'Different',
+      model_b: insightSim > 0.35 ? 'Aligned' : 'Different',
+    });
+    if (insightSim > 0.35 && takeA.key_insight) {
+      agreementPoints.push(`Key Insight: ${takeA.key_insight}`);
+    } else if (takeA.key_insight || takeB.key_insight) {
+      if (takeA.key_insight) divergentPoints.push({ from: 'unique_to_a', claim: `Key Insight: ${takeA.key_insight}` });
+      if (takeB.key_insight) divergentPoints.push({ from: 'unique_to_b', claim: `Key Insight: ${takeB.key_insight}` });
+    }
+
+    if (takeA.watch_out_for && takeB.watch_out_for) {
+      const watchSim = await semanticSimilarity(takeA.watch_out_for, takeB.watch_out_for);
+      scoreComparison.push({
+        metric: 'Watch Out For',
+        model_a: watchSim > 0.35 ? 'Aligned' : 'Different',
+        model_b: watchSim > 0.35 ? 'Aligned' : 'Different',
+      });
+    }
+    if (takeA.next_step && takeB.next_step) {
+      const nextSim = await semanticSimilarity(takeA.next_step, takeB.next_step);
+      scoreComparison.push({
+        metric: 'Next Step',
+        model_a: nextSim > 0.35 ? 'Aligned' : 'Different',
+        model_b: nextSim > 0.35 ? 'Aligned' : 'Different',
+      });
+    }
+  } else {
+    scoreComparison.push({
+      metric: 'Key Takeaways',
+      model_a: takeA ? 'Generated' : 'Missing',
+      model_b: takeB ? 'Generated' : 'Missing',
     });
   }
 
@@ -597,6 +674,13 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         const secondaryParsed = typeof secondaryResponse === 'string'
           ? JSON.parse(secondaryResponse)
           : secondaryResponse;
+
+        // Ensure secondary model also has SWOT and takeaways before diffing
+        try {
+          await fillMissingStrategicFields(secondaryParsed, abortSignal);
+        } catch (e) {
+          // Non-critical
+        }
 
         // Diff the two reports
         const consensus = await diffReports(parsed, secondaryParsed);
