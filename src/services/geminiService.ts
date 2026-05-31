@@ -9,6 +9,7 @@ import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
 import { generateMissingConflicts } from '../utils/conflictDetector';
 import { detectUncertaintyQuery, detectAdversarialQuery } from '../utils/scoringEngine';
+import { redistributeBatchCitations } from '../utils/citations';
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
@@ -434,6 +435,18 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     // Ensure conflicts field always exists (AI often skips optional fields)
     if (!parsed.conflicts) {
       parsed.conflicts = [];
+    }
+
+    // ─── Fix Batched Citations ───
+    // Post-process: redistribute citations that the LLM stacked at the end of paragraphs
+    if (typeof parsed.summary?.full_synthesis === 'string') {
+      parsed.summary.full_synthesis = redistributeBatchCitations(parsed.summary.full_synthesis);
+    }
+    if (typeof parsed.summary?.bottom_line === 'string') {
+      parsed.summary.bottom_line = redistributeBatchCitations(parsed.summary.bottom_line);
+    }
+    if (typeof parsed.summary?.eli5_version === 'string') {
+      parsed.summary.eli5_version = redistributeBatchCitations(parsed.summary.eli5_version);
     }
 
     // ─── Consensus Accuracy Override ───
