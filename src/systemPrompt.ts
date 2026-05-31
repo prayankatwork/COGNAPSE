@@ -121,7 +121,7 @@ Then frame SWOT around THAT decision, not a generic overview.
   THREATS       → What could go wrong, what to watch
 
 Each SWOT point: max 12 words. Punchy, not academic.
-Provide 3–5 points per quadrant.
+Provide 3–4 points per quadrant.
 
 STEP 7 — TIMELINE (Only when [TIMELINE: TRUE])
 When TIMELINE flag is TRUE, extract 5–8 chronological milestones:
@@ -140,7 +140,7 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
   "timeline_triggered": true | false,
   "summary": {
     "bottom_line": "1–2 sentence plain-English conclusion. Lead with the answer.",
-    "full_synthesis": "A rigorous 600-800 word narrative. Do not be brief, but remain precise. Connect the dots across sources. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. Ensure deep academic density and extensive detail. CRITICAL INSTRUCTION: You MUST cite your sources inline using [1], [2] format for EVERY SINGLE FACTUAL CLAIM. If a sentence contains a fact, it MUST end with a citation chip.",
+    "full_synthesis": "A focused 400-500 word narrative. Connect the dots across sources concisely. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. CRITICAL INSTRUCTION: You MUST cite your sources inline using [1], [2] format for EVERY SINGLE FACTUAL CLAIM. If a sentence contains a fact, it MUST end with a citation chip.",
     "eli5_version": "Same conclusion explained as if to a curious 12-year-old. Pure analogies, zero data.",
     "confidence_narrative": "One sentence explaining WHY confidence is at this level."
   },

@@ -445,68 +445,6 @@ ${pairsText}`;
   }
 }
 
-/* ─── Source Reranking ─── */
-
-/**
- * Rerank top sources by asking the verifier model to rate relevance to the query.
- * This improves on the heuristic (credibility + relevance) sort by using actual
- * semantic understanding of the query-source relationship.
- */
-async function rerankSourcesByRelevance(
-  sources: GroundedSource[],
-  query: string,
-  abortSignal?: AbortSignal
-): Promise<GroundedSource[]> {
-  if (sources.length < 3) return sources;
-
-  // Only rerank the top candidates — beyond ~20 the model's attention degrades
-  const candidates = sources.slice(0, 20);
-  const rest = sources.slice(20);
-
-  const prompt = `Rate each source's relevance to the research query on a scale of 0-100.
-Return ONLY a valid JSON array of objects (no markdown, no backticks).
-Each object must have: "id" (number), "relevance" (0-100), "reason" (max 10 words)
-
-QUERY: "${query}"
-
-SOURCES:
-${candidates.map((s, i) => `${i + 1}. [${s.id}] ${s.title} (${s.domain})
-   Snippet: ${s.snippet || s.key_finding || ''}`).join('\n')}`;
-
-  try {
-    const raw = await callCloudAI(prompt, true, CONSENSUS_MODEL, abortSignal);
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    const ratings = Array.isArray(parsed) ? parsed : (parsed.ratings || []);
-
-    // Build a lookup of source ID → model relevance score
-    const modelScore = new Map<number, number>();
-    for (const r of ratings) {
-      if (r.id && typeof r.relevance === 'number') {
-        modelScore.set(r.id, r.relevance);
-      }
-    }
-
-    // Blend model relevance (60%) with existing credibility (40%)
-    const blended = candidates.map(s => {
-      const modelRel = modelScore.get(s.id) ?? 50;
-      const credNorm = (s.credibility_score || 50) / 100 * 100;
-      const blendedScore = modelRel * 0.6 + credNorm * 0.4;
-      return { ...s, relevance_score: Math.round(blendedScore) };
-    });
-
-    // Sort by blended score descending
-    blended.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
-
-    // Renumber IDs sequentially after reranking
-    const renumbered = [...blended, ...rest].map((s, i) => ({ ...s, id: i + 1 }));
-
-    return renumbered;
-  } catch (e) {
-    console.warn('[COGNAPSE] Source reranking failed — falling back to heuristic sort:', e);
-    return sources;
-  }
-}
-
 /* ─── Full-Text Source Fetcher ─── */
 
 /**
@@ -567,6 +505,106 @@ Return ONLY valid JSON with NO markdown formatting:
   } catch (e) {
     console.warn('[COGNAPSE] Confidence calibration failed:', e);
     return null;
+  }
+}
+
+/**
+ * Deferred report enrichment — runs confidence calibration and citation verification
+ * in the background after the report is already returned to the user.
+ * Both tasks run in parallel and update the report object + store when complete.
+ */
+async function deferredReportEnrichment(
+  report: COGNAPSE_Output,
+  sources: GroundedSource[],
+  query: string,
+  abortSignal?: AbortSignal
+): Promise<void> {
+  try {
+    const [calibration, _] = await Promise.all([
+      // Task 1: Confidence calibration
+      calibrateConfidence(
+        report.summary?.full_synthesis || report.summary?.bottom_line || '',
+        query,
+        abortSignal
+      ),
+
+      // Task 2: Citation verification (full-text fetch + claim check)
+      (async () => {
+        if (sources.length === 0 || !report.summary?.full_synthesis) return;
+        try {
+          const citationPairs = extractCitations(report.summary.full_synthesis);
+          if (citationPairs.length === 0) return;
+
+          // Fetch full text for up to 5 unique source URLs
+          const uniqueUrls = new Map<number, string>();
+          for (const s of sources) {
+            if (s.url && !s.url.startsWith('document') && !uniqueUrls.has(s.id)) {
+              uniqueUrls.set(s.id, s.url);
+            }
+          }
+          const fullTextPromises = Array.from(uniqueUrls.entries()).slice(0, 5).map(
+            async ([id, url]) => {
+              const text = await fetchSourceFullText(url, abortSignal);
+              return { id, text };
+            }
+          );
+          const fullTextResults = await Promise.all(fullTextPromises);
+          const fullTextMap = new Map<number, string>();
+          for (const r of fullTextResults) {
+            if (r.text) fullTextMap.set(r.id, r.text);
+          }
+
+          // Build source context for verification
+          const sourceContexts = sources.map(s => ({
+            id: s.id,
+            snippet: s.snippet || '',
+            key_finding: s.key_finding || '',
+            title: s.title,
+            domain: s.domain,
+            full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
+          }));
+
+          const verifications = await verifyCitations(citationPairs, sourceContexts, abortSignal);
+
+          // Attach results to the report object (mutates the already-returned reference)
+          (report as COGNAPSE_Output).citation_verifications = verifications;
+          (report as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
+          audioSystem.play('verification-complete');
+
+          // Log summary via reasoning steps
+          const supported = verifications.filter(v => v.verdict === 'supported').length;
+          const partial = verifications.filter(v => v.verdict === 'partial').length;
+          const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
+          const fullTextCount = fullTextMap.size;
+          const addStep = useStore.getState().addReasoningStep;
+          addStep(`Citations: ${supported} supported, ${partial} partial, ${failed} flagged${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
+        } catch (e) {
+          console.warn('Citation verification unavailable:', e);
+          const addStep = useStore.getState().addReasoningStep;
+          addStep('Citation verification unavailable — proceeding without claim-level checks');
+        }
+      })(),
+    ]);
+
+    // Apply confidence calibration results
+    if (calibration) {
+      (report as COGNAPSE_Output).confidence_calibration = calibration;
+      if (report.scores && calibration.confidence_rating === 'uncertain' && report.scores.confidence_label === '🟢 High') {
+        report.scores.confidence_label = '🟡 Medium';
+      }
+      const addStep = useStore.getState().addReasoningStep;
+      addStep(`Confidence: ${calibration.confidence_rating} — ${calibration.narrative}`);
+    }
+
+    // Update the store to trigger re-render with enriched fields
+    const state = useStore.getState();
+    if (state.currentReport === report) {
+      // Shallow copy to trigger React re-render
+      state.setCurrentReport({ ...report });
+    }
+  } catch (e) {
+    // Non-critical — enrichment is optional
+    console.warn('[COGNAPSE] Deferred enrichment error:', e);
   }
 }
 
@@ -768,15 +806,10 @@ export async function executeCognapseResearch(
     }
   }
 
-  // ─── Source Reranking ───
-  // Rerank top sources by model-assessed relevance to improve citation quality
-  let sourceRerankingApplied = false;
-  const originalSourceCount = groundedSources.length;
-  if (groundedSources.length >= 3) {
-    addReasoningStep('Reranking sources by semantic relevance to query...');
-    groundedSources = await rerankSourcesByRelevance(groundedSources, query, abortSignal);
-    sourceRerankingApplied = true;
-  }
+  // ─── Source Compression ───
+  // Sources remain sorted by credibility + relevance from the server ranking.
+  // The server already returns sources scored by Tavily's relevance + our credibility
+  // heuristics, so LLM-based reranking is redundant. We proceed directly to compression.
 
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
   // Compress sources into token-efficient context
@@ -895,37 +928,6 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       generateMissingConflicts(parsed);
     } catch (e) {
       // Non-critical — conflicts are optional
-    }
-
-    // ─── Source Reranking Metadata ───
-    if (sourceRerankingApplied) {
-      (parsed as COGNAPSE_Output)._source_reranking = {
-        applied: true,
-        model: CONSENSUS_MODEL,
-        original_count: originalSourceCount,
-      };
-    }
-
-    // ─── Confidence Calibration ───
-    // After synthesis, ask the LLM to honestly rate its own confidence
-    // This surfaces knowledge gaps and uncertainty that the primary model may have glossed over
-    addReasoningStep('Calibrating confidence assessment...');
-    try {
-      const calibration = await calibrateConfidence(
-        parsed.summary?.full_synthesis || parsed.summary?.bottom_line || '',
-        query,
-        abortSignal
-      );
-      if (calibration) {
-        (parsed as COGNAPSE_Output).confidence_calibration = calibration;
-        // If calibration says uncertain, adjust the confidence_label accordingly
-        if (parsed.scores && calibration.confidence_rating === 'uncertain' && parsed.scores.confidence_label === '🟢 High') {
-          parsed.scores.confidence_label = '🟡 Medium';
-        }
-        addReasoningStep(`Confidence: ${calibration.confidence_rating} — ${calibration.narrative}`);
-      }
-    } catch (e) {
-      // Non-critical — calibration is optional
     }
 
     // ─── Auto Bias Alert from Sentiment Analysis ───
@@ -1129,100 +1131,20 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       addReasoningStep('Multi-model consensus unavailable — proceeding with single-model report');
     }
 
+    // ─── Deferred Enrichment (non-blocking) ───
+    // Confidence calibration and citation verification kick off in the background
+    // after the report object is returned. The user sees the report immediately;
+    // these enrichments (confidence self-assessment + citation badge counts) populate
+    // asynchronously via store update when complete.
     addReasoningStep('Verifying citations against source material...');
     audioSystem.play('verification-start');
 
-    // ─── PHASE 4: CITATION VERIFICATION ───
-    if (groundedSources.length > 0 && parsed.summary?.full_synthesis) {
-      try {
-        const citationPairs = extractCitations(parsed.summary.full_synthesis);
-
-        if (citationPairs.length > 0) {
-          // Try to fetch full text for each unique source URL for deeper verification
-          const uniqueUrls = new Map<number, string>();
-          for (const s of groundedSources) {
-            if (s.url && !s.url.startsWith('document') && !uniqueUrls.has(s.id)) {
-              uniqueUrls.set(s.id, s.url);
-            }
-          }
-
-          // Fetch full text for up to 5 sources (parallel, non-blocking)
-          const fullTextPromises = Array.from(uniqueUrls.entries()).slice(0, 5).map(
-            async ([id, url]) => {
-              const text = await fetchSourceFullText(url, abortSignal);
-              return { id, text };
-            }
-          );
-          const fullTextResults = await Promise.all(fullTextPromises);
-          const fullTextMap = new Map<number, string>();
-          for (const r of fullTextResults) {
-            if (r.text) fullTextMap.set(r.id, r.text);
-          }
-
-          // Build source context: use full text when available, fall back to snippet
-          const sourceContexts = groundedSources.map(s => ({
-            id: s.id,
-            snippet: s.snippet || '',
-            key_finding: s.key_finding || '',
-            title: s.title,
-            domain: s.domain,
-            // If we fetched full text, append relevant portion for verification
-            full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
-          }));
-
-          const verifications = await verifyCitations(
-            citationPairs,
-            sourceContexts,
-            abortSignal
-          );
-
-          // Always attach verification results + timestamp so the UI badge renders
-          // even when verification returns empty (showing 0/0/0 instead of hiding)
-          (parsed as COGNAPSE_Output).citation_verifications = verifications;
-          (parsed as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
-          audioSystem.play('verification-complete');
-          const supported = verifications.filter(v => v.verdict === 'supported').length;
-          const partial = verifications.filter(v => v.verdict === 'partial').length;
-          const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
-          const fullTextCount = fullTextMap.size;
-          addReasoningStep(`Citations: ${supported} supported, ${partial} partial, ${failed} flagged${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
-        }
-      } catch (e) {
-        console.warn('Citation verification unavailable:', e);
-        addReasoningStep('Citation verification unavailable — proceeding without claim-level checks');
-      }
-    }
-
-    addReasoningStep('Finalizing report structure...');
-
-    // ─── Consensus Variance Alignment (final pass) ───
-    // Ensure consensus_variance aligns with evidence_consensus regardless of
-    // whether the secondary model succeeded. This catches cases where:
-    // - The secondary model failed (no variance computed)
-    // - The variance was computed but alignment inside the handler didn't fire
-    // - evidence_consensus was overridden after variance was already set
-    //
-    // IMPORTANT: Only promote, never demote. If the secondary model computed
-    // a legitimate 'high' variance from genuine score disagreement, preserve it.
-    if (parsed.scores) {
-      const ec = parsed.scores.evidence_consensus;
-      const current = (parsed as COGNAPSE_Output).consensus_variance;
-      const currentLevel = current?.level;
-      
-      if (ec === 'contested' && currentLevel !== 'high') {
-        // Topic-level mandation: contested queries always get high variance
-        (parsed as COGNAPSE_Output).consensus_variance = {
-          level: 'high',
-          narrative: 'Models disagree significantly on this controversial topic — exercise caution',
-        };
-      } else if (ec === 'mixed' && (!current || currentLevel === 'low')) {
-        // Only promote from low/undefined to moderate — don't downgrade high
-        (parsed as COGNAPSE_Output).consensus_variance = {
-          level: 'moderate',
-          narrative: 'Models show moderate disagreement reflecting genuine topic complexity',
-        };
-      }
-    }
+    deferredReportEnrichment(
+      parsed,
+      groundedSources,
+      query,
+      abortSignal
+    );
 
     return parsed;
   } catch (error) {
