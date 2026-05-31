@@ -45,6 +45,106 @@ function normalizePrivateKey(raw) {
   return key.replace(/\\n/g, '\n');
 }
 
+/* ─── POST /api/fetch-url ─── */
+
+/**
+ * Fetch a URL and return its full text content.
+ * Used by citation verification to fetch full source text (not just snippet).
+ * Only accessible server-side to avoid CORS issues.
+ */
+export async function handleFetchUrl(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    let body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const url = body.url;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'url field is required' });
+    }
+
+    // Basic URL validation — must be http/https
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return res.status(400).json({ error: 'Only http and https URLs are supported' });
+    }
+
+    // Fetch with a reasonable timeout (10s) and user-agent to avoid blocks
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; COGNAPSE/1.0; +https://cognapse.com)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      return res.status(502).json({ error: `Source returned status ${response.status}` });
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml');
+    const isText = contentType.includes('text/') || contentType.includes('application/json') || contentType.includes('application/xml');
+
+    if (!isHtml && !isText) {
+      return res.status(415).json({ error: `Unsupported content type: ${contentType}` });
+    }
+
+    const rawText = await response.text();
+
+    // Strip HTML tags for HTML content, keeping paragraph text
+    let cleanText = rawText;
+    if (isHtml) {
+      // Remove script and style blocks
+      cleanText = cleanText.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ');
+      cleanText = cleanText.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ');
+      // Replace common block tags with newlines
+      cleanText = cleanText.replace(/<\/(p|div|h[1-6]|li|blockquote|section|article|tr|td|th)[^>]*>/gi, '\n');
+      // Strip all remaining HTML tags
+      cleanText = cleanText.replace(/<[^>]+>/g, ' ');
+      // Decode common entities
+      cleanText = cleanText.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+      // Collapse whitespace
+      cleanText = cleanText.replace(/\s+/g, ' ').trim();
+    }
+
+    // Limit response size (50KB of text is plenty for verification)
+    const maxChars = 50000;
+    const truncated = cleanText.length > maxChars;
+    const text = cleanText.slice(0, maxChars);
+
+    return res.status(200).json({
+      url,
+      text,
+      truncated,
+      length: text.length,
+      title: extractTitle(rawText),
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Source fetch timed out after 10 seconds' });
+    }
+    if (error.code === 'ERR_INVALID_URL') {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+    console.error('[fetch-url] Error fetching:', url, error?.message || error);
+    return res.status(502).json({ error: `Failed to fetch source: ${error?.message || 'Unknown error'}` });
+  }
+}
+
+function extractTitle(html) {
+  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return match ? match[1].trim() : '';
+}
+
 /* ─── GET /api/health ─── */
 
 export async function handleHealth(req, res) {

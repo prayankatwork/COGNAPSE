@@ -1,7 +1,7 @@
 import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { COGNAPSE_Output, ResearchVisibility } from '../types';
-import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash } from 'lucide-react';
+import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash, Layers } from 'lucide-react';
 import { toast } from '../utils/toast';
 import { ErrorBoundary } from './ui';
 import clsx from 'clsx';
@@ -509,6 +509,63 @@ export default function ReportView({
               }))}
               retrievalTrace={report._retrieval_trace || null}
             />
+          )}
+
+          {/* Citation Verification Status */}
+          {report._citation_verified_at && (
+            <div className="flex flex-wrap items-center gap-3 px-3 py-2 border border-my-border bg-my-bg/40">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 size={11} className="text-green-500" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-my-ink">Citations Verified</span>
+              </div>
+              <span className="text-[8px] font-mono text-my-muted">
+                {new Date(report._citation_verified_at).toLocaleString(undefined, {
+                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                })}
+              </span>
+              {report.citation_verifications && (
+                <span className="text-[8px] font-mono text-my-muted">
+                  {report.citation_verifications.filter(v => v.verdict === 'supported').length} supported
+                  {' · '}
+                  {report.citation_verifications.filter(v => v.verdict === 'partial').length} partial
+                  {' · '}
+                  {report.citation_verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length} flagged
+                </span>
+              )}
+              {report._source_reranking?.applied && (
+                <span className="ml-auto text-[8px] font-mono text-my-accent">
+                  <Layers size={9} className="inline mr-1" />Sources re-ranked by relevance
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Consensus Variance Signal */}
+          {report.consensus_variance && (
+            <div className={clsx(
+              "px-3 py-2 border-l-[3px] text-[10px] leading-relaxed",
+              report.consensus_variance.level === 'low'
+                ? "border-green-500 bg-green-50/30 dark:bg-green-950/10"
+                : report.consensus_variance.level === 'moderate'
+                ? "border-amber-500 bg-amber-50/30 dark:bg-amber-950/10"
+                : "border-red-500 bg-red-50/30 dark:bg-red-950/10"
+            )}>
+              <div className="flex items-start gap-2">
+                {report.consensus_variance.level === 'low' ? (
+                  <CheckCircle2 size={11} className="text-green-500 mt-0.5 shrink-0" />
+                ) : report.consensus_variance.level === 'moderate' ? (
+                  <AlertTriangle size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                ) : (
+                  <AlertTriangle size={11} className="text-red-500 mt-0.5 shrink-0" />
+                )}
+                <div>
+                  <span className="font-bold uppercase tracking-widest text-[8px]">
+                    Multi-Model Consensus: {report.consensus_variance.level}
+                  </span>
+                  <p className="text-my-muted mt-0.5">{report.consensus_variance.narrative}</p>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Actionable Takeaways — full width below the grid */}

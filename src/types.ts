@@ -122,11 +122,34 @@ export interface COGNAPSE_Output {
   // Citation Verification: attached by geminiService after verifying each [N] claim against its source
   citation_verifications?: CitationVerification[];
 
+  // Timestamp when citations were last verified (ISO string)
+  _citation_verified_at?: string;
+
   // Multi-Model Consensus: attached by geminiService when running two-model validation
   multi_model_consensus?: MultiModelConsensus;
 
+  // Confidence Calibration: LLM's self-assessment of confidence after synthesis
+  confidence_calibration?: {
+    confidence_rating: 'sure' | 'partially_sure' | 'uncertain';
+    gaps_identified: string[];
+    narrative: string;
+  };
+
   // Source Grounding: retrieval trace attached by geminiService
   _retrieval_trace?: RetrievalTrace;
+
+  // Whether sources were reranked by the verifier model after initial search
+  _source_reranking?: {
+    applied: boolean;
+    model: string;
+    original_count: number;
+  };
+
+  // Variance signal: derived from multi-model score disagreement
+  consensus_variance?: {
+    level: 'low' | 'moderate' | 'high';
+    narrative: string;
+  };
 }
 
 /* ─── Source Grounding Types ─── */

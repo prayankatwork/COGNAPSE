@@ -8,8 +8,9 @@ import { useStore } from '../store';
 import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
 import { generateMissingConflicts } from '../utils/conflictDetector';
-import { detectUncertaintyQuery, detectAdversarialQuery } from '../utils/scoringEngine';
+import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentiment } from '../utils/scoringEngine';
 import { redistributeBatchCitations } from '../utils/citations';
+import { apiFetch } from './apiClient';
 const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
@@ -372,28 +373,31 @@ function extractCitations(synthesis: string): { sourceId: number; claimText: str
  */
 async function verifyCitations(
   citations: { sourceId: number; claimText: string }[],
-  sources: { id: number; snippet: string; title: string; domain: string; key_finding?: string }[],
+  sources: { id: number; snippet: string; title: string; domain: string; key_finding?: string; full_text?: string }[],
   abortSignal?: AbortSignal
 ): Promise<CitationVerification[]> {
   if (citations.length === 0 || sources.length === 0) return [];
 
-  // Build a lookup of sourceId → snippet
+  // Build a lookup of sourceId → source content (prefer full text, fall back to snippet)
   const sourceMap = new Map<number, string>();
   for (const s of sources) {
-    sourceMap.set(s.id, s.snippet || s.key_finding || '');
+    const content = (s.full_text || s.snippet || s.key_finding || '').substring(0, 2000);
+    sourceMap.set(s.id, content);
   }
 
   // Only verify citations where we actually have the source
   const verifiable = citations.filter(c => sourceMap.has(c.sourceId) && sourceMap.get(c.sourceId)!.length > 10);
   if (verifiable.length === 0) return [];
 
-  // Build the batch prompt
+  // Build the batch prompt — include full text label when available
   const pairsText = verifiable.map((c, i) => {
-    const snippet = sourceMap.get(c.sourceId)!.substring(0, 500); // trim to 500 chars
-    return `PAIR ${i + 1}:\nCLAIM: "${c.claimText}"\nSOURCE SNIPPET: "${snippet}"\n`;
+    const content = sourceMap.get(c.sourceId)!;
+    const isFullText = sources.find(s => s.id === c.sourceId)?.full_text ? true : false;
+    const label = isFullText ? 'FULL SOURCE TEXT' : 'SOURCE SNIPPET';
+    return `PAIR ${i + 1}:\nCLAIM: "${c.claimText}"\n${label}: "${content}"\n`;
   }).join('\n');
 
-  const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE SNIPPETS, determine for each pair whether the source supports the claim.
+  const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE CONTENT, determine for each pair whether the source supports the claim.
 
 For each pair, return:
 - verdict: "supported" (source clearly supports the claim) | "partial" (source partially supports but missing key details) | "contradicted" (source contradicts the claim) | "unrelated" (source doesn't address the claim)
@@ -421,6 +425,137 @@ ${pairsText}`;
   } catch (e) {
     console.warn('Citation verification failed:', e);
     return [];
+  }
+}
+
+/* ─── Source Reranking ─── */
+
+/**
+ * Rerank top sources by asking the verifier model to rate relevance to the query.
+ * This improves on the heuristic (credibility + relevance) sort by using actual
+ * semantic understanding of the query-source relationship.
+ */
+async function rerankSourcesByRelevance(
+  sources: GroundedSource[],
+  query: string,
+  abortSignal?: AbortSignal
+): Promise<GroundedSource[]> {
+  if (sources.length < 3) return sources;
+
+  // Only rerank the top candidates — beyond ~20 the model's attention degrades
+  const candidates = sources.slice(0, 20);
+  const rest = sources.slice(20);
+
+  const prompt = `Rate each source's relevance to the research query on a scale of 0-100.
+Return ONLY a valid JSON array of objects (no markdown, no backticks).
+Each object must have: "id" (number), "relevance" (0-100), "reason" (max 10 words)
+
+QUERY: "${query}"
+
+SOURCES:
+${candidates.map((s, i) => `${i + 1}. [${s.id}] ${s.title} (${s.domain})
+   Snippet: ${s.snippet || s.key_finding || ''}`).join('\n')}`;
+
+  try {
+    const raw = await callCloudAI(prompt, true, CONSENSUS_MODEL, abortSignal);
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    const ratings = Array.isArray(parsed) ? parsed : (parsed.ratings || []);
+
+    // Build a lookup of source ID → model relevance score
+    const modelScore = new Map<number, number>();
+    for (const r of ratings) {
+      if (r.id && typeof r.relevance === 'number') {
+        modelScore.set(r.id, r.relevance);
+      }
+    }
+
+    // Blend model relevance (60%) with existing credibility (40%)
+    const blended = candidates.map(s => {
+      const modelRel = modelScore.get(s.id) ?? 50;
+      const credNorm = (s.credibility_score || 50) / 100 * 100;
+      const blendedScore = modelRel * 0.6 + credNorm * 0.4;
+      return { ...s, relevance_score: Math.round(blendedScore) };
+    });
+
+    // Sort by blended score descending
+    blended.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+
+    // Renumber IDs sequentially after reranking
+    const renumbered = [...blended, ...rest].map((s, i) => ({ ...s, id: i + 1 }));
+
+    return renumbered;
+  } catch (e) {
+    console.warn('[COGNAPSE] Source reranking failed — falling back to heuristic sort:', e);
+    return sources;
+  }
+}
+
+/* ─── Confidence Calibration ─── */
+
+/**
+ * After primary synthesis, run a second prompt asking the LLM to rate its own confidence.
+ * This produces an honest self-assessment that surfaces knowledge gaps and uncertainty.
+ */
+async function calibrateConfidence(
+  synthesis: string,
+  query: string,
+  abortSignal?: AbortSignal
+): Promise<{ confidence_rating: 'sure' | 'partially_sure' | 'uncertain'; gaps_identified: string[]; narrative: string } | null> {
+  if (!synthesis || synthesis.length < 50) return null;
+
+  const prompt = `You generated the following research synthesis for the query: "${query}"
+
+SYNTHESIS:
+"${synthesis.substring(0, 2000)}"
+
+Now, honestly assess your confidence in this synthesis. Consider:
+- Are there claims in your synthesis that you're not fully sure about?
+- What specific information would you need to be more confident?
+- Are there alternative interpretations you didn't explore?
+
+Return ONLY valid JSON with NO markdown formatting:
+{
+  "confidence_rating": "sure" | "partially_sure" | "uncertain",
+  "gaps_identified": ["list of specific knowledge gaps or uncertainties"],
+  "narrative": "One sentence explaining your confidence level and why"
+}`;
+
+  try {
+    const raw = await callCloudAI(prompt, true, CONSENSUS_MODEL, abortSignal);
+    const result = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    const rating = result.confidence_rating || 'partially_sure';
+    return {
+      confidence_rating: ['sure', 'partially_sure', 'uncertain'].includes(rating) ? rating as any : 'partially_sure',
+      gaps_identified: Array.isArray(result.gaps_identified) ? result.gaps_identified.slice(0, 5) : [],
+      narrative: result.narrative || 'Confidence assessment unavailable',
+    };
+  } catch (e) {
+    console.warn('[COGNAPSE] Confidence calibration failed:', e);
+    return null;
+  }
+}
+
+/* ─── Full-Text Source Fetcher ─── */
+
+/**
+ * Fetch full text of a source URL via the server-side /api/fetch-url endpoint.
+ * Falls back gracefully on failure (returns null, downstream uses snippet).
+ */
+async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Promise<string | null> {
+  if (!url || url.startsWith('document')) return null; // document sources have no external URL
+  try {
+    const response = await apiFetch('/api/fetch-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: abortSignal,
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.text || null;
+  } catch (e) {
+    console.warn('[COGNAPSE] Full-text fetch failed for', url, e);
+    return null;
   }
 }
 
@@ -544,6 +679,16 @@ export async function executeCognapseResearch(
     audioSystem.play('retrieval-complete');
   }
 
+  // ─── Source Reranking ───
+  // Rerank top sources by model-assessed relevance to improve citation quality
+  let sourceRerankingApplied = false;
+  const originalSourceCount = groundedSources.length;
+  if (groundedSources.length >= 3) {
+    addReasoningStep('Reranking sources by semantic relevance to query...');
+    groundedSources = await rerankSourcesByRelevance(groundedSources, query, abortSignal);
+    sourceRerankingApplied = true;
+  }
+
   // ─── PHASE 2: COMPRESS SOURCES FOR LLM ───
   // Compress sources into token-efficient context
   const sourcesContext = groundedSources.length > 0
@@ -658,6 +803,58 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       // Non-critical — conflicts are optional
     }
 
+    // ─── Source Reranking Metadata ───
+    if (sourceRerankingApplied) {
+      (parsed as COGNAPSE_Output)._source_reranking = {
+        applied: true,
+        model: CONSENSUS_MODEL,
+        original_count: originalSourceCount,
+      };
+    }
+
+    // ─── Confidence Calibration ───
+    // After synthesis, ask the LLM to honestly rate its own confidence
+    // This surfaces knowledge gaps and uncertainty that the primary model may have glossed over
+    addReasoningStep('Calibrating confidence assessment...');
+    try {
+      const calibration = await calibrateConfidence(
+        parsed.summary?.full_synthesis || parsed.summary?.bottom_line || '',
+        query,
+        abortSignal
+      );
+      if (calibration) {
+        (parsed as COGNAPSE_Output).confidence_calibration = calibration;
+        // If calibration says uncertain, adjust the confidence_label accordingly
+        if (parsed.scores && calibration.confidence_rating === 'uncertain' && parsed.scores.confidence_label === '🟢 High') {
+          parsed.scores.confidence_label = '🟡 Medium';
+        }
+        addReasoningStep(`Confidence: ${calibration.confidence_rating} — ${calibration.narrative}`);
+      }
+    } catch (e) {
+      // Non-critical — calibration is optional
+    }
+
+    // ─── Auto Bias Alert from Sentiment Analysis ───
+    // If the AI didn't generate a bias_alert, but our sentiment analysis detects
+    // above-average emotional language in sources, auto-generate one.
+    if (!parsed.bias_alert && groundedSources.length > 0) {
+      try {
+        const sentimentResult = await computeBiasFromSentiment(groundedSources);
+        if (sentimentResult.biasScore > 0.4) {
+          let direction = 'slight';
+          if (sentimentResult.biasScore > 0.6) direction = 'moderate';
+          if (sentimentResult.biasScore > 0.8) direction = 'strong';
+          parsed.bias_alert = {
+            direction: `${direction} emotional language detected in sources`,
+            recommendation: 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.',
+          };
+          addReasoningStep(`Bias alert generated: ${direction} emotional language detected (score: ${sentimentResult.biasScore})`);
+        }
+      } catch (e) {
+        // Non-critical
+      }
+    }
+
     // Attach real sources and retrieval trace to the output
     if (groundedSources.length > 0) {
       // Replace any AI-hallucinated sources with our real ones
@@ -701,6 +898,25 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         const consensus = await diffReports(parsed, secondaryParsed);
         (parsed as COGNAPSE_Output).multi_model_consensus = consensus;
 
+        // Compute variance signal: disagreement between models on key scores
+        // Higher variance = less confidence in results
+        if (parsed.scores && secondaryParsed.scores) {
+          const credDiff = Math.abs((parsed.scores.overall_credibility || 0) - (secondaryParsed.scores.overall_credibility || 0)) / 100;
+          const relDiff = Math.abs((parsed.scores.overall_relevance || 0) - (secondaryParsed.scores.overall_relevance || 0)) / 100;
+          const consensusDiff = parsed.scores.evidence_consensus !== secondaryParsed.scores.evidence_consensus ? 0.3 : 0;
+          const variance = Math.min(1, (credDiff * 0.4 + relDiff * 0.3 + consensusDiff * 0.3));
+          let level: 'low' | 'moderate' | 'high' = 'low';
+          let narrative = 'Models closely agree on credibility and relevance assessments';
+          if (variance > 0.6) {
+            level = 'high';
+            narrative = 'Significant disagreement between models on core scores — exercise caution with results';
+          } else if (variance > 0.3) {
+            level = 'moderate';
+            narrative = 'Models show moderate disagreement on some quality dimensions — cross-check critical claims';
+          }
+          (parsed as COGNAPSE_Output).consensus_variance = { level, narrative };
+        }
+
         addReasoningStep(`Consensus: ${consensus.overall_agreement}% agreement across two AI models`);
       } catch (e) {
         console.warn('Multi-model consensus parse failed:', e);
@@ -719,25 +935,53 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         const citationPairs = extractCitations(parsed.summary.full_synthesis);
 
         if (citationPairs.length > 0) {
+          // Try to fetch full text for each unique source URL for deeper verification
+          const uniqueUrls = new Map<number, string>();
+          for (const s of groundedSources) {
+            if (s.url && !s.url.startsWith('document') && !uniqueUrls.has(s.id)) {
+              uniqueUrls.set(s.id, s.url);
+            }
+          }
+
+          // Fetch full text for up to 5 sources (parallel, non-blocking)
+          const fullTextPromises = Array.from(uniqueUrls.entries()).slice(0, 5).map(
+            async ([id, url]) => {
+              const text = await fetchSourceFullText(url, abortSignal);
+              return { id, text };
+            }
+          );
+          const fullTextResults = await Promise.all(fullTextPromises);
+          const fullTextMap = new Map<number, string>();
+          for (const r of fullTextResults) {
+            if (r.text) fullTextMap.set(r.id, r.text);
+          }
+
+          // Build source context: use full text when available, fall back to snippet
+          const sourceContexts = groundedSources.map(s => ({
+            id: s.id,
+            snippet: s.snippet || '',
+            key_finding: s.key_finding || '',
+            title: s.title,
+            domain: s.domain,
+            // If we fetched full text, append relevant portion for verification
+            full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
+          }));
+
           const verifications = await verifyCitations(
             citationPairs,
-            groundedSources.map(s => ({
-              id: s.id,
-              snippet: s.snippet || '',
-              key_finding: s.key_finding || '',
-              title: s.title,
-              domain: s.domain,
-            })),
+            sourceContexts,
             abortSignal
           );
 
           if (verifications.length > 0) {
             (parsed as COGNAPSE_Output).citation_verifications = verifications;
+            (parsed as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
             audioSystem.play('verification-complete');
             const supported = verifications.filter(v => v.verdict === 'supported').length;
             const partial = verifications.filter(v => v.verdict === 'partial').length;
             const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
-            addReasoningStep(`Citations: ${supported} verified, ${partial} partial, ${failed} unsupported`);
+            const fullTextCount = fullTextMap.size;
+            addReasoningStep(`Citations: ${supported} verified, ${partial} partial, ${failed} unsupported${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
           }
         }
       } catch (e) {
