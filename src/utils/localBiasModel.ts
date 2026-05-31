@@ -19,7 +19,7 @@
 
 /* ─── Constants ─── */
 
-const BIAS_CANDIDATE_LABELS = [
+export const BIAS_CANDIDATE_LABELS = [
   'reliable scientific evidence',
   'neutral factual reporting',
   'government official information',
@@ -27,9 +27,9 @@ const BIAS_CANDIDATE_LABELS = [
   'commercial or promotional',
   'misleading or false claims',
   'satirical or humorous',
-];
+] as const;
 
-const LABEL_BIAS_MAP: Record<string, number> = {
+export const LABEL_BIAS_MAP: Record<string, number> = {
   'reliable scientific evidence': 0.05,
   'neutral factual reporting': 0.10,
   'government official information': 0.10,
@@ -39,7 +39,7 @@ const LABEL_BIAS_MAP: Record<string, number> = {
   'satirical or humorous': 0.60,
 };
 
-const LABEL_FACTUAL_MAP: Record<string, number> = {
+export const LABEL_FACTUAL_MAP: Record<string, number> = {
   'reliable scientific evidence': 10,
   'neutral factual reporting': 8,
   'government official information': 8,
@@ -61,18 +61,77 @@ export interface LocalBiasResult {
 
 /* ─── Pipeline Singleton ─── */
 
+let hfFetchPatched = false;
 let classifierPromise: Promise<any> | null = null;
 let classifierReady = false;
 let classifierLoading = false;
 
+/**
+ * Test-only hook: inject a mock classifier function.
+ * When set, getClassifier() returns this instead of loading the real model.
+ * Only available in test environment.
+ */
+let mockClassifier: any = undefined;
+
+/**
+ * Reset all module state (for test isolation between tests).
+ */
+export function resetLocalBiasState(): void {
+  hfFetchPatched = false;
+  classifierPromise = null;
+  classifierReady = false;
+  classifierLoading = false;
+  mockClassifier = undefined;
+}
+
+/**
+ * Inject a mock classifier for testing.
+ * The mock should be an async function accepting (text, labels, options) and
+ * returning { labels: string[], scores: number[] }.
+ */
+export function setMockClassifier(mock: any): void {
+  mockClassifier = mock;
+  classifierReady = true;
+  classifierPromise = Promise.resolve(mock);
+}
+
 async function getClassifier(): Promise<any> {
-  if (classifierReady && classifierPromise) return classifierPromise;
+  // Test hook: return mock classifier if set
+  if (mockClassifier !== undefined && classifierReady) return classifierPromise;
   if (classifierLoading) {
     // Wait for loading to complete
     while (classifierLoading) await new Promise(r => setTimeout(r, 100));
     return classifierPromise;
   }    classifierLoading = true;
   try {
+    // Patch global fetch to rewrite /resolve/ → /raw/ for Hugging Face model files.
+    // Required because /resolve/ issues a 307 redirect that breaks CORS in the browser.
+    // ONNX model files (.onnx) are excluded because they use Git LFS and /raw/ returns
+    // pointer files (text) instead of binary — breaking ONNX Runtime.
+    // Same patch used by getEmbedder() and getSentimentModel() in scoringEngine.ts.
+    if (!hfFetchPatched) {
+      hfFetchPatched = true;
+      const origFetch = globalThis.fetch.bind(globalThis);
+      globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+        const urlStr = typeof input === 'string'
+          ? input
+          : input instanceof Request
+            ? (input as Request).url
+            : String(input);
+        if (urlStr.includes('huggingface.co/') && urlStr.includes('/resolve/') && !urlStr.includes('.onnx')) {
+          const rewritten = urlStr.replace('/resolve/', '/raw/');
+          if (typeof input === 'string') {
+            input = rewritten;
+          } else if (input instanceof Request) {
+            input = new Request(rewritten, input);
+          } else {
+            input = rewritten;
+          }
+        }
+        return origFetch(input, init);
+      };
+    }
+
     console.log('[LocalBias] Downloading zero-shot model (~90MB quantized) from CDN...');
     // Same CDN import pattern used by scoringEngine.ts
     // @ts-expect-error - CDN module has no type declarations
