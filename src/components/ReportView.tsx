@@ -506,27 +506,8 @@ export default function ReportView({
               retrievalTrace={report._retrieval_trace || null}
             />
           )}
-        </motion.div>
 
-        <motion.div
-          variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
-          className="flex flex-col gap-6 min-w-0"
-        >
-          
-          {/* Metrics */}
-          <SectionTitle>Metrics</SectionTitle>
-          {report.scores && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-my-border border border-my-border">
-               <ScoreCard label="Credibility" value={safeText(report.scores.overall_credibility)} />
-               <ScoreCard label="Relevance" value={safeText(report.scores.overall_relevance)} />
-               <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">
-                 <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
-                 <span className="text-my-ink font-semibold capitalize text-[13px]">{safeText(report.scores.evidence_consensus)}</span>
-               </div>
-            </div>
-          )}
-
-          {/* SWOT Analysis */}
+          {/* SWOT Analysis — below sources */}
           {report.swot && (
             <div className="border border-my-border bg-my-callout/50">
               <SectionTitle>Strategic Analysis</SectionTitle>
@@ -544,7 +525,7 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Actionable Takeaways */}
+          {/* Actionable Takeaways — below sources */}
           {report.actionable_takeaways && (
             <div className="border border-my-border bg-my-callout/50">
               <SectionTitle>Key Takeaways</SectionTitle>
@@ -553,6 +534,25 @@ export default function ReportView({
                 <TakeawayCard title="Watch Out For" content={report.actionable_takeaways.watch_out_for} />
                 <TakeawayCard title="Next Step" content={report.actionable_takeaways.next_step} />
               </div>
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+          className="flex flex-col gap-6 min-w-0"
+        >
+          
+          {/* Metrics */}
+          <SectionTitle>Metrics</SectionTitle>
+          {report.scores && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-my-border border border-my-border">
+               <ScoreCard label="Credibility" value={safeText(report.scores.overall_credibility)} />
+               <ScoreCard label="Relevance" value={safeText(report.scores.overall_relevance)} />
+               <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">
+                 <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
+                 <span className="text-my-ink font-semibold capitalize text-[13px]">{safeText(report.scores.evidence_consensus)}</span>
+               </div>
             </div>
           )}
 
