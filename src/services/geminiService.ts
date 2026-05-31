@@ -490,13 +490,31 @@ ${candidates.map((s, i) => `${i + 1}. [${s.id}] ${s.title} (${s.domain})
   }
 }
 
-/* ─── Confidence Calibration ─── */
+/* ─── Full-Text Source Fetcher ─── */
 
 /**
- * After primary synthesis, run a second prompt asking the LLM to rate its own confidence.
- * This produces an honest self-assessment that surfaces knowledge gaps and uncertainty.
+ * Fetch full text of a source URL via the server-side /api/fetch-url endpoint.
+ * Falls back gracefully on failure (returns null, downstream uses snippet).
  */
-async function calibrateConfidence(
+async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Promise<string | null> {
+  if (!url || url.startsWith('document')) return null; // document sources have no external URL
+  try {
+    const response = await apiFetch('/api/fetch-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: abortSignal,
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.text || null;
+  } catch (e) {
+    console.warn('[COGNAPSE] Full-text fetch failed for', url, e);
+    return null;
+  }
+}
+
+export async function calibrateConfidence(
   synthesis: string,
   query: string,
   abortSignal?: AbortSignal
@@ -531,30 +549,6 @@ Return ONLY valid JSON with NO markdown formatting:
     };
   } catch (e) {
     console.warn('[COGNAPSE] Confidence calibration failed:', e);
-    return null;
-  }
-}
-
-/* ─── Full-Text Source Fetcher ─── */
-
-/**
- * Fetch full text of a source URL via the server-side /api/fetch-url endpoint.
- * Falls back gracefully on failure (returns null, downstream uses snippet).
- */
-async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Promise<string | null> {
-  if (!url || url.startsWith('document')) return null; // document sources have no external URL
-  try {
-    const response = await apiFetch('/api/fetch-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-      signal: abortSignal,
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.text || null;
-  } catch (e) {
-    console.warn('[COGNAPSE] Full-text fetch failed for', url, e);
     return null;
   }
 }

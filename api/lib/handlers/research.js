@@ -135,22 +135,28 @@ function extractDomain(url) {
 
 function inferSourceType(domain) {
   const d = (domain || '').toLowerCase();
-  if (d.endsWith('.edu') || d.includes('arxiv.org') || d.includes('pubmed') || d.includes('jstor') || d.includes('scholar')) return 'academic';
+  // Academic / reference
+  if (d.endsWith('.edu') || d.includes('arxiv.org') || d.includes('pubmed') || d.includes('jstor') || d.includes('scholar') || d.includes('wikipedia.org') || d.includes('britannica.com') || d.includes('lpi.usra.edu') || d.includes('si.edu') || d.includes('nixonlibrary.gov') || d.includes('planetary.org')) return 'academic';
+  // Government / military
   if (d.endsWith('.gov') || d.endsWith('.mil')) return 'government';
-  if (d.includes('reuters.com') || d.includes('ap.org') || d.includes('bbc.com') || d.includes('economist.com') || d.includes('ft.com') || d.includes('nytimes.com') || d.includes('wsj.com') || d.includes('bloomberg.com')) return 'journalism';
+  if (d.includes('nasa.gov') || d.includes('nih.gov') || d.includes('cdc.gov') || d.includes('loc.gov') || d.includes('ebsco')) return 'government';
+  // Journalism / news
+  if (d.includes('reuters.com') || d.includes('ap.org') || d.includes('bbc.com') || d.includes('bbc.co.uk') || d.includes('economist.com') || d.includes('ft.com') || d.includes('nytimes.com') || d.includes('wsj.com') || d.includes('bloomberg.com') || d.includes('theguardian.com') || d.includes('washingtonpost.com') || d.includes('forbes.com') || d.includes('cnn.com') || d.includes('nbcnews.com') || d.includes('abcnews.go.com') || d.includes('cbsnews.com') || d.includes('theatlantic.com') || d.includes('space.com') || d.includes('popsci.com') || d.includes('scientificamerican.com') || d.includes('nationalgeographic.com') || d.includes('pursuit.unimelb.edu.au') || d.includes('npr.org') || d.includes('pbs.org') || d.includes('pursuit')) return 'journalism';
+  // Social media / user-generated
+  if (d.includes('reddit.com') || d.includes('quora.com') || d.includes('facebook.com') || d.includes('youtube.com') || d.includes('linkedin.com') || d.includes('medium.com') || d.includes('substack.com') || d.includes('wordpress.com')) return 'social';
+  // Industry / commercial
   return 'industry';
 }
 
 function rankSources(sources) {
   return sources.map(s => {
     const domain = (s.domain || '').toLowerCase();
+    const sourceType = inferSourceType(domain);
     let typeScore = 0;
-    if (domain.endsWith('.edu')) typeScore = 30;
-    else if (domain.endsWith('.gov') || domain.endsWith('.mil')) typeScore = 28;
-    else if (domain.includes('nature.com') || domain.includes('science.org') || domain.includes('cell.com')) typeScore = 30;
-    else if (domain.includes('arxiv.org') || domain.includes('pubmed.ncbi.nlm.nih.gov') || domain.includes('jstor.org')) typeScore = 30;
-    else if (domain.includes('reuters.com') || domain.includes('ap.org') || domain.includes('bbc.com') || domain.includes('economist.com') || domain.includes('ft.com')) typeScore = 25;
-    else if (domain.endsWith('.org')) typeScore = 15;
+    if (sourceType === 'academic') typeScore = 30;
+    else if (sourceType === 'government') typeScore = 28;
+    else if (sourceType === 'journalism') typeScore = 25;
+    else if (sourceType === 'social') typeScore = 8;
     else typeScore = 10;
 
     let recencyBonus = 0;
@@ -160,7 +166,7 @@ function rankSources(sources) {
       else if (monthsAgo < 24) recencyBonus = 5;
     }
     const credibility = Math.min(100, typeScore + recencyBonus + (s.relevance_score || 50));
-    return { ...s, credibility_score: credibility, relevance_score: s.relevance_score || 50 };
+    return { ...s, credibility_score: credibility, relevance_score: s.relevance_score || 50, source_type: sourceType };
   }).sort((a, b) => b.credibility_score - a.credibility_score || b.relevance_score - a.relevance_score);
 }
 
