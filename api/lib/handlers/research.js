@@ -165,7 +165,14 @@ function rankSources(sources) {
       if (monthsAgo < 12) recencyBonus = 10;
       else if (monthsAgo < 24) recencyBonus = 5;
     }
-    const credibility = Math.min(100, typeScore + recencyBonus + (s.relevance_score || 50));
+    // Credibility = blended score where domain authority is the primary driver:
+    // - domainAuthority: typeScore scaled to 0-50 range
+    // - relevanceContrib: relevance capped at 40% weight (prevents a highly relevant
+    //   industry blog from scoring the same as an academic paper)
+    // - recencyBonus: max 10 for sources <12 months old
+    const domainAuthority = Math.round(typeScore * 1.67);     // 0-50 (academic=50, journalism=42, industry=17, social=13)
+    const relevanceContrib = Math.round((s.relevance_score || 50) * 0.4);  // 0-40
+    const credibility = Math.min(95, Math.max(10, domainAuthority + relevanceContrib + recencyBonus));
     return { ...s, credibility_score: credibility, relevance_score: s.relevance_score || 50, source_type: sourceType };
   }).sort((a, b) => b.credibility_score - a.credibility_score || b.relevance_score - a.relevance_score);
 }
@@ -296,3 +303,179 @@ export async function handleSearch(req, res) {
     return sendSafeError(res, 500, `Search failed: ${error.message}`, error);
   }
 }
+
+/* ─── POST /api/academic-search — CrossRef + PubMed + arXiv ─── */
+
+/**
+ * Cross-reference a research query against authoritative academic databases.
+ * Queries multiple APIs in parallel and returns results with:
+ * - High credibility scores (academic baseline)
+ * - DOI/PMID identifiers for citation
+ * - Source type markers ("pubmed" / "arxiv" / "crossref")
+ * Returns max 5 results per provider to avoid overwhelming the context.
+ */
+export async function handleAcademicSearch(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const rl = rateLimit(req, { key: 'academic', limit: 10, windowMs: 60_000 });
+  if (!rl.allowed) return res.status(429).json({ error: 'Academic search rate limit exceeded.' });
+
+  const { query, count = 5 } = req.body || {};
+  if (!query || typeof query !== 'string' || query.trim().length === 0)
+    return res.status(400).json({ error: 'Missing query' });
+
+  const startTime = Date.now();
+
+  async function searchPubMed(q) {
+    try {
+      const esearchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(q)}&retmax=${count}&retmode=json`;
+      const esearchRes = await fetch(esearchUrl, { signal: AbortSignal.timeout(8000) });
+      if (!esearchRes.ok) return [];
+      const esearchData = await esearchRes.json();
+      const ids = esearchData.esearchresult?.idlist || [];
+      if (ids.length === 0) return [];
+
+      const efetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${ids.slice(0, count).join(',')}&retmode=xml`;
+      const efetchRes = await fetch(efetchUrl, { signal: AbortSignal.timeout(8000) });
+      if (!efetchRes.ok) return [];
+      const xml = await efetchRes.text();
+
+      const titles = [...xml.matchAll(/<ArticleTitle>([^<]+)<\/ArticleTitle>/g)].map(m => m[1]);
+      const abstracts = [...xml.matchAll(/<AbstractText[^>]*>([^<]*)<\/AbstractText>/g)].map(m => m[1]);
+      const pubDates = [...xml.matchAll(/<PubDate>\\s*<Year>(\\d{4})<\/Year>/g)].map(m => m[1]);
+
+      return ids.slice(0, count).map((id, i) => ({
+        title: titles[i] || `PubMed article #${id}`,
+        url: `https://pubmed.ncbi.nlm.nih.gov/${id}/`,
+        domain: 'pubmed.ncbi.nlm.nih.gov',
+        snippet: (abstracts[i] || '').substring(0, 400),
+        published_date: pubDates[i] || 'unknown',
+        pmid: id,
+        relevance_score: 85,
+      }));
+    } catch (e) {
+      console.warn('[AcademicSearch] PubMed failed:', e.message);
+      return [];
+    }
+  }
+
+  async function searchArxiv(q) {
+    try {
+      const url = `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(q)}&start=0&max_results=${count}&sortBy=relevance&sortOrder=descending`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return [];
+      const xml = await res.text();
+
+      const titles = [...xml.matchAll(/<title>([^<]+)<\/title>/g)].map(m => m[1]);
+      const summaries = [...xml.matchAll(/<summary>([^<]*)<\/summary>/g)].map(m => m[1]);
+      const ids = [...xml.matchAll(/<id>https?:\\/\\/arxiv\\.org\\/abs\\/([^<]+)<\\/id>/g)].map(m => m[1]);
+      const published = [...xml.matchAll(/<published>(\\d{4})/g)].map(m => m[1]);
+
+      // First <title> is the feed title; skip it
+      const actualTitles = titles.slice(1, count + 1);
+
+      return actualTitles.slice(0, count).map((title, i) => ({
+        title: title || `arXiv article #${ids[i] || i}`,
+        url: `https://arxiv.org/abs/${ids[i] || ''}`,
+        domain: 'arxiv.org',
+        snippet: (summaries[i] || title || '').substring(0, 400),
+        published_date: published[i] || 'unknown',
+        arxiv_id: ids[i] || '',
+        relevance_score: 80,
+      }));
+    } catch (e) {
+      console.warn('[AcademicSearch] arXiv failed:', e.message);
+      return [];
+    }
+  }
+
+  async function searchCrossref(q) {
+    try {
+      const url = `https://api.crossref.org/works?query=${encodeURIComponent(q)}&rows=${count}&sort=relevance&order=desc`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const items = data.message?.items || [];
+      return items.slice(0, count).map(item => ({
+        title: item.title?.[0] || item['container-title']?.[0] || 'Untitled',
+        url: item.URL || (item.DOI ? `https://doi.org/${item.DOI}` : ''),
+        domain: (() => {
+          try { return new URL(item.URL || 'https://doi.org').hostname; } catch { return 'crossref.org'; }
+        })(),
+        snippet: (item.abstract || item['container-title']?.[0] || '').substring(0, 400),
+        published_date: item['published-print']?.['date-parts']?.[0]?.[0]?.toString() || item.created?.['date-parts']?.[0]?.[0]?.toString() || 'unknown',
+        doi: item.DOI || '',
+        relevance_score: 75,
+      }));
+    } catch (e) {
+      console.warn('[AcademicSearch] Crossref failed:', e.message);
+      return [];
+    }
+  }
+
+  try {
+    const [pubmed, arxiv, crossref] = await Promise.all([
+      searchPubMed(query),
+      searchArxiv(query),
+      searchCrossref(query),
+    ]);
+
+    const allSources = [...pubmed, ...arxiv, ...crossref];
+
+    // Deduplicate by URL
+    const seen = new Map();
+    for (const s of allSources) {
+      const key = s.url || s.doi || s.pmid || s.title;
+      if (!seen.has(key)) seen.set(key, s);
+    }
+    const deduped = Array.from(seen.values());
+
+    // Assign credibility: PubMed/NIH is highest (95), arXiv (88), Crossref DOI (92)
+    const ranked = deduped.map(s => {
+      let typeScore = 85;
+      if (s.domain === 'pubmed.ncbi.nlm.nih.gov') typeScore = 95;
+      else if (s.domain === 'arxiv.org') typeScore = 88;
+      if (s.doi) typeScore = Math.max(typeScore, 92);
+      return {
+        ...s, credibility_score: typeScore, source_type: 'academic',
+      };
+    }).sort((a, b) => b.credibility_score - a.credibility_score);
+
+    return res.status(200).json({
+      provider: 'academic',
+      trace: {
+        query,
+        sources_retrieved: allSources.length,
+        sources_used: ranked.length,
+        pubmed_found: pubmed.length,
+        arxiv_found: arxiv.length,
+        crossref_found: crossref.length,
+        latency_ms: Date.now() - startTime,
+        search_provider: 'academic',
+      },
+      sources: ranked.slice(0, count).map((s, i) => ({
+        id: i + 1,
+        title: s.title,
+        url: s.url,
+        domain: s.domain,
+        type: 'academic',
+        snippet: (s.snippet || '').substring(0, 400),
+        credibility_score: s.credibility_score,
+        relevance_score: s.relevance_score || 85,
+        key_finding: (s.snippet || '').substring(0, 200),
+        published_date: s.published_date || 'unknown',
+        bias_flag: null,
+        retrieval_timestamp: new Date().toISOString(),
+        author: s.author || null,
+        pmid: s.pmid || null,
+        arxiv_id: s.arxiv_id || null,
+        doi: s.doi || null,
+      })),
+    });
+  } catch (error) {
+    return sendSafeError(res, 500, `Academic search failed: ${error.message}`, error);
+  }
+}
+

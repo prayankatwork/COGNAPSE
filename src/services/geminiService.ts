@@ -668,9 +668,56 @@ export async function executeCognapseResearch(
     }
   }
 
+  // ─── PHASE 1b: ACADEMIC CROSS-REFERENCING (parallel) ───
+  // Query PubMed, arXiv, and CrossRef for authoritative academic sources.
+  // These results get merged with web sources at higher credibility.
+  let academicSources: GroundedSource[] = [];
+  const academicPromise = (async () => {
+    try {
+      const response = await apiFetch('/api/academic-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, count: 5 }),
+        signal: abortSignal,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sources && Array.isArray(data.sources)) {
+          return data.sources as GroundedSource[];
+        }
+      }
+      return [];
+    } catch (e) {
+      console.warn('[COGNAPSE] Academic search unavailable:', e);
+      return [];
+    }
+  })();
+
   // Micro-sound: retrieval complete (sources collected from web and/or docs)
   if (groundedSources.length > 0) {
     audioSystem.play('retrieval-complete');
+  }
+
+  // ─── Merge Academic Sources ───
+  // Await the parallel academic search and merge results at the front
+  // with high credibility scores (PubMed=95, arXiv=88, DOI=92)
+  academicSources = await academicPromise;
+  if (academicSources.length > 0) {
+    addReasoningStep(`Cross-referenced ${academicSources.length} authoritative academic sources (PubMed/arXiv/CrossRef)`);
+    // Assign IDs after the last web source
+    let nextId = 0;
+    for (const s of groundedSources) {
+      if (s.id > nextId) nextId = s.id;
+    }
+    const mergedAcademia = academicSources.map((s, i) => ({
+      ...s,
+      id: nextId + i + 1,
+      // The credibility score already signals authority — no prefix needed
+    }));
+    // Insert academic sources at the front (they have highest credibility)
+    groundedSources = [...mergedAcademia, ...groundedSources];
+    // Re-number all sources sequentially
+    groundedSources = groundedSources.map((s, i) => ({ ...s, id: i + 1 }));
   }
 
   // ─── Source Reranking ───
@@ -967,16 +1014,16 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
             abortSignal
           );
 
-          if (verifications.length > 0) {
-            (parsed as COGNAPSE_Output).citation_verifications = verifications;
-            (parsed as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
-            audioSystem.play('verification-complete');
-            const supported = verifications.filter(v => v.verdict === 'supported').length;
-            const partial = verifications.filter(v => v.verdict === 'partial').length;
-            const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
-            const fullTextCount = fullTextMap.size;
-            addReasoningStep(`Citations: ${supported} verified, ${partial} partial, ${failed} unsupported${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
-          }
+          // Always attach verification results + timestamp so the UI badge renders
+          // even when verification returns empty (showing 0/0/0 instead of hiding)
+          (parsed as COGNAPSE_Output).citation_verifications = verifications;
+          (parsed as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
+          audioSystem.play('verification-complete');
+          const supported = verifications.filter(v => v.verdict === 'supported').length;
+          const partial = verifications.filter(v => v.verdict === 'partial').length;
+          const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
+          const fullTextCount = fullTextMap.size;
+          addReasoningStep(`Citations: ${supported} supported, ${partial} partial, ${failed} flagged${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
         }
       } catch (e) {
         console.warn('Citation verification unavailable:', e);

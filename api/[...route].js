@@ -38,6 +38,7 @@ const routes = {
   'research':                research.handleResearch,  'analyze':                  research.handleAnalyze,
   'fetch-url':               system.handleFetchUrl,
   'search':                  research.handleSearch,
+  'academic-search':         research.handleAcademicSearch,
   'upload-document':         documents.handleUploadDocument,
   'list-documents':          documents.handleListDocuments,
   'confirm-document':        documents.handleConfirmDocument,
