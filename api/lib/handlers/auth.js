@@ -105,6 +105,30 @@ export async function handleCheckPremium(req, res) {
   }
 }
 
+/* ─── GET /api/verify-session ─── */
+
+/**
+ * Lightweight session verification endpoint.
+ * The extension calls this on every popup open — if the server can't verify
+ * the Firebase idToken, the extension shows a hard block with no functionality.
+ */
+export async function handleVerifySession(req, res) {
+  applyCors(req, res);
+  if (handleOptions(req, res)) return;
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const decoded = await requireUser(req, res);
+  if (decoded === false) return; // 401 already sent by requireUser
+
+  return res.status(200).json({
+    valid: true,
+    user: {
+      uid: decoded.uid,
+      email: decoded.email || null,
+    },
+  });
+}
+
 /* ─── POST /api/revoke-session ─── */
 
 export async function handleRevokeSession(req, res) {

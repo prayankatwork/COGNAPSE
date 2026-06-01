@@ -23,6 +23,7 @@ import * as documents from './lib/handlers/documents.js';
 const routes = {
   'health':                  system.handleHealth,
   'ops-telemetry':           system.handleOpsTelemetry,
+  'verify-session':          auth.handleVerifySession,
   'check-premium':           auth.handleCheckPremium,
   'revoke-session':          auth.handleRevokeSession,
   'admin-auth':              auth.handleAdminAuth,

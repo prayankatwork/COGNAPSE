@@ -21,7 +21,6 @@ const resultInsight = document.getElementById('result-insight');
 const resultConfidence = document.getElementById('result-confidence');
 const resultRecommendation = document.getElementById('result-recommendation');
 
-const btnLoginRedirect = document.getElementById('btn-login-redirect');
 const btnPremiumUpgrade = document.getElementById('btn-premium-upgrade');
 
 chrome.action.setBadgeText({ text: '' });
@@ -49,36 +48,25 @@ function authHeaders(session) {
   return headers;
 }
 
-/** Check if the stored idToken has expired (grace period of 2 min). */
-function isTokenExpired(session) {
-  if (!session?.tokenExpiresAt) return false;
-  // tokenExpiresAt is a timestamp. Give 2 min grace period.
-  return Date.now() > session.tokenExpiresAt + 2 * 60 * 1000;
-}
-
-/** Clear cached session from chrome.storage and show the auth-required panel. */
-function clearSessionAndShowAuth() {
-  chrome.storage.local.remove(['cognapse_user', 'cognapse_session', 'cognapse_premium', 'cognapse_logged_out'], () => {
-    console.log('COGNAPSE Extension: Cleared stale session.');
-  });
+/**
+ * Show the strict blocked panel with no interactive functionality.
+ * This is the only thing a non-logged-in user ever sees.
+ */
+function showBlocked() {
   premiumBadge.textContent = 'AUTH REQ';
   premiumBadge.style.background = 'rgba(239, 68, 68, 0.2)';
   premiumBadge.style.color = '#ef4444';
   showPanel(authPanel);
 }
 
-/** Set badge to AUTH REQ state. */
-function setBadgeAuthReq() {
-  premiumBadge.textContent = 'AUTH REQ';
-  premiumBadge.style.background = 'rgba(239, 68, 68, 0.2)';
-  premiumBadge.style.color = '#ef4444';
+/** Clear cached session data from chrome.storage. */
+function clearSession() {
+  chrome.storage.local.remove(['cognapse_user', 'cognapse_session', 'cognapse_premium', 'cognapse_logged_out'], () => {
+    console.log('COGNAPSE Extension: Cleared session data.');
+  });
 }
 
 const btnRetry = document.getElementById('btn-retry');
-
-btnLoginRedirect.addEventListener('click', () => {
-  chrome.tabs.create({ url: `${BASE_URL}?action=login` });
-});
 
 btnPremiumUpgrade.addEventListener('click', () => {
   chrome.tabs.create({ url: `${BASE_URL}?action=premium` });
@@ -92,75 +80,83 @@ async function runAnalysis() {
 
   try {
     const store = await new Promise(resolve =>
-      chrome.storage.local.get(['cognapse_session', 'cognapse_user', 'selectedText', 'cognapse_logged_out'], resolve)
+      chrome.storage.local.get(['cognapse_session', 'selectedText', 'cognapse_logged_out'], resolve)
     );
 
-    // If a logout sentinel exists, immediately force re-auth
+    // If a logout sentinel exists, clear everything and block immediately
     if (store.cognapse_logged_out) {
-      chrome.storage.local.remove(['cognapse_logged_out', 'cognapse_user', 'cognapse_session', 'cognapse_premium']);
-      setBadgeAuthReq();
-      showPanel(authPanel);
+      clearSession();
+      showBlocked();
       return;
     }
 
     const session = store.cognapse_session;
-    const user = store.cognapse_user || session;
     const selectedText = store.selectedText;
 
     if (selectedText) {
       chrome.storage.local.remove('selectedText');
     }
 
-    if (!user?.id) {
-      setBadgeAuthReq();
-      showPanel(authPanel);
+    // --- STEP 1: Server-verify the session before showing ANY UI ---
+    // No local storage trust — the server is the sole authority on whether
+    // the user has a valid session from cognapse.vercel.app.
+    showPanel(analysisPanel);
+    showState(stateLoading);
+    loadingStatusText.textContent = 'Verifying secure session...';
+
+    const verifyRes = await fetch(`${BASE_URL}/api/verify-session`, {
+      headers: authHeaders(session),
+    });
+
+    if (verifyRes.status === 401) {
+      // Token invalid/expired/missing — strict block, no functionality
+      clearSession();
+      showBlocked();
       return;
     }
 
-    if (!session?.idToken) {
-      setBadgeAuthReq();
-      errorMessageText.textContent =
-        'No session found. Open COGNAPSE in your browser and sign in, then retry.';
-      showPanel(analysisPanel);
-      showState(stateError);
+    if (!verifyRes.ok) {
+      let detail = 'Session verification failed';
+      try {
+        const errJson = await verifyRes.json();
+        detail = errJson.error || detail;
+      } catch (_) {}
+      throw new Error(detail);
+    }
+
+    const verifyData = await verifyRes.json();
+    if (!verifyData.valid || !verifyData.user?.uid) {
+      clearSession();
+      showBlocked();
       return;
     }
 
-    if (isTokenExpired(session)) {
-      setBadgeAuthReq();
-      errorMessageText.textContent =
-        'Session token expired. Open COGNAPSE in your browser to refresh your session, then retry.';
-      showPanel(analysisPanel);
-      showState(stateError);
-      return;
-    }
-
+    // --- STEP 2: Session is server-verified — check premium ---
     try {
-      showPanel(analysisPanel);
-      showState(stateLoading);
       loadingStatusText.textContent = 'Verifying premium security layer...';
 
-      const verifyRes = await fetch(
-        `${BASE_URL}/api/check-premium?userId=${encodeURIComponent(user.id)}`,
+      const premiumRes = await fetch(
+        `${BASE_URL}/api/check-premium?userId=${encodeURIComponent(verifyData.user.uid)}`,
         { headers: authHeaders(session) }
       );
 
-      if (verifyRes.status === 401) {
-        clearSessionAndShowAuth();
+      if (premiumRes.status === 401) {
+        clearSession();
+        showBlocked();
         return;
       }
 
-      if (!verifyRes.ok) {
+      if (!premiumRes.ok) {
         let detail = 'Failed to verify premium status';
         try {
-          const errJson = await verifyRes.json();
+          const errJson = await premiumRes.json();
           detail = errJson.error || detail;
         } catch (_) {}
         throw new Error(detail);
       }
 
-      const verifyData = await verifyRes.json();
-      if (!verifyData.premium) {
+      const premiumData = await premiumRes.json();
+      if (!premiumData.premium) {
         premiumBadge.textContent = 'FREE TIER';
         showPanel(premiumPanel);
         return;
@@ -170,6 +166,7 @@ async function runAnalysis() {
       premiumBadge.style.background = 'rgba(16, 185, 129, 0.2)';
       premiumBadge.style.color = '#10b981';
 
+      // --- STEP 3: Premium verified — run analysis or show idle ---
       if (selectedText) {
         selectionTextPreview.textContent = `"${selectedText}"`;
         selectionCharCount.textContent = `${selectedText.length} chars`;
@@ -179,11 +176,12 @@ async function runAnalysis() {
         const analyzeRes = await fetch(`${BASE_URL}/api/analyze`, {
           method: 'POST',
           headers: authHeaders(session),
-          body: JSON.stringify({ userId: user.id, text: selectedText }),
+          body: JSON.stringify({ userId: verifyData.user.uid, text: selectedText }),
         });
 
         if (analyzeRes.status === 401) {
-          clearSessionAndShowAuth();
+          clearSession();
+          showBlocked();
           return;
         }
 
