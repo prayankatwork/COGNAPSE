@@ -225,8 +225,25 @@ export default function App() {
   // determine if the user is truly logged out — and clear localStorage so the
   // Chrome extension can't re-sync old credentials.
   useEffect(() => {
-    auth.authStateReady().then(() => {
+    auth.authStateReady().then(async () => {
       if (!auth.currentUser) {
+        // Revoke any stale idToken server-side so the Chrome extension's
+        // /api/verify-session call immediately rejects it instead of allowing
+        // up to 55 minutes of stale access.
+        try {
+          const raw = localStorage.getItem('cognapse_session');
+          if (raw) {
+            const session = JSON.parse(raw);
+            if (session.idToken) {
+              await fetch('/api/revoke-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: session.idToken }),
+              }).catch(() => {});
+            }
+          }
+        } catch { /* no stale token to revoke */ }
+
         syncAuthSession(null);
       }
     });
@@ -239,7 +256,24 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        // No authenticated user — release Firestore lock if any
+        // Immediately kick off token revocation (fires before authStateReady).
+        // This gives the revoke fetch a head start so the Chrome extension can't
+        // use the old idToken in the brief window before authStateReady settles.
+        try {
+          const raw = localStorage.getItem('cognapse_session');
+          if (raw) {
+            const session = JSON.parse(raw);
+            if (session.idToken) {
+              fetch('/api/revoke-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: session.idToken }),
+              }).catch(() => {});
+            }
+          }
+        } catch { /* nothing to revoke */ }
+
+        // Release Firestore lock if any
         if (sessionLockRef.current) {
           sessionLockRef.current.release();
           sessionLockRef.current = null;
