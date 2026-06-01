@@ -252,10 +252,29 @@ export default function App() {
   const [suspendedUser, setSuspendedUser] = useState<{ username: string } | null>(null);
   const [takenOver, setTakenOver] = useState(false);
   const sessionLockRef = useRef<{ release: () => void } | null>(null);
+  // Capture whether cognapse_session existed in localStorage when the component
+  // mounted, BEFORE any effects run (e.g. authStateReady may clear it later).
+  // Used to detect Firebase IndexedDB auto-restoring a session the user never
+  // explicitly created on this page load.
+  const hadSessionOnMount = useRef(!!localStorage.getItem('cognapse_session'));
+  // Track whether we're still within the "auto-restore window" after page load.
+  // Firebase's IndexedDB session restoration fires within ~500ms after the
+  // initial onAuthStateChanged(null). Explicit logins take seconds (user must
+  // interact with the AuthPortal). After 5s, the window closes.
+  const authInitRef = useRef({ nullFired: false, autoRestoreWindow: true });
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
+        // ── Initial auth null fire ──
+        // The first onAuthStateChanged null fires BEFORE Firebase checks
+        // IndexedDB. Mark the window and close it after 5s — any user fire
+        // within this window is an IndexedDB auto-restore, not an explicit login.
+        if (!authInitRef.current.nullFired) {
+          authInitRef.current.nullFired = true;
+          setTimeout(() => { authInitRef.current.autoRestoreWindow = false; }, 5000);
+        }
+
         // Immediately kick off token revocation (fires before authStateReady).
         // This gives the revoke fetch a head start so the Chrome extension can't
         // use the old idToken in the brief window before authStateReady settles.
@@ -278,6 +297,29 @@ export default function App() {
           sessionLockRef.current.release();
           sessionLockRef.current = null;
         }
+        return;
+      }
+
+      // ── Auto-restored session guard ──
+      // If Firebase restored a session from IndexedDB but there was NO
+      // cognapse_session in localStorage when the page mounted, a previous
+      // user's auth state is leaking through. Sign out so the extension
+      // can't show premium for a stale session.
+      if (authInitRef.current.autoRestoreWindow && !hadSessionOnMount.current) {
+        // Revoke the idToken server-side before clearing
+        try {
+          const token = await firebaseUser.getIdToken(true);
+          if (token) {
+            fetch('/api/revoke-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken: token }),
+            }).catch(() => {});
+          }
+        } catch { /* can't get token to revoke */ }
+
+        syncAuthSession(null);
+        await auth.signOut();
         return;
       }
 
@@ -305,12 +347,6 @@ export default function App() {
         username =
           firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative';
         await syncAuthSession({ id: firebaseUser.uid, username });
-      }
-
-      // Redirect from landing page to research dashboard on session restore
-      // so the user sees they're logged in after a page refresh.
-      if (state.currentView === 'landing') {
-        state.setView('research');
       }
 
       // Claim the session lock (single-instance enforcement)
