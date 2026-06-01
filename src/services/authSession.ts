@@ -40,6 +40,24 @@ export async function getBearerToken(): Promise<string | null> {
   }
 }export async function syncAuthSession(user: { id: string; username: string } | null) {
   if (!user) {
+    // ── Server-side token revocation ──
+    // Revoke the idToken BEFORE clearing localStorage so the Chrome extension's
+    // stale chrome.storage copy is invalidated even if the website never got a
+    // chance to read the token (e.g. explicit logout in a different tab).
+    try {
+      const raw = localStorage.getItem('cognapse_session');
+      if (raw) {
+        const session = JSON.parse(raw) as CognapseSession;
+        if (session.idToken) {
+          fetch('/api/revoke-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: session.idToken }),
+          }).catch(() => {});
+        }
+      }
+    } catch { /* nothing to revoke */ }
+
     localStorage.removeItem('cognapse_session');
 
     // Clean up all premium keys from localStorage so extension can't re-sync stale data
