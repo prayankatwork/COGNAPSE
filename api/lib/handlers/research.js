@@ -119,7 +119,7 @@ export async function handleAnalyze(req, res) {
     if (!premium.premium) return res.status(403).json({ error: 'COGNAPSE Premium required for extension analysis.' });
 
     const raw = await runSwarm({ prompt: ANALYZE_PROMPT(text), isJson: true, estTokens: Math.ceil(text.length / 4) });
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw.result);
     return res.status(200).json(parsed);
   } catch (error) {
     if (error.message === 'SERVER_DATABASE_NOT_CONFIGURED') return res.status(503).json({ error: 'Analysis service is temporarily unavailable.' });

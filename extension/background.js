@@ -1,11 +1,14 @@
 // Register Context Menu on Install
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "analyze-text",
-    title: "Analyze with COGNAPSE",
-    contexts: ["selection"]
+  // Remove any stale menu items first to prevent duplicate ID error on update
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: "analyze-text",
+      title: "Analyze with COGNAPSE",
+      contexts: ["selection"]
+    });
+    console.log("COGNAPSE Extension: Context menu registered.");
   });
-  console.log("COGNAPSE Extension: Context menu registered.");
 });
 
 // Listen for Context Menu Click
