@@ -45,6 +45,17 @@ function patchHuggingFaceFetch() {
   };
 }
 
+/**
+ * Eagerly preload both Transformers.js models in the background.
+ * Call this on app boot so models are cached by the time the user runs research.
+ * The singleton guards in getEmbedder() and getSentimentModel() ensure each
+ * model only loads once — subsequent calls just await the already-in-progress promise.
+ */
+export function preloadModels(): void {
+  getEmbedder().catch(() => {});
+  getSentimentModel().catch(() => {});
+}
+
 export async function getEmbedder(): Promise<any> {
   if (embedderReady) return embedder;
   if (embedderLoading) {

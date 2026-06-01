@@ -52,6 +52,7 @@ import { apiFetch } from './services/apiClient';
 import { toast } from './utils/toast';
 import { claimSessionLock } from './services/sessionLock';
 import SessionTakeoverOverlay from './components/SessionTakeoverOverlay';
+import { preloadModels } from './utils/scoringEngine';
 
 export default function App() {
   const [shareRoute, setShareRoute] = useState<string | null>(() => {
@@ -102,6 +103,12 @@ export default function App() {
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
     };
+  }, []);
+
+  // Eagerly preload Transformers.js models (sentiment + embedding) in the background
+  // so they're cached before the user runs research, avoiding ~60s download delay.
+  useEffect(() => {
+    preloadModels();
   }, []);
 
   // ── Audio state management: Research Start ──
