@@ -965,8 +965,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       let mbfcSourceLabel = 'unavailable';
       try {
         const mbfcResults = await batchLookupDomains(
-          groundedSources.map(s => s.domain || ''),
-          groundedSources
+          groundedSources.map(s => s.domain || '')
         );
         mbfcSourceLabel = isMbfcConfigured() ? 'api' : 'hardcoded';
         const results = Array.from(mbfcResults.values());
