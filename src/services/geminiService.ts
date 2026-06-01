@@ -12,7 +12,7 @@ import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentimen
 import { redistributeBatchCitations } from '../utils/citations';
 import { apiFetch } from './apiClient';
 import { batchLookupDomains, isMbfcConfigured } from '../utils/mbfcApi';
-const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — 70b for quality
+const RESEARCH_MODEL = "groq-mixtral-8x7b"; // Deep research — Mixtral 8x7b for speed (~8-12s vs 70b's ~57s)
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
 
@@ -319,7 +319,7 @@ async function diffReports(
 
   return {
     overall_agreement: Math.min(100, Math.max(0, agreementPercent)),
-    model_a: { provider: 'Groq', model: 'llama-3.3-70b-versatile' },
+    model_a: { provider: 'Groq', model: 'mixtral-8x7b-32768' },
     model_b: { provider: 'Groq', model: CONSENSUS_MODEL },
     agreement_points: agreementPoints.slice(0, 8), // cap at 8 for readability
     divergent_points: divergentPoints.slice(0, 10), // cap at 10
