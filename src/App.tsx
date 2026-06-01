@@ -105,8 +105,8 @@ export default function App() {
     };
   }, []);
 
-  // Eagerly preload Transformers.js models (sentiment + embedding) in the background
-  // so they're cached before the user runs research, avoiding ~60s download delay.
+  // Eagerly preload Transformers.js embedding model in the background
+  // so the 23MB model is cached before the research pipeline needs it for consensus scoring.
   useEffect(() => {
     preloadModels();
   }, []);

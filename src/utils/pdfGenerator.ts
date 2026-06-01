@@ -4,7 +4,7 @@ import type { COGNAPSE_Output, DeepResearchThesis } from '../types';
 import { escapeHtml } from './escapeHtml';
 import { formatAllCitations, formatCitation } from './citations';
 import type { CitationFormat } from './citations';
-import { computeEnhancedSourceCredibility, computeEntityDiversity, computeBiasFromSentiment } from './scoringEngine';
+import { computeEnhancedSourceCredibility, computeEntityDiversity } from './scoringEngine';
 
 interface PDFGeneratorInput {
   query: string;

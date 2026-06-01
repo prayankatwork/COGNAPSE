@@ -41,11 +41,10 @@ import {
   computeEnhancedSourceCredibility,
   computeSemanticRelevance,
   computeConsensusScore,
-  computeBiasFromSentiment,
   computeAllScores,
 } from '../scoringEngine';
 
-import { lookupDomain, factualToScore, biasToBiasScore } from '../domainCredibility';
+import { lookupDomain, factualToScore } from '../domainCredibility';
 import nlp from 'compromise';
 
 const mockNlp = vi.mocked(nlp);
@@ -474,67 +473,7 @@ describe('computeConsensusScore (fallback)', () => {
   });
 });
 
-/* ===================================================================
- * TESTS: computeBiasFromSentiment — fallback path (CDN models unavailable)
- * =================================================================== */
 
-describe('computeBiasFromSentiment (fallback)', () => {
-  beforeEach(() => {
-    resetMocks();
-  });
-
-  it('returns neutral fallback when sentiment model unavailable', async () => {
-    const result = await computeBiasFromSentiment([createSource()]);
-
-    expect(result.averageSentiment).toBeCloseTo(0, 1);
-    expect(result.biasScore).toBeGreaterThanOrEqual(0);
-    expect(result.biasScore).toBeLessThanOrEqual(1);
-  });
-
-  it('returns bias 0.1 for empty sources', async () => {
-    const result = await computeBiasFromSentiment([]);
-    expect(result.biasScore).toBe(0.1);
-    expect(result.averageSentiment).toBe(0);
-    expect(result.emotionalIntensity).toBe(0);
-    expect(result.hasDomainOverride).toBe(false);
-  });
-
-  it('uses domain bias override when domain data is available', async () => {
-    vi.mocked(lookupDomain).mockReturnValue({ bias: 'right', factual: 'low' });
-    vi.mocked(biasToBiasScore).mockReturnValue(0.4);
-
-    const result = await computeBiasFromSentiment([createSource({ domain: 'breitbart.com' })]);
-
-    expect(result.hasDomainOverride).toBe(true);
-    // domainBias = 0.4, sentimentBias ≈ 0 (model unavailable → neutral)
-    // biasScore = 0.4 * 0.7 + 0 * 0.3 = 0.28
-    expect(result.biasScore).toBeCloseTo(0.28, 2);
-  });
-
-  it('aggregates bias from multiple domain sources', async () => {
-    vi.mocked(lookupDomain)
-      .mockReturnValueOnce({ bias: 'left', factual: 'mixed' })
-      .mockReturnValueOnce({ bias: 'right', factual: 'mixed' });
-    vi.mocked(biasToBiasScore)
-      .mockReturnValueOnce(0.4)
-      .mockReturnValueOnce(0.4);
-
-    const sources = [
-      createSource({ domain: 'huffpost.com', title: 'Source 1' }),
-      createSource({ domain: 'breitbart.com', title: 'Source 2' }),
-    ];
-
-    const result = await computeBiasFromSentiment(sources);
-
-    expect(result.hasDomainOverride).toBe(true);
-    // domainBiasSum = 0.4 + 0.4 = 0.8, domainCount = 2
-    // domainBias = 0.8 / 2 = 0.4
-    // sentimentBias ≈ 0 (neutral)
-    // biasScore = 0.4 * 0.7 + 0 * 0.3 = 0.28
-    expect(result.biasScore).toBeCloseTo(0.28, 2);
-    expect(lookupDomain).toHaveBeenCalledTimes(2);
-  });
-});
 
 /* ===================================================================
  * TESTS: computeAllScores — integration with all mocked components

@@ -1,5 +1,5 @@
 import nlp from 'compromise';
-import { lookupDomain, factualToScore, biasToBiasScore } from './domainCredibility';
+import { lookupDomain, factualToScore } from './domainCredibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let embedder: any = null;
@@ -46,14 +46,12 @@ function patchHuggingFaceFetch() {
 }
 
 /**
- * Eagerly preload both Transformers.js models in the background.
- * Call this on app boot so models are cached by the time the user runs research.
- * The singleton guards in getEmbedder() and getSentimentModel() ensure each
- * model only loads once — subsequent calls just await the already-in-progress promise.
+ * Eagerly preload the Transformers.js embedding model in the background.
+ * Call this on app boot so the 23MB model is cached before the user runs research.
+ * The singleton guard in getEmbedder() ensures only one download starts.
  */
 export function preloadModels(): void {
   getEmbedder().catch(() => {});
-  getSentimentModel().catch(() => {});
 }
 
 export async function getEmbedder(): Promise<any> {
@@ -85,54 +83,6 @@ export async function getEmbedder(): Promise<any> {
   }
 }
 
-// ─── Sentiment Model (replaces AFINN-111 word-list) ───
-
-let sentimentModel: any = null;
-let sentimentLoading = false;
-let sentimentReady = false;
-
-async function getSentimentModel(): Promise<any> {
-  if (sentimentReady) return sentimentModel;
-  if (sentimentLoading) {
-    while (sentimentLoading) await new Promise(r => setTimeout(r, 100));
-    return sentimentModel;
-  }
-  sentimentLoading = true;
-  // Patch fetch so model file requests use /raw/ instead of /resolve/
-  patchHuggingFaceFetch();
-  try {
-    // @ts-expect-error - CDN module has no type declarations
-    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
-    env.allowLocalModels = false;
-    // Disable browser cache to avoid stale HTML error responses
-    env.useBrowserCache = false;
-    sentimentModel = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
-      quantized: true,
-    });
-    sentimentReady = true;
-    return sentimentModel;
-  } catch (e) {
-    console.warn('[ScoringEngine] Sentiment model unavailable, using neutral fallback:', e);
-    return null;
-  } finally {
-    sentimentLoading = false;
-  }
-}
-
-async function analyzeSentiment(text: string): Promise<{ comparative: number }> {
-  const pipe = await getSentimentModel();
-  if (!pipe || !text.trim()) return { comparative: 0 };
-
-  try {
-    const result = await pipe(text.slice(0, 500));
-    const output = result[0] as { label: string; score: number };
-    // Convert POSITIVE(0.95) → 0.95, NEGATIVE(0.95) → -0.95
-    const comparative = output.label === 'POSITIVE' ? output.score : -output.score;
-    return { comparative };
-  } catch {
-    return { comparative: 0 };
-  }
-}
 
 export function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0, na = 0, nb = 0;
@@ -266,61 +216,7 @@ export function computeEntityDiversity(sources: { domain?: string; key_finding?:
   };
 }
 
-export async function computeBiasFromSentiment(
-  sources: { domain?: string; key_finding?: string; title?: string }[]
-): Promise<{
-  averageSentiment: number;
-  emotionalIntensity: number;
-  biasScore: number;
-  hasDomainOverride: boolean;
-}> {
-  if (sources.length === 0) return { averageSentiment: 0, emotionalIntensity: 0, biasScore: 0.1, hasDomainOverride: false };
 
-  let totalComparative = 0;
-  let totalIntensity = 0;
-  let hasDomainOverride = false;
-  let domainBiasSum = 0;
-  let domainCount = 0;
-
-  // Batch sentiment analysis in parallel for performance
-  const results = await Promise.all(
-    sources.map(async (s) => {
-      const text = `${s.title || ''} ${s.key_finding || ''}`;
-      if (!text.trim()) return null;
-      const result = await analyzeSentiment(text);
-      const domainInfo = lookupDomain(s.domain || '');
-      return { comparative: result.comparative, domainInfo };
-    })
-  );
-
-  for (const r of results) {
-    if (!r) continue;
-    totalComparative += r.comparative;
-    totalIntensity += Math.abs(r.comparative);
-    if (r.domainInfo) {
-      domainBiasSum += biasToBiasScore(r.domainInfo.bias);
-      domainCount++;
-      hasDomainOverride = true;
-    }
-  }
-
-  const avgSentiment = sources.length > 0 ? totalComparative / sources.length : 0;
-  const emotionalIntensity = sources.length > 0 ? totalIntensity / sources.length : 0;
-
-  const sentimentBias = Math.max(0, Math.min(1, Math.abs(avgSentiment) * 0.7 + emotionalIntensity * 0.3));
-  const domainBias = domainCount > 0 ? domainBiasSum / domainCount : 0.3;
-
-  const biasScore = hasDomainOverride
-    ? domainBias * 0.7 + sentimentBias * 0.3
-    : sentimentBias;
-
-  return {
-    averageSentiment: avgSentiment,
-    emotionalIntensity,
-    biasScore: Math.round(biasScore * 100) / 100,
-    hasDomainOverride,
-  };
-}
 
 /**
  * Known conspiracy / pseudoscience keywords for adversarial query detection.
@@ -447,7 +343,7 @@ export async function computeAllScores(
   ]);
 
   const entityDiversity = computeEntityDiversity(sources);
-  const sentimentResult = await computeBiasFromSentiment(sources);
+  const sentimentResult = { averageSentiment: 0, emotionalIntensity: 0, biasScore: 0.1, hasDomainOverride: false };
   const credibility = computeEnhancedSourceCredibility(sources);
 
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[evidenceConsensus || ''] ?? 0.5;
