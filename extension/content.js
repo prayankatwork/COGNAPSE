@@ -13,11 +13,14 @@ function getSessionHash(session) {
   return String(hash);
 }
 
-function syncSession() {
+function syncSession(force = false) {
   const session = localStorage.getItem('cognapse_session');
   const loggedOut = localStorage.getItem('cognapse_logged_out');
   const currentHash = getSessionHash(session);
-  if (currentHash === lastSessionHash && !loggedOut) return; // skip if unchanged
+  // Skip unchanged state UNLESS this is a forced initial sync.
+  // Without this, the initial call short-circuits when localStorage is clean
+  // (both session and sentinel null), leaving stale data in chrome.storage.
+  if (!force && currentHash === lastSessionHash && !loggedOut) return;
   lastSessionHash = currentHash;
 
   // No session? Clear chrome.storage (write sentinel if logout flag is present)
@@ -66,8 +69,9 @@ function syncSession() {
   }
 }
 
-// Initial sync — syncSession() sets lastSessionHash internally
-syncSession();
+// Initial sync — force=true ensures chrome.storage is cleared even when
+// localStorage is clean (no session, no sentinel), preventing stale data reuse.
+syncSession(true);
 
 // Listen for storage events from other tabs
 window.addEventListener('storage', (e) => {
