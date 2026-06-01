@@ -349,6 +349,12 @@ export default function App() {
         await syncAuthSession({ id: firebaseUser.uid, username });
       }
 
+      // Sync the zustand store so the Navbar (which reads state.user) shows
+      // the correct auth state instead of "Sync Identity". The store's user
+      // is NOT persisted across refreshes (see partialize in store.ts), so
+      // this must be set explicitly on every session restore.
+      state.setUser({ id: firebaseUser.uid, username });
+
       // Claim the session lock (single-instance enforcement)
       if (sessionLockRef.current) sessionLockRef.current.release();
       sessionLockRef.current = claimSessionLock(
