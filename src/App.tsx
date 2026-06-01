@@ -295,7 +295,8 @@ export default function App() {
         // If claims check fails, continue normally
       }
 
-      const current = useStore.getState().user;
+      const state = useStore.getState();
+      const current = state.user;
       let username: string;
       if (current?.id === firebaseUser.uid) {
         await syncAuthSession(current);
@@ -304,6 +305,12 @@ export default function App() {
         username =
           firebaseUser.email?.replace(/@cognapse\.vault$/i, '') || 'operative';
         await syncAuthSession({ id: firebaseUser.uid, username });
+      }
+
+      // Redirect from landing page to research dashboard on session restore
+      // so the user sees they're logged in after a page refresh.
+      if (state.currentView === 'landing') {
+        state.setView('research');
       }
 
       // Claim the session lock (single-instance enforcement)
