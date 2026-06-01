@@ -848,8 +848,11 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
   addReasoningStep('Synthesizing intelligence report from sources...');
   
   // Fire both models concurrently
+  const primaryT0 = performance.now();
+  const promptTokens = Math.ceil(prompt.length / 4);
   const primaryResponsePromise = callCloudAI(prompt, true, RESEARCH_MODEL, abortSignal);
   
+  const secondaryT0 = performance.now();
   const secondaryResponsePromise = callCloudAI(
     prompt,
     true,
@@ -863,6 +866,8 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
   });
 
   const rawResponse = await primaryResponsePromise;
+  const primaryMs = Math.round(performance.now() - primaryT0);
+  console.log(`[BENCH] PRIMARY | round-trip=${primaryMs}ms tokens=${promptTokens}+~2500(model) model=${RESEARCH_MODEL}`);
   
   try {
     // callCloudAI already returns JSON.stringify output — parse once
@@ -1066,6 +1071,8 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     addReasoningStep('Running multi-model consensus validation...');
     audioSystem.play('consensus-complete');
     const secondaryResponse = await secondaryResponsePromise;
+    const secondaryMs = Math.round(performance.now() - secondaryT0);
+    console.log(`[BENCH] CONSENSUS | round-trip=${secondaryMs}ms model=${CONSENSUS_MODEL}`);
     if (secondaryResponse) {
       try {
         const secondaryParsed = typeof secondaryResponse === 'string'
