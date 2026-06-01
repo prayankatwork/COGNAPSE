@@ -226,7 +226,11 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        // No authenticated user — release Firestore lock if any
+        // No authenticated user — clear stale session from localStorage
+        // so the Chrome extension can't re-sync old credentials after page refresh.
+        syncAuthSession(null);
+
+        // Release Firestore lock if any
         if (sessionLockRef.current) {
           sessionLockRef.current.release();
           sessionLockRef.current = null;

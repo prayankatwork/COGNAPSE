@@ -97,6 +97,14 @@ async function runAnalysis() {
       chrome.storage.local.remove('selectedText');
     }
 
+    // Fast local expiry check — if the token was obtained more than 58 minutes ago,
+    // it's definitely stale. Don't even bother the server with it.
+    if (session?.tokenExpiresAt && Date.now() > session.tokenExpiresAt) {
+      clearSession();
+      showBlocked();
+      return;
+    }
+
     // --- STEP 1: Server-verify the session before showing ANY UI ---
     // No local storage trust — the server is the sole authority on whether
     // the user has a valid session from cognapse.vercel.app.
