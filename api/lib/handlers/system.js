@@ -81,9 +81,10 @@ export async function handleFetchUrl(req, res) {
     const timeout = setTimeout(() => controller.abort(), 8000);
     
     // Pre-check: skip URLs that are known to fail (PDFs, binary content, login walls)
+    // Return 200 with text:null so the client doesn't log a console error
     const skipPatterns = [/\.pdf$/i, /\.zip$/i, /\.docx?$/i, /\.xlsx?$/i, /\.pptx?$/i, /login/i, /signup/i, /register/i, /captcha/i];
     if (skipPatterns.some(p => p.test(parsed.pathname) || p.test(parsed.href))) {
-      return res.status(422).json({ error: 'Unfetchable content type (binary, PDF, or login wall)', url });
+      return res.status(200).json({ url, text: null, skipped: true, reason: 'Unfetchable content type (binary, PDF, or login wall)' });
     }
 
     const response = await fetch(url, {
@@ -99,7 +100,8 @@ export async function handleFetchUrl(req, res) {
 
     if (!response.ok) {
       console.warn(`[fetch-url] Source returned ${response.status} for: ${url}`);
-      return res.status(502).json({ error: `Remote source returned status ${response.status}`, url });
+      // Return 200 with text:null so the client doesn't log a console error
+      return res.status(200).json({ url, text: null, skipped: true, reason: `Remote source returned status ${response.status}` });
     }
 
     const contentType = response.headers.get('content-type') || '';
@@ -107,7 +109,8 @@ export async function handleFetchUrl(req, res) {
     const isText = contentType.includes('text/') || contentType.includes('application/json') || contentType.includes('application/xml');
 
     if (!isHtml && !isText) {
-      return res.status(415).json({ error: `Unsupported content type: ${contentType}` });
+      // Return 200 with text:null so the client doesn't log a console error
+      return res.status(200).json({ url, text: null, skipped: true, reason: `Unsupported content type: ${contentType}` });
     }
 
     const rawText = await response.text();
@@ -142,13 +145,10 @@ export async function handleFetchUrl(req, res) {
     });
   } catch (error) {
     if (error.name === 'AbortError') {
-      return res.status(504).json({ error: 'Source fetch timed out after 8 seconds', url });
-    }
-    if (error.code === 'ERR_INVALID_URL') {
-      return res.status(400).json({ error: 'Invalid URL format', url });
+      return res.status(200).json({ url, text: null, skipped: true, reason: 'Source fetch timed out after 8 seconds' });
     }
     console.error(`[fetch-url] Error fetching: ${url || 'unknown'} — ${error?.message || error}`);
-    return res.status(502).json({ error: `Failed to fetch source: ${error?.message || 'Unknown error'}`, url });
+    return res.status(200).json({ url, text: null, skipped: true, reason: `Failed to fetch source: ${error?.message || 'Unknown error'}` });
   }
 }
 

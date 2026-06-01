@@ -453,6 +453,9 @@ ${pairsText}`;
  */
 async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Promise<string | null> {
   if (!url || url.startsWith('document')) return null; // document sources have no external URL
+  // Skip URLs that are known to be unfetchable (PDFs, binary, login walls)
+  const skipPatterns = [/\.pdf$/i, /\.zip$/i, /\.docx?$/i, /\.xlsx?$/i, /\.pptx?$/i, /login/i, /signup/i, /register/i, /captcha/i];
+  if (skipPatterns.some(p => p.test(url))) return null;
   try {
     const response = await apiFetch('/api/fetch-url', {
       method: 'POST',
