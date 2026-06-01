@@ -219,6 +219,19 @@ export default function App() {
     if (typeof state._hydrateCleanup === 'function') (state._hydrateCleanup as () => void)();
   }, []);
 
+  // ── Stale session cleanup on page load ──
+  // onAuthStateChanged fires null BEFORE Firebase checks IndexedDB for stored
+  // sessions. authStateReady() resolves AFTER that check, so we can safely
+  // determine if the user is truly logged out — and clear localStorage so the
+  // Chrome extension can't re-sync old credentials.
+  useEffect(() => {
+    auth.authStateReady().then(() => {
+      if (!auth.currentUser) {
+        syncAuthSession(null);
+      }
+    });
+  }, []);
+
   const [suspendedUser, setSuspendedUser] = useState<{ username: string } | null>(null);
   const [takenOver, setTakenOver] = useState(false);
   const sessionLockRef = useRef<{ release: () => void } | null>(null);
@@ -226,11 +239,7 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        // No authenticated user — clear stale session from localStorage
-        // so the Chrome extension can't re-sync old credentials after page refresh.
-        syncAuthSession(null);
-
-        // Release Firestore lock if any
+        // No authenticated user — release Firestore lock if any
         if (sessionLockRef.current) {
           sessionLockRef.current.release();
           sessionLockRef.current = null;
