@@ -22,22 +22,6 @@ const resultConfidence = document.getElementById('result-confidence');
 const resultRecommendation = document.getElementById('result-recommendation');
 
 const btnPremiumUpgrade = document.getElementById('btn-premium-upgrade');
-
-// ── Debug trace ──
-const debugEl = document.getElementById('debug-trace');
-const trace = [];
-function dbg(label, data) {
-  const ts = new Date().toISOString().slice(11, 23);
-  const msg = `[${ts}] ${label}: ${typeof data === 'string' ? data : JSON.stringify(data)}`;
-  trace.push(msg);
-  console.log('DBG:', msg);
-  if (debugEl) {
-    debugEl.style.display = 'block';
-    debugEl.innerHTML = trace.map(m => `<div>${m}</div>`).join('');
-    debugEl.scrollTop = debugEl.scrollHeight;
-  }
-}
-
 chrome.action.setBadgeText({ text: '' });
 
 function showPanel(panel) {
@@ -98,11 +82,8 @@ async function runAnalysis() {
       chrome.storage.local.get(['cognapse_session', 'selectedText', 'cognapse_logged_out'], resolve)
     );
 
-    dbg('STORAGE', { hasSession: !!store.cognapse_session, hasLoggedOut: !!store.cognapse_logged_out, hasSelectedText: !!store.selectedText });
-
     // If a logout sentinel exists, clear everything and block immediately
     if (store.cognapse_logged_out) {
-      dbg('BLOCK', 'cognapse_logged_out sentinel found in chrome.storage');
       clearSession();
       showBlocked();
       return;
@@ -119,15 +100,11 @@ async function runAnalysis() {
     // it's definitely stale. Don't even bother the server with it.
     if (session?.tokenExpiresAt) {
       const expired = Date.now() > session.tokenExpiresAt;
-      dbg('EXPIRY', { expiresAt: new Date(session.tokenExpiresAt).toISOString(), expired });
       if (expired) {
-        dbg('BLOCK', 'tokenExpiresAt expired locally');
         clearSession();
         showBlocked();
         return;
       }
-    } else {
-      dbg('EXPIRY', 'no tokenExpiresAt field on session');
     }
 
     // --- STEP 1: Server-verify the session before showing ANY UI ---
@@ -141,10 +118,7 @@ async function runAnalysis() {
       headers: authHeaders(session),
     });
 
-    dbg('VERIFY', { status: verifyRes.status, ok: verifyRes.ok, hasAuthHeader: !!session?.idToken });
-
     if (verifyRes.status === 401) {
-      dbg('BLOCK', 'verify-session returned 401');
       clearSession();
       showBlocked();
       return;
@@ -156,15 +130,12 @@ async function runAnalysis() {
         const errJson = await verifyRes.json();
         detail = errJson.error || detail;
       } catch (_) {}
-      dbg('ERROR', `verify-session !ok: ${detail}`);
       throw new Error(detail);
     }
 
     const verifyData = await verifyRes.json();
-    dbg('VERIFY', { valid: verifyData.valid, uid: verifyData.user?.uid });
 
     if (!verifyData.valid || !verifyData.user?.uid) {
-      dbg('BLOCK', 'verify-session response invalid or missing uid');
       clearSession();
       showBlocked();
       return;
@@ -195,16 +166,13 @@ async function runAnalysis() {
       }
 
       const premiumData = await premiumRes.json();
-      dbg('PREMIUM', { premium: premiumData.premium, status: premiumRes.status });
 
       if (!premiumData.premium) {
-        dbg('BLOCK', 'not premium (FREE TIER)');
         premiumBadge.textContent = 'FREE TIER';
         showPanel(premiumPanel);
         return;
       }
 
-      dbg('PREMIUM', 'PREMIUM CONFIRMED — showing analysis panel');
       premiumBadge.textContent = 'PREMIUM';
       premiumBadge.style.background = 'rgba(16, 185, 129, 0.2)';
       premiumBadge.style.color = '#10b981';
