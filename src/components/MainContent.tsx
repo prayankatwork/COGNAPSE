@@ -494,6 +494,11 @@ export default function MainContent() {
 
         {/* Content Area */}
         <div ref={contentAreaRef} className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
+          {/* Deep Analysis Progress Banner */}
+          {deepResearch.status === 'running' && (
+            <DeepResearchLoader stage={deepResearch.stage} progress={deepResearch.progress} />
+          )}
+
           {deepResearch.status === 'error' && (
             <div className="sticky top-0 left-0 right-0 z-20 bg-red-900 text-white py-3 px-8 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
@@ -515,11 +520,7 @@ export default function MainContent() {
 
             {deepResearch.status === 'completed' && <DeepResearchView />}
 
-            {deepResearch.status === 'running' && (
-              <DeepResearchLoader stage={deepResearch.stage} progress={deepResearch.progress} />
-            )}
-
-            {deepResearch.status !== 'running' && deepResearch.status !== 'completed' && !currentReport && !loading && !error && (
+            {deepResearch.status !== 'completed' && !currentReport && !loading && !error && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-0 overflow-hidden">
                 {/* Advanced Animated Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
@@ -711,7 +712,7 @@ export default function MainContent() {
               </div>
             )}
 
-            {deepResearch.status !== 'running' && currentReport && !error && (
+            {currentReport && !error && (
               <>
                 <ReportView report={currentReport} onSubSearch={handleSubSearch} onChatFollowUp={handleChatFollowUp} />
 
