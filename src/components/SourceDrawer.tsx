@@ -11,6 +11,7 @@ import clsx from 'clsx';
 interface SourceDrawerProps {
   sources: GroundedSource[];
   retrievalTrace?: RetrievalTrace | null;
+  isPremium?: boolean;
 }
 
 function getSourceIcon(type: string) {
@@ -55,7 +56,7 @@ function getSourceLabel(type: string): string {
   }
 }
 
-function CredibilityBar({ score }: { score: number }) {
+function CredibilityBar({ score, showRaw }: { score: number; showRaw?: boolean }) {
   const barColor = score >= 81 ? 'bg-green-500' : score >= 61 ? 'bg-emerald-500' : score >= 41 ? 'bg-amber-500' : 'bg-red-500';
   const textColor = score >= 81 ? 'text-green-600 dark:text-green-400' : score >= 61 ? 'text-emerald-600 dark:text-emerald-400' : score >= 41 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
   const label = getCredibilityLabel(score);
@@ -65,12 +66,14 @@ function CredibilityBar({ score }: { score: number }) {
         <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${score}%` }} />
       </div>
       <div className="flex items-center gap-1.5">
-        <span className={clsx(
-          'text-[9px] font-bold font-mono tabular-nums shrink-0',
-          textColor
-        )}>
-          {score}
-        </span>
+        {showRaw && (
+          <span className={clsx(
+            'text-[9px] font-bold font-mono tabular-nums shrink-0',
+            textColor
+          )}>
+            {score}
+          </span>
+        )}
         <span className="text-[7px] font-bold uppercase tracking-wider text-my-muted/50 hidden sm:inline">
           {label}
         </span>
@@ -79,7 +82,7 @@ function CredibilityBar({ score }: { score: number }) {
   );
 }
 
-export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerProps) {
+export default function SourceDrawer({ sources, retrievalTrace, isPremium }: SourceDrawerProps) {
   const [expandedSource, setExpandedSource] = useState<number | null>(null);
 
   if (!sources || sources.length === 0) return null;
@@ -126,7 +129,7 @@ export default function SourceDrawer({ sources, retrievalTrace }: SourceDrawerPr
                         {getSourceLabel(source.type)}
                       </span>
                     </div>
-                    <CredibilityBar score={source.credibility_score} />
+                    <CredibilityBar score={source.credibility_score} showRaw={isPremium} />
                   </button>
 
                   <AnimatePresence>

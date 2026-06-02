@@ -33,17 +33,26 @@ A real-time forensic monitoring array that synthesizes global events into action
 - **Thought Replay Engine**: A visual forensic audit trail that plays back the AI's internal reasoning process, identifying sources and mitigating bias.
 - **Tactical Intelligence Map**: Every dossier is mapped into an interactive, physics-based semantic node graph for non-linear exploration.
 
-### 🛡️ 4. Security & The Nuclear Purge
+### 📊 4. Intelligence Quality Scoring
+All research reports include an Intelligence Quality Report with standardized scoring across four metrics:
+- **Source Credibility** — Evaluates domain authority, factual reporting ratings (MBFC), and cross-source consistency
+- **Objectivity (Low Bias)** — Analyzes domain bias ratings and semantic sentiment to detect directional skew
+- **Source Diversity** — Measures entity richness, domain variety, and topical breadth across sources
+- **Confidence Interval** — Assesses multi-model agreement, evidence consensus, and conflict penalties
+
+Scores are displayed using a universal label framework: **Superior, High, Moderate, Limited, Insufficient** (and domain-specific labels for bias, diversity, and confidence). Labels facilitate rapid cognitive assessment — the underlying numerical values are approximations derived from heuristic computation and model self-assessment, not precision measurements. Raw numerical values are available to Premium subscribers for technical verification.
+
+### 🛡️ 5. Security & The Nuclear Purge
 Built with a "Zero-Trust" local security model to ensure total operative privacy.
 - **Nuclear Purge Protocol**: A terminal-action security module that performs a cascading, atomic excision of all user data, reports, and settings from the Vault.
 - **Encrypted Vault**: All intelligence dossiers are encrypted at rest and partitioned using Firebase security rules.
 - **Local Loopback Binding**: The internal intelligence vault is strictly bound to `127.0.0.1`, preventing unauthorized external network access.
 
-### 🏆 5. Operative Status & Gamification
+### 🏆 6. Operative Status & Gamification
 - **Rank Progression**: Earn XP through successful synthesis. Ascend from *Novice* to *Omni-Observer*, unlocking higher tiers of system clearance.
 - **Clearance Badges**: Visual rendering of operative status within the dossier, tracking research streaks and forensic output.
 
-### 🎵 6. Interactive Environment
+### 🎵 7. Interactive Environment
 - **Spotify Sync & Sonification**: Background particle engines and visualizers adapt in real-time to the rhythm and bass of your Spotify music.
 - **Bimodal Aesthetics**: Stunning cinematic fidelity across **Focus (Dark)** and **Energy (Light)** modes.
 
@@ -89,5 +98,4 @@ COGNAPSE is engineered with a **"Zero-Trust"** local security model:
   <p><i>"Extract objective truth from the noise of the digital age."</i></p>
   <p><b>Developed by a Dedicated Student Operative using Gemini, Groq, and Ollama.</b></p>
 </div>
-ated Student Developer.</b></p>
-</div>
+

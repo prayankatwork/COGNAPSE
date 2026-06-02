@@ -9,8 +9,8 @@ import clsx from 'clsx';
 
 interface Props { scores: ResearchScore; }
 
-function ScoreMeter({ value, max = 1, label, icon, color, labelText }: {
-  value: number; max?: number; label: string; icon: React.ReactNode; color: string; labelText?: string;
+function ScoreMeter({ value, max = 1, label, icon, color, labelText, showRaw }: {
+  value: number; max?: number; label: string; icon: React.ReactNode; color: string; labelText?: string; showRaw?: boolean;
 }) {
   const pct = Math.round((value / max) * 100);
   return (
@@ -23,9 +23,11 @@ function ScoreMeter({ value, max = 1, label, icon, color, labelText }: {
           {labelText && (
             <span className="text-[11px] font-bold text-my-ink leading-none">{labelText}</span>
           )}
-          <span className="text-[8px] font-mono text-my-muted/40" title="Raw score">
-            {max === 10 ? `${value}/10` : `${Math.round(value * 100)}%`}
-          </span>
+          {showRaw && (
+            <span className="text-[8px] font-mono text-my-muted/40" title="Raw score">
+              {max === 10 ? `${value}/10` : `${Math.round(value * 100)}%`}
+            </span>
+          )}
         </div>
       </div>
       <div className="h-1.5 w-full bg-my-border/40 rounded-full overflow-hidden">
@@ -143,17 +145,21 @@ export default function ResearchScoreCard({ scores }: Props) {
 
       <ScoreMeter value={displayAccuracy} max={10} label="Source Credibility Score"
         icon={<ShieldCheck size={12} />} color="#22c55e"
-        labelText={getCredibilityLabel(Math.round(displayAccuracy * 10))} />
+        labelText={getCredibilityLabel(Math.round(displayAccuracy * 10))}
+        showRaw={isPremium} />
       <ScoreMeter value={1 - displayBias} label="Objectivity (Low Bias)"
         icon={<AlertTriangle size={12} />}
         color={displayBias < 0.3 ? '#22c55e' : displayBias < 0.6 ? '#f59e0b' : '#ef4444'}
-        labelText={getBiasLabel(displayBias)} />
+        labelText={getBiasLabel(displayBias)}
+        showRaw={isPremium} />
       <ScoreMeter value={displayDiversity} label="Source Diversity"
         icon={<Globe size={12} />} color="#38bdf8"
-        labelText={getDiversityLabel(displayDiversity)} />
+        labelText={getDiversityLabel(displayDiversity)}
+        showRaw={isPremium} />
       <ScoreMeter value={displayConfidence} label="Confidence Interval"
         icon={<TrendingUp size={12} />} color="#a78bfa"
-        labelText={getConfidenceLabel(displayConfidence)} />
+        labelText={getConfidenceLabel(displayConfidence)}
+        showRaw={isPremium} />
 
       {isPremium && premiumData && (
         <div className="pt-4 border-t border-my-border space-y-4 animate-in fade-in duration-500">
@@ -275,35 +281,37 @@ export default function ResearchScoreCard({ scores }: Props) {
         </div>
       )}
 
-      {/* Technical Metrics — collapsed by default */}
-      <details className="group">
-        <summary className="cursor-pointer list-none flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors pt-2 border-t border-my-border/50">
-          <span className="group-open:hidden">▶</span>
-          <span className="hidden group-open:inline">▼</span>
-          Technical Metrics
-        </summary>
-        <div className="mt-3 space-y-2 bg-my-bg border border-my-border p-3">
-          <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-my-muted">
-            <div><span className="font-bold text-my-ink">Accuracy:</span> {scores.accuracy}/10</div>
-            <div><span className="font-bold text-my-ink">Bias Score:</span> {scores.bias.toFixed(2)}</div>
-            <div><span className="font-bold text-my-ink">Diversity:</span> {scores.sourceDiversity.toFixed(2)}</div>
-            <div><span className="font-bold text-my-ink">Confidence:</span> {scores.confidenceInterval.toFixed(2)}</div>
-            {es?.enhancedCredibility !== undefined && (
-              <div><span className="font-bold text-my-ink">Enhanced Credibility:</span> {es.enhancedCredibility.toFixed(1)}</div>
-            )}
-            {es?.credibilityStdDev !== undefined && (
-              <div><span className="font-bold text-my-ink">Credibility StdDev:</span> {es.credibilityStdDev.toFixed(2)}</div>
-            )}
-            {es?.sentimentBias !== undefined && (
-              <div><span className="font-bold text-my-ink">Sentiment Bias:</span> {es.sentimentBias.toFixed(3)}</div>
-            )}
-            {es?.entityDiversity !== undefined && (
-              <div><span className="font-bold text-my-ink">Entity Diversity:</span> {es.entityDiversity.toFixed(2)}</div>
-            )}
+      {/* Technical Metrics — collapsed by default, premium only */}
+      {isPremium && (
+        <details className="group">
+          <summary className="cursor-pointer list-none flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors pt-2 border-t border-my-border/50">
+            <span className="group-open:hidden">▶</span>
+            <span className="hidden group-open:inline">▼</span>
+            Technical Metrics
+          </summary>
+          <div className="mt-3 space-y-2 bg-my-bg border border-my-border p-3">
+            <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-my-muted">
+              <div><span className="font-bold text-my-ink">Accuracy:</span> {scores.accuracy}/10</div>
+              <div><span className="font-bold text-my-ink">Bias Score:</span> {scores.bias.toFixed(2)}</div>
+              <div><span className="font-bold text-my-ink">Diversity:</span> {scores.sourceDiversity.toFixed(2)}</div>
+              <div><span className="font-bold text-my-ink">Confidence:</span> {scores.confidenceInterval.toFixed(2)}</div>
+              {es?.enhancedCredibility !== undefined && (
+                <div><span className="font-bold text-my-ink">Enhanced Credibility:</span> {es.enhancedCredibility.toFixed(1)}</div>
+              )}
+              {es?.credibilityStdDev !== undefined && (
+                <div><span className="font-bold text-my-ink">Credibility StdDev:</span> {es.credibilityStdDev.toFixed(2)}</div>
+              )}
+              {es?.sentimentBias !== undefined && (
+                <div><span className="font-bold text-my-ink">Sentiment Bias:</span> {es.sentimentBias.toFixed(3)}</div>
+              )}
+              {es?.entityDiversity !== undefined && (
+                <div><span className="font-bold text-my-ink">Entity Diversity:</span> {es.entityDiversity.toFixed(2)}</div>
+              )}
+            </div>
+            <p className="text-[8px] text-my-muted italic">Raw scores shown for technical verification. These values drive the label display above.</p>
           </div>
-          <p className="text-[8px] text-my-muted italic">Raw scores shown for technical verification. These values drive the label display above.</p>
-        </div>
-      </details>
+        </details>
+      )}
 
       <p className="text-[10px] text-my-muted uppercase tracking-widest pt-2 border-t border-my-border/50 leading-[1.6]">
         Scores reflect cross-verification of multiple AI-generated analyses, domain credibility data (MBFC), and when available, neural semantic consensus from Transformers.js (browser-side MiniLM-L6-v2 embeddings). Always verify critical claims independently.

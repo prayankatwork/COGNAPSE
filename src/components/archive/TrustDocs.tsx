@@ -186,6 +186,14 @@ export default function TrustDocs() {
                     or outdated information. Scores should be used as a relative indicator, not an absolute measure 
                     of truth.
                   </p>
+                  <p className="text-xs text-my-muted leading-relaxed mt-2 italic border-l-2 border-my-accent/20 pl-3">
+                    All quality metrics are displayed using standardized labels (Superior, High, Moderate, Limited, Insufficient) 
+                    to support rapid interpretation. These labels correspond to approximate numerical ranges derived from 
+                    heuristic computation, domain credibility analysis, and multi-model consensus — not ground-truth 
+                    validation. Numerical precision should not be inferred; the underlying scoring methodology produces 
+                    approximations suitable for comparative analysis, not absolute measurement. Premium subscribers 
+                    have access to raw numerical values for independent technical verification.
+                  </p>
                </div>
                <div className="p-6 border border-my-border bg-my-callout/20">
                   <h4 className="font-bold text-my-ink mb-3 text-sm">Relevance Score Interpretation</h4>

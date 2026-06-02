@@ -8,11 +8,11 @@
 /* ─── Source Credibility (0–100) ─── */
 
 export function getCredibilityLabel(score: number): string {
-  if (score >= 81) return 'Very High';
+  if (score >= 81) return 'Superior';
   if (score >= 61) return 'High';
   if (score >= 41) return 'Moderate';
-  if (score >= 21) return 'Low';
-  return 'Very Low';
+  if (score >= 21) return 'Limited';
+  return 'Insufficient';
 }
 
 export function getCredibilityColor(score: number): string {
@@ -42,8 +42,8 @@ const CONSENSUS_SCORE_MAP: Record<string, number> = {
 
 export function getConsensusLabel(consensus: string): string {
   const score = CONSENSUS_SCORE_MAP[consensus] ?? 0;
-  if (score >= 81) return 'Very Strong';
-  if (score >= 61) return 'Strong';
+  if (score >= 81) return 'Strong';
+  if (score >= 61) return 'Moderate';
   if (score >= 41) return 'Mixed';
   if (score >= 21) return 'Weak';
   return 'Contested';
@@ -127,8 +127,8 @@ export function getQualityLabel(score: number): string {
   if (score >= 90) return 'Exceptional';
   if (score >= 70) return 'High';
   if (score >= 50) return 'Moderate';
-  if (score >= 30) return 'Poor';
-  return 'Very Poor';
+  if (score >= 30) return 'Limited';
+  return 'Insufficient';
 }
 
 export function getQualityColor(score: number): string {
@@ -142,21 +142,21 @@ export function getQualityColor(score: number): string {
 /* ─── Overall Credibility (0–100 from report.scores.overall_credibility) ─── */
 
 export function getOverallCredibilityLabel(score: number): string {
-  if (score >= 81) return 'Very High';
+  if (score >= 81) return 'Superior';
   if (score >= 61) return 'High';
   if (score >= 41) return 'Moderate';
-  if (score >= 21) return 'Low';
-  return 'Very Low';
+  if (score >= 21) return 'Limited';
+  return 'Insufficient';
 }
 
 /* ─── Relevance (0–100) ─── */
 
 export function getRelevanceLabel(score: number): string {
-  if (score >= 81) return 'Very High';
+  if (score >= 81) return 'Superior';
   if (score >= 61) return 'High';
   if (score >= 41) return 'Moderate';
-  if (score >= 21) return 'Low';
-  return 'Very Low';
+  if (score >= 21) return 'Limited';
+  return 'Insufficient';
 }
 
 /* ─── Consensus variance (low/moderate/high → descriptive label) ─── */

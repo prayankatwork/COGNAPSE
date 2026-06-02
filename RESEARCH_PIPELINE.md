@@ -388,15 +388,27 @@ flowchart LR
 
 | UI Element | Source | Scale |
 |---|---|---|
-| **Source Credibility** `/10` | `scores.accuracy` | 0–10 |
-| **Objectivity (Low Bias)** `%` | `scores.bias` | 0–1 → display as (1-bias)% |
-| **Source Diversity** `%` | `scores.sourceDiversity` | 0–1 → display as % |
-| **Confidence Interval** `%` | `scores.confidenceInterval` | 0–1 → display as % |
-| **Overall Quality** `%` | weighted composite | 0–100 |
-| **Source Reliability Index** `/10` | `computeEnhancedSourceCredibility().average` | 0–10 |
-| **Consensus Score** | multi-model agreement % | 0–100 |
-| **Confidence Spread** `±%` | credibility std dev / mean | derived % |
+| **Source Credibility** `/10` | `scores.accuracy` | 0–10 → Label (Superior/High/Moderate/Limited/Insufficient) |
+| **Objectivity (Low Bias)** `%` | `scores.bias` | 0–1 → Label (Minimal/Low/Moderate/Elevated/High) |
+| **Source Diversity** `%` | `scores.sourceDiversity` | 0–1 → Label (Broad/Moderate/Limited/Narrow) |
+| **Confidence Interval** `%` | `scores.confidenceInterval` | 0–1 → Label (High/Medium/Low/Insufficient) |
+| **Overall Quality** `%` | weighted composite | 0–100 → Letter Grade (A/B/C/D/F) + Label |
+| **Source Reliability Index** `/10` | `computeEnhancedSourceCredibility().average` | 0–10 → Label (Superior/High/Moderate/Limited/Insufficient) |
+| **Consensus Score** | multi-model agreement % | 0–100 → Label (Strong/Moderate/Mixed/Weak/Contested) |
+| **Confidence Spread** `±%` | credibility std dev / mean | derived % → Label (High/Medium/Low/Insufficient) |
+
+### Score Precision Disclaimer
+
+All quality scores displayed in the COGNAPSE interface use standardized labels to facilitate rapid cognitive assessment. These labels correspond to approximate numerical ranges derived from:
+- Heuristic computation (domain credibility lookups, factual-to-score mapping)
+- Semantic similarity analysis (client-side Transformers.js embeddings)
+- Multi-model consensus alignment
+- Model self-assessment (confidence calibration)
+
+**These values are directional indicators, not precision measurements.** The underlying scoring engine produces approximations suitable for comparative analysis — e.g., determining which source has higher credibility or whether confidence has improved across reports. The numerical granularity implied by decimal values (e.g., 87.4) should not be interpreted as laboratory-grade precision.
+
+Raw numerical values are gated behind Premium subscription and are intended for technical verification purposes. All users see labels by default to reduce cognitive load while preserving analytical utility.
 
 ---
 
-*Generated from source code. Last updated: May 27, 2026.*
+*Generated from source code. Last updated: June 3, 2026.*

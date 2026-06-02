@@ -509,6 +509,7 @@ export default function ReportView({
                 retrieval_timestamp: s.retrieval_timestamp || new Date().toISOString()
               }))}
               retrievalTrace={report._retrieval_trace || null}
+              isPremium={isUnlocked}
             />
           )}
 
@@ -595,20 +596,24 @@ export default function ReportView({
                  label="Credibility"
                  value={report.scores.overall_credibility}
                  labelText={getOverallCredibilityLabel(report.scores.overall_credibility)}
+                 showRaw={isUnlocked}
                />
                <ScoreCard
                  label="Relevance"
                  value={report.scores.overall_relevance}
                  labelText={getRelevanceLabel(report.scores.overall_relevance)}
+                 showRaw={isUnlocked}
                />
                <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">
                  <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
                  <span className={clsx('text-[13px] font-semibold capitalize', getConsensusColor(report.scores.evidence_consensus))}>
                    {getConsensusLabel(report.scores.evidence_consensus)}
                  </span>
-                 <span className="text-[8px] font-mono text-my-muted/50 mt-0.5">
-                   {safeText(report.scores.evidence_consensus)}
-                 </span>
+                 {isUnlocked && (
+                   <span className="text-[8px] font-mono text-my-muted/50 mt-0.5">
+                     {safeText(report.scores.evidence_consensus)}
+                   </span>
+                 )}
                </div>
             </div>
           )}
@@ -841,7 +846,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ScoreCard({ label, value, labelText, labelColor }: { label: string, value: any, labelText?: string, labelColor?: string }) {
+function ScoreCard({ label, value, labelText, labelColor, showRaw }: { label: string, value: any, labelText?: string, labelColor?: string, showRaw?: boolean }) {
   const num = typeof value === 'string' ? parseFloat(value) : value;
   const hasNumeric = typeof num === 'number' && !isNaN(num);
   return (
@@ -853,7 +858,7 @@ function ScoreCard({ label, value, labelText, labelColor }: { label: string, val
             {labelText}
           </span>
         )}
-        {hasNumeric && (
+        {hasNumeric && showRaw && (
           <span className="text-[8px] font-mono text-my-muted/50" title="Raw score">
             {num.toFixed(1)}%
           </span>

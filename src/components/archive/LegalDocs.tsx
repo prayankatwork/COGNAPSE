@@ -347,6 +347,7 @@ export default function LegalDocs() {
                  <li><strong>Temporal Limitations:</strong> AI models have knowledge cutoffs and may not reflect current events, recent research, or updated information.</li>
                  <li><strong>Confidence Does Not Equal Certainty:</strong> Confidence scores, credibility ratings, and consensus metrics are derived from model self-assessment and cross-verification heuristics, not ground-truth validation.</li>
                  <li><strong>Consensus Does Not Equal Factual Truth:</strong> Multi-model agreement indicates statistical alignment, not empirical correctness.</li>
+                 <li><strong>Score Precision Is Approximate:</strong> All quality scores are displayed using standardized labels (Superior, High, Moderate, Limited, Insufficient) that correspond to approximate numerical ranges derived from heuristics, domain credibility analysis, and semantic similarity computations. These values are directional indicators suitable for comparative assessment — they are not precision measurements and should not be interpreted as exact or empirically validated figures. The underlying scoring methodology produces approximations, not laboratory-grade measurements.</li>
                  <li><strong>Contradictions Do Not Indicate System Failure:</strong> Conflicting outputs across sources or models may reflect genuine disagreement in the underlying data rather than system error.</li>
                </ul>
             </div>

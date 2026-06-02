@@ -22,11 +22,11 @@ function getCredibilityColor(score: number): string {
 
 function getCredibilityLabel(score: number): string {
   // Use shared labels from scoreLabels.ts
-  if (score >= 81) return 'Very High';
+  if (score >= 81) return 'Superior';
   if (score >= 61) return 'High';
   if (score >= 41) return 'Moderate';
-  if (score >= 21) return 'Low';
-  return 'Very Low';
+  if (score >= 21) return 'Limited';
+  return 'Insufficient';
 }
 
 function VerdictBadge({ verdict }: { verdict: string }) {

@@ -80,6 +80,12 @@ export default function PlatformDocs() {
                       methodology, findings, comparative insights, limitations, and conclusion — each section independently 
                       verifiable. An Intelligence Quality Report scores accuracy, objectivity, source diversity, and confidence.
                     </p>
+                    <p className="text-xs text-my-muted leading-relaxed border-l-2 border-my-accent/30 pl-3 italic">
+                      Scoring methodology: All quality metrics use a standardized label framework (Superior, High, Moderate, Limited, Insufficient) 
+                      to facilitate rapid assessment. Numerical scores are approximate and derived from heuristic computation, domain credibility 
+                      analysis, and model self-assessment — they should be treated as directional indicators, not precision measurements. 
+                      Raw numerical values are available exclusively to Premium subscribers for technical verification.
+                    </p>
                  </div>
               </div>
            </div>
@@ -388,8 +394,12 @@ export default function PlatformDocs() {
               <p className="text-sm text-my-muted">Disclose AI assistance when incorporating generated content into professional or public work. Do not misrepresent AI outputs as human-produced.</p>
            </div>
            <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-              <h4 className="font-bold text-my-ink mb-2">Critical Evaluation</h4>
-              <p className="text-sm text-my-muted">Use scores (confidence, relevance, consensus) as directional indicators, not absolute measures of truth. Apply your own domain expertise to evaluate outputs.</p>
+              <h4 className="font-bold text-my-ink mb-2">Score Interpretation</h4>
+              <p className="text-sm text-my-muted">All scoring metrics use standardized labels (Superior, High, Moderate, Limited, Insufficient) for rapid assessment. These labels correspond to approximate numerical ranges and are derived from heuristic computation — they are directional indicators, not precision measurements. Apply your own domain expertise when evaluating outputs.</p>
+              <p className="text-xs text-my-muted mt-2 italic border-l-2 border-my-accent/20 pl-3">
+                Raw numerical values underlying these labels are available exclusively to Premium subscribers for technical verification. 
+                The label framework is designed to reduce cognitive load while preserving analytical utility for all users.
+              </p>
            </div>
         </div>
       </section>
