@@ -5,6 +5,7 @@ import { escapeHtml } from './escapeHtml';
 import { formatAllCitations, formatCitation } from './citations';
 import type { CitationFormat } from './citations';
 import { computeEnhancedSourceCredibility, computeEntityDiversity } from './scoringEngine';
+import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getCredibilityLabel } from './scoreLabels';
 
 interface PDFGeneratorInput {
   query: string;
@@ -683,15 +684,15 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
           <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 18px; border-radius: 4px;">
             <h4 style="color: #64748B; font-size: 10px; text-transform: uppercase; margin: 0 0 14px 0; font-weight: 700; letter-spacing: 0.12em;">Quality Scores</h4>
             <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Credibility</span></div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Credibility</span> <span style="color: #3B82F6; font-weight: 700; font-size: 9px;">${getOverallCredibilityLabel(credibilityPct)}</span></div>
               ${scoreBar(credibilityPct, '#3B82F6')}
             </div>
             <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Relevance</span></div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Relevance</span> <span style="color: #8B5CF6; font-weight: 700; font-size: 9px;">${getRelevanceLabel(relevancePct)}</span></div>
               ${scoreBar(relevancePct, '#8B5CF6')}
             </div>
             <div>
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Source Reliability Index</span></div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Source Reliability Index</span> <span style="color: #10B981; font-weight: 700; font-size: 9px;">${getCredibilityLabel(Math.round(reliabilityIndex * 10))}</span></div>
               ${scoreBar(reliabilityIndex * 10, '#10B981')}
             </div>
           </div>

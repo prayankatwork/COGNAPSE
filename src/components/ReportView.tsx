@@ -104,6 +104,7 @@ import EvidencePreview from './EvidencePreview';
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
+import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getConsensusColor } from '../utils/scoreLabels';
 
 export default function ReportView({
   report,
@@ -590,11 +591,24 @@ export default function ReportView({
           <SectionTitle>Metrics</SectionTitle>
           {report.scores && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-my-border border border-my-border">
-               <ScoreCard label="Credibility" value={safeText(report.scores.overall_credibility)} />
-               <ScoreCard label="Relevance" value={safeText(report.scores.overall_relevance)} />
+               <ScoreCard
+                 label="Credibility"
+                 value={report.scores.overall_credibility}
+                 labelText={getOverallCredibilityLabel(report.scores.overall_credibility)}
+               />
+               <ScoreCard
+                 label="Relevance"
+                 value={report.scores.overall_relevance}
+                 labelText={getRelevanceLabel(report.scores.overall_relevance)}
+               />
                <div className="bg-my-callout p-3 flex flex-col justify-center col-span-2">
                  <span className="text-[9px] font-bold text-my-muted uppercase mb-1">Consensus</span>
-                 <span className="text-my-ink font-semibold capitalize text-[13px]">{safeText(report.scores.evidence_consensus)}</span>
+                 <span className={clsx('text-[13px] font-semibold capitalize', getConsensusColor(report.scores.evidence_consensus))}>
+                   {getConsensusLabel(report.scores.evidence_consensus)}
+                 </span>
+                 <span className="text-[8px] font-mono text-my-muted/50 mt-0.5">
+                   {safeText(report.scores.evidence_consensus)}
+                 </span>
                </div>
             </div>
           )}
@@ -827,13 +841,24 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ScoreCard({ label, value }: { label: string, value: any }) {
+function ScoreCard({ label, value, labelText, labelColor }: { label: string, value: any, labelText?: string, labelColor?: string }) {
   const num = typeof value === 'string' ? parseFloat(value) : value;
-  const displayValue = typeof num === 'number' && !isNaN(num) ? num.toFixed(1) + '%' : value;
+  const hasNumeric = typeof num === 'number' && !isNaN(num);
   return (
     <div className="bg-my-callout p-3 flex flex-col justify-center">
       <span className="text-[9px] font-bold text-my-muted uppercase mb-1">{label}</span>
-      <span className="text-my-accent font-bold text-lg leading-none">{displayValue}</span>
+      <div className="flex items-center gap-2">
+        {labelText && (
+          <span className={clsx('text-[11px] font-bold leading-none', labelColor || 'text-my-ink')}>
+            {labelText}
+          </span>
+        )}
+        {hasNumeric && (
+          <span className="text-[8px] font-mono text-my-muted/50" title="Raw score">
+            {num.toFixed(1)}%
+          </span>
+        )}
+      </div>
     </div>
   );
 }

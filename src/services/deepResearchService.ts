@@ -98,12 +98,20 @@ export async function executeDeepResearch(query: string) {
     const deepT0 = performance.now();
     console.log(`[BENCH:deep] START | query="${query.slice(0, 40)}..."`);
 
+    // ─── STAGE 1: Expanding Research Objective ───
     addReasoningStep('Expanding research objective...');
     setDeepResearch({ status: 'running', stage: 1, progress: 'Expanding research objective...' });
     clearCognition();
 
+    // Yield so React flushes the stage-1 paint before we overwrite with stage 2
+    await new Promise(r => setTimeout(r, 80));
+
+    // ─── STAGE 2: Source Retrieval ───
     addReasoningStep('Retrieving real-time sources from web...');
     setDeepResearch({ stage: 2, progress: 'Retrieving real-time sources from web...' });
+
+    // Let stage 2 render before the async search starts
+    await new Promise(r => setTimeout(r, 80));
 
     // ─── REAL SOURCE RETRIEVAL ───
     let groundedSources: GroundedSource[] = [];
@@ -119,6 +127,7 @@ export async function executeDeepResearch(query: string) {
     } catch (e: any) {
     }
 
+    // ─── STAGE 3: Evidence Synthesis ───
     addReasoningStep('Synthesizing evidence-backed intelligence...');
     setDeepResearch({ stage: 3, progress: 'Synthesizing evidence-backed intelligence...' });
 
@@ -153,10 +162,16 @@ ${compressSourcesForLLM(groundedSources, 3000)}
       if (report) dbService.saveScoreHistory(user.id, report);
     }
 
+    // ─── STAGE 4: Finalization (visible before completion) ───
     addReasoningStep('Finalizing intelligence report...');
+    setDeepResearch({ stage: 4, progress: 'Finalizing intelligence report...' });
+
+    // Let stage 4 render before transitioning to completed
+    await new Promise(r => setTimeout(r, 250));
+
     setDeepResearch({ 
       status: 'completed', 
-      stage: 4, 
+      stage: 4,
       progress: 'Intelligence Synthesis Finalized',
       thesis,
       scores

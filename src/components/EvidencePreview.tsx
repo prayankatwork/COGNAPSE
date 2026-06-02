@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, ShieldCheck, Clock, Globe, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import type { GroundedSource, CitationVerification } from '../types';
+
 import clsx from 'clsx';
 
 interface EvidencePreviewProps {
@@ -12,15 +13,20 @@ interface EvidencePreviewProps {
 }
 
 function getCredibilityColor(score: number): string {
-  if (score >= 70) return 'border-green-500/30 bg-green-500/5';
-  if (score >= 40) return 'border-amber-500/30 bg-amber-500/5';
+  if (score >= 81) return 'border-green-500/30 bg-green-500/5';
+  if (score >= 61) return 'border-emerald-500/30 bg-emerald-500/5';
+  if (score >= 41) return 'border-amber-500/30 bg-amber-500/5';
+  if (score >= 21) return 'border-orange-500/30 bg-orange-500/5';
   return 'border-red-500/30 bg-red-500/5';
 }
 
 function getCredibilityLabel(score: number): string {
-  if (score >= 70) return 'High Credibility';
-  if (score >= 40) return 'Medium Credibility';
-  return 'Low Credibility';
+  // Use shared labels from scoreLabels.ts
+  if (score >= 81) return 'Very High';
+  if (score >= 61) return 'High';
+  if (score >= 41) return 'Moderate';
+  if (score >= 21) return 'Low';
+  return 'Very Low';
 }
 
 function VerdictBadge({ verdict }: { verdict: string }) {
@@ -72,8 +78,9 @@ export default function EvidencePreview({ source, isVisible, position = 'bottom'
             <div className="flex items-start gap-2 mb-2">
               <ShieldCheck size={12} className={clsx(
                 'shrink-0 mt-0.5',
-                source.credibility_score >= 70 ? 'text-green-500' :
-                source.credibility_score >= 40 ? 'text-amber-500' : 'text-red-500'
+                source.credibility_score >= 81 ? 'text-green-500' :
+                source.credibility_score >= 61 ? 'text-emerald-500' :
+                source.credibility_score >= 41 ? 'text-amber-500' : 'text-red-500'
               )} />
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-my-ink leading-tight line-clamp-2">
@@ -105,11 +112,12 @@ export default function EvidencePreview({ source, isVisible, position = 'bottom'
               <div className="flex items-center gap-2 text-[8px] text-my-muted">
                 <span className={clsx(
                   'px-1 py-0.5 font-bold uppercase tracking-wider',
-                  source.credibility_score >= 70 ? 'text-green-600 dark:text-green-400 bg-green-500/10' :
-                  source.credibility_score >= 40 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10' :
+                  source.credibility_score >= 81 ? 'text-green-600 dark:text-green-400 bg-green-500/10' :
+                  source.credibility_score >= 61 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' :
+                  source.credibility_score >= 41 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10' :
                   'text-red-600 dark:text-red-400 bg-red-500/10'
                 )}>
-                  {getCredibilityLabel(source.credibility_score)} ({source.credibility_score})
+                  {getCredibilityLabel(source.credibility_score)}
                 </span>
                 {source.published_date && source.published_date !== 'unknown' && (
                   <span className="flex items-center gap-1">

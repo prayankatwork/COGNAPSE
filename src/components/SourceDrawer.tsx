@@ -5,6 +5,7 @@ import {
   Building2, Newspaper, Hash, GraduationCap
 } from 'lucide-react';
 import type { GroundedSource, RetrievalTrace } from '../types';
+import { getCredibilityLabel } from '../utils/scoreLabels';
 import clsx from 'clsx';
 
 interface SourceDrawerProps {
@@ -55,19 +56,25 @@ function getSourceLabel(type: string): string {
 }
 
 function CredibilityBar({ score }: { score: number }) {
-  const barColor = score >= 70 ? 'bg-my-accent' : score >= 40 ? 'bg-amber-500' : 'bg-red-500';
-  const textColor = score >= 70 ? 'text-my-accent' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+  const barColor = score >= 81 ? 'bg-green-500' : score >= 61 ? 'bg-emerald-500' : score >= 41 ? 'bg-amber-500' : 'bg-red-500';
+  const textColor = score >= 81 ? 'text-green-600 dark:text-green-400' : score >= 61 ? 'text-emerald-600 dark:text-emerald-400' : score >= 41 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+  const label = getCredibilityLabel(score);
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="w-16 h-1.5 bg-my-border rounded-full overflow-hidden shrink-0">
         <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${score}%` }} />
       </div>
-      <span className={clsx(
-        'text-[9px] font-bold font-mono tabular-nums shrink-0',
-        textColor
-      )}>
-        {score}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <span className={clsx(
+          'text-[9px] font-bold font-mono tabular-nums shrink-0',
+          textColor
+        )}>
+          {score}
+        </span>
+        <span className="text-[7px] font-bold uppercase tracking-wider text-my-muted/50 hidden sm:inline">
+          {label}
+        </span>
+      </div>
     </div>
   );
 }
