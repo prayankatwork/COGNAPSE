@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ResearchScore } from '../types';
-import { ShieldCheck, AlertTriangle, Globe, TrendingUp, BarChart3, Layers, Crown, Loader2, BrainCircuit, ChevronDown, ChevronRight } from 'lucide-react';
+import { Globe, TrendingUp, BarChart3, Layers, Crown, Loader2, BrainCircuit } from 'lucide-react';
 import { useStore } from '../store';
-import { lookupDomain, factualToScore, biasToBiasScore } from '../utils/domainCredibility';
+import { lookupDomain, factualToScore } from '../utils/domainCredibility';
 import { computeAllScores, computeEntityDiversity, normalizeCredScore } from '../utils/scoringEngine';
-import { getCredibilityLabel, getConfidenceLabel, getDiversityLabel, getBiasLabel, getQualityLabel, getQualityGrade, getQualityColor, getCredibilityColor, getConfidenceColor, getDiversityColor, getBiasColor } from '../utils/scoreLabels';
+import { getCredibilityLabel, getConfidenceLabel, getDiversityLabel, getQualityLabel, getQualityGrade, getQualityColor, getCredibilityColor, getConfidenceColor, getDiversityColor } from '../utils/scoreLabels';
 import clsx from 'clsx';
 
 interface Props { scores: ResearchScore; }
@@ -82,14 +82,6 @@ export default function ResearchScoreCard({ scores }: Props) {
     ? Math.sqrt(credScores.reduce((sum, s) => sum + (s - avgCredibility) ** 2, 0) / credScores.length)
     : 0;
 
-  const biasFromDomains = sources.map(s => {
-    const d = lookupDomain(s.domain || '');
-    return d ? biasToBiasScore(d.bias) : null;
-  }).filter((b): b is number => b !== null);
-  const realBias = biasFromDomains.length > 0
-    ? biasFromDomains.reduce((a, b) => a + b, 0) / biasFromDomains.length
-    : null;
-
   const avgRelevance = relevanceScores.length > 0 ? relevanceScores.reduce((a, b) => a + b, 0) / relevanceScores.length / 100 : 0.5;
   const consensusBase = ({ strong: 1, mixed: 0.7, contested: 0.4, insufficient: 0.2 } as Record<string, number>)[reportScores?.evidence_consensus || ''] ?? 0.5;
   const fallbackOverallQ = Math.round((
@@ -100,8 +92,6 @@ export default function ResearchScoreCard({ scores }: Props) {
 
   // Choose enhanced vs fallback scores
   const es = enhanced;
-  const displayAccuracy = es?.accuracy ?? scores.accuracy;
-  const displayBias = es?.bias ?? (realBias !== null ? realBias : scores.bias);
   const displayDiversity = es?.sourceDiversity ?? scores.sourceDiversity;
   const displayConfidence = es?.confidenceInterval ?? scores.confidenceInterval;
   const displayCredibility = es?.enhancedCredibility ?? avgCredibility;
@@ -143,15 +133,6 @@ export default function ResearchScoreCard({ scores }: Props) {
         )}
       </div>
 
-      <ScoreMeter value={displayAccuracy} max={10} label="Source Credibility Score"
-        icon={<ShieldCheck size={12} />} color="#22c55e"
-        labelText={getCredibilityLabel(Math.round(displayAccuracy * 10))}
-        showRaw={isPremium} />
-      <ScoreMeter value={1 - displayBias} label="Objectivity (Low Bias)"
-        icon={<AlertTriangle size={12} />}
-        color={displayBias < 0.3 ? '#22c55e' : displayBias < 0.6 ? '#f59e0b' : '#ef4444'}
-        labelText={getBiasLabel(displayBias)}
-        showRaw={isPremium} />
       <ScoreMeter value={displayDiversity} label="Source Diversity"
         icon={<Globe size={12} />} color="#38bdf8"
         labelText={getDiversityLabel(displayDiversity)}

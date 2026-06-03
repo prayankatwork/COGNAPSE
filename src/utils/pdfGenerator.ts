@@ -409,7 +409,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     sectionsHTML.push(findingsHTML);
 
     // ════════════════════════════════════════════
-    // 4. MULTI-MODEL CONSENSUS — real data
+    // 5. MULTI-MODEL CONSENSUS — real data
     // ════════════════════════════════════════════
     const consensusScore = hasRealConsensus
       ? consensusFromReal!.overall_agreement
@@ -420,93 +420,121 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
         })();
     const consensusColor = consensusScore >= 85 ? '#10B981' : consensusScore >= 70 ? '#F59E0B' : '#EF4444';
 
+    const cVar = report.consensus_variance;
+    const cVarIsLow = !cVar || cVar.level === 'low';
+    const cVarStyle = cVarIsLow
+      ? { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', labelText: '#16A34A' }
+      : cVar.level === 'moderate'
+        ? { bg: '#FFFBEB', border: '#FDE68A', text: '#92400E', labelText: '#D97706' }
+        : { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', labelText: '#DC2626' };
+    const cVarLabel = cVarIsLow ? 'Strong' : cVar.level === 'moderate' ? 'Moderate' : 'Low';
+    const cVarNarrative = cVar?.narrative || (cVarIsLow ? 'Models closely agreed on scoring across all dimensions.' : cVar?.level === 'moderate' ? 'Models showed moderate disagreement on certain scoring dimensions.' : 'Models showed significant disagreement on scoring dimensions.');
+
     const consensusHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.consensus};">
         <h3 style="${sectionTitleStyle}">${secNum++}. Multi-Model Consensus</h3>
 
-        <div style="display: flex; gap: 24px; align-items: stretch; margin-bottom: 24px;">
-          <div style="flex-shrink: 0; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 24px; border-radius: 6px; width: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 44px; font-weight: 900; color: ${consensusColor}; line-height: 1; font-family: ${systemFont};">${consensusScore}%</div>
-            <div style="width: 80%; height: 4px; background: #E2E8F0; border-radius: 2px; margin-top: 12px; overflow: hidden;">
-              <div style="width: ${consensusScore}%; height: 100%; background: ${consensusColor}; border-radius: 2px;"></div>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748B; letter-spacing: 0.12em; font-weight: 700; margin-top: 10px; text-align: center;">Consensus Score</div>
+        <!-- Hero Score (full width, centered) -->
+        <div style="text-align: center; padding: 30px 20px; margin-bottom: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;">
+          <div style="font-size: 56px; font-weight: 900; color: ${consensusColor}; line-height: 1; letter-spacing: -0.02em; font-family: ${systemFont};">${consensusScore}%</div>
+          <div style="max-width: 320px; height: 5px; background: #E2E8F0; border-radius: 3px; margin: 14px auto 0; overflow: hidden;">
+            <div style="width: ${consensusScore}%; height: 100%; background: ${consensusColor}; border-radius: 3px;"></div>
           </div>
+          <div style="font-size: 10px; text-transform: uppercase; color: #64748B; letter-spacing: 0.15em; font-weight: 700; margin-top: 10px;">Overall Consensus Score</div>
+        </div>
 
-          <!-- Model Agreement Signal -->
-          ${report.consensus_variance ? `
-            <div style="flex-shrink: 0; background: ${report.consensus_variance.level === 'low' ? '#F0FDF4' : report.consensus_variance.level === 'moderate' ? '#FFFBEB' : '#FEF2F2'}; border: 1px solid ${report.consensus_variance.level === 'low' ? '#BBF7D0' : report.consensus_variance.level === 'moderate' ? '#FDE68A' : '#FECACA'}; padding: 16px; border-radius: 4px; width: 180px; display: flex; flex-direction: column; justify-content: center;">
-              <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: ${report.consensus_variance.level === 'low' ? '#166534' : report.consensus_variance.level === 'moderate' ? '#92400E' : '#991B1B'}; letter-spacing: 0.08em; display: block; margin-bottom: 4px;">Model Agreement</span>
-              <span style="font-size: 20px; font-weight: 900; color: ${report.consensus_variance.level === 'low' ? '#16A34A' : report.consensus_variance.level === 'moderate' ? '#D97706' : '#DC2626'};">${report.consensus_variance.level === 'low' ? 'Strong' : report.consensus_variance.level === 'moderate' ? 'Moderate' : 'Low'}</span>
-              <span style="font-size: 8px; color: #64748B; margin-top: 4px; line-height: 1.4;">${report.consensus_variance.narrative || (report.consensus_variance.level === 'low' ? 'Models closely agreed on scoring' : report.consensus_variance.level === 'moderate' ? 'Models showed moderate disagreement' : 'Models significantly disagreed')}</span>
-            </div>
-          ` : ''}
-
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
-            ${hasRealConsensus ? `
-            <div style="background: #ECFDF5; border-left: 4px solid #10B981; padding: 14px; border-radius: 0 4px 4px 0;">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #047857; display: block; margin-bottom: 6px; letter-spacing: 0.08em;">Agreement Between Systems</span>
-              <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #064E3B; line-height: 1.5;">
-                ${formatList(consensusFromReal!.agreement_points)}
-              </ul>
-            </div>
-            ${consensusFromReal!.divergent_points && consensusFromReal!.divergent_points.length > 0 ? `
-            <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 14px; border-radius: 0 4px 4px 0;">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #B91C1C; display: block; margin-bottom: 6px; letter-spacing: 0.08em;">Differing Viewpoints</span>
-              <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #7F1D1D; line-height: 1.5;">
-                ${formatList(consensusFromReal!.divergent_points.map(d => d.claim))}
-              </ul>
-            </div>` : ''}
-            <div style="margin-top: 12px;">
-              <h4 style="color: #0F172A; font-size: 12px; font-weight: 700; margin: 0 0 12px 0;">Models Compared</h4>
-              <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 4px; overflow: hidden;">
-                <thead>
-                  <tr>
-                    <th style="${tableHeaderStyle}; text-align: left;">AI System</th>
-                    <th style="${tableHeaderStyle}; text-align: left;">Model</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(consensusFromReal!.model_a.provider)}</td>
-                    <td style="${tableCellStyle}">${safeText(consensusFromReal!.model_a.model)}</td>
-                  </tr>
-                  <tr>
-                    <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(consensusFromReal!.model_b.provider)}</td>
-                    <td style="${tableCellStyle}">${safeText(consensusFromReal!.model_b.model)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            ${consensusFromReal!.score_comparison && consensusFromReal!.score_comparison.length > 0 ? `
-            <div style="margin-top: 16px;">
-              <h4 style="color: #0F172A; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">Score Comparison</h4>
-              <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 4px; overflow: hidden;">
-                <thead>
-                  <tr>
-                    <th style="${tableHeaderStyle}; text-align: left;">Metric</th>
-                    <th style="${tableHeaderStyle}; text-align: center;">Model A</th>
-                    <th style="${tableHeaderStyle}; text-align: center;">Model B</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${consensusFromReal!.score_comparison.map(m => `
-                    <tr>
-                      <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(m.metric)}</td>
-                      <td style="${tableCellStyle}; text-align: center;">${safeText(m.model_a)}</td>
-                      <td style="${tableCellStyle}; text-align: center;">${safeText(m.model_b)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>` : ''}
-            ` : `
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 4px;">
-              <p style="font-size: 12px; color: #475569; margin: 0;">Multi-model consensus was not computed for this report. The consensus score above is derived from source agreement and conflict analysis.</p>
-            </div>
-            `}
+        ${cVar ? `
+        <!-- Model Agreement badge (clean standalone) -->
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding: 16px 20px; background: ${cVarStyle.bg}; border: 1px solid ${cVarStyle.border}; border-radius: 8px;">
+          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-shrink: 0;">
+            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: ${cVarStyle.text};">Model Agreement</span>
+            <span style="font-size: 18px; font-weight: 900; color: ${cVarStyle.labelText};">${cVarLabel}</span>
+          </div>
+          <div style="flex: 1; height: 32px; display: flex; align-items: center; padding-left: 16px; border-left: 1px solid ${cVarStyle.border};">
+            <span style="font-size: 11px; line-height: 1.5; color: #475569;">${cVarNarrative}</span>
           </div>
         </div>
+        ` : ''}
+
+        ${hasRealConsensus ? `
+        <!-- Agreement points -->
+        <div style="margin-bottom: 16px;">
+          <h4 style="color: #0F172A; font-size: 11px; font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em;">Areas of Agreement</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${consensusFromReal!.agreement_points.map(p => `
+              <div style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 4px;">
+                <span style="font-size: 9px; color: #16A34A; font-weight: 700; margin-top: 1px;">\u2713</span>
+                <span style="font-size: 11px; color: #064E3B; line-height: 1.5;">${safeText(p)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Divergent points -->
+        ${consensusFromReal!.divergent_points && consensusFromReal!.divergent_points.length > 0 ? `
+        <div style="margin-bottom: 16px;">
+          <h4 style="color: #0F172A; font-size: 11px; font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em;">Differing Viewpoints</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${consensusFromReal!.divergent_points.map(d => `
+              <div style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 4px;">
+                <span style="font-size: 9px; color: #EF4444; font-weight: 700; margin-top: 1px;">\u00d7</span>
+                <span style="font-size: 11px; color: #7F1D1D; line-height: 1.5;">${safeText(d.claim)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+
+        <!-- Models Compared table -->
+        <div style="margin-bottom: 16px;">
+          <h4 style="color: #0F172A; font-size: 11px; font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em;">Models Compared</h4>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 4px; overflow: hidden;">
+            <thead>
+              <tr>
+                <th style="${tableHeaderStyle}; text-align: left;">AI System</th>
+                <th style="${tableHeaderStyle}; text-align: left;">Model</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(consensusFromReal!.model_a.provider)}</td>
+                <td style="${tableCellStyle}">${safeText(consensusFromReal!.model_a.model)}</td>
+              </tr>
+              <tr>
+                <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(consensusFromReal!.model_b.provider)}</td>
+                <td style="${tableCellStyle}">${safeText(consensusFromReal!.model_b.model)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Score Comparison table -->
+        ${consensusFromReal!.score_comparison && consensusFromReal!.score_comparison.length > 0 ? `
+        <div>
+          <h4 style="color: #0F172A; font-size: 11px; font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em;">Score Comparison</h4>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 4px; overflow: hidden;">
+            <thead>
+              <tr>
+                <th style="${tableHeaderStyle}; text-align: left;">Metric</th>
+                <th style="${tableHeaderStyle}; text-align: center;">Model A</th>
+                <th style="${tableHeaderStyle}; text-align: center;">Model B</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${consensusFromReal!.score_comparison.map(m => `
+                <tr>
+                  <td style="${tableCellStyle}; font-weight: 600; color: #0F172A;">${safeText(m.metric)}</td>
+                  <td style="${tableCellStyle}; text-align: center;">${safeText(m.model_a)}</td>
+                  <td style="${tableCellStyle}; text-align: center;">${safeText(m.model_b)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+
+        ` : `
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 4px;">
+          <p style="font-size: 12px; color: #475569; margin: 0;">Multi-model consensus was not computed for this report. The consensus score above is derived from source agreement and conflict analysis.</p>
+        </div>`}
       </div>
     `;
     sectionsHTML.push(consensusHTML);
