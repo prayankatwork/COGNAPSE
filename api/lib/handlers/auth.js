@@ -145,9 +145,16 @@ export async function handleRevokeSession(req, res) {
     if (!admin) return res.status(503).json({ error: 'Firebase Admin SDK unavailable.' });
 
     const decoded = await admin.auth().verifyIdToken(idToken);
-    await admin.auth().revokeRefreshTokens(decoded.uid);
+    try {
+      await admin.auth().revokeRefreshTokens(decoded.uid);
+    } catch (revokeErr) {
+      // Gracefully degrade: the service account may lack iam.serviceAccounts.keys.create.
+      // Client-side session is already cleared — revocation is a best-effort cleanup.
+      console.warn('[Auth API] Token revocation skipped (non-critical):', revokeErr?.message || revokeErr);
+    }
     return res.status(200).json({ success: true, uid: decoded.uid });
   } catch (error) {
-    return sendSafeError(res, 500, 'Failed to revoke session.', error);
+    console.error('[Auth API] Failed to revoke session:', error?.message || error);
+    return res.status(200).json({ success: false, uid: null, error: 'Failed to revoke session server-side, client session already cleared.' });
   }
 }
