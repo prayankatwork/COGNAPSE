@@ -355,7 +355,9 @@ function extractCitations(synthesis: string): { sourceId: number; claimText: str
       ? preText.slice(sentenceBoundary + 2).trim()
       : preText.slice(-150).trim(); // fallback: last 150 chars
 
-    if (claimText.length > 5) {
+    // Skip citations with very short surrounding text — these are usually
+    // sentence fragments or transitional phrases, not actual claims
+    if (claimText.length > 40) {
       for (const id of ids) {
         pairs.push({ sourceId: id, claimText });
       }
@@ -402,14 +404,18 @@ async function verifyCitations(
 
   const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE CONTENT, determine whether each source reasonably supports the claim made about it.
 
+CRITICAL: You MUST include a brief explanation for EVERY pair. Do not skip the explanation field — it is required for every object in the array. Responses missing any field will be rejected.
+
 Be generous: a claim is "supported" if the source discusses the same general topic or finding, even if exact wording differs. Only use "contradicted" if the source explicitly says the opposite of the claim. Use "unrelated" only if the source is about a completely different subject.
 
-For each pair, return:
-- verdict: "supported" (source clearly supports the claim) | "partial" (source partially supports but missing key details) | "contradicted" (source contradicts the claim) | "unrelated" (source doesn't address the claim)
-- confidence: 0.0 to 1.0
-- explanation: One brief sentence explaining why
+For each pair, return exactly this structure:
+{
+  "verdict": "supported" | "partial" | "contradicted" | "unrelated",
+  "confidence": 0.0 to 1.0,
+  "explanation": "Required — one brief sentence explaining why"
+}
 
-Respond with ONLY a valid JSON array of objects (no markdown, no backticks). Each object must have: "verdict", "confidence", "explanation"
+Return ONLY a valid JSON array. No markdown, no backticks, no extra text. Every object MUST include all three fields: verdict, confidence, and explanation.
 
 ${pairsText}`;
 
@@ -437,7 +443,7 @@ ${pairsText}`;
         ? r.verdict
         : 'unrelated',
       confidence: typeof r.confidence === 'number' ? Math.max(0, Math.min(1, r.confidence)) : 0,
-      explanation: r.explanation || 'No explanation provided',
+      explanation: r.explanation || 'Verifier did not provide a detailed explanation for this verdict — source content may be insufficient or ambiguous',
     }));
   } catch (e) {
     console.warn('Citation verification failed:', e);
