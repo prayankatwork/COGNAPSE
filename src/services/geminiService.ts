@@ -406,7 +406,7 @@ async function verifyCitations(
 
 CRITICAL: You MUST include a brief explanation for EVERY pair. Do not skip the explanation field — it is required for every object in the array. Responses missing any field will be rejected.
 
-Be generous: a claim is "supported" if the source discusses the same general topic or finding, even if exact wording differs. Only use "contradicted" if the source explicitly says the opposite of the claim. Use "unrelated" only if the source is about a completely different subject.
+Be precise: a claim is "supported" only if the source content explicitly supports the claim or directly discusses the same specific finding. Assign "partial" if the source covers the general topic but not the specific claim. Use "contradicted" only if the source explicitly says the opposite. Use "unrelated" only if the source is about a completely different subject.
 
 For each pair, return exactly this structure:
 {

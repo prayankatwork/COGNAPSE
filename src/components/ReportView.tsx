@@ -893,7 +893,7 @@ function ScoreCard({ label, value, labelText, labelColor, showRaw }: { label: st
         )}
         {hasNumeric && showRaw && (
           <span className="text-[8px] font-mono text-my-muted/50" title="Raw score">
-            {num.toFixed(1)}%
+            {Math.round(num)}%
           </span>
         )}
       </div>

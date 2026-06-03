@@ -98,7 +98,8 @@ describe('generateMissingConflicts - guard clauses', () => {
       conflicts: [],
     });
     generateMissingConflicts(report);
-    expect(report.conflicts).toEqual([]);
+    // With threshold at 1, 'increase' triggers positive and 'decline'/'loss' triggers negative → conflict found
+    expect(report.conflicts).toHaveLength(1);
   });
 });
 
@@ -339,7 +340,7 @@ describe('generateMissingConflicts - word boundary correctness', () => {
  * =================================================================== */
 
 describe('generateMissingConflicts - keyword threshold', () => {
-  it('requires at least 2 keyword matches in the dominant direction', () => {
+  it('generates conflict with minimum 1 keyword match in the dominant direction', () => {
     const report = createReport({
       sources: [
         createSource({ id: 1, title: 'Growth in sector', key_finding: 'This is about the sector only.' }),
@@ -348,7 +349,8 @@ describe('generateMissingConflicts - keyword threshold', () => {
       conflicts: [],
     });
     generateMissingConflicts(report);
-    expect(report.conflicts).toEqual([]);
+    // With threshold lowered to 1, 'growth' matches positive and 'decline' matches negative → conflict
+    expect(report.conflicts).toHaveLength(1);
   });
 
   it('generates conflict when a source has exactly 2 keyword matches', () => {
@@ -553,11 +555,11 @@ describe('generateMissingConflicts - synthesis text analysis', () => {
 });
 
 /* ===================================================================
- * TESTS: consensus-label fallback
+ * TESTS: consensus-label fallback (Priority 3 was removed — no longer generates)
  * =================================================================== */
 
-describe('generateMissingConflicts - consensus-label fallback', () => {
-  it('generates conflict when consensus is "mixed" with no source stance or synthesis signals', () => {
+describe('generateMissingConflicts - consensus-label fallback (removed)', () => {
+  it('does not generate conflict from consensus label alone (Priority 3 removed)', () => {
     const report = createReport({
       sources: [
         createSource({ id: 1, title: 'Study Report', key_finding: 'A study of the topic.' }),
@@ -570,18 +572,17 @@ describe('generateMissingConflicts - consensus-label fallback', () => {
         confidence_label: '🟡 Medium',
       },
       summary: {
-        bottom_line: 'The evidence is mixed on this topic. Some studies show positive effects while others show negative outcomes.',
-        full_synthesis: 'Recent studies have examined this topic thoroughly. A prominent 2024 study found significant benefits to the approach. Follow-up research in early 2025 examined additional data points. The overall picture requires careful interpretation of multiple results.',
+        bottom_line: 'The evidence is mixed on this topic.',
+        full_synthesis: 'Recent studies have examined this topic thoroughly. A prominent 2024 study found significant benefits. Follow-up research in early 2025 examined additional data. The overall picture requires careful interpretation.',
       },
       conflicts: [],
     });
     generateMissingConflicts(report);
-    expect(report.conflicts).toHaveLength(1);
-    expect(report.conflicts![0].explanation).toContain('mixed');
-    expect(report.conflicts![0].source_a).toBe('synthesis text');
+    // Priority 3 was removed — no conflict from consensus label alone
+    expect(report.conflicts).toEqual([]);
   });
 
-  it('generates conflict when consensus is "contested" with no other signals', () => {
+  it('does not generate conflict from contested consensus alone (Priority 3 removed)', () => {
     const report = createReport({
       sources: [
         createSource({ id: 1, title: 'Research Paper', key_finding: 'Neutral research data.' }),
@@ -595,38 +596,38 @@ describe('generateMissingConflicts - consensus-label fallback', () => {
       },
       summary: {
         bottom_line: 'This topic is highly contested with no clear consensus.',
-        full_synthesis: 'Researchers approach this topic from different perspectives. Proponents argue that the available data supports their conclusions. Critics point to methodological concerns and alternative interpretations. The discussion continues as new evidence emerges over time.',
+        full_synthesis: 'Researchers approach this topic from different perspectives. Proponents argue data supports conclusions. Critics point to methodological concerns. Discussion continues as new evidence emerges.',
       },
       conflicts: [],
     });
     generateMissingConflicts(report);
-    expect(report.conflicts).toHaveLength(1);
-    expect(report.conflicts![0].explanation).toContain('contested');
-  });
-
-  it('does not generate consensus-label fallback when consensus is "strong"', () => {
-    const report = createReport({
-      sources: [
-        createSource({ id: 1, title: 'Study Report', key_finding: 'Data about the topic.' }),
-        createSource({ id: 2, title: 'Analysis Report', key_finding: 'More data about the topic.' }),
-      ],
-      scores: {
-        overall_credibility: 90,
-        overall_relevance: 90,
-        evidence_consensus: 'strong',
-        confidence_label: '🟢 High',
-      },
-      summary: {
-        bottom_line: 'Strong consensus exists.',
-        full_synthesis: 'The evidence strongly supports the conclusion that this approach is effective.',
-      },
-      conflicts: [],
-    });
-    generateMissingConflicts(report);
+    // Priority 3 was removed
     expect(report.conflicts).toEqual([]);
   });
 
-  it('does not override existing conflicts with consensus-label fallback', () => {
+  it('does not generate conflict from consensus label when sources are neutral (Priority 3 removed)', () => {
+    const report = createReport({
+      sources: [
+        createSource({ id: 1, title: 'Study', key_finding: 'Data.' }),
+        createSource({ id: 2, title: 'Analysis', key_finding: 'More data.' }),
+      ],
+      scores: {
+        overall_credibility: 70,
+        overall_relevance: 70,
+        evidence_consensus: 'mixed',
+        confidence_label: '🟡 Medium',
+      },
+      summary: {
+        bottom_line: 'The bottom line shows mixed evidence on this topic.',
+      },
+      conflicts: [],
+    });
+    generateMissingConflicts(report);
+    // Priority 3 was removed
+    expect(report.conflicts).toEqual([]);
+  });
+
+  it('does not override existing conflicts (guard clause still active)', () => {
     const existingConflicts = [
       {
         claim_a: 'Existing conflict',
@@ -655,28 +656,6 @@ describe('generateMissingConflicts - consensus-label fallback', () => {
     });
     generateMissingConflicts(report);
     expect(report.conflicts).toEqual(existingConflicts);
-  });
-
-  it('uses bottom line as claim_a when synthesis is not available', () => {
-    const report = createReport({
-      sources: [
-        createSource({ id: 1, title: 'Study', key_finding: 'Data.' }),
-        createSource({ id: 2, title: 'Analysis', key_finding: 'More data.' }),
-      ],
-      scores: {
-        overall_credibility: 70,
-        overall_relevance: 70,
-        evidence_consensus: 'mixed',
-        confidence_label: '🟡 Medium',
-      },
-      summary: {
-        bottom_line: 'The bottom line shows mixed evidence on this topic.',
-      },
-      conflicts: [],
-    });
-    generateMissingConflicts(report);
-    expect(report.conflicts).toHaveLength(1);
-    expect(report.conflicts![0].claim_a).toContain('bottom line shows mixed');
   });
 });
 

@@ -57,11 +57,43 @@ function setCache(query: string, sources: GroundedSource[], trace: RetrievalTrac
 /* ─── Source Ranking ─── */
 
 /**
- * Rank sources by a combined credibility + relevance score.
+ * Rank sources by a combined credibility + relevance score,
+ * with a diversity penalty to prevent the same domain from dominating top results.
  * Higher is better. Returns sorted copy.
  */
 function rankSources(sources: GroundedSource[]): GroundedSource[] {
-  return [...sources].sort((a, b) => {
+  // First pass: assign base scores
+  const scored = [...sources].map(s => ({
+    source: s,
+    baseScore: (s.credibility_score || 0) + (s.relevance_score || 0),
+  }));
+
+  // Sort by base score descending
+  scored.sort((a, b) => b.baseScore - a.baseScore);
+
+  // Apply a modest diversity penalty: sources sharing a two-level domain with
+  // a higher-ranked source get a 15% score reduction. This prevents the top 5
+  // from being all from the same domain without excluding them entirely.
+  const seenDomains = new Set<string>();
+  const result: GroundedSource[] = [];
+
+  for (const item of scored) {
+    const domain = item.source.domain || '';
+    const domainKey = domain.split('.').slice(-2).join('.');
+
+    if (seenDomains.has(domainKey) && domainKey.length > 0) {
+      // Reduce effective score for repeat-domain sources
+      const penalty = 0.15;
+      const newCred = Math.round((item.source.credibility_score || 0) * (1 - penalty));
+      result.push({ ...item.source, credibility_score: newCred });
+    } else {
+      if (domainKey.length > 0) seenDomains.add(domainKey);
+      result.push(item.source);
+    }
+  }
+
+  // Re-sort with the diversity penalty applied
+  return result.sort((a, b) => {
     const scoreA = (a.credibility_score || 0) + (a.relevance_score || 0);
     const scoreB = (b.credibility_score || 0) + (b.relevance_score || 0);
     return scoreB - scoreA;

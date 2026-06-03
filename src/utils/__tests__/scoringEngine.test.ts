@@ -600,6 +600,100 @@ describe('computeAllScores (integration)', () => {
 });
 
 /* ===================================================================
+ * TESTS: detectAdversarialQuery
+ * =================================================================== */
+
+describe('detectAdversarialQuery', () => {
+  // Import needs to be at top, but we've already imported. Let's test inline.
+  // Note: we import these at module level below
+
+  it('detects flat earth queries', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    expect(detectAdversarialQuery('flat earth theory evidence').isAdversarial).toBe(true);
+    expect(detectAdversarialQuery('the flat earth myth').isAdversarial).toBe(true);
+  });
+
+  it('detects anti-vaccine queries', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    expect(detectAdversarialQuery('Do vaccines cause autism?').isAdversarial).toBe(true);
+    expect(detectAdversarialQuery('vaccines cause infertility').isAdversarial).toBe(true);
+  });
+
+  it('does not flag legitimate scientific queries', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    expect(detectAdversarialQuery('What is vaccine efficacy against COVID-19?').isAdversarial).toBe(false);
+    expect(detectAdversarialQuery('How does the Earth\'s orbit work?').isAdversarial).toBe(false);
+    expect(detectAdversarialQuery('What causes autism spectrum disorder?').isAdversarial).toBe(false);
+  });
+
+  it('returns label for matched patterns', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    const result = detectAdversarialQuery('do vaccines cause autism');
+    expect(result.isAdversarial).toBe(true);
+    expect(result.label).toBe('anti_vax');
+  });
+
+  it('returns false for empty string', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    expect(detectAdversarialQuery('').isAdversarial).toBe(false);
+    expect(detectAdversarialQuery(null as unknown as string).isAdversarial).toBe(false);
+    expect(detectAdversarialQuery(undefined as unknown as string).isAdversarial).toBe(false);
+  });
+
+  it('does not flag normal queries', async () => {
+    const { detectAdversarialQuery } = await import('../scoringEngine');
+    expect(detectAdversarialQuery('What is the capital of France?').isAdversarial).toBe(false);
+    expect(detectAdversarialQuery('How does photosynthesis work?').isAdversarial).toBe(false);
+    expect(detectAdversarialQuery('Health benefits of exercise').isAdversarial).toBe(false);
+  });
+});
+
+/* ===================================================================
+ * TESTS: detectUncertaintyQuery — especially regression: should NOT flag settled science
+ * =================================================================== */
+
+describe('detectUncertaintyQuery', () => {
+  it('flags queries with explicit debate keywords', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    expect(detectUncertaintyQuery('Is there a controversy about vaccine safety?')).toBe(true);
+    expect(detectUncertaintyQuery('a debate in economics')).toBe(true);
+    expect(detectUncertaintyQuery('a debated topic in economics')).toBe(true);
+  });
+
+  it('flags queries about future predictions', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    expect(detectUncertaintyQuery('What will AI look like in 2030?')).toBe(true);
+    expect(detectUncertaintyQuery('Future outlook for renewable energy')).toBe(true);
+    expect(detectUncertaintyQuery('AI predictions for 2025')).toBe(true);
+  });
+
+  it('flags queries with risk/benefit framing', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    expect(detectUncertaintyQuery('What are the risks and benefits of social media?')).toBe(true);
+    expect(detectUncertaintyQuery('risk vs reward of investing')).toBe(true);
+  });
+
+  it('flags queries about mixed or conflicting studies', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    expect(detectUncertaintyQuery('Studies differ on the health effects of coffee')).toBe(true);
+    expect(detectUncertaintyQuery('The literature is mixed on this topic')).toBe(true);
+  });
+
+  it('does NOT flag settled-science queries about effects/impact', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    // These were previously false positives from the broad "effects of" pattern
+    expect(detectUncertaintyQuery('What are the effects of gravity on light?')).toBe(false);
+    expect(detectUncertaintyQuery('How does photosynthesis work in plants?')).toBe(false);
+    expect(detectUncertaintyQuery('What is the impact of gravity on time?')).toBe(false);
+  });
+
+  it('returns false for empty/undefined query', async () => {
+    const { detectUncertaintyQuery } = await import('../scoringEngine');
+    expect(detectUncertaintyQuery('')).toBe(false);
+  });
+});
+
+/* ===================================================================
  * EDGE CASES
  * =================================================================== */
 

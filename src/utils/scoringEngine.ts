@@ -306,12 +306,17 @@ const ADVERSARIAL_PATTERNS: { pattern: RegExp; label: string }[] = [
 const UNCERTAINTY_PATTERNS: RegExp[] = [
   /\b(will|will\s+we|will\s+there)\s+(ever\s+)?(achieve|reach|see|have|get|be)\b/i,
   /\b(is\s+(it\s+)?possible\b|can\s+we\b)/i,
-  /\b(controversy|debate|disputed|uncertain|unknowns?|unclear)\b/i,
+  /\b(controvers(y|ies)|debate[dds]?|disputed|uncertain|unknowns?|unclear)\b/i,
   /\b(future\s+(of|outlook)|predictions?|forecast|prospects?)\b/i,
-  /\b(risk|benefit|trade.off|pro\s*(v|v\s*s?|\.\s*v\s*\.)\s*con)\b/i,
+  // Future year references — inherently speculative ("in 2030", "by 2050")
+  /\b(in|by|around)\s+(20[2-9]\d|2[1-9]\d{2})\b/i,
+  /\b(risks?|benefits?|trade.off|pro\s*(v|v\s*s?|\.\s*v\s*\.)\s*con)\b/i,
   /\b(should|whether)\s+.*\s+(is|are|be)\b/i,
-  // Effects/impact on something — inherently uncertain as outcomes vary by methodology
-  /\b(effects?|impact|implications?|outcomes?|consequences?)\s+(of|on)\b/i,
+  // Effects/impact — only flag when combined with explicit debate or methodological language.
+  // Removed the broad pattern from earlier which matched ANY "effects of" query (including
+  // settled-science topics like "effects of gravity on light"). The patterns above
+  // (controversy, debate, dispute, conflicting studies, etc.) already catch genuinely
+  // uncertain topics without false-positives on well-understood phenomena.
   // Trend/scenario projections — future-oriented and inherently speculative
   /\b(trends?|outlook|projections?|scenarios?|trajectory)\b/i,
   // Academic disagreements across studies
