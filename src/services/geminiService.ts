@@ -7,7 +7,8 @@ import { audioSystem } from './audioService';
 import { useStore } from '../store';
 import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
-import { generateMissingConflicts } from '../utils/conflictDetector';
+import { generateMissingConflicts, generateStructuredContradictions } from '../utils/conflictDetector';
+import { computeEvidenceBasedConfidence, determineConsensus } from '../utils/scoringEngine';
 import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentiment } from '../utils/scoringEngine';
 import { redistributeBatchCitations } from '../utils/citations';
 import { apiFetch } from './apiClient';
@@ -478,47 +479,88 @@ async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Prom
   }
 }
 
-export async function calibrateConfidence(
-  synthesis: string,
-  query: string,
-  abortSignal?: AbortSignal
-): Promise<{ confidence_rating: 'sure' | 'partially_sure' | 'uncertain'; gaps_identified: string[]; narrative: string } | null> {
-  if (!synthesis || synthesis.length < 50) return null;
+/**
+ * Compute evidence-based assessment from source metrics rather than model self-opinion.
+ * Replaces the model-generated confidence_calibration with a computed assessment.
+ */
+function computeEvidenceAssessment(
+  report: COGNAPSE_Output,
+  sources: GroundedSource[]
+): void {
+  if (!sources || sources.length === 0) return;
 
-  const prompt = `You generated the following research synthesis for the query: "${query}"
+  const conflicts = report.conflicts || [];
+  const verifications = (report as COGNAPSE_Output).citation_verifications;
 
-SYNTHESIS:
-"${synthesis.substring(0, 2000)}"
+  const confidence = computeEvidenceBasedConfidence(
+    sources,
+    conflicts,
+    verifications
+  );
 
-Now, honestly assess your confidence in this synthesis. Consider:
-- Are there claims in your synthesis that you're not fully sure about?
-- What specific information would you need to be more confident?
-- Are there alternative interpretations you didn't explore?
+  // Build narrative from the metrics
+  const parts: string[] = [];
+  parts.push(`${sources.length} source${sources.length !== 1 ? 's' : ''} analyzed`);
 
-Return ONLY valid JSON with NO markdown formatting:
-{
-  "confidence_rating": "sure" | "partially_sure" | "uncertain",
-  "gaps_identified": ["list of specific knowledge gaps or uncertainties"],
-  "narrative": "One sentence explaining your confidence level and why"
-}`;
+  const uniqueDomains = new Set(sources.map(s => (s.domain || '').split('.').slice(-2).join('.')));
+  parts.push(`${uniqueDomains.size} domain${uniqueDomains.size !== 1 ? 's' : ''}`);
 
-  try {
-    const raw = await callCloudAI(prompt, true, CONSENSUS_MODEL, abortSignal);
-    const result = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    const rating = result.confidence_rating || 'partially_sure';
-    return {
-      confidence_rating: ['sure', 'partially_sure', 'uncertain'].includes(rating) ? rating as any : 'partially_sure',
-      gaps_identified: Array.isArray(result.gaps_identified) ? result.gaps_identified.slice(0, 5) : [],
-      narrative: result.narrative || 'Confidence assessment unavailable',
-    };
-  } catch (e) {
-    console.warn('[COGNAPSE] Confidence calibration failed:', e);
-    return null;
+  if (conflicts.length > 0) {
+    parts.push(`${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''} detected`);
   }
+
+  if (verifications && verifications.length > 0) {
+    const supported = verifications.filter(v => v.verdict === 'supported').length;
+    const supportRate = Math.round((supported / verifications.length) * 100);
+    parts.push(`${supportRate}% citation support rate`);
+  }
+
+  const avgCred = Math.round(
+    sources.reduce((sum, s) => sum + (s.credibility_score || 50), 0) / sources.length
+  );
+  parts.push(`avg source credibility: ${avgCred}/100`);
+
+  const narrative = `Evidence assessment based on ${parts.join(', ')}. Coverage: ${confidence.coverage}.`;
+
+  (report as COGNAPSE_Output).evidence_assessment = {
+    source_count: sources.length,
+    source_diversity_score: uniqueDomains.size / Math.max(sources.length, 1),
+    contradiction_count: conflicts.length,
+    citation_support_rate: verifications && verifications.length > 0
+      ? verifications.filter(v => v.verdict === 'supported').length / verifications.length
+      : 0,
+    evidence_coverage: confidence.coverage,
+    narrative,
+  };
+
+  // Override scores with evidence-based values
+  if (report.scores) {
+    // Map coverage to confidence label
+    const coverageMap: Record<string, '🟢 High' | '🟡 Medium' | '🔴 Low'> = {
+      'comprehensive': '🟢 High',
+      'moderate': '🟡 Medium',
+      'limited': '🔴 Low',
+      'insufficient': '🔴 Low',
+    };
+    report.scores.confidence_label = coverageMap[confidence.coverage] || report.scores.confidence_label;
+
+    // Determine consensus from evidence
+    const consensus = determineConsensus(sources, conflicts, verifications);
+    report.scores.evidence_consensus = consensus.level;
+
+    // Override overall_credibility with computed average
+    const avgCred = Math.round(
+      sources.reduce((sum, s) => sum + (s.credibility_score || 50), 0) / sources.length
+    );
+    report.scores.overall_credibility = avgCred;
+  }
+
+  // Generate structured contradictions if conflicts exist
+  generateStructuredContradictions(report);
 }
 
 /**
- * Deferred report enrichment — runs confidence calibration and citation verification
+ * Deferred report enrichment — runs evidence-based assessment and citation verification
  * in the background after the report is already returned to the user.
  * Both tasks run in parallel and update the report object + store when complete.
  */
@@ -529,15 +571,9 @@ async function deferredReportEnrichment(
   abortSignal?: AbortSignal
 ): Promise<void> {
   try {
-    const [calibration, _] = await Promise.all([
-      // Task 1: Confidence calibration
-      calibrateConfidence(
-        report.summary?.full_synthesis || report.summary?.bottom_line || '',
-        query,
-        abortSignal
-      ),
-
-      // Task 2: Citation verification (full-text fetch + claim check)
+    const [_] = await Promise.all([
+      // Task 1: Citation verification (full-text fetch + claim check)
+      // Evidence assessment is not a model call — computed synchronously below
       (async () => {
         if (sources.length === 0 || !report.summary?.full_synthesis) return;
         try {
@@ -595,14 +631,13 @@ async function deferredReportEnrichment(
       })(),
     ]);
 
-    // Apply confidence calibration results
-    if (calibration) {
-      (report as COGNAPSE_Output).confidence_calibration = calibration;
-      if (report.scores && calibration.confidence_rating === 'uncertain' && report.scores.confidence_label === '🟢 High') {
-        report.scores.confidence_label = '🟡 Medium';
-      }
+    // Compute evidence-based assessment (no model call, pure computation)
+    computeEvidenceAssessment(report, sources);
+
+    const assessment = (report as COGNAPSE_Output).evidence_assessment;
+    if (assessment) {
       const addStep = useStore.getState().addReasoningStep;
-      addStep(`Confidence: ${calibration.confidence_rating} — ${calibration.narrative}`);
+      addStep(`Evidence assessment: ${assessment.evidence_coverage} coverage — ${assessment.narrative}`);
     }
 
     // Update the store to trigger re-render with enriched fields

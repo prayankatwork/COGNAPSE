@@ -142,7 +142,14 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
     "bottom_line": "1–2 sentence plain-English conclusion. Lead with the answer.",
     "full_synthesis": "A focused 400-500 word narrative. Connect the dots across sources concisely. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. CRITICAL INSTRUCTION: You MUST cite your sources inline using [1], [2] format for EVERY SINGLE FACTUAL CLAIM. If a sentence contains a fact, it MUST end with a citation chip.",
     "eli5_version": "Same conclusion explained as if to a curious 12-year-old. Pure analogies, zero data.",
-    "confidence_narrative": "One sentence explaining WHY confidence is at this level."
+    "confidence_narrative": "One sentence explaining WHY confidence is at this level.",
+    "evidence_breakdown": {
+      "established_findings": "What the evidence clearly proves — claims supported by multiple independent, high-credibility sources. Be specific about what is settled.",
+      "supported_evidence": "What the evidence suggests but does not conclusively prove — claims supported by some credible sources but with caveats about methodology, sample size, or conflicting data.",
+      "competing_interpretations": "Where informed experts disagree on what the evidence means — different analytical frameworks, methodological disputes, or legitimate differences in interpreting the same data.",
+      "remaining_uncertainty": "What the evidence does NOT tell us — gaps where sources are silent, claims that rest on weak evidence, or questions the current research cannot answer.",
+      "research_gaps": "Specific missing evidence that, if found, would resolve key uncertainties. Name WHAT is missing, not just THAT it is missing."
+    }
   },
   "scores": {
     "overall_credibility": 87.4, // Provide a precise decimal, not an integer
@@ -189,14 +196,14 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
     "threats": ["max 12 words each"]
   },
   "timeline_events": [],
-  "actionable_takeaways": {
-    "key_insight": "The single most important thing to understand",
-    "watch_out_for": "The biggest risk or misconception to avoid",
-    "next_step": "The most useful concrete action to take",
-    "professional_referral": null
+  "evidence_insights": {
+    "most_important_finding": "The single most important finding the evidence supports — what users should take away above all else. Be specific, not generic.",
+    "most_important_limitation": "The most significant limitation or caveat in the evidence — what the sources do NOT prove or what weakens confidence.",
+    "most_contested_question": "The question where experts disagree most sharply — what is genuinely unresolved in the literature or commentary.",
+    "most_actionable_insight": "A concrete, evidence-based action someone can take based on this research. Avoid 'Further research is needed' unless the evidence genuinely supports that conclusion."
   },
   "follow_up_suggestions": [
-    "3 smart follow-up questions the user should consider asking next"
+    "3 specific, concrete follow-up questions that address UNANSWERED questions, MISSING EVIDENCE, UNRESOLVED DEBATES, or IMPORTANT FUTURE INVESTIGATIONS identified in this report. Each should be something a real person could research next. Avoid generic questions like 'What are the future implications?' — instead ask specific, answerable questions."
   ],
   "archive_entry": {
     "query": "Original user query",

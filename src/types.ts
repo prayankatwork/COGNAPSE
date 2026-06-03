@@ -29,11 +29,18 @@ export interface COGNAPSE_Output {
     full_synthesis?: string;
     eli5_version?: string;
     confidence_narrative?: string;
+    evidence_breakdown?: {
+      established_findings: string;
+      supported_evidence: string;
+      competing_interpretations: string;
+      remaining_uncertainty: string;
+      research_gaps: string;
+    };
   };
   scores?: {
     overall_credibility: number;
     overall_relevance: number;
-    evidence_consensus: "strong" | "mixed" | "contested" | "insufficient";
+    evidence_consensus: "strong" | "moderate" | "mixed" | "contested" | "insufficient";
     confidence_label: "🟢 High" | "🟡 Medium" | "🔴 Low";
   };
   sources?: {
@@ -69,6 +76,32 @@ export interface COGNAPSE_Output {
   swot?: { perspective: string; strengths: string[]; weaknesses: string[]; opportunities: string[]; threats: string[] } | null;
   timeline_events?: { date: string; title: string; description: string; significance: number }[] | null;
   actionable_takeaways?: { key_insight: string; watch_out_for: string; next_step: string; professional_referral: string | null };
+  // Evidence Assessment: replaces AI Self-Assessment with evidence-based analysis
+  evidence_assessment?: {
+    source_count: number;
+    source_diversity_score: number;
+    contradiction_count: number;
+    citation_support_rate: number;
+    evidence_coverage: 'comprehensive' | 'moderate' | 'limited' | 'insufficient';
+    narrative: string;
+  };
+
+  // Evidence Insights: replaces actionable_takeaways with evidence-derived findings
+  evidence_insights?: {
+    most_important_finding: string;
+    most_important_limitation: string;
+    most_contested_question: string;
+    most_actionable_insight: string;
+  };
+
+  // Structured Contradictions: replaces basic conflicts with organized reporting
+  structured_contradictions?: {
+    areas_of_agreement: string[];
+    areas_of_disagreement: { claim: string; sources: string[] }[];
+    evidence_conflicts: { claim_a: string; claim_b: string; explanation: string }[];
+    open_questions: string[];
+  };
+
   follow_up_suggestions?: string[];
   gamification?: {
     search_count: number;

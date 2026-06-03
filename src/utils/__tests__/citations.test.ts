@@ -169,8 +169,8 @@ describe('getDomainBadge', () => {
   });
 
   it('returns "organization" for .org domains', () => {
-    expect(getDomainBadge('wikipedia.org')).toBe('organization');
-    expect(getDomainBadge('sub.icrc.org')).toBe('organization');
+    expect(getDomainBadge('icrc.org')).toBe('organization');
+    expect(getDomainBadge('un.org')).toBe('organization');
   });
 
   it('returns "web" for .com domains', () => {

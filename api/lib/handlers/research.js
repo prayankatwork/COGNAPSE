@@ -136,14 +136,20 @@ function extractDomain(url) {
 function inferSourceType(domain) {
   const d = (domain || '').toLowerCase();
   // Academic / reference
-  if (d.endsWith('.edu') || d.includes('arxiv.org') || d.includes('pubmed') || d.includes('jstor') || d.includes('scholar') || d.includes('wikipedia.org') || d.includes('britannica.com') || d.includes('lpi.usra.edu') || d.includes('si.edu') || d.includes('nixonlibrary.gov') || d.includes('planetary.org')) return 'academic';
+  if (d.endsWith('.edu') || d.includes('arxiv.org') || d.includes('pubmed') || d.includes('jstor') || d.includes('scholar') || d.includes('lpi.usra.edu') || d.includes('si.edu') || d.includes('nixonlibrary.gov') || d.includes('planetary.org') || d.includes('ebsco') || d.includes('acm.org') || d.includes('ieee.org')) return 'academic';
   // Government / military
   if (d.endsWith('.gov') || d.endsWith('.mil')) return 'government';
-  if (d.includes('nasa.gov') || d.includes('nih.gov') || d.includes('cdc.gov') || d.includes('loc.gov') || d.includes('ebsco')) return 'government';
+  if (d.includes('nasa.gov') || d.includes('nih.gov') || d.includes('cdc.gov') || d.includes('loc.gov')) return 'government';
   // Journalism / news
   if (d.includes('reuters.com') || d.includes('ap.org') || d.includes('bbc.com') || d.includes('bbc.co.uk') || d.includes('economist.com') || d.includes('ft.com') || d.includes('nytimes.com') || d.includes('wsj.com') || d.includes('bloomberg.com') || d.includes('theguardian.com') || d.includes('washingtonpost.com') || d.includes('forbes.com') || d.includes('cnn.com') || d.includes('nbcnews.com') || d.includes('abcnews.go.com') || d.includes('cbsnews.com') || d.includes('theatlantic.com') || d.includes('space.com') || d.includes('popsci.com') || d.includes('scientificamerican.com') || d.includes('nationalgeographic.com') || d.includes('pursuit.unimelb.edu.au') || d.includes('npr.org') || d.includes('pbs.org') || d.includes('pursuit')) return 'journalism';
+  // Encyclopedia
+  if (d.includes('wikipedia.org') || d.includes('britannica.com')) return 'encyclopedia';
+  // Think Tanks / Policy Research
+  if (d.includes('brookings.edu') || d.includes('rand.org') || d.includes('pewresearch.org') || d.includes('cato.org') || d.includes('aei.org') || d.includes('urban.org') || d.includes('heritage.org') || d.includes('csis.org') || d.includes('cfr.org') || d.includes('wilsoncenter.org') || d.includes('carnegieendowment.org') || d.includes('chathamhouse.org') || d.includes('ipinst.org') || d.includes('sipri.org') || d.includes('iiss.org') || d.includes('hoover.org') || d.includes('mackinac.org') || d.includes('manhattan-institute.org') || d.includes('nber.org') || d.includes('policyscotland.org') || d.includes('rff.org') || d.includes('wri.org') || d.includes('worldwatch.org')) return 'think_tank';
+  // Forums / user-generated content
+  if (d.includes('reddit.com') || d.includes('quora.com') || d.includes('stackexchange.com') || d.includes('stackoverflow.com') || d.includes('news.ycombinator.com')) return 'forum';
   // Social media / user-generated
-  if (d.includes('reddit.com') || d.includes('quora.com') || d.includes('facebook.com') || d.includes('youtube.com') || d.includes('linkedin.com') || d.includes('medium.com') || d.includes('substack.com') || d.includes('wordpress.com')) return 'social';
+  if (d.includes('facebook.com') || d.includes('youtube.com') || d.includes('linkedin.com') || d.includes('medium.com') || d.includes('substack.com') || d.includes('wordpress.com') || d.includes('twitter.com') || d.includes('x.com') || d.includes('tiktok.com') || d.includes('instagram.com')) return 'social';
   // Industry / commercial
   return 'industry';
 }

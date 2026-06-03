@@ -371,6 +371,159 @@ export function computeEnhancedSourceCredibility(
   return { perSource, average };
 }
 
+/**
+ * Compute evidence-based confidence from actual source metrics rather than model self-opinion.
+ * Confidence is driven by:
+ *   - source count (more = better, up to 10)
+ *   - source diversity (unique domain types)
+ *   - source quality (average credibility)
+ *   - contradiction level (fewer = better)
+ *   - citation verification rate (higher = better)
+ *   - evidence completeness (how well the sources cover the topic)
+ *
+ * Returns a score 0-1 and a coverage label.
+ */
+export function computeEvidenceBasedConfidence(
+  sources: { domain?: string; credibility_score?: number }[],
+  conflicts: any[],
+  citationVerifications?: { verdict: string }[]
+): { score: number; coverage: 'comprehensive' | 'moderate' | 'limited' | 'insufficient' } {
+  if (sources.length === 0) return { score: 0.05, coverage: 'insufficient' };
+
+  // Source count score: 0 to 1, diminishing returns after 8
+  const countScore = Math.min(sources.length / 8, 1);
+
+  // Source diversity score: unique domain types
+  const domainTypes = new Set(sources.map(s => {
+    const d = (s.domain || '').toLowerCase();
+    if (d.endsWith('.edu') || d.includes('pubmed') || d.includes('arxiv')) return 'academic';
+    if (d.endsWith('.gov') || d.endsWith('.mil')) return 'government';
+    if (d.includes('wikipedia.org') || d.includes('britannica.com')) return 'reference';
+    return 'other';
+  }));
+  const diversityScore = Math.min(domainTypes.size / 4, 1);
+
+  // Source quality score: average credibility normalized to 0-1
+  const credScores = sources.map(s => s.credibility_score || 50);
+  const avgCred = credScores.reduce((a, b) => a + b, 0) / credScores.length;
+  const qualityScore = Math.min(avgCred / 100, 1);
+
+  // Contradiction penalty: each contradiction reduces confidence
+  const conflictCount = conflicts?.length || 0;
+  const conflictPenalty = Math.min(conflictCount * 0.15, 0.5);
+
+  // Citation verification rate
+  let citationSupportRate = 0.5; // neutral default when no data
+  if (citationVerifications && citationVerifications.length > 0) {
+    const supported = citationVerifications.filter(v => v.verdict === 'supported').length;
+    citationSupportRate = supported / citationVerifications.length;
+  }
+
+  // Weighted combination
+  // Count and diversity together ensure thin reports don't get inflated scores
+  const baseConfidence =
+    countScore * 0.15 +
+    diversityScore * 0.15 +
+    qualityScore * 0.30 +
+    citationSupportRate * 0.25 +
+    (1 - conflictPenalty) * 0.15;
+
+  // Coverage label based on the combined evidence
+  let coverage: 'comprehensive' | 'moderate' | 'limited' | 'insufficient';
+  if (baseConfidence >= 0.7 && sources.length >= 5 && diversityScore >= 0.5) {
+    coverage = 'comprehensive';
+  } else if (baseConfidence >= 0.4 && sources.length >= 3) {
+    coverage = 'moderate';
+  } else if (baseConfidence >= 0.2) {
+    coverage = 'limited';
+  } else {
+    coverage = 'insufficient';
+  }
+
+  return { score: Math.round(baseConfidence * 100) / 100, coverage };
+}
+
+/**
+ * Determine evidence consensus based on source independence, diversity, and contradictions.
+ * Returns one of the four consensus states with a reason.
+ *
+ * Strong: multiple independent, high-quality sources agree
+ * Moderate: general agreement but some caveats or lower-quality sources
+ * Mixed: significant disagreement or conflicting evidence
+ * Contested: active debate, highly contradictory evidence
+ */
+export function determineConsensus(
+  sources: { domain?: string; credibility_score?: number }[],
+  conflicts: any[],
+  citationVerifications?: { verdict: string }[]
+): {
+  level: 'insufficient' | 'strong' | 'moderate' | 'mixed' | 'contested';
+  reason: string;
+} {
+  if (sources.length === 0) {
+    return { level: 'insufficient', reason: 'No sources available to determine consensus.' };
+  }
+
+  const credScores = sources.map(s => s.credibility_score || 50);
+  const avgCred = credScores.reduce((a, b) => a + b, 0) / credScores.length;
+  const highCredCount = sources.filter(s => (s.credibility_score || 0) >= 70).length;
+  const conflictCount = conflicts?.length || 0;
+
+  // Source independence: unique root domains
+  const uniqueDomains = new Set(sources.map(s => (s.domain || '').split('.').slice(-2).join('.')));
+  const independenceRatio = uniqueDomains.size / Math.max(sources.length, 1);
+
+  // Citation verification rate
+  let citationSupportRate = 0.5;
+  if (citationVerifications && citationVerifications.length > 0) {
+    const supported = citationVerifications.filter(v => v.verdict === 'supported').length;
+    citationSupportRate = supported / citationVerifications.length;
+  }
+
+  // Determine level
+  if (
+    conflictCount >= 3 ||
+    (conflictCount >= 2 && citationSupportRate < 0.4) ||
+    (sources.length >= 4 && highCredCount >= 2 && conflictCount >= 2)
+  ) {
+    return {
+      level: 'contested',
+      reason: `${conflictCount} evidence conflict(s) detected across ${sources.length} sources, indicating active debate or contradictory findings.`,
+    };
+  }
+
+  if (
+    conflictCount >= 1 ||
+    citationSupportRate < 0.5 ||
+    (avgCred < 60 && sources.length >= 3) ||
+    independenceRatio < 0.3
+  ) {
+    return {
+      level: 'mixed',
+      reason: conflictCount > 0
+        ? `${conflictCount} conflicting claim(s) found — evidence is divided on some aspects.`
+        : `Source quality is moderate (avg ${Math.round(avgCred)}/100) or sources are concentrated in few domains — evidence is not fully conclusive.`,
+    };
+  }
+
+  if (
+    sources.length >= 3 &&
+    highCredCount >= 2 &&
+    independenceRatio >= 0.5 &&
+    citationSupportRate >= 0.6
+  ) {
+    return {
+      level: 'strong',
+      reason: `${highCredCount} high-credibility sources from ${uniqueDomains.size} independent domains consistently support the main findings.`,
+    };
+  }
+
+  return {
+    level: 'moderate',
+    reason: `General agreement across ${sources.length} sources, but evidence is not independently corroborated by enough high-credibility domains.`,
+  };
+}
+
 export async function computeAllScores(
   query: string,
   existingScores: { accuracy: number; bias: number; sourceDiversity: number; confidenceInterval: number },

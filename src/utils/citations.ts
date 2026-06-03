@@ -36,13 +36,27 @@ export function formatAllCitations(sources: Partial<GroundedSource>[], format: C
     .join('\n\n');
 }
 
+/**
+ * Known think tank domains for classification.
+ */
+const THINK_TANK_DOMAINS = [
+  'brookings.edu', 'rand.org', 'pewresearch.org', 'cato.org', 'aei.org',
+  'urban.org', 'heritage.org', 'csis.org', 'cfr.org', 'wilsoncenter.org',
+  'carnegieendowment.org', 'chathamhouse.org', 'sipri.org', 'iiss.org',
+  'hoover.org', 'nber.org', 'rff.org', 'wri.org', 'worldwatch.org',
+];
+
 /** Get a domain badge for display */
 export function getDomainBadge(domain: string): string {
   if (!domain) return 'web';
-  if (domain.endsWith('.edu')) return 'academic';
-  if (domain.endsWith('.gov')) return 'government';
-  if (domain.endsWith('.mil')) return 'military';
-  if (domain.endsWith('.org')) return 'organization';
+  const d = domain.toLowerCase();
+  if (d.endsWith('.edu')) return 'academic';
+  if (d.endsWith('.gov')) return 'government';
+  if (d.endsWith('.mil')) return 'military';
+  if (d.includes('wikipedia.org') || d.includes('britannica.com')) return 'encyclopedia';
+  if (THINK_TANK_DOMAINS.some(t => d.includes(t))) return 'think_tank';
+  if (d.includes('reddit.com') || d.includes('quora.com') || d.includes('stackexchange.com')) return 'forum';
+  if (d.endsWith('.org')) return 'organization';
   return 'web';
 }
 
