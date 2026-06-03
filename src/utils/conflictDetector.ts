@@ -172,10 +172,12 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
       if (regex.test(text)) negScore++;
     }
 
-    // Must have at least 2 keyword matches in the dominant direction
-    if (posScore >= 2 && posScore > negScore) {
+    // A source is classified as positive/negative if it has at least 1 keyword
+    // match in the dominant direction. This is intentionally sensitive — even
+    // a single word like "risk" or "benefit" can signal stance.
+    if (posScore >= 1 && posScore > negScore) {
       positiveSources.push(source);
-    } else if (negScore >= 2 && negScore > posScore) {
+    } else if (negScore >= 1 && negScore > posScore) {
       negativeSources.push(source);
     }
   }
