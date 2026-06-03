@@ -137,6 +137,7 @@ export default function ReportView({
   const [sharing, setSharing] = useState(false);
   const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
   const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
+  const [showAllTools, setShowAllTools] = useState(false);
   // Build a lookup of sourceId → worst citation verdict for display
   const verdictMap = new Map<number, { verdict: string; confidence: number }>();
   if (report.citation_verifications) {
@@ -276,47 +277,62 @@ export default function ReportView({
           );
         })()}
 
-        {/* Unified Action Bar */}
+        {/* Unified Action Bar — collapsed by default */}
         <div className="flex flex-wrap items-center gap-3 mb-6 pb-4 border-b border-my-border">
           {!readOnly && (
-            <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout min-touch-h">
-              <select
-                id="share-visibility"
-                name="share-visibility"
-                value={shareVisibility}
-                onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
-                className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
-              >
-                <option value="private">Private</option>
-                <option value="unlisted">Unlisted</option>
-                <option value="public">Public</option>
-              </select>
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleCreateShare}
                 disabled={sharing}
-                className="px-3 py-2 md:px-3 md:py-2 px-4 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                className="px-4 py-2.5 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
               >
                 {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
                 Share
               </button>
+              <button
+                onClick={() => setShowAllTools(!showAllTools)}
+                className={clsx(
+                  "px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-all border flex items-center gap-1.5",
+                  showAllTools
+                    ? "border-my-accent bg-my-accent/10 text-my-accent"
+                    : "border-my-border bg-my-callout text-my-muted hover:text-my-ink hover:border-my-accent"
+                )}
+              >
+                <FileText size={11} />
+                Tools
+                <span className={`text-[7px] transition-transform ${showAllTools ? 'rotate-180' : ''}`}>▼</span>
+              </button>
             </div>
           )}
 
-          {!readOnly && (
-            <div className="flex items-center gap-1.5 text-[8px] text-my-muted font-mono">
-              <Info size={10} />
-              <span>Preview feature</span>
-            </div>
-          )}
-
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-2">
-            {isUnlocked && (
-              <>
-                <button
-                  onClick={() => {
-                    const md = generateMarkdown(report) + '\n\n---\n\n## References (' + citationFormat.toUpperCase() + ')\n\n' + (report.sources ? formatAllCitations(report.sources, citationFormat) : 'No sources available.');
+          {showAllTools && (
+            <div className="w-full flex flex-wrap items-center gap-3 pt-2">
+              {!readOnly && (
+                <div className="flex items-center gap-2 p-1.5 border border-my-border bg-my-callout">
+                  <select
+                    id="share-visibility"
+                    name="share-visibility"
+                    value={shareVisibility}
+                    onChange={(e) => setShareVisibility(e.target.value as ResearchVisibility)}
+                    className="bg-transparent text-[9px] font-black uppercase tracking-widest text-my-ink focus:outline-none"
+                  >
+                    <option value="private">Private</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="public">Public</option>
+                  </select>
+                </div>
+              )}
+              {!readOnly && (
+                <div className="flex items-center gap-1.5 text-[8px] text-my-muted font-mono">
+                  <Info size={10} />
+                  <span>Preview feature</span>
+                </div>
+              )}
+              {isUnlocked && (
+                <>
+                  <button
+                    onClick={() => {
+                      const md = generateMarkdown(report) + '\n\n---\n\n## References (' + citationFormat.toUpperCase() + ')\n\n' + (report.sources ? formatAllCitations(report.sources, citationFormat) : 'No sources available.');
                     downloadAsFile(md, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.md`, 'text/markdown');
                     toast.success('Markdown report downloaded.');
                   }}
@@ -354,31 +370,35 @@ export default function ReportView({
                 </div>
               </>
             )}
-            <button
-              onClick={handleDownloadPDF}
-              disabled={generatingPDF}
-              className={clsx(
-                "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
-                isUnlocked 
-                  ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
-                  : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
-              )}
-            >
-              {generatingPDF ? (
-                <>
-                  <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
-                </>
-              ) : isUnlocked ? (
-                <>
-                  <Download size={12} /> Premium Report
-                </>
-              ) : (
-                <>
-                  <Lock size={12} /> Unlock Full Report
-                </>
-              )}
-            </button>
-          </div>
+            </div>
+          )}
+
+          <div className="flex-1" />
+
+          <button
+            onClick={handleDownloadPDF}
+            disabled={generatingPDF}
+            className={clsx(
+              "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
+              isUnlocked 
+                ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+                : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
+            )}
+          >
+            {generatingPDF ? (
+              <>
+                <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
+              </>
+            ) : isUnlocked ? (
+              <>
+                <Download size={12} /> Premium Report
+              </>
+            ) : (
+              <>
+                <Lock size={12} /> Unlock Full Report
+              </>
+            )}
+          </button>
         </div>
 
         {/* Share link — appears right after the action bar when generated */}
@@ -638,18 +658,19 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Contradictions Panel */}
+          {/* Contradictions Panel — collapsible */}
           {hasConflicts && (
-            <div className="border border-my-border bg-my-callout/50">
-              <div className="w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50">
+            <details className="group border border-my-border bg-my-callout/50">
+              <summary className="cursor-pointer list-none w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50 hover:bg-my-callout/80 transition-colors">
                 <div className="flex items-center gap-3">
                   <AlertTriangle size={14} className="text-red-500" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-my-ink">
                     Contradictions ({report.conflicts!.length})
                   </span>
                 </div>
-              </div>
-              <div className="px-4 pb-4 space-y-3">
+                <span className="text-[8px] text-my-muted transition-transform group-open:rotate-180">▼</span>
+              </summary>
+              <div className="px-4 pb-4 space-y-3 pt-4">
                 {report.conflicts!.map((c, i) => (
                   <div key={i} className="border border-red-200 dark:border-red-900/40 bg-my-bg/50">
                     {/* Side-by-side claims */}
@@ -679,7 +700,7 @@ export default function ReportView({
                   </div>
                 ))}
               </div>
-            </div>
+            </details>
           )}
 
           {/* Intelligence Map */}
@@ -700,22 +721,27 @@ export default function ReportView({
             <ThoughtReplayEngine />
           )}
 
-          {/* SWOT Analysis */}
+          {/* SWOT Analysis — collapsible */}
           {report.swot && (
-            <div className="border border-my-border bg-my-callout/50">
-              <SectionTitle>Strategic Analysis</SectionTitle>
-              {report.swot.perspective && (
-                <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
-                  Perspective: {report.swot.perspective}
+            <details className="group border border-my-border bg-my-callout/50">
+              <summary className="cursor-pointer list-none w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50 hover:bg-my-callout/80 transition-colors">
+                <span className="text-[10px] uppercase tracking-[0.1em] font-bold text-my-muted">Strategic Analysis</span>
+                <span className="text-[8px] text-my-muted transition-transform group-open:rotate-180">▼</span>
+              </summary>
+              <div>
+                {report.swot.perspective && (
+                  <div className="px-4 py-2 text-[9px] text-my-muted font-mono border-b border-my-border/50">
+                    Perspective: {report.swot.perspective}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-[1px] bg-my-border">
+                  <SwotQuadrant title="Strengths" items={report.swot.strengths} />
+                  <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
+                  <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
+                  <SwotQuadrant title="Threats" items={report.swot.threats} />
                 </div>
-              )}
-              <div className="grid grid-cols-2 gap-[1px] bg-my-border">
-                <SwotQuadrant title="Strengths" items={report.swot.strengths} />
-                <SwotQuadrant title="Weaknesses" items={report.swot.weaknesses} />
-                <SwotQuadrant title="Opportunities" items={report.swot.opportunities} />
-                <SwotQuadrant title="Threats" items={report.swot.threats} />
               </div>
-            </div>
+            </details>
           )}
 
         </motion.div>
