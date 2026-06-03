@@ -44,7 +44,7 @@
         if (window.__cognapse_reloaded) return;
         window.addEventListener('unhandledrejection', function(e) {
           if (e.reason && typeof e.reason.message === 'string' &&
-              e.reason.message.indexOf('Failed to fetch dynamically imported module') !== -1) {
+              e.reason.message.includes('imported module')) {
             window.__cognapse_reloaded = true;
             window.location.reload();
           }
