@@ -104,7 +104,7 @@ import EvidencePreview from './EvidencePreview';
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
-import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getConsensusColor, getModelAgreementLabel, getModelAgreementColor, getConsensusVarianceNarrative } from '../utils/scoreLabels';
+import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getConsensusColor } from '../utils/scoreLabels';
 
 export default function ReportView({
   report,
@@ -586,36 +586,6 @@ export default function ReportView({
                   </div>
                 </details>
               )}
-            </div>
-          )}
-
-          {/* Model Agreement Signal */}
-          {report.consensus_variance && (
-            <div className={clsx(
-              "px-3 py-2 border-l-[3px] text-[10px] leading-relaxed",
-              report.consensus_variance.level === 'low'
-                ? "border-green-500 bg-green-50/30 dark:bg-green-950/10"
-                : report.consensus_variance.level === 'moderate'
-                ? "border-amber-500 bg-amber-50/30 dark:bg-amber-950/10"
-                : "border-red-500 bg-red-50/30 dark:bg-red-950/10"
-            )}>
-              <div className="flex items-start gap-2">
-                {report.consensus_variance.level === 'low' ? (
-                  <CheckCircle2 size={11} className="text-green-500 mt-0.5 shrink-0" />
-                ) : report.consensus_variance.level === 'moderate' ? (
-                  <AlertTriangle size={11} className="text-amber-500 mt-0.5 shrink-0" />
-                ) : (
-                  <AlertTriangle size={11} className="text-red-500 mt-0.5 shrink-0" />
-                )}
-                <div>
-                  <span className={clsx('font-bold uppercase tracking-widest text-[8px]', getModelAgreementColor(report.consensus_variance.level))}>
-                    Model Agreement: {getModelAgreementLabel(report.consensus_variance.level)}
-                  </span>
-                  <p className="text-my-muted mt-0.5">
-                    {report.consensus_variance.narrative || getConsensusVarianceNarrative(report.consensus_variance.level)}
-                  </p>
-                </div>
-              </div>
             </div>
           )}
 

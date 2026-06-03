@@ -931,13 +931,6 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       // Non-critical — strategic fields are optional
     }
 
-    // Post-process: detect missing contradictions from source stance analysis
-    try {
-      generateMissingConflicts(parsed);
-    } catch (e) {
-      // Non-critical — conflicts are optional
-    }
-
     // ─── Auto Bias Alert from Source Analysis ───
     // Uses domain-level signals (MBFC, commercial health, structural imbalance,
     // credibility variance), query-level signals (conspiracy, uncertainty),
@@ -1047,6 +1040,15 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     // Attach retrieval metadata
     if (retrievalTrace) {
       (parsed as COGNAPSE_Output)._retrieval_trace = retrievalTrace;
+    }
+
+    // Post-process: detect missing contradictions from source stance analysis
+    // NOTE: runs AFTER real sources are attached so Priority 1 has access to
+    // actual source titles/domains rather than the AI-hallucinated ones
+    try {
+      generateMissingConflicts(parsed);
+    } catch (e) {
+      // Non-critical — conflicts are optional
     }
 
     // ─── PHASE 3: SECOND MODEL SYNTHESIS (Multi-Model Consensus) ───
