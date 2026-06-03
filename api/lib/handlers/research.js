@@ -366,13 +366,16 @@ export async function handleSearch(req, res) {
     const deduped = deduplicateSources(filtered);
     const dedupCount = filtered.length - deduped.length;
     const ranked = rankSources(deduped);
-    // Filter out low-credibility sources (< 40) — spam, unknown domains, garbage
-    const credibleSources = ranked.filter(s => s.credibility_score >= 40);
+    // Filter out low-credibility sources (< 30) — spam, unknown domains, garbage
+    // Lowered from 40 to 30 to let through legitimate local news, expert commentary,
+    // and first-person accounts that may have lower automated credibility scores.
+    const credibleSources = ranked.filter(s => s.credibility_score >= 30);
     const credibilityFiltered = ranked.length - credibleSources.length;
     const topSources = credibleSources.slice(0, count);
 
+    const fallbackUsed = providers.indexOf(usedProvider) > 0;
     return res.status(200).json({
-      provider: usedProvider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, credibility_filtered: credibilityFiltered, latency_ms: Date.now() - startTime, search_provider: usedProvider },
+      provider: usedProvider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, credibility_filtered: credibilityFiltered, latency_ms: Date.now() - startTime, search_provider: usedProvider, fallback_used: fallbackUsed },
       sources: topSources.map((s, i) => ({
         id: i + 1, title: s.title, url: s.url, domain: s.domain, type: s.source_type,
         snippet: s.snippet, credibility_score: s.credibility_score, relevance_score: s.relevance_score,
@@ -505,13 +508,26 @@ export async function handleAcademicSearch(req, res) {
 
     const allSources = [...pubmed, ...arxiv, ...crossref];
 
-    // Deduplicate by URL
-    const seen = new Map();
+    // Deduplicate by URL (primary) + content (secondary)
+    const seenByUrl = new Map();
     for (const s of allSources) {
       const key = s.url || s.doi || s.pmid || s.title;
-      if (!seen.has(key)) seen.set(key, s);
+      if (!seenByUrl.has(key)) seenByUrl.set(key, s);
     }
-    const deduped = Array.from(seen.values());
+    const urlDeduped = Array.from(seenByUrl.values());
+    
+    // Content-level dedup: same abstract on different repositories
+    const seenContent = new Map();
+    const deduped = [];
+    for (const s of urlDeduped) {
+      const contentKey = normalizedSnippetKey(s.snippet || '');
+      if (!contentKey) {
+        deduped.push(s);
+      } else if (!seenContent.has(contentKey)) {
+        seenContent.set(contentKey, true);
+        deduped.push(s);
+      }
+    }
 
     // Assign credibility: PubMed/NIH is highest (95), arXiv (88), Crossref DOI (92)
     const ranked = deduped.map(s => {

@@ -472,8 +472,22 @@ export default function ReportView({
                                   onMouseEnter={() => setHoveredCitation(instanceKey)}
                                   onMouseLeave={() => setHoveredCitation(null)}
                                 >
-                                  <sup className="text-my-accent font-bold text-[10px] cursor-help hover:underline relative">
+                                  <sup
+                                    className="text-my-accent font-bold text-[10px] cursor-pointer hover:underline hover:text-my-accent/80 transition-colors relative"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (source?.url) {
+                                        setLiveSource({ title: source.title, url: source.url });
+                                      }
+                                    }}
+                                    title={source ? `Click to open: ${source.title}` : `Source #${sourceId}`}
+                                  >
                                     [{sourceId}]
+                                    {source && (
+                                      <span className="ml-0.5 text-[7px] font-mono opacity-60">
+                                        ·{getDomainBadge(source.domain || '') === 'academic' ? '📘' : getDomainBadge(source.domain || '') === 'government' ? '🏛️' : '🌐'}
+                                      </span>
+                                    )}
                                   </sup>
                                   {source && (
                                     <EvidencePreview

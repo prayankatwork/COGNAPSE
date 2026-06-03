@@ -815,6 +815,46 @@ export async function executeCognapseResearch(
     }
   }
 
+  // ─── Iterative Search ───
+  // If the combined search returned fewer than 5 sources, do a broader search
+  // with a simplified query to find additional relevant content.
+  // This prevents thin reports when the initial query was too specific.
+  if (groundedSources.length > 0 && groundedSources.length < 5) {
+    // Extract key terms: words > 3 chars, excluding common stopwords
+    const keyTerms = query.toLowerCase().split(/\s+/).filter(w =>
+      w.length > 3 && !['this','that','with','from','what','which','their','there','about','would','could','should','have','been','were','being','does','they','them','then','than','also','just','more','some','into','over','such','only','other','after','before','between','through','during','because','without','under','above','where','while','until','since','against','these','those','each','very','your','will'].includes(w)
+    );
+    
+    if (keyTerms.length > 0) {
+      // Use first 2 key terms for a broader search
+      const broaderQuery = keyTerms.slice(0, 2).join(' ');
+      if (broaderQuery.length >= 5) {
+        addReasoningStep(`Focused search returned only ${groundedSources.length} sources — broadening to cover more ground...`);
+        try {
+          const broaderResult = await searchWeb(broaderQuery, 5);
+          if (broaderResult && broaderResult.sources.length > 0) {
+            // Filter out sources we already have (by URL)
+            const existingUrls = new Set(groundedSources.map(s => s.url));
+            const newSources = broaderResult.sources.filter(s => !existingUrls.has(s.url));
+            if (newSources.length > 0) {
+              // Assign IDs after the last source
+              let nextId = 0;
+              for (const s of groundedSources) {
+                if (s.id > nextId) nextId = s.id;
+              }
+              const merged = newSources.map((s, i) => ({ ...s, id: nextId + i + 1 }));
+              groundedSources.push(...merged as GroundedSource[]);
+              addReasoningStep(`Broadened search added ${merged.length} additional sources`);
+            }
+          }
+        } catch (e) {
+          // Non-critical — proceed with what we have
+          console.warn('[COGNAPSE] Iterative search unavailable:', e);
+        }
+      }
+    }
+  }
+
   // ─── Source Compression ───
   // Sources remain sorted by credibility + relevance from the server ranking.
   // The server already returns sources scored by Tavily's relevance + our credibility

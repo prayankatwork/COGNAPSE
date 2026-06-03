@@ -215,12 +215,22 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
     };
   }
 
-  // Step 2: Call backend with normalized query
-  const response = await apiFetch('/api/search', {
+  // Step 2: Call backend with normalized query (with retry on failure)
+  let response = await apiFetch('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: sanitized, count }),
   });
+
+  if (!response.ok) {
+    // Retry once after 1s delay on transient failures
+    await new Promise(r => setTimeout(r, 1000));
+    response = await apiFetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: sanitized, count }),
+    });
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Search failed' }));
