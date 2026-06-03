@@ -212,52 +212,8 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
     detectSynthesisConflicts(report);
   }
 
-  // If synthesis analysis generated conflicts, we're done
-  if ((report.conflicts?.length ?? 0) > 0) return;
-
-  // ─── Priority 3: Consensus-Label Fallback ───
-  // If the AI itself reported "mixed" or "contested" consensus but we didn't
-  // generate any conflicts from source stance or synthesis analysis, create
-  // a conflict that explains the consensus gap. This catches cases where the
-  // AI recognized disagreement in its reasoning but didn't surface it.
-  if (report.scores) {
-    const consensus = report.scores.evidence_consensus;
-    if (consensus === 'mixed' || consensus === 'contested') {
-      const synthesis = report.summary?.full_synthesis;
-      const bottomLine = report.summary?.bottom_line || '';
-
-      let claimA = bottomLine.substring(0, 200);
-      let claimB = 'See synthesis text for details on divergent evidence.';
-
-      if (synthesis && synthesis.length > 50) {
-        const synSentences = splitSentences(synthesis);
-        if (synSentences.length >= 2) {
-          const mid = Math.floor(synSentences.length / 2);
-          claimA = synSentences[0].substring(0, 200);
-          for (let i = mid; i < synSentences.length; i++) {
-            if (synSentences[i].length > 30) {
-              claimB = synSentences[i].substring(0, 200);
-              break;
-            }
-          }
-        }
-      }
-
-      report.conflicts = [
-        {
-          claim_a: claimA,
-          source_a: 'synthesis text',
-          claim_b: claimB,
-          source_b: 'synthesis text',
-          explanation:
-            `The AI self-reported "${consensus}" consensus for this topic, indicating that ` +
-            `the evidence is not uniform. However, no structured conflict entries were ` +
-            `generated from source stance analysis or synthesis text patterns. This suggests ` +
-            `the AI detected nuanced or contradictory evidence in its reasoning process that ` +
-            `was not fully captured in the report structure. Review the claims above and ` +
-            `the full synthesis for a complete picture of the diverging evidence.`,
-        },
-      ];
-    }
-  }
+  // Priority 3 (consensus-label fallback) removed — produced low-quality noise
+  // by stitching together random synthesis sentences that weren't actually
+  // contradictory. The Metrics sidebar already shows 'mixed'/'contested'
+  // consensus labels, which communicates the same signal without the noise.
 }
