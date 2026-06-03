@@ -101,24 +101,70 @@ function rankSources(sources: GroundedSource[]): GroundedSource[] {
 }
 
 /**
- * Deduplicate sources by URL, keeping the one with higher combined score.
+ * Normalize snippet text for content-level deduplication.
+ * Returns lowercase, whitespace-collapsed string, truncated to 200 chars.
+ * Empty return means the snippet is too short to reliably match.
+ */
+function normalizedSnippetKey(snippet: string): string {
+  const normalized = snippet.toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (normalized.length < 30) return ''; // too short to reliably match
+  return normalized;
+}
+
+/**
+ * Deduplicate sources by URL (primary) AND normalized snippet text (secondary).
+ * Two sources with the same snippet content (e.g., AP wire on different outlets)
+ * are treated as duplicates — the one with higher combined score wins.
+ * URL dedup takes priority over content dedup (prevents different pages from the
+ * same site being merged just because they share snippet boilerplate).
  */
 function deduplicateSources(sources: GroundedSource[]): GroundedSource[] {
-  const seen = new Map<string, GroundedSource>();
+  // First pass: URL dedup (most specific, takes priority)
+  const seenByUrl = new Map<string, GroundedSource>();
   for (const source of sources) {
-    const key = source.url || source.title;
-    const existing = seen.get(key);
+    const urlKey = source.url || source.title;
+    const existing = seenByUrl.get(urlKey);
+    const newScore = (source.credibility_score || 0) + (source.relevance_score || 0);
+    
     if (!existing) {
-      seen.set(key, source);
+      seenByUrl.set(urlKey, source);
     } else {
       const existingScore = (existing.credibility_score || 0) + (existing.relevance_score || 0);
-      const newScore = (source.credibility_score || 0) + (source.relevance_score || 0);
       if (newScore > existingScore) {
-        seen.set(key, source);
+        seenByUrl.set(urlKey, source);
       }
     }
   }
-  return Array.from(seen.values());
+  
+  // Second pass: content-level dedup using normalized snippet text as key (no hash collision risk)
+  const urlDeduped = Array.from(seenByUrl.values());
+  const seenContent = new Map<string, number>();
+  const result: GroundedSource[] = [];
+  
+  for (const source of urlDeduped) {
+    const key = normalizedSnippetKey(source.snippet || source.key_finding || '');
+    if (!key) {
+      // Snippet too short to match — keep as-is
+      result.push(source);
+      continue;
+    }
+    
+    const existingIdx = seenContent.get(key);
+    if (existingIdx === undefined) {
+      seenContent.set(key, result.length);
+      result.push(source);
+    } else {
+      // Same content — keep the higher-scoring one
+      const existing = result[existingIdx];
+      const existingScore = (existing.credibility_score || 0) + (existing.relevance_score || 0);
+      const newScore = (source.credibility_score || 0) + (source.relevance_score || 0);
+      if (newScore > existingScore) {
+        result[existingIdx] = source;
+      }
+    }
+  }
+  
+  return result;
 }
 
 /* ─── Public API ─── */
@@ -130,20 +176,37 @@ export interface SearchResult {
 }
 
 /**
+ * Normalize a search query: trim, collapse whitespace, enforce max length.
+ * Returns null if the query is empty after normalization.
+ */
+function normalizeQuery(query: string): string | null {
+  const normalized = query.trim().replace(/\s+/g, ' ');
+  if (!normalized) return null;
+  return normalized.slice(0, 500); // 500 char max
+}
+
+/**
  * Perform a real web search for the given query.
  *
  * Steps:
- * 1. Check in-memory cache → return immediately if fresh
- * 2. Call /api/search backend endpoint
- * 3. Deduplicate and rank results
- * 4. Cache and return
+ * 1. Normalize and validate the query
+ * 2. Check in-memory cache → return immediately if fresh
+ * 3. Call /api/search backend endpoint
+ * 4. Deduplicate and rank results
+ * 5. Cache and return
  *
  * @param query - The search query
  * @param count - Max sources to return (default 8)
  */
 export async function searchWeb(query: string, count = 8): Promise<SearchResult> {
-  // Step 1: Check cache
-  const cached = getFromCache(query);
+  // Step 0: Normalize query
+  const sanitized = normalizeQuery(query);
+  if (!sanitized) {
+    throw new Error('Query is empty after normalization');
+  }
+
+  // Step 1: Check cache (use normalized query for cache key)
+  const cached = getFromCache(sanitized);
   if (cached) {
     return {
       sources: cached.sources.slice(0, count),
@@ -152,11 +215,11 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
     };
   }
 
-  // Step 2: Call backend
+  // Step 2: Call backend with normalized query
   const response = await apiFetch('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: query.trim(), count }),
+    body: JSON.stringify({ query: sanitized, count }),
   });
 
   if (!response.ok) {
@@ -179,7 +242,7 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
   const renumbered = ranked.map((s, i) => ({ ...s, id: i + 1 }));
 
   const trace: RetrievalTrace = data.trace || {
-    query,
+    query: sanitized,
     sources_retrieved: data.sources.length,
     sources_used: ranked.length,
     dedup_removed: data.sources.length - deduped.length,
@@ -189,7 +252,7 @@ export async function searchWeb(query: string, count = 8): Promise<SearchResult>
   };
 
   // Step 4: Cache and return
-  setCache(query, renumbered, trace);
+  setCache(sanitized, renumbered, trace);
 
   return {
     sources: renumbered.slice(0, count),

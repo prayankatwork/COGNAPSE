@@ -177,13 +177,53 @@ function rankSources(sources) {
   }).sort((a, b) => b.credibility_score - a.credibility_score || b.relevance_score - a.relevance_score);
 }
 
+/**
+ * Normalize snippet text for content-level deduplication.
+ * Returns lowercase, whitespace-collapsed string, truncated to 200 chars.
+ * Empty return means the snippet is too short to reliably match.
+ */
+function normalizedSnippetKey(snippet) {
+  const normalized = (snippet || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (normalized.length < 30) return '';
+  return normalized;
+}
+
 function deduplicateSources(sources) {
-  const seen = new Map();
+  // First pass: URL dedup (most specific, takes priority)
+  const seenByUrl = new Map();
   for (const source of sources) {
     const key = source.url || source.title;
-    if (!seen.has(key) || (seen.get(key).credibility_score || 0) < (source.credibility_score || 0)) seen.set(key, source);
+    if (!seenByUrl.has(key) || (seenByUrl.get(key).credibility_score || 0) < (source.credibility_score || 0)) {
+      seenByUrl.set(key, source);
+    }
   }
-  return Array.from(seen.values());
+  
+  // Second pass: content-level dedup using normalized snippet text as key (no hash collision risk)
+  const urlDeduped = Array.from(seenByUrl.values());
+  const seenContent = new Map();
+  const result = [];
+  
+  for (const source of urlDeduped) {
+    const key = normalizedSnippetKey(source.snippet || source.key_finding || '');
+    if (!key) {
+      result.push(source);
+      continue;
+    }
+    const existingIdx = seenContent.get(key);
+    if (existingIdx === undefined) {
+      seenContent.set(key, result.length);
+      result.push(source);
+    } else {
+      const existing = result[existingIdx];
+      const existingScore = (existing.credibility_score || 0) + (existing.relevance_score || 0);
+      const newScore = (source.credibility_score || 0) + (source.relevance_score || 0);
+      if (newScore > existingScore) {
+        result[existingIdx] = source;
+      }
+    }
+  }
+  
+  return result;
 }
 
 function filterLowQuality(sources) {
@@ -197,66 +237,87 @@ function filterLowQuality(sources) {
 }
 
 async function searchSerper(query, count = 10) {
-  const response = await fetch('https://google.serper.dev/search', {
-    method: 'POST',
-    headers: { 'X-API-KEY': process.env.SERPER_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q: query, num: count, gl: 'us', hl: 'en' }),
-  });
-  if (!response.ok) throw new Error(`Serper API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
-  const data = await response.json();
-  const sources = [];
-  if (data.organic && Array.isArray(data.organic)) {
-    for (const result of data.organic) {
-      const domain = extractDomain(result.link || '');
-      sources.push({ title: result.title || 'Untitled', url: result.link || '', domain, snippet: result.snippet || '', published_date: result.date || 'unknown', source_type: inferSourceType(domain), relevance_score: 50 });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('https://google.serper.dev/search', {
+      signal: controller.signal,
+      method: 'POST',
+      headers: { 'X-API-KEY': process.env.SERPER_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: query, num: count, gl: 'us', hl: 'en' }),
+    });
+    if (!response.ok) throw new Error(`Serper API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
+    const data = await response.json();
+    const sources = [];
+    if (data.organic && Array.isArray(data.organic)) {
+      for (const result of data.organic) {
+        const domain = extractDomain(result.link || '');
+        sources.push({ title: result.title || 'Untitled', url: result.link || '', domain, snippet: result.snippet || '', published_date: result.date || 'unknown', source_type: inferSourceType(domain), relevance_score: 50 });
+      }
     }
-  }
-  if (data.knowledgeGraph) {
-    const kg = data.knowledgeGraph;
-    if (kg.description && kg.title) sources.push({ title: kg.title, url: kg.website || `https://en.wikipedia.org/wiki/${encodeURIComponent(kg.title.replace(/ /g, '_'))}`, domain: kg.website ? extractDomain(kg.website) : 'wikipedia.org', snippet: kg.description, published_date: 'unknown', source_type: 'other', relevance_score: 70 });
-  }
-  return sources;
+    if (data.knowledgeGraph) {
+      const kg = data.knowledgeGraph;
+      if (kg.description && kg.title) sources.push({ title: kg.title, url: kg.website || `https://en.wikipedia.org/wiki/${encodeURIComponent(kg.title.replace(/ /g, '_'))}`, domain: kg.website ? extractDomain(kg.website) : 'wikipedia.org', snippet: kg.description, published_date: 'unknown', source_type: 'other', relevance_score: 70 });
+    }
+    return sources;
+  } finally { clearTimeout(timeout); }
 }
 
 async function searchBrave(query, count = 10) {
-  const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}`, {
-    headers: { 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'X-Subscription-Token': process.env.BRAVE_SEARCH_API_KEY },
-  });
-  if (!response.ok) throw new Error(`Brave Search API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
-  const data = await response.json();
-  const sources = [];
-  if (data.web && data.web.results && Array.isArray(data.web.results)) {
-    for (const result of data.web.results) {
-      const domain = extractDomain(result.url || '');
-      sources.push({ title: result.title || 'Untitled', url: result.url || '', domain, snippet: result.description || '', published_date: result.age || 'unknown', source_type: inferSourceType(domain), relevance_score: result.importance ? Math.round(result.importance * 100) : 50 });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'X-Subscription-Token': process.env.BRAVE_SEARCH_API_KEY },
+    });
+    if (!response.ok) throw new Error(`Brave Search API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
+    const data = await response.json();
+    const sources = [];
+    if (data.web && data.web.results && Array.isArray(data.web.results)) {
+      for (const result of data.web.results) {
+        const domain = extractDomain(result.url || '');
+        sources.push({ title: result.title || 'Untitled', url: result.url || '', domain, snippet: result.description || '', published_date: result.age || 'unknown', source_type: inferSourceType(domain), relevance_score: result.importance ? Math.round(result.importance * 100) : 50 });
+      }
     }
-  }
-  return sources;
+    return sources;
+  } finally { clearTimeout(timeout); }
 }
 
 async function searchTavily(query, count = 10) {
-  const response = await fetch('https://api.tavily.com/search', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query, search_depth: 'basic', max_results: count }),
-  });
-  if (!response.ok) throw new Error(`Tavily API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
-  const data = await response.json();
-  const sources = [];
-  if (data.results && Array.isArray(data.results)) {
-    for (const result of data.results) {
-      const domain = extractDomain(result.url || '');
-      sources.push({ title: result.title || 'Untitled', url: result.url || '', domain, snippet: result.content || '', published_date: result.published_date || 'unknown', source_type: inferSourceType(domain), relevance_score: result.score ? Math.round(result.score * 100) : 50 });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('https://api.tavily.com/search', {
+      signal: controller.signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query, search_depth: 'basic', max_results: count }),
+    });
+    if (!response.ok) throw new Error(`Tavily API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
+    const data = await response.json();
+    const sources = [];
+    if (data.results && Array.isArray(data.results)) {
+      for (const result of data.results) {
+        const domain = extractDomain(result.url || '');
+        sources.push({ title: result.title || 'Untitled', url: result.url || '', domain, snippet: result.content || '', published_date: result.published_date || 'unknown', source_type: inferSourceType(domain), relevance_score: result.score ? Math.round(result.score * 100) : 50 });
+      }
     }
-  }
-  return sources;
+    return sources;
+  } finally { clearTimeout(timeout); }
 }
 
-function getConfiguredProvider() {
-  if (process.env.SERPER_API_KEY) return 'serper';
-  if (process.env.BRAVE_SEARCH_API_KEY) return 'brave';
-  if (process.env.TAVILY_API_KEY) return 'tavily';
-  return null;
+/**
+ * Returns an ordered list of configured search providers.
+ * Order: Serper (fastest) > Brave > Tavily.
+ * Used for automatic fallback: if the first provider fails, the next is tried.
+ */
+function getConfiguredProviders() {
+  const providers = [];
+  if (process.env.SERPER_API_KEY) providers.push('serper');
+  if (process.env.BRAVE_SEARCH_API_KEY) providers.push('brave');
+  if (process.env.TAVILY_API_KEY) providers.push('tavily');
+  return providers;
 }
 
 /* ─── POST /api/search ─── */
@@ -273,12 +334,32 @@ export async function handleSearch(req, res) {
   if (!query || typeof query !== 'string' || query.trim().length === 0) return res.status(400).json({ error: 'Missing or empty query parameter' });
   if (query.length > 500) return res.status(400).json({ error: 'Query exceeds maximum length of 500 characters' });
 
-  const provider = getConfiguredProvider();
-  if (!provider) return res.status(503).json({ error: 'No search API key configured. Please set SERPER_API_KEY, BRAVE_SEARCH_API_KEY, or TAVILY_API_KEY.', provider: null, sources: [], trace: null });
+  const providers = getConfiguredProviders();
+  if (providers.length === 0) return res.status(503).json({ error: 'No search API key configured. Please set SERPER_API_KEY, BRAVE_SEARCH_API_KEY, or TAVILY_API_KEY.', provider: null, sources: [], trace: null });
 
   const startTime = Date.now();
+  let rawSources = null;
+  let usedProvider = null;
+  let lastError = null;
+  
+  for (const provider of providers) {
+    try {
+      if (provider === 'serper') rawSources = await searchSerper(query, count);
+      else if (provider === 'brave') rawSources = await searchBrave(query, count);
+      else if (provider === 'tavily') rawSources = await searchTavily(query, count);
+      usedProvider = provider;
+      break; // First success
+    } catch (e) {
+      lastError = e;
+      console.warn(`[Search] Provider "${provider}" failed, trying next: ${e.message}`);
+    }
+  }
+  
+  if (!rawSources) {
+    return sendSafeError(res, 500, `All search providers failed. Last error: ${lastError?.message || 'Unknown'}`, lastError);
+  }
+
   try {
-    let rawSources = provider === 'serper' ? await searchSerper(query, count) : provider === 'brave' ? await searchBrave(query, count) : await searchTavily(query, count);
     const beforeFilter = rawSources.length;
     const filtered = filterLowQuality(rawSources);
     const filteredCount = beforeFilter - filtered.length;
@@ -291,7 +372,7 @@ export async function handleSearch(req, res) {
     const topSources = credibleSources.slice(0, count);
 
     return res.status(200).json({
-      provider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, credibility_filtered: credibilityFiltered, latency_ms: Date.now() - startTime, search_provider: provider },
+      provider: usedProvider, trace: { query, sources_retrieved: beforeFilter, sources_used: topSources.length, dedup_removed: dedupCount, low_quality_filtered: filteredCount, credibility_filtered: credibilityFiltered, latency_ms: Date.now() - startTime, search_provider: usedProvider },
       sources: topSources.map((s, i) => ({
         id: i + 1, title: s.title, url: s.url, domain: s.domain, type: s.source_type,
         snippet: s.snippet, credibility_score: s.credibility_score, relevance_score: s.relevance_score,
