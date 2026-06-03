@@ -519,78 +519,10 @@ export default function ReportView({
                   )}
                 </div>
               )              }
-              {/* Evidence Breakdown — structured separation of findings, uncertainty, and gaps */}
-              {report.summary?.evidence_breakdown && (
-                <div className="flex flex-col gap-3 p-4 bg-my-callout border border-my-border rounded mt-2">
-                  <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest">Evidence Breakdown</span>
-                  {report.summary.evidence_breakdown.established_findings && (
-                    <div>
-                      <h4 className="text-[8px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-1">Established Findings</h4>
-                      <p className="text-[12px] leading-relaxed text-my-syn">{report.summary.evidence_breakdown.established_findings}</p>
-                    </div>
-                  )}
-                  {report.summary.evidence_breakdown.supported_evidence && (
-                    <div>
-                      <h4 className="text-[8px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Supported Evidence</h4>
-                      <p className="text-[12px] leading-relaxed text-my-syn">{report.summary.evidence_breakdown.supported_evidence}</p>
-                    </div>
-                  )}
-                  {report.summary.evidence_breakdown.competing_interpretations && (
-                    <div>
-                      <h4 className="text-[8px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1">Competing Interpretations</h4>
-                      <p className="text-[12px] leading-relaxed text-my-syn">{report.summary.evidence_breakdown.competing_interpretations}</p>
-                    </div>
-                  )}
-                  {report.summary.evidence_breakdown.remaining_uncertainty && (
-                    <div>
-                      <h4 className="text-[8px] font-bold uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-1">Remaining Uncertainty</h4>
-                      <p className="text-[12px] leading-relaxed text-my-syn">{report.summary.evidence_breakdown.remaining_uncertainty}</p>
-                    </div>
-                  )}
-                  {report.summary.evidence_breakdown.research_gaps && (
-                    <div>
-                      <h4 className="text-[8px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 mb-1">Research Gaps</h4>
-                      <p className="text-[12px] leading-relaxed text-my-syn">{report.summary.evidence_breakdown.research_gaps}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Evidence Assessment — replaces AI Self-Assessment with source-driven metrics */}
-              {report.evidence_assessment && (
-                <div className="flex flex-col gap-2 p-3 bg-my-callout border border-my-border rounded mt-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest">Evidence Assessment</span>
-                    <span className="text-[8px] font-mono text-my-muted ml-auto">
-                      coverage: <strong className="text-my-ink">{report.evidence_assessment.evidence_coverage}</strong>
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[9px] text-my-muted">
-                    <div className="flex flex-col p-1.5 bg-my-bg border border-my-border">
-                      <span className="text-[7px] font-bold uppercase tracking-widest">Sources</span>
-                      <span className="text-[12px] font-bold text-my-ink">{report.evidence_assessment.source_count}</span>
-                    </div>
-                    <div className="flex flex-col p-1.5 bg-my-bg border border-my-border">
-                      <span className="text-[7px] font-bold uppercase tracking-widest">Diversity</span>
-                      <span className="text-[12px] font-bold text-my-ink">{Math.round(report.evidence_assessment.source_diversity_score * 100)}%</span>
-                    </div>
-                    <div className="flex flex-col p-1.5 bg-my-bg border border-my-border">
-                      <span className="text-[7px] font-bold uppercase tracking-widest">Contradictions</span>
-                      <span className="text-[12px] font-bold text-my-ink">{report.evidence_assessment.contradiction_count}</span>
-                    </div>
-                    <div className="flex flex-col p-1.5 bg-my-bg border border-my-border">
-                      <span className="text-[7px] font-bold uppercase tracking-widest">Citation Support</span>
-                      <span className="text-[12px] font-bold text-my-ink">{Math.round(report.evidence_assessment.citation_support_rate * 100)}%</span>
-                    </div>
-                  </div>
-                  <p className="text-[10px] leading-relaxed text-my-muted italic">
-                    {report.evidence_assessment.narrative}
-                  </p>
-                </div>
-              )}
-              {/* Fallback — preserve old confidence_narrative for backward compatibility */}
-              {!report.evidence_assessment && report.summary?.confidence_narrative && (
+
+              {report.summary?.confidence_narrative && (
                  <div className="flex items-start gap-2 p-3 bg-my-callout border border-my-border rounded mt-2">
-                   <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest shrink-0 mt-0.5">Evidence Assessment</span>
+                   <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest shrink-0 mt-0.5">Confidence</span>
                    <p className="italic text-my-muted text-[12px] leading-[1.6]">{safeText(report.summary.confidence_narrative)}</p>
                  </div>
               )}
@@ -680,20 +612,8 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Evidence Insights — replaces old Key Takeaways with evidence-derived insights */}
-          {report.evidence_insights && (
-            <div className="border border-my-border bg-my-callout/50">
-              <SectionTitle>Key Insights</SectionTitle>
-              <div className="divide-y divide-my-border">
-                <TakeawayCard title="Most Important Finding" content={report.evidence_insights.most_important_finding} />
-                <TakeawayCard title="Most Important Limitation" content={report.evidence_insights.most_important_limitation} />
-                <TakeawayCard title="Most Contested Question" content={report.evidence_insights.most_contested_question} />
-                <TakeawayCard title="Most Actionable Insight" content={report.evidence_insights.most_actionable_insight} />
-              </div>
-            </div>
-          )}
-          {/* Legacy Key Takeaways — fallback when evidence_insights is not available */}
-          {!report.evidence_insights && report.actionable_takeaways && (
+          {/* Actionable Takeaways */}
+          {report.actionable_takeaways && (
             <div className="border border-my-border bg-my-callout/50">
               <SectionTitle>Key Takeaways</SectionTitle>
               <div className="divide-y divide-my-border">
@@ -760,85 +680,8 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Structured Contradictions — only shown when evidence exists */}
-          {report.structured_contradictions && (
-            <details className="group border border-my-border bg-my-callout/50" open>
-              <summary className="cursor-pointer list-none w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50 hover:bg-my-callout/80 transition-colors">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle size={14} className="text-amber-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-my-ink">
-                    Contradiction Analysis
-                  </span>
-                </div>
-                <span className="text-[8px] text-my-muted transition-transform group-open:rotate-180">▼</span>
-              </summary>
-              <div className="px-4 pb-4 space-y-4 pt-4">
-                {report.structured_contradictions.areas_of_agreement.length > 0 && (
-                  <div>
-                    <h4 className="text-[9px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-2">Areas of Agreement</h4>
-                    <ul className="space-y-1.5">
-                      {report.structured_contradictions.areas_of_agreement.map((a, i) => (
-                        <li key={i} className="text-[11px] leading-relaxed text-my-syn flex items-start gap-2">
-                          <span className="text-green-500 mt-0.5 shrink-0">&#10003;</span>
-                          {a}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {report.structured_contradictions.areas_of_disagreement.length > 0 && (
-                  <div>
-                    <h4 className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2">Areas of Disagreement</h4>
-                    {report.structured_contradictions.areas_of_disagreement.map((d, i) => (
-                      <div key={i} className="mb-2 p-2 border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/10">
-                        <p className="text-[11px] leading-relaxed text-my-syn">{d.claim}</p>
-                        {d.sources.length > 0 && (
-                          <span className="text-[8px] font-mono text-my-muted block mt-0.5">Sources: {d.sources.join(', ')}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {report.structured_contradictions.evidence_conflicts.length > 0 && (
-                  <div>
-                    <h4 className="text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 mb-2">Evidence Conflicts</h4>
-                    {report.structured_contradictions.evidence_conflicts.map((ec, i) => (
-                      <div key={i} className="mb-2 border border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/10">
-                        <div className="grid grid-cols-2 divide-x divide-red-200 dark:divide-red-900/40">
-                          <div className="p-2">
-                            <span className="text-[7px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 block mb-1">Claim A</span>
-                            <p className="text-[10px] leading-relaxed text-my-ink">{ec.claim_a}</p>
-                          </div>
-                          <div className="p-2">
-                            <span className="text-[7px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 block mb-1">Claim B</span>
-                            <p className="text-[10px] leading-relaxed text-my-ink">{ec.claim_b}</p>
-                          </div>
-                        </div>
-                        <div className="px-2 py-1.5 bg-red-50/50 dark:bg-red-950/20 border-t border-red-200 dark:border-red-900/40">
-                          <p className="text-[10px] leading-relaxed text-my-syn">{ec.explanation}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {report.structured_contradictions.open_questions.length > 0 && (
-                  <div>
-                    <h4 className="text-[9px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">Open Questions</h4>
-                    <ul className="space-y-1.5">
-                      {report.structured_contradictions.open_questions.map((q, i) => (
-                        <li key={i} className="text-[11px] leading-relaxed text-my-syn flex items-start gap-2">
-                          <span className="text-blue-400 mt-0.5 shrink-0">?</span>
-                          {q}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </details>
-          )}
-          {/* Legacy Contradictions Panel — fallback when structured_contradictions is not available */}
-          {!report.structured_contradictions && hasConflicts && (
+          {/* Contradictions Panel */}
+          {hasConflicts && (
             <details className="group border border-my-border bg-my-callout/50">
               <summary className="cursor-pointer list-none w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50 hover:bg-my-callout/80 transition-colors">
                 <div className="flex items-center gap-3">

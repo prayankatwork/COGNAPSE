@@ -5,12 +5,8 @@
  * Uses keyword-based stance classification on source titles and key_findings
  * to detect positive vs negative framing, then generates conflict entries
  * when both stances are present.
- *
- * Also generates structured contradiction reports (Areas of Agreement,
- * Areas of Disagreement, Evidence Conflicts, Open Questions) from
- * existing conflict data.
  */
-import type { GroundedSource, COGNAPSE_Output } from '../types';
+import type { COGNAPSE_Output } from '../types';
 
 /**
  * Hedging / contrastive signal patterns found in synthesis text.
@@ -224,92 +220,3 @@ export function generateMissingConflicts(report: COGNAPSE_Output): void {
   // consensus labels, which communicates the same signal without the noise.
 }
 
-/**
- * Generate structured contradiction reporting from existing conflict entries.
- * Organizes into:
- *   - Areas of Agreement
- *   - Areas of Disagreement
- *   - Evidence Conflicts
- *   - Open Questions
- *
- * Only includes sections where evidence exists. Does not fabricate disagreements.
- * Mutates report.structured_contradictions in place. Does nothing if no conflicts exist.
- */
-export function generateStructuredContradictions(report: COGNAPSE_Output): void {
-  const conflicts = report.conflicts || [];
-  const synthesis = report.summary?.full_synthesis || '';
-
-  if (conflicts.length === 0 && !synthesis) return;
-
-  // Areas of Agreement: derived from synthesis — statements that appear without
-  // hedging or contrastive language. We extract sentences from synthesis that
-  // are NOT near hedging patterns.
-  const areasOfAgreement: string[] = [];
-  const areasOfDisagreement: { claim: string; sources: string[] }[] = [];
-  const evidenceConflicts: { claim_a: string; claim_b: string; explanation: string }[] = [];
-  const openQuestions: string[] = [];
-
-  // Populate evidence conflicts from existing conflict entries
-  for (const c of conflicts) {
-    evidenceConflicts.push({
-      claim_a: c.claim_a,
-      claim_b: c.claim_b,
-      explanation: c.explanation,
-    });
-
-    // Extract source names for areas of disagreement
-    if (c.source_a && c.source_a !== 'synthesis text') {
-      const existing = areasOfDisagreement.find(d => d.claim === c.claim_a || d.claim === c.claim_b);
-      if (!existing) {
-        areasOfDisagreement.push({
-          claim: c.claim_a.length < 200 ? c.claim_a : c.claim_a.substring(0, 200) + '...',
-          sources: [c.source_a],
-        });
-        areasOfDisagreement.push({
-          claim: c.claim_b.length < 200 ? c.claim_b : c.claim_b.substring(0, 200) + '...',
-          sources: [c.source_b],
-        });
-      }
-    }
-  }
-
-  // Extract areas of agreement from synthesis — look for non-hedged statements
-  if (synthesis) {
-    const sentences = synthesis
-      .split(/(?<=[.!?])\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 20 && s.length < 300);
-
-    const hedgingWords = /\b(however|but|yet|although|though|debate|controversial|disputed|on the other hand|conversely|alternatively)\b/i;
-    const agreementCandidates = sentences.filter(s => !hedgingWords.test(s));
-
-    // Take up to 3 non-hedged sentences as areas of agreement
-    for (const s of agreementCandidates.slice(0, 3)) {
-      const cleaned = s.replace(/\[\d+\]/g, '').replace(/\s+/g, ' ').trim();
-      if (cleaned.length > 30 && !areasOfAgreement.includes(cleaned)) {
-        areasOfAgreement.push(cleaned);
-      }
-    }
-  }
-
-  // Generate open questions from follow_up_suggestions or conflict explanations
-  if (report.follow_up_suggestions && report.follow_up_suggestions.length > 0) {
-    for (const suggestion of report.follow_up_suggestions.slice(0, 3)) {
-      const question = typeof suggestion === 'string' ? suggestion : '';
-      if (question && question.length > 10) {
-        openQuestions.push(question);
-      }
-    }
-  }
-
-  // Only attach if we have meaningful data
-  const hasContent = areasOfAgreement.length > 0 || evidenceConflicts.length > 0 || openQuestions.length > 0;
-  if (!hasContent) return;
-
-  report.structured_contradictions = {
-    areas_of_agreement: areasOfAgreement.slice(0, 3),
-    areas_of_disagreement: areasOfDisagreement.slice(0, 4),
-    evidence_conflicts: evidenceConflicts.slice(0, 4),
-    open_questions: openQuestions.slice(0, 3),
-  };
-}

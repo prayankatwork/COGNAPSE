@@ -7,8 +7,7 @@ import { audioSystem } from './audioService';
 import { useStore } from '../store';
 import { listDocuments } from './documentService';
 import { queryDocuments } from './documentRagService';
-import { generateMissingConflicts, generateStructuredContradictions } from '../utils/conflictDetector';
-import { computeEvidenceBasedConfidence, determineConsensus } from '../utils/scoringEngine';
+import { generateMissingConflicts } from '../utils/conflictDetector';
 import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentiment } from '../utils/scoringEngine';
 import { redistributeBatchCitations } from '../utils/citations';
 import { apiFetch } from './apiClient';
@@ -480,165 +479,64 @@ async function fetchSourceFullText(url: string, abortSignal?: AbortSignal): Prom
 }
 
 /**
- * Compute evidence-based assessment from source metrics rather than model self-opinion.
- * Replaces the model-generated confidence_calibration with a computed assessment.
- */
-function computeEvidenceAssessment(
-  report: COGNAPSE_Output,
-  sources: GroundedSource[]
-): void {
-  if (!sources || sources.length === 0) return;
-
-  const conflicts = report.conflicts || [];
-  const verifications = (report as COGNAPSE_Output).citation_verifications;
-
-  const confidence = computeEvidenceBasedConfidence(
-    sources,
-    conflicts,
-    verifications
-  );
-
-  // Build narrative from the metrics
-  const parts: string[] = [];
-  parts.push(`${sources.length} source${sources.length !== 1 ? 's' : ''} analyzed`);
-
-  const uniqueDomains = new Set(sources.map(s => (s.domain || '').split('.').slice(-2).join('.')));
-  parts.push(`${uniqueDomains.size} domain${uniqueDomains.size !== 1 ? 's' : ''}`);
-
-  if (conflicts.length > 0) {
-    parts.push(`${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''} detected`);
-  }
-
-  if (verifications && verifications.length > 0) {
-    const supported = verifications.filter(v => v.verdict === 'supported').length;
-    const supportRate = Math.round((supported / verifications.length) * 100);
-    parts.push(`${supportRate}% citation support rate`);
-  }
-
-  const avgCred = Math.round(
-    sources.reduce((sum, s) => sum + (s.credibility_score || 50), 0) / sources.length
-  );
-  parts.push(`avg source credibility: ${avgCred}/100`);
-
-  const narrative = `Evidence assessment based on ${parts.join(', ')}. Coverage: ${confidence.coverage}.`;
-
-  (report as COGNAPSE_Output).evidence_assessment = {
-    source_count: sources.length,
-    source_diversity_score: uniqueDomains.size / Math.max(sources.length, 1),
-    contradiction_count: conflicts.length,
-    citation_support_rate: verifications && verifications.length > 0
-      ? verifications.filter(v => v.verdict === 'supported').length / verifications.length
-      : 0,
-    evidence_coverage: confidence.coverage,
-    narrative,
-  };
-
-  // Override scores with evidence-based values
-  if (report.scores) {
-    // Map coverage to confidence label
-    const coverageMap: Record<string, '🟢 High' | '🟡 Medium' | '🔴 Low'> = {
-      'comprehensive': '🟢 High',
-      'moderate': '🟡 Medium',
-      'limited': '🔴 Low',
-      'insufficient': '🔴 Low',
-    };
-    report.scores.confidence_label = coverageMap[confidence.coverage] || report.scores.confidence_label;
-
-    // Determine consensus from evidence
-    const consensus = determineConsensus(sources, conflicts, verifications);
-    report.scores.evidence_consensus = consensus.level;
-
-    // Override overall_credibility with computed average
-    const avgCred = Math.round(
-      sources.reduce((sum, s) => sum + (s.credibility_score || 50), 0) / sources.length
-    );
-    report.scores.overall_credibility = avgCred;
-  }
-
-  // Generate structured contradictions if conflicts exist
-  generateStructuredContradictions(report);
-}
-
-/**
- * Deferred report enrichment — runs evidence-based assessment and citation verification
+ * Deferred report enrichment — runs citation verification
  * in the background after the report is already returned to the user.
- * Both tasks run in parallel and update the report object + store when complete.
+ * Updates the report object + store when complete.
  */
 async function deferredReportEnrichment(
   report: COGNAPSE_Output,
   sources: GroundedSource[],
-  query: string,
   abortSignal?: AbortSignal
 ): Promise<void> {
   try {
-    const [_] = await Promise.all([
-      // Task 1: Citation verification (full-text fetch + claim check)
-      // Evidence assessment is not a model call — computed synchronously below
-      (async () => {
-        if (sources.length === 0 || !report.summary?.full_synthesis) return;
-        try {
-          const citationPairs = extractCitations(report.summary.full_synthesis);
-          if (citationPairs.length === 0) return;
+    if (sources.length === 0 || !report.summary?.full_synthesis) return;
 
-          // Fetch full text for up to 5 unique source URLs
-          const uniqueUrls = new Map<number, string>();
-          for (const s of sources) {
-            if (s.url && !s.url.startsWith('document') && !uniqueUrls.has(s.id)) {
-              uniqueUrls.set(s.id, s.url);
-            }
-          }
-          const fullTextPromises = Array.from(uniqueUrls.entries()).slice(0, 5).map(
-            async ([id, url]) => {
-              const text = await fetchSourceFullText(url, abortSignal);
-              return { id, text };
-            }
-          );
-          const fullTextResults = await Promise.all(fullTextPromises);
-          const fullTextMap = new Map<number, string>();
-          for (const r of fullTextResults) {
-            if (r.text) fullTextMap.set(r.id, r.text);
-          }
+    const citationPairs = extractCitations(report.summary.full_synthesis);
+    if (citationPairs.length === 0) return;
 
-          // Build source context for verification
-          const sourceContexts = sources.map(s => ({
-            id: s.id,
-            snippet: s.snippet || '',
-            key_finding: s.key_finding || '',
-            title: s.title,
-            domain: s.domain,
-            full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
-          }));
-
-          const verifications = await verifyCitations(citationPairs, sourceContexts, abortSignal);
-
-          // Attach results to the report object (mutates the already-returned reference)
-          (report as COGNAPSE_Output).citation_verifications = verifications;
-          (report as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
-          audioSystem.play('verification-complete');
-
-          // Log summary via reasoning steps
-          const supported = verifications.filter(v => v.verdict === 'supported').length;
-          const partial = verifications.filter(v => v.verdict === 'partial').length;
-          const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
-          const fullTextCount = fullTextMap.size;
-          const addStep = useStore.getState().addReasoningStep;
-          addStep(`Citations: ${supported} supported, ${partial} partial, ${failed} flagged${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
-        } catch (e) {
-          console.warn('Citation verification unavailable:', e);
-          const addStep = useStore.getState().addReasoningStep;
-          addStep('Citation verification unavailable — proceeding without claim-level checks');
-        }
-      })(),
-    ]);
-
-    // Compute evidence-based assessment (no model call, pure computation)
-    computeEvidenceAssessment(report, sources);
-
-    const assessment = (report as COGNAPSE_Output).evidence_assessment;
-    if (assessment) {
-      const addStep = useStore.getState().addReasoningStep;
-      addStep(`Evidence assessment: ${assessment.evidence_coverage} coverage — ${assessment.narrative}`);
+    // Fetch full text for up to 5 unique source URLs
+    const uniqueUrls = new Map<number, string>();
+    for (const s of sources) {
+      if (s.url && !s.url.startsWith('document') && !uniqueUrls.has(s.id)) {
+        uniqueUrls.set(s.id, s.url);
+      }
     }
+    const fullTextPromises = Array.from(uniqueUrls.entries()).slice(0, 5).map(
+      async ([id, url]) => {
+        const text = await fetchSourceFullText(url, abortSignal);
+        return { id, text };
+      }
+    );
+    const fullTextResults = await Promise.all(fullTextPromises);
+    const fullTextMap = new Map<number, string>();
+    for (const r of fullTextResults) {
+      if (r.text) fullTextMap.set(r.id, r.text);
+    }
+
+    // Build source context for verification
+    const sourceContexts = sources.map(s => ({
+      id: s.id,
+      snippet: s.snippet || '',
+      key_finding: s.key_finding || '',
+      title: s.title,
+      domain: s.domain,
+      full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
+    }));
+
+    const verifications = await verifyCitations(citationPairs, sourceContexts, abortSignal);
+
+    // Attach results to the report object (mutates the already-returned reference)
+    (report as COGNAPSE_Output).citation_verifications = verifications;
+    (report as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
+    audioSystem.play('verification-complete');
+
+    // Log summary via reasoning steps
+    const supported = verifications.filter(v => v.verdict === 'supported').length;
+    const partial = verifications.filter(v => v.verdict === 'partial').length;
+    const failed = verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length;
+    const fullTextCount = fullTextMap.size;
+    const addStep = useStore.getState().addReasoningStep;
+    addStep(`Citations: ${supported} supported, ${partial} partial, ${failed} flagged${fullTextCount > 0 ? ` (${fullTextCount} sources full-text checked)` : ''}`);
 
     // Update the store to trigger re-render with enriched fields
     const state = useStore.getState();
@@ -1214,7 +1112,6 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
     deferredReportEnrichment(
       parsed,
       groundedSources,
-      query,
       abortSignal
     );
 
