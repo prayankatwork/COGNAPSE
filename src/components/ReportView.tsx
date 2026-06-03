@@ -91,7 +91,15 @@ function generateJSON(report: COGNAPSE_Output, citations?: string): string {
   return JSON.stringify(exportObj, null, 2);
 }
 // Map rendering removed per request
-const PhysicsMap = React.lazy(() => import('./PhysicsMap'));
+const PhysicsMap = React.lazy(async () => {
+  try {
+    return await import('./PhysicsMap');
+  } catch (e) {
+    console.warn('PhysicsMap chunk failed to load — reloading page for fresh bundle', e);
+    window.location.reload();
+    throw e;
+  }
+});
 import { useStore } from '../store';
 import confetti from 'canvas-confetti';
 
