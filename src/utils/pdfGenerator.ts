@@ -5,7 +5,7 @@ import { escapeHtml } from './escapeHtml';
 import { formatAllCitations, formatCitation } from './citations';
 import type { CitationFormat } from './citations';
 import { computeEnhancedSourceCredibility, computeEntityDiversity } from './scoringEngine';
-import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getCredibilityLabel } from './scoreLabels';
+import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel } from './scoreLabels';
 
 interface PDFGeneratorInput {
   query: string;
@@ -170,8 +170,6 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     const credStdDev = sources.length > 1
       ? Math.sqrt(enhancedCred.perSource.reduce((sum, s) => sum + (s - avgCred) ** 2, 0) / enhancedCred.perSource.length)
       : 0;
-    const enhancedCredPct = Math.round((avgCred / 10) * 100);
-    const reliabilityIndex = Math.round(avgCred * 10) / 10;
     const confidenceSpread = avgCred > 0 ? Math.round(credStdDev / avgCred * 100) : 0;
 
     // Build verdict map from citation_verifications for reference badges
@@ -219,7 +217,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     tocEntries.push(`${sectionNum++}. Citation Verification Details`);
     tocEntries.push(`${sectionNum++}. Formatted Citations (APA)`);
     if (report.follow_up_suggestions && report.follow_up_suggestions.length > 0) {
-      tocEntries.push(`${sectionNum++}. Future Research Directions`);
+      tocEntries.push(`${sectionNum++}. Investigate Further`);
     }
     tocEntries.push(`${sectionNum++}. Appendix &amp; Report Metadata`);
 
@@ -637,20 +635,20 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       const take = report.actionable_takeaways;
       const highlightsHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.highlights};">
-          <h3 style="${sectionTitleStyle}">Key Observations &amp; Risk Indicators</h3>
+          <h3 style="${sectionTitleStyle}">Key Takeaways</h3>
           <div style="margin-bottom: 20px;">
             <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 18px; border-radius: 4px; border-left: 4px solid #22C55E;">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #166534; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Important Insight</span>
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #166534; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Key Insight</span>
               <p style="font-size: 12px; margin: 0; color: #14532D; line-height: 1.6; font-weight: 500;">${safeText(take.key_insight)}</p>
             </div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div style="background: #FEF2F2; border: 1px solid #FECACA; padding: 16px; border-radius: 4px; border-left: 4px solid #EF4444;">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #991B1B; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Risk Indicator</span>
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #991B1B; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Watch Out For</span>
               <p style="font-size: 12px; margin: 0; color: #7F1D1D; line-height: 1.6;">${safeText(take.watch_out_for)}</p>
             </div>
             <div style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 16px; border-radius: 4px; border-left: 4px solid #3B82F6;">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1E40AF; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Recommendation</span>
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1E40AF; display: block; margin-bottom: 6px; letter-spacing: 0.1em;">Next Step</span>
               <p style="font-size: 12px; margin: 0; color: #1E3A8A; line-height: 1.6;">${safeText(take.next_step)}</p>
             </div>
           </div>
@@ -757,12 +755,12 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
 
     // ════════════════════════════════════════════
-    // FUTURE RESEARCH DIRECTIONS — real follow_up_suggestions
+    // INVESTIGATE FURTHER — real follow_up_suggestions
     // ════════════════════════════════════════════
     if (report.follow_up_suggestions && report.follow_up_suggestions.length > 0) {
       const futureHTML = `
         <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.future};">
-          <h3 style="${sectionTitleStyle}">${secNum++}. Future Research Directions</h3>
+          <h3 style="${sectionTitleStyle}">${secNum++}. Investigate Further</h3>
           <p style="font-size: 12px; color: #475569; margin-bottom: 14px; line-height: 1.6;">Based on the findings and limitations of the current analysis, the following areas are recommended for continuation topics and deeper investigation:</p>
           <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #0F172A;">
             ${formatList(report.follow_up_suggestions)}
@@ -773,15 +771,8 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
 
     // ════════════════════════════════════════════
-    // APPENDIX — real scores & metadata
+    // APPENDIX — metadata only (scores already shown in Quality Metrics section)
     // ════════════════════════════════════════════
-    const credibilityPct = report.scores?.overall_credibility !== undefined
-      ? Math.round(report.scores.overall_credibility)
-      : enhancedCredPct;
-    const relevancePct = report.scores?.overall_relevance !== undefined
-      ? Math.round(report.scores.overall_relevance)
-      : 0;
-
     // Use the actual model provider from the report
     const actualProvider = report.provider || aiProvider;
     const modelRouting = hasRealConsensus
@@ -791,22 +782,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     const appendixHTML = `
       <div style="${cardStyle}; border-top: 4px solid ${sectionAccents.appendix};">
         <h3 style="${sectionTitleStyle}">${secNum++}. Appendix &amp; Report Metadata</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
-          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 18px; border-radius: 4px;">
-            <h4 style="color: #64748B; font-size: 10px; text-transform: uppercase; margin: 0 0 14px 0; font-weight: 700; letter-spacing: 0.12em;">Quality Scores</h4>
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Credibility</span> <span style="color: #3B82F6; font-weight: 700; font-size: 9px;">${getOverallCredibilityLabel(credibilityPct)}</span></div>
-              ${scoreBar(credibilityPct, '#3B82F6')}
-            </div>
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Relevance</span> <span style="color: #8B5CF6; font-weight: 700; font-size: 9px;">${getRelevanceLabel(relevancePct)}</span></div>
-              ${scoreBar(relevancePct, '#8B5CF6')}
-            </div>
-            <div>
-              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-bottom: 4px;"><span>Source Reliability Index</span> <span style="color: #10B981; font-weight: 700; font-size: 9px;">${getCredibilityLabel(Math.round(reliabilityIndex * 10))}</span></div>
-              ${scoreBar(reliabilityIndex * 10, '#10B981')}
-            </div>
-          </div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 24px;">
           <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 18px; border-radius: 4px;">
             <h4 style="color: #64748B; font-size: 10px; text-transform: uppercase; margin: 0 0 14px 0; font-weight: 700; letter-spacing: 0.12em;">Document Information</h4>
             <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: #0F172A;">

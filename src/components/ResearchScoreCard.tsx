@@ -262,38 +262,6 @@ export default function ResearchScoreCard({ scores }: Props) {
         </div>
       )}
 
-      {/* Technical Metrics — collapsed by default, premium only */}
-      {isPremium && (
-        <details className="group">
-          <summary className="cursor-pointer list-none flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors pt-2 border-t border-my-border/50">
-            <span className="group-open:hidden">▶</span>
-            <span className="hidden group-open:inline">▼</span>
-            Technical Metrics
-          </summary>
-          <div className="mt-3 space-y-2 bg-my-bg border border-my-border p-3">
-            <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-my-muted">
-              <div><span className="font-bold text-my-ink">Accuracy:</span> {scores.accuracy}/10</div>
-              <div><span className="font-bold text-my-ink">Bias Score:</span> {scores.bias.toFixed(2)}</div>
-              <div><span className="font-bold text-my-ink">Diversity:</span> {scores.sourceDiversity.toFixed(2)}</div>
-              <div><span className="font-bold text-my-ink">Confidence:</span> {scores.confidenceInterval.toFixed(2)}</div>
-              {es?.enhancedCredibility !== undefined && (
-                <div><span className="font-bold text-my-ink">Enhanced Credibility:</span> {es.enhancedCredibility.toFixed(1)}</div>
-              )}
-              {es?.credibilityStdDev !== undefined && (
-                <div><span className="font-bold text-my-ink">Credibility StdDev:</span> {es.credibilityStdDev.toFixed(2)}</div>
-              )}
-              {es?.sentimentBias !== undefined && (
-                <div><span className="font-bold text-my-ink">Sentiment Bias:</span> {es.sentimentBias.toFixed(3)}</div>
-              )}
-              {es?.entityDiversity !== undefined && (
-                <div><span className="font-bold text-my-ink">Entity Diversity:</span> {es.entityDiversity.toFixed(2)}</div>
-              )}
-            </div>
-            <p className="text-[8px] text-my-muted italic">Raw scores shown for technical verification. These values drive the label display above.</p>
-          </div>
-        </details>
-      )}
-
       <p className="text-[10px] text-my-muted uppercase tracking-widest pt-2 border-t border-my-border/50 leading-[1.6]">
         Scores reflect cross-verification of multiple AI-generated analyses, domain credibility data (MBFC), and when available, neural semantic consensus from Transformers.js (browser-side MiniLM-L6-v2 embeddings). Always verify critical claims independently.
       </p>
