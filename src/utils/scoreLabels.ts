@@ -159,9 +159,36 @@ export function getRelevanceLabel(score: number): string {
   return 'Insufficient';
 }
 
-/* ─── Consensus variance (low/moderate/high → descriptive label) ─── */
+/* ─── Model Agreement / Consensus Variance (low/moderate/high → display label) ─── */
 
-export function getConsensusVarianceLabel(level: string): string {
+/**
+ * Transforms the internal variance level into a human-friendly label
+ * with the SAME directionality as evidence_consensus labels.
+ *   low variance → "Strong" agreement (models closely agreed)
+ *   moderate    → "Moderate"
+ *   high        → "Low" agreement
+ */
+export function getModelAgreementLabel(level: string): string {
+  switch (level) {
+    case 'low': return 'Strong';
+    case 'moderate': return 'Moderate';
+    case 'high': return 'Low';
+    default: return 'Unknown';
+  }
+}
+
+export function getModelAgreementColor(level: string): string {
+  switch (level) {
+    case 'low': return 'text-green-600 dark:text-green-400';
+    case 'moderate': return 'text-amber-600 dark:text-amber-400';
+    case 'high': return 'text-red-600 dark:text-red-400';
+    default: return 'text-my-muted';
+  }
+}
+
+/* ─── Consensus variance narrative (low/moderate/high → descriptive text) ─── */
+
+export function getConsensusVarianceNarrative(level: string): string {
   switch (level) {
     case 'low': return 'Models closely agree on credibility and relevance assessments';
     case 'moderate': return 'Models show moderate disagreement — cross-check critical claims';

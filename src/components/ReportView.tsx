@@ -104,7 +104,7 @@ import EvidencePreview from './EvidencePreview';
 
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { dbService } from '../services/dbService';
-import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getConsensusColor } from '../utils/scoreLabels';
+import { getOverallCredibilityLabel, getRelevanceLabel, getConsensusLabel, getConsensusColor, getModelAgreementLabel, getModelAgreementColor, getConsensusVarianceNarrative } from '../utils/scoreLabels';
 
 export default function ReportView({
   report,
@@ -562,7 +562,7 @@ export default function ReportView({
             </div>
           )}
 
-          {/* Consensus Variance Signal */}
+          {/* Model Agreement Signal */}
           {report.consensus_variance && (
             <div className={clsx(
               "px-3 py-2 border-l-[3px] text-[10px] leading-relaxed",
@@ -581,10 +581,12 @@ export default function ReportView({
                   <AlertTriangle size={11} className="text-red-500 mt-0.5 shrink-0" />
                 )}
                 <div>
-                  <span className="font-bold uppercase tracking-widest text-[8px]">
-                    Multi-Model Consensus: {report.consensus_variance.level}
+                  <span className={clsx('font-bold uppercase tracking-widest text-[8px]', getModelAgreementColor(report.consensus_variance.level))}>
+                    Model Agreement: {getModelAgreementLabel(report.consensus_variance.level)}
                   </span>
-                  <p className="text-my-muted mt-0.5">{report.consensus_variance.narrative}</p>
+                  <p className="text-my-muted mt-0.5">
+                    {report.consensus_variance.narrative || getConsensusVarianceNarrative(report.consensus_variance.level)}
+                  </p>
                 </div>
               </div>
             </div>
