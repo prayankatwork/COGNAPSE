@@ -65,7 +65,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
   // Professional style helpers
   const systemFont = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
   const serifFont = "'Georgia', 'Times New Roman', serif";
-  const cardStyle = "background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: 35px; margin-bottom: 30px; border-radius: 6px; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);";
+  const cardStyle = "background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: 35px; margin-bottom: 30px; border-radius: 6px; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); page-break-inside: avoid; overflow: hidden;";
   const sectionTitleStyle = "color: #0F172A; font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0; margin-bottom: 20px; font-weight: 800; border-bottom: 2px solid #2563EB; padding-bottom: 10px; line-height: 1.2;";
   const highlightBoxStyle = "background-color: #F8FAFC; border-left: 4px solid #3B82F6; padding: 20px; margin-bottom: 24px; border-radius: 0 6px 6px 0;";
   const tableHeaderStyle = "padding: 10px 14px; background-color: #F1F5F9; color: #334155; font-weight: 700; text-transform: uppercase; font-size: 10px; border-bottom: 2px solid #CBD5E1;";
@@ -206,6 +206,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       tocEntries.push(`${sectionNum++}. Deep Research Thesis`);
     }
     tocEntries.push(`${sectionNum++}. Executive Summary`);
+    tocEntries.push(`${sectionNum++}. Quality Metrics`);
     tocEntries.push(`${sectionNum++}. Key Findings &amp; Critical Insights`);
     tocEntries.push(`${sectionNum++}. Multi-Model Consensus`);
     if (report.swot || report.bias_alert || (report.conflicts && report.conflicts.length > 0)) {
@@ -215,6 +216,7 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       tocEntries.push(`${sectionNum++}. Timeline Mapping`);
     }
     tocEntries.push(`${sectionNum++}. References &amp; Bibliography`);
+    tocEntries.push(`${sectionNum++}. Citation Verification Details`);
     tocEntries.push(`${sectionNum++}. Formatted Citations (APA)`);
     if (report.follow_up_suggestions && report.follow_up_suggestions.length > 0) {
       tocEntries.push(`${sectionNum++}. Future Research Directions`);
@@ -349,6 +351,40 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     sectionsHTML.push(execHTML);
 
     // ════════════════════════════════════════════
+    // METRICS — Credibility / Relevance / Consensus (matching web view)
+    // ════════════════════════════════════════════
+    if (report.scores) {
+      const metricsHTML = `
+        <div style="${cardStyle}; border-top: 4px solid #2563EB;">
+          <h3 style="${sectionTitleStyle}">${secNum++}. Quality Metrics</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 4px;">
+              <span style="display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em; margin-bottom: 6px;">Credibility</span>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 22px; font-weight: 900; color: #0F172A;">${getOverallCredibilityLabel(report.scores.overall_credibility)}</span>
+                <span style="font-size: 11px; font-weight: 600; color: #94A3B8;">${Math.round(report.scores.overall_credibility)}%</span>
+              </div>
+              ${scoreBar(report.scores.overall_credibility, '#3B82F6')}
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 4px;">
+              <span style="display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em; margin-bottom: 6px;">Relevance</span>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 22px; font-weight: 900; color: #0F172A;">${getRelevanceLabel(report.scores.overall_relevance)}</span>
+                <span style="font-size: 11px; font-weight: 600; color: #94A3B8;">${Math.round(report.scores.overall_relevance)}%</span>
+              </div>
+              ${scoreBar(report.scores.overall_relevance, '#8B5CF6')}
+            </div>
+          </div>
+          <div style="margin-top: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em;">Evidence Consensus</span>
+            <span style="font-size: 16px; font-weight: 900; color: #0F172A;">${getConsensusLabel(report.scores.evidence_consensus)}</span>
+          </div>
+        </div>
+      `;
+      sectionsHTML.push(metricsHTML);
+    }
+
+    // ════════════════════════════════════════════
     // KEY FINDINGS & CRITICAL INSIGHTS — separate section for proper pagination
     // ════════════════════════════════════════════
     const findingsHTML = `
@@ -396,6 +432,15 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
             </div>
             <div style="font-size: 9px; text-transform: uppercase; color: #64748B; letter-spacing: 0.12em; font-weight: 700; margin-top: 10px; text-align: center;">Consensus Score</div>
           </div>
+
+          <!-- Model Agreement Signal -->
+          ${report.consensus_variance ? `
+            <div style="flex-shrink: 0; background: ${report.consensus_variance.level === 'low' ? '#F0FDF4' : report.consensus_variance.level === 'moderate' ? '#FFFBEB' : '#FEF2F2'}; border: 1px solid ${report.consensus_variance.level === 'low' ? '#BBF7D0' : report.consensus_variance.level === 'moderate' ? '#FDE68A' : '#FECACA'}; padding: 16px; border-radius: 4px; width: 180px; display: flex; flex-direction: column; justify-content: center;">
+              <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: ${report.consensus_variance.level === 'low' ? '#166534' : report.consensus_variance.level === 'moderate' ? '#92400E' : '#991B1B'}; letter-spacing: 0.08em; display: block; margin-bottom: 4px;">Model Agreement</span>
+              <span style="font-size: 20px; font-weight: 900; color: ${report.consensus_variance.level === 'low' ? '#16A34A' : report.consensus_variance.level === 'moderate' ? '#D97706' : '#DC2626'};">${report.consensus_variance.level === 'low' ? 'Strong' : report.consensus_variance.level === 'moderate' ? 'Moderate' : 'Low'}</span>
+              <span style="font-size: 8px; color: #64748B; margin-top: 4px; line-height: 1.4;">${report.consensus_variance.narrative || (report.consensus_variance.level === 'low' ? 'Models closely agreed on scoring' : report.consensus_variance.level === 'moderate' ? 'Models showed moderate disagreement' : 'Models significantly disagreed')}</span>
+            </div>
+          ` : ''}
 
           <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
             ${hasRealConsensus ? `
@@ -627,7 +672,45 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
     }
 
     // ════════════════════════════════════════════
-    // 8. FORMATTED CITATIONS (APA)
+    // CITATION VERIFICATION DETAILS
+    // ════════════════════════════════════════════
+    const flaggedVerifications = report.citation_verifications?.filter(v => v.verdict !== 'supported') || [];
+    if (flaggedVerifications.length > 0) {
+      const citationVerificationHTML = `
+        <div style="${cardStyle}; border-top: 4px solid #F59E0B;">
+          <h3 style="${sectionTitleStyle}">${secNum++}. Citation Verification Details</h3>
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <span style="font-size: 10px; color: #475569;">
+              ${report.citation_verifications!.filter(v => v.verdict === 'supported').length} supported
+              &nbsp;·&nbsp;
+              ${report.citation_verifications!.filter(v => v.verdict === 'partial').length} partial
+              &nbsp;·&nbsp;
+              ${flaggedVerifications.length} flagged
+            </span>
+          </div>
+          ${flaggedVerifications.map((v, i) => {
+            const source = report.sources?.find(s => s.id === v.source_id);
+            const vColor = v.verdict === 'partial'
+              ? { bg: '#FFFBEB', border: '#FDE68A', text: '#92400E', label: 'Partial' }
+              : { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: v.verdict === 'contradicted' ? 'Contradicted' : 'Unrelated' };
+            return `
+            <div style="background: ${vColor.bg}; border: 1px solid ${vColor.border}; padding: 12px; border-radius: 4px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: ${vColor.text};">${vColor.label}</span>
+                <span style="font-size: 9px; color: #64748B;">Source #${v.source_id}</span>
+                ${source ? `<span style="font-size: 9px; color: #64748B;">${source.title}</span>` : ''}
+              </div>
+              <p style="font-size: 10px; color: #475569; font-style: italic; margin: 0 0 4px 0; line-height: 1.5;">&ldquo;${v.claim}&rdquo;</p>
+              <p style="font-size: 9px; color: #64748B; margin: 0; line-height: 1.5;">${v.explanation}</p>
+            </div>
+          `;}).join('')}
+        </div>
+      `;
+      sectionsHTML.push(citationVerificationHTML);
+    }
+
+    // ════════════════════════════════════════════
+    // FORMATTED CITATIONS (APA)
     // ════════════════════════════════════════════
     if (report.sources && report.sources.length > 0) {
       const citationsHTML = `
@@ -820,9 +903,10 @@ export async function generatePremiumPDF({ query, report, deepThesis, aiProvider
       pageFrame.style.left = '-9999px';
       pageFrame.style.top = '-9999px';
       pageFrame.style.width = '850px';
-      pageFrame.style.height = '1202px';
+      pageFrame.style.height = '1300px';
       pageFrame.style.boxSizing = 'border-box';
-      pageFrame.style.padding = '60px';
+      pageFrame.style.padding = '60px 60px 140px';
+      pageFrame.style.overflow = 'hidden';
       pageFrame.style.backgroundColor = '#FFFFFF';
       pageFrame.style.color = '#0F172A';
       pageFrame.style.fontFamily = systemFont;

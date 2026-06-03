@@ -138,20 +138,6 @@ export default function ReportView({
   const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa');
   const [liveSource, setLiveSource] = useState<{ title: string; url: string } | null>(null);
   const [showAllTools, setShowAllTools] = useState(false);
-  // Build a lookup of sourceId → worst citation verdict for display
-  const verdictMap = new Map<number, { verdict: string; confidence: number }>();
-  if (report.citation_verifications) {
-    for (const v of report.citation_verifications) {
-      const existing = verdictMap.get(v.source_id);
-      // Keep the "worst" verdict (supported < partial < unrelated/contradicted)
-      const rank = { supported: 0, partial: 1, unrelated: 2, contradicted: 2 };
-      const newRank = rank[v.verdict] ?? 0;
-      const oldRank = existing ? (rank[existing.verdict as keyof typeof rank] ?? 0) : -1;
-      if (!existing || newRank > oldRank) {
-        verdictMap.set(v.source_id, { verdict: v.verdict, confidence: v.confidence });
-      }
-    }
-  }
 
   const reportId = report.id || report.query_understood;
   const isUnlocked = !!user?.premium;
@@ -533,31 +519,72 @@ export default function ReportView({
             />
           )}
 
-          {/* Citation Verification Status */}
+          {/* Citation Verification Status with expandable flagged details */}
           {report._citation_verified_at && (
-            <div className="flex flex-wrap items-center gap-3 px-3 py-2 border border-my-border bg-my-bg/40">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 size={11} className="text-green-500" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-my-ink">Citations Verified</span>
-              </div>
-              <span className="text-[8px] font-mono text-my-muted">
-                {new Date(report._citation_verified_at).toLocaleString(undefined, {
-                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                })}
-              </span>
-              {report.citation_verifications && (
+            <div className="border border-my-border bg-my-bg/40">
+              {/* Summary bar */}
+              <div className="flex flex-wrap items-center gap-3 px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={11} className="text-green-500" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-my-ink">Citations Verified</span>
+                </div>
                 <span className="text-[8px] font-mono text-my-muted">
-                  {report.citation_verifications.filter(v => v.verdict === 'supported').length} supported
-                  {' · '}
-                  {report.citation_verifications.filter(v => v.verdict === 'partial').length} partial
-                  {' · '}
-                  {report.citation_verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length} flagged
+                  {new Date(report._citation_verified_at).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                  })}
                 </span>
-              )}
-              {report._source_reranking?.applied && (
-                <span className="ml-auto text-[8px] font-mono text-my-accent">
-                  <Layers size={9} className="inline mr-1" />Sources re-ranked by relevance
-                </span>
+                {report.citation_verifications && (
+                  <span className="text-[8px] font-mono text-my-muted">
+                    {report.citation_verifications.filter(v => v.verdict === 'supported').length} supported
+                    {' · '}
+                    {report.citation_verifications.filter(v => v.verdict === 'partial').length} partial
+                    {' · '}
+                    {report.citation_verifications.filter(v => v.verdict === 'contradicted' || v.verdict === 'unrelated').length} flagged
+                  </span>
+                )}
+                {report._source_reranking?.applied && (
+                  <span className="ml-auto text-[8px] font-mono text-my-accent">
+                    <Layers size={9} className="inline mr-1" />Sources re-ranked by relevance
+                  </span>
+                )}
+              </div>
+              {/* Expandable flagged details */}
+              {report.citation_verifications && report.citation_verifications.some(v => v.verdict !== 'supported') && (
+                <details className="group border-t border-my-border/50">
+                  <summary className="cursor-pointer list-none px-3 py-1.5 flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors">
+                    <AlertTriangle size={9} className="text-amber-500" />
+                    <span>Flagged citation details</span>
+                    <span className="ml-auto text-[6px] transition-transform group-open:rotate-180">▼</span>
+                  </summary>
+                  <div className="px-3 pb-3 space-y-2">
+                    {report.citation_verifications
+                      .filter(v => v.verdict !== 'supported')
+                      .map((v, i) => {
+                        const source = report.sources?.find(s => s.id === v.source_id);
+                        const verdictColor = v.verdict === 'partial'
+                          ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40'
+                          : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40';
+                        const verdictLabel = v.verdict === 'partial' ? 'Partial' : v.verdict === 'contradicted' ? 'Contradicted' : 'Unrelated';
+                        return (
+                          <div key={i} className={`flex flex-col gap-1 p-2 border ${verdictColor}`}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[8px] font-black uppercase tracking-widest">{verdictLabel}</span>
+                              <span className="text-[8px] font-mono text-my-muted">Source #{v.source_id}</span>
+                              {source && (
+                                <span className="text-[8px] font-mono text-my-muted truncate max-w-[200px]">{source.title}</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-my-syn italic leading-relaxed">
+                              "{v.claim}"
+                            </p>
+                            <p className="text-[9px] text-my-muted leading-relaxed">
+                              {v.explanation}
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </details>
               )}
             </div>
           )}
