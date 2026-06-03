@@ -341,23 +341,15 @@ export default function MainContent() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || !query.trim()) return;
 
-    if (currentReport) {
-      handleChatFollowUp(query);
-    } else {
-      // New Research Mode
-
-      const isBatch = query.includes('|');
-      const isCompare = query.toLowerCase().includes(' vs ');
-
-      if (isBatch || isCompare) {
-        // for now we'll just fall back to standard but the UI will see it as batch / compare due to the prompt
-        // Gemini handles these via prompt "Batch research (3 queries at once)" or "Compare Two Topics"
-      }
-
-      handleSearch(query);
-    }
+    // Main input bar ALWAYS triggers fresh research.
+    // Follow-up chat is handled exclusively via the Analysis Thread section
+    // below the report (handleChatFollowUp), which keeps the ReportView in view
+    // and provides contextual Q&A without re-running research.
+    // This ensures users can always start a new investigation by typing in the
+    // main input, even when a report is already displayed.
+    handleSearch(query);
   };
 
   const startDeepResearch = async () => {
