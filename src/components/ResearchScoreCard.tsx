@@ -252,9 +252,15 @@ export default function ResearchScoreCard({ scores }: Props) {
             <div className="p-3 bg-my-bg border border-my-border flex flex-col">
               <span className="text-[8px] font-bold uppercase tracking-widest text-my-muted mb-1">Confidence Spread</span>
               <span className="text-xl font-black text-my-ink">±{premiumData.confidenceSpread}%</span>
-              <span className={clsx('text-[9px] font-bold', getConfidenceColor(premiumData.confidenceSpread / 100))}>
-                {getConfidenceLabel(premiumData.confidenceSpread / 100)}
-              </span>
+              {(() => {
+                // Invert: low spread = high confidence (sources agree)
+                const inverted = Math.max(0, Math.min(1, 1 - (premiumData.confidenceSpread / 100)));
+                return (
+                  <span className={clsx('text-[9px] font-bold', getConfidenceColor(inverted))}>
+                    {getConfidenceLabel(inverted)}
+                  </span>
+                );
+              })()}
             </div>
           </div>
 
