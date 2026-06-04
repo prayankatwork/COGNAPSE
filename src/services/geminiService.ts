@@ -356,9 +356,11 @@ function extractCitations(synthesis: string): { sourceId: number; claimText: str
       : preText.slice(-150).trim(); // fallback: last 150 chars
 
     // Skip citations with very short surrounding text — these are usually
-    // sentence fragments or transitional phrases, not actual claims
+    // sentence fragments or transitional phrases, not actual claims.
+    // Also skip sourceId 0 which is not a real source (document placeholder).
     if (claimText.length > 40) {
       for (const id of ids) {
+        if (id === 0) continue; // Skip placeholder/document source IDs
         pairs.push({ sourceId: id, claimText });
       }
     }
@@ -404,15 +406,20 @@ async function verifyCitations(
 
   const verifierPrompt = `You are a citation verifier. Given a list of CLAIMS and their cited SOURCE CONTENT, determine whether each source reasonably supports the claim made about it.
 
-CRITICAL: You MUST include a brief explanation for EVERY pair. Do not skip the explanation field — it is required for every object in the array. Responses missing any field will be rejected.
+CRITICAL RULES:
+1. Base your verdict STRICTLY on the SOURCE CONTENT provided below. Do NOT infer, guess, or add information not present in the quoted source text.
+2. If the source content does not discuss the claim topic at all, use "unrelated".
+3. If you are unsure because the source content is too short or ambiguous, use "partial" with low confidence.
+4. NEVER make up source content. If the source content field is empty, use "unrelated" with confidence 0.
+5. You MUST include an explanation for EVERY pair that references SPECIFIC text from the source or explains why no matching text was found.
 
-Be precise: a claim is "supported" only if the source content explicitly supports the claim or directly discusses the same specific finding. Assign "partial" if the source covers the general topic but not the specific claim. Use "contradicted" only if the source explicitly says the opposite. Use "unrelated" only if the source is about a completely different subject.
+Be precise: a claim is "supported" only if the source content explicitly supports the claim or directly discusses the same specific finding. Assign "partial" if the source covers the general topic but not the specific claim. Use "contradicted" only if the source explicitly says the opposite. Use "unrelated" only if the source is about a completely different subject or the content field is empty.
 
 For each pair, return exactly this structure:
 {
   "verdict": "supported" | "partial" | "contradicted" | "unrelated",
   "confidence": 0.0 to 1.0,
-  "explanation": "Required — one brief sentence explaining why"
+  "explanation": "Required — one brief sentence explaining why, referencing specific words from the source if possible"
 }
 
 Return ONLY a valid JSON array. No markdown, no backticks, no extra text. Every object MUST include all three fields: verdict, confidence, and explanation.
@@ -528,6 +535,12 @@ async function deferredReportEnrichment(
     // Attach results to the report object (mutates the already-returned reference)
     (report as COGNAPSE_Output).citation_verifications = verifications;
     (report as COGNAPSE_Output)._citation_verified_at = new Date().toISOString();
+
+    // Recompute evidence_assessment.citation_support_rate from real verification data
+    if (verifications.length > 0 && (report as COGNAPSE_Output).evidence_assessment) {
+      const supported = verifications.filter(v => v.verdict === 'supported').length;
+      (report as COGNAPSE_Output).evidence_assessment!.citation_support_rate = Math.round((supported / verifications.length) * 100) / 100;
+    }
     audioSystem.play('verification-complete');
 
     // Log summary via reasoning steps
@@ -710,18 +723,47 @@ export async function executeCognapseResearch(
     // Dynamic threshold: single-word queries need 1 match, 2-3 word queries need 1 match,
     // 4+ word queries need 2 matches. This prevents off-topic results like PCSK9 inhibitor
     // studies from leaking into a statins query without being too strict for short queries.
+    // Categorize keywords into "core topic" words (what the query is ABOUT)
+    // vs "context" words (geographic terms, comparative framing, generic research words).
+    // This prevents false positives where a source about "homelessness" matches because
+    // both the query and source mention "United States" and "Europe".
+    const contextWords = new Set([
+      'compare', 'contrast', 'versus', 'across', 'between', 'among',
+      'analysis', 'review', 'study', 'studies', 'research', 'evidence',
+      'impact', 'effect', 'effects', 'result', 'results', 'findings',
+      'united', 'states', 'europe', 'china', 'india', 'japan', 'global',
+      'international', 'world', 'australia', 'canada', 'britain', 'germany',
+      'france', 'uk', 'usa', 'current', 'recent', 'new', 'latest',
+      'future', 'past', 'history', 'overview', 'summary', 'report',
+    ]);
+    const topicWords = queryWords.filter(w => !contextWords.has(w));
     const requiredMatches = Math.min(2, Math.max(1, Math.floor(queryWords.length / 2)));
+    // At least 1 match must be from core topic words (not just geographic/context matches)
+    const requireTopicMatch = topicWords.length > 0;
     const filtered = academicSources.filter(s => {
       const titleLower = (s.title || '').toLowerCase();
       const snippetLower = (s.snippet || '').toLowerCase();
       // Check for exact keyword match OR stem match (e.g. "vaccine" matches "vaccines")
-      const matchCount = queryWords.filter(w => {
-        if (titleLower.includes(w) || snippetLower.includes(w)) return true;
+      let matchCount = 0;
+      let topicMatchCount = 0;
+      for (const w of queryWords) {
+        const isTopicWord = topicWords.includes(w);
+        if (titleLower.includes(w) || snippetLower.includes(w)) {
+          matchCount++;
+          if (isTopicWord) topicMatchCount++;
+          continue;
+        }
         // Also check if word without trailing 's'/'es' matches (basic stemming)
         const stem = w.replace(/(?:e?s|ing|ed)$/, '');
-        return stem.length > 3 && (titleLower.includes(stem) || snippetLower.includes(stem));
-      }).length;
-      return matchCount >= requiredMatches;
+        if (stem.length > 3 && (titleLower.includes(stem) || snippetLower.includes(stem))) {
+          matchCount++;
+          if (isTopicWord) topicMatchCount++;
+        }
+      }
+      // Must meet total match threshold AND have at least 1 core topic match
+      if (matchCount < requiredMatches) return false;
+      if (requireTopicMatch && topicMatchCount < 1) return false;
+      return true;
     });
     const filteredCount = academicSources.length - filtered.length;
     if (filteredCount > 0) {
@@ -880,6 +922,31 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       parsed.summary.eli5_version = redistributeBatchCitations(parsed.summary.eli5_version);
     }
 
+    // ─── Evidence Assessment — computed from actual data, not LLM guesswork ───
+    if (parsed.sources && parsed.sources.length > 0) {
+      const domainTypes = new Set(parsed.sources.map((s: any) => {
+        const d = (s.domain || '').toLowerCase();
+        if (d.endsWith('.edu') || d.includes('pubmed') || d.includes('arxiv')) return 'academic';
+        if (d.endsWith('.gov') || d.endsWith('.mil')) return 'government';
+        return 'other';
+      }));
+      const sourceCount = parsed.sources.length;
+      const diversityScore = Math.min(domainTypes.size / 4, 1);
+      const conflictCount = (parsed.conflicts || []).length;
+      // Citation support rate from verifications (if available) or default
+      let citationRate = 0.5;
+      if (parsed.citation_verifications && parsed.citation_verifications.length > 0) {
+        const supported = parsed.citation_verifications.filter((v: any) => v.verdict === 'supported').length;
+        citationRate = supported / parsed.citation_verifications.length;
+      }
+      parsed.evidence_assessment = {
+        source_count: sourceCount,
+        source_diversity_score: diversityScore,
+        contradiction_count: conflictCount,
+        citation_support_rate: Math.round(citationRate * 100) / 100,
+      };
+    }
+
     // ─── Consensus Accuracy Override ───
     // Post-process: if the query is about an uncertain/debated topic or an adversarial
     // conspiracy theory, override the AI's self-reported consensus label.
@@ -970,7 +1037,35 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
 
       if (sentimentResult.biasScore > biasThreshold || hasCommercialHealthSource || structuralImbalance || hasControversialQuery || hasHighCredVariance || hasConspiracySource || hasSkewedBias || hasLowFactualSource) {
         let direction = 'slight';
-        if (sentimentResult.biasScore > 0.6 || queryIsAdversarial.isAdversarial || hasConspiracySource) direction = 'moderate';
+        // Build a specific direction label based on what triggered the alert
+        let directionDetails: string[] = [];
+        if (queryIsAdversarial.isAdversarial) {
+          directionDetails.push('conspiracy/pseudoscience topic');
+        }
+        if (hasConspiracySource) {
+          directionDetails.push('known conspiracy sources');
+        }
+        if (hasSkewedBias) {
+          directionDetails.push('skewed domain bias');
+        }
+        if (hasLowFactualSource) {
+          directionDetails.push('low-factual-reporting domains');
+        }
+        if (hasCommercialHealthSource) {
+          directionDetails.push('commercial health sites');
+        }
+        if (structuralImbalance) {
+          directionDetails.push('industry-heavy source mix');
+        }
+        if (hasHighCredVariance) {
+          directionDetails.push('widely varying source quality');
+        }
+        if (sentimentResult.biasScore > biasThreshold && directionDetails.length === 0) {
+          directionDetails.push('emotional language detected');
+        }
+        const directionSuffix = directionDetails.length > 0 ? ` (${directionDetails.join(', ')})` : '';
+        let biasSeverity = 'slight';
+        if (sentimentResult.biasScore > 0.6 || queryIsAdversarial.isAdversarial || hasConspiracySource) biasSeverity = 'moderate';
         let alertNarrative = '';
         if (queryIsAdversarial.isAdversarial) {
           alertNarrative = 'This query touches on a topic known to attract misinformation or pseudoscientific claims. Sources may include debunking content with strong rhetorical framing. Cross-reference with authoritative scientific bodies and peer-reviewed literature.';
@@ -992,7 +1087,7 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
           alertNarrative = 'Our sentiment analysis detected above-average emotional language in the sources used for this report. These sources may lean toward advocacy over neutral reporting. Consider cross-referencing with more neutral sources.';
         }
         parsed.bias_alert = {
-          direction: `${direction} potential bias detected`,
+          direction: `${biasSeverity} potential bias detected${directionSuffix}`,
           recommendation: alertNarrative!,
         };
         addReasoningStep(`Bias alert: adversarial=${queryIsAdversarial.isAdversarial}, uncertainty=${queryIsUncertain}, sentiment=${sentimentResult.biasScore.toFixed(2)}, credVariance=${credVariance.toFixed(1)}, MBFC(avg=${mbfcAvgBiasScore.toFixed(2)}, conspiracy=${hasConspiracySource}, skewed=${hasSkewedBias}, lowFactual=${hasLowFactualSource})`);
