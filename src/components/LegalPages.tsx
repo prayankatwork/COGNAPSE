@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, FileText, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Button } from './ui';
 
 type LegalPage = 'privacy' | 'terms' | 'ai-disclaimer';
 
@@ -88,12 +89,14 @@ export default function LegalPages({ page, onBack }: { page: LegalPage; onBack: 
 
   return (
     <div className="min-h-full overflow-y-auto px-6 py-16 max-w-3xl mx-auto">
-      <button
+      <Button
+        variant="ghost"
         onClick={onBack}
-        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent mb-10"
+        className="p-0 !border-0 !rounded-none text-[10px] font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent mb-10 !gap-2 !justify-start"
+        icon={<ArrowLeft size={14} />}
       >
-        <ArrowLeft size={14} /> Back
-      </button>
+        Back
+      </Button>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 border border-my-border bg-my-callout/30">

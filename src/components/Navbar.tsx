@@ -9,7 +9,7 @@ import {
 import { useIsMobile } from '../hooks/useIsMobile';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SectionLabel } from './ui';
+import { SectionLabel, Button } from './ui';
 import BrandLogo from './BrandLogo';
 import CommandPalette from './CommandPalette';
 import PremiumExportModal from './PremiumExportModal';
@@ -181,22 +181,20 @@ export default function Navbar() {
         {/* Right: Utility Cluster */}
         <div className="flex items-center justify-end w-1/3 gap-4">
           {!user?.premium && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => walkthroughCompleted && setIsPremiumModalOpen(true)}
               disabled={!walkthroughCompleted}
               className={clsx(
-                "hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-[2px] border transition-colors group",
+                "hidden sm:flex px-2.5 py-1.5 text-[8px] rounded-[2px]",
                 walkthroughCompleted 
-                  ? "bg-my-accent/5 border-my-accent/20 hover:border-my-accent hover:bg-my-accent/10 cursor-pointer" 
-                  : "bg-my-border opacity-30 cursor-not-allowed"
+                  ? "bg-my-accent/5 border-my-accent/20 hover:border-my-accent hover:bg-my-accent/10 text-my-ink" 
+                  : "bg-my-border opacity-30"
               )}
+              icon={<Zap size={10} className="text-my-accent" />}
             >
-               <div className="relative">
-                 <Zap size={10} className="text-my-accent group-hover:scale-110 transition-transform relative z-10" />
-                 <span className="absolute inset-0 rounded-full bg-my-accent/20 blur-sm animate-premium-glow" />
-               </div>
-               <span className="text-[8px] font-black text-my-ink uppercase tracking-widest">COGNAPSE Premium</span>
-            </button>
+              COGNAPSE Premium
+            </Button>
           )}
           {user ? (
             <div className="flex items-center gap-4">
@@ -229,56 +227,57 @@ export default function Navbar() {
                     )}
                   </span>
                </button>
-               <button 
-                 onClick={() => walkthroughCompleted && logout()}
-                 disabled={!walkthroughCompleted}
-                 className={clsx(
-                   "w-8 h-8 flex items-center justify-center rounded-full border border-my-border text-my-muted transition-all bg-my-bg",
-                   walkthroughCompleted ? "hover:ds-text-danger hover:border-red-500/50 cursor-pointer" : "opacity-30 cursor-not-allowed"
-                 )}
-                 title="Terminate Session"
-               >
-                  <X size={14} />
-               </button>
+               <span title="Terminate Session">
+                 <Button
+                   variant="ghost"
+                   onClick={() => walkthroughCompleted && logout()}
+                   disabled={!walkthroughCompleted}
+                   className={clsx(
+                     "w-8 h-8 !rounded-full p-0",
+                     walkthroughCompleted && "hover:!ds-text-danger hover:!border-red-500/50"
+                   )}
+                 >
+                   <X size={14} />
+                 </Button>
+               </span>
             </div>
           ) : (
-            <button 
+            <Button
+              variant="primary"
               onClick={() => walkthroughCompleted && setAuthOpen(true)}
               disabled={!walkthroughCompleted}
               className={clsx(
-                "px-3 py-2 md:px-4 md:py-2 text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 rounded-[2px]",
-                walkthroughCompleted 
-                  ? "bg-my-ink text-my-bg dark:bg-my-accent dark:text-black hover:opacity-90 cursor-pointer" 
-                  : "bg-my-border text-my-muted opacity-40 cursor-not-allowed"
+                "px-3 py-2 md:px-4 md:py-2 text-[9px] font-black tracking-widest rounded-[2px]"
               )}
+              icon={<User size={12} />}
             >
-               <User size={12} /> <span className="hidden sm:inline">Sync Identity</span>
-            </button>
+              <span className="hidden sm:inline">Sync Identity</span>
+            </Button>
           )}
 
           <div className="flex items-center bg-my-bg rounded-[4px] border border-my-border p-1 gap-1 shadow-sm">
-            <button 
-              id="walkthrough-theme-anchor"
-              onClick={toggleTheme}
-              className="w-8 h-8 rounded-[2px] flex items-center justify-center text-my-muted hover:text-my-ink transition-colors cursor-pointer"
-              title="Toggle Neural Mode"
-            >
-               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
+            <span id="walkthrough-theme-anchor" title="Toggle Neural Mode">
+              <Button
+                variant="ghost"
+                onClick={toggleTheme}
+                className="w-8 h-8 p-0 !rounded-[2px]"
+              >
+                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              </Button>
+            </span>
 
-            <button 
-              id="walkthrough-notebook-anchor"
-              onClick={() => setNotebookOpen(!isNotebookOpen)}
-              className={clsx(
-                "w-8 h-8 rounded-[2px] flex items-center justify-center transition-all cursor-pointer",
-                isNotebookOpen 
-                  ? "bg-my-accent text-white shadow-[0_0_15px_var(--my-accent)]" 
-                  : "text-my-muted hover:text-my-ink"
-              )}
-              title="Tactical Notebook"
-            >
-               <BookOpen size={14} />
-            </button>
+            <span id="walkthrough-notebook-anchor" title="Tactical Notebook">
+              <Button
+                variant={isNotebookOpen ? "primary" : "ghost"}
+                onClick={() => setNotebookOpen(!isNotebookOpen)}
+                className={clsx(
+                  "w-8 h-8 p-0 !rounded-[2px]",
+                  isNotebookOpen && "shadow-[0_0_15px_var(--my-accent)]"
+                )}
+              >
+                <BookOpen size={14} />
+              </Button>
+            </span>
           </div>
         </div>
       </nav>

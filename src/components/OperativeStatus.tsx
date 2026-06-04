@@ -14,7 +14,7 @@ import { dbService } from '../services/dbService';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
 import { buildActivityHeatmap } from '../utils/activityHeatmap';
 import { syncAuthSession } from '../services/authSession';
-import { Panel, SectionLabel } from './ui';
+import { Panel, SectionLabel, Button } from './ui';
 
 // ─── Analytics Components ─────────────────────────────────────────────────────
 
@@ -307,46 +307,50 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
         {/* Header / Tabs */}
         <div className="px-8 pt-8 flex items-center justify-between border-b border-my-border bg-my-bg/50 backdrop-blur-md md:backdrop-blur-xl relative z-10">
           <div className="flex gap-8">
-            <button 
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab('overview')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
-                activeTab === 'overview' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
+                "pb-3 md:pb-4 !rounded-none text-xs font-black uppercase tracking-[0.3em]",
+                activeTab === 'overview' ? "text-my-accent !border-0" : "text-my-muted hover:text-my-ink !border-0"
               )}
             >
               01/ Overview
               {activeTab === 'overview' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab('analytics')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
-                activeTab === 'analytics' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
+                "pb-3 md:pb-4 !rounded-none text-xs font-black uppercase tracking-[0.3em]",
+                activeTab === 'analytics' ? "text-my-accent !border-0" : "text-my-muted hover:text-my-ink !border-0"
               )}
             >
               02/ Research Analytics
               {activeTab === 'analytics' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab('exports')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
-                activeTab === 'exports' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
+                "pb-3 md:pb-4 !rounded-none text-xs font-black uppercase tracking-[0.3em]",
+                activeTab === 'exports' ? "text-my-accent !border-0" : "text-my-muted hover:text-my-ink !border-0"
               )}
             >
               03/ My Exports
               {activeTab === 'exports' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setActiveTab('premium')}
               className={clsx(
-                "pb-3 md:pb-4 min-touch text-xs font-black uppercase tracking-[0.3em] transition-all relative",
-                activeTab === 'premium' ? "text-my-accent" : "text-my-muted hover:text-my-ink"
+                "pb-3 md:pb-4 !rounded-none text-xs font-black uppercase tracking-[0.3em]",
+                activeTab === 'premium' ? "text-my-accent !border-0" : "text-my-muted hover:text-my-ink !border-0"
               )}
             >
               04/ Premium
               {activeTab === 'premium' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-my-accent" />}
-            </button>
+            </Button>
           </div>
           <button 
             onClick={onClose}
@@ -555,18 +559,19 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     {pdfExports && pdfExports.length > 0 && (
-                      <button
+                      <Button
+                        variant="danger"
                         onClick={() => {
                           if (!window.confirm('Delete ALL exported PDFs? This cannot be undone.')) return;
                           setClearingExports(true);
                           clearExports().finally(() => setClearingExports(false));
                         }}
                         disabled={clearingExports}
-                        className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ds-text-danger/70 hover:ds-text-danger transition-colors px-2 py-1 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 disabled:opacity-40"
+                        className="px-2 py-1 text-[9px] font-black"
+                        icon={<Trash2 size={10} />}
                       >
-                        <Trash2 size={10} />
                         {clearingExports ? 'Clearing…' : 'Delete All'}
-                      </button>
+                      </Button>
                     )}
                     <div className="flex items-center gap-2 text-[10px] text-my-accent font-mono uppercase bg-my-accent/5 px-3 py-1 border border-my-accent/10">
                       <FileText size={12} />
@@ -612,21 +617,15 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                               <Trash2 size={12} />
                             )}
                           </button>
-                          <button
+                          <Button
+                            variant="ghost"
                             onClick={() => handleRedownload(exp)}
                             disabled={downloadingId === exp.id}
-                            className="px-4 py-2 border border-my-border hover:border-my-accent text-[9px] font-black uppercase tracking-widest text-my-ink hover:text-my-accent transition-all flex items-center gap-2 justify-center bg-my-bg disabled:opacity-50"
+                            className="px-4 py-2 text-[9px] font-black uppercase tracking-widest"
+                            icon={downloadingId === exp.id ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
                           >
-                            {downloadingId === exp.id ? (
-                              <>
-                                <Loader2 size={12} className="animate-spin" /> Packaging...
-                              </>
-                            ) : (
-                              <>
-                                <Download size={12} /> Get PDF
-                              </>
-                            )}
-                          </button>
+                            {downloadingId === exp.id ? 'Packaging...' : 'Get PDF'}
+                          </Button>
                         </div>
                       </div>
                     ))}

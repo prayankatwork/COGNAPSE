@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import ForceGraph2D from 'react-force-graph-2d';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2, Cpu, Zap, Maximize2, Minimize2, Anchor, Filter, Target, Share2, Layers } from 'lucide-react';
+import { Button } from './ui';
 import { executeQuickInfo } from '../services/geminiService';
 import { useStore } from '../store';
 import { getSignalColor } from '../utils/brandColors';
@@ -208,29 +209,30 @@ export default function PhysicsMap({
         
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <button 
+            <Button
+              variant="ghost"
               onClick={() => setFilterMode(f => f === 'all' ? 'high' : 'all')}
-              className={`flex items-center gap-1.5 px-2 py-1 text-[9px] font-bold uppercase transition-all border ${
-                filterMode === 'high' ? 'bg-my-accent text-white dark:text-black border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
+              className={`px-2 py-1 text-[9px] font-bold !rounded-none ${
+                filterMode === 'high' ? '!bg-my-accent !text-white dark:!text-black !border-my-accent' : '!text-my-muted !border-my-border hover:!border-my-accent'
               }`}
+              icon={<Filter size={10} />}
             >
-              <Filter size={10} /> {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
-            </button>
+              {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
+            </Button>
           )}
           <div className="w-px h-4 bg-my-border mx-1" />
-          <button 
+          <Button
+            variant="ghost"
             onClick={() => fgRef.current?.zoomToFit(500)}
-            className="p-1.5 text-my-muted hover:text-my-accent transition-colors"
-            title="Auto-Fit"
-          >
-            <Target size={14} />
-          </button>
-          <button 
+            className="p-1.5 !rounded-none"
+            icon={<Target size={14} />}
+          ><></></Button>
+          <Button
+            variant="ghost"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 text-my-muted hover:text-my-accent transition-colors"
-          >
-            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
+            className="p-1.5 !rounded-none"
+            icon={isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          ><></></Button>
         </div>
       </div>
 
@@ -394,7 +396,8 @@ export default function PhysicsMap({
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button 
+                  <Button
+                    variant="primary"
                     onClick={() => {
                       if (readOnly) return;
                       onSubSearch(selectedNode.sub_query || selectedNode.name);
@@ -403,10 +406,11 @@ export default function PhysicsMap({
                       setTimeout(() => setShowScrollMessage(false), 5000);
                     }}
                     disabled={readOnly}
-                    className="col-span-2 bg-my-accent text-white dark:text-black py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="col-span-2 py-4 px-4 text-[10px] font-bold !rounded-none hover:!bg-my-ink"
+                    icon={<Target size={16} />}
                   >
-                    <Target size={16} /> {readOnly ? "Read Only Snapshot" : "Execute Research"}
-                  </button>
+                    {readOnly ? "Read Only Snapshot" : "Execute Research"}
+                  </Button>
 
                 </div>
               </div>

@@ -103,12 +103,12 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
         className="w-full max-w-md bg-my-bg border border-my-border shadow-2xl relative overflow-hidden rounded-[4px]"
       >
         {/* Close Button */}
-        <button 
+        <Button 
+          variant="ghost"
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-my-muted hover:text-my-accent transition-colors"
-        >
-          <X size={20} />
-        </button>
+          className="absolute top-6 right-6 p-2"
+          icon={<X size={20} />}
+        ><></></Button>
 
         <div className="p-10">
           <div className="flex items-center justify-between mb-8">
@@ -205,12 +205,13 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
              <p className="text-[10px] text-my-muted uppercase tracking-widest mb-4">
                 {isRegister ? 'Already have an active account?' : 'New user requiring access?'}
              </p>
-             <button 
+             <Button 
+               variant="ghost"
                onClick={() => setIsRegister(!isRegister)}
-               className="text-[10px] font-black text-my-accent uppercase tracking-[0.3em] hover:opacity-70 transition-opacity"
+               className="text-[10px] font-black hover:opacity-70 h-auto py-1"
              >
                 {isRegister ? 'Switch to Login' : 'Create User Account'}
-             </button>
+             </Button>
           </div>
         </div>
 

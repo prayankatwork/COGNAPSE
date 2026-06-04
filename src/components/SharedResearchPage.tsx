@@ -1,4 +1,4 @@
-import { SectionLabel } from './ui';
+import { SectionLabel, Button } from './ui';
 import { useEffect, useState } from 'react';
 import { AlertCircle, AlertTriangle, Calendar, FlaskConical, Loader2, ShieldCheck, Flag, X } from 'lucide-react';
 import { useStore } from '../store';
@@ -153,12 +153,14 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
       {/* Abuse Report Button */}
       <div className="max-w-5xl mx-auto px-6 pb-8">
         <div className="border-t border-my-border pt-6 mt-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowAbuseDialog(true)}
-            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted hover:ds-text-danger transition-colors"
+            className="text-[10px] hover:ds-text-danger"
+            icon={<Flag size={12} />}
           >
-            <Flag size={12} /> Report This Content
-          </button>
+            Report This Content
+          </Button>
         </div>
       </div>
 
@@ -168,9 +170,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
           <div className="bg-my-bg border border-my-border p-6 max-w-md w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-my-ink uppercase tracking-widest">Report Content</h3>
-              <button onClick={() => setShowAbuseDialog(false)} className="text-my-muted hover:text-my-ink">
-                <X size={16} />
-              </button>
+              <Button variant="ghost" onClick={() => setShowAbuseDialog(false)} className="p-1" icon={<X size={16} />}><></></Button>
             </div>
             <p className="text-xs text-my-muted mb-4 leading-relaxed">
               Help us keep the platform safe. Describe the issue with this shared research content.
@@ -182,19 +182,21 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
               className="w-full bg-my-sidebar border border-my-border text-sm text-my-ink p-3 mb-4 h-24 resize-none focus:outline-none focus:border-my-accent"
             />
             <div className="flex gap-3 justify-end">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setShowAbuseDialog(false)}
-                className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-my-muted border border-my-border hover:bg-my-sidebar transition-colors"
+                className="text-[10px]"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={submitAbuseReport}
                 disabled={!abuseReason.trim()}
-                className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="text-[10px] bg-red-600 hover:bg-red-700 text-white border-0"
               >
                 Submit Report
-              </button>
+              </Button>
             </div>
             {abuseSubmitted && (
               <p className="mt-3 text-[11px] ds-text-success font-medium">Report submitted. Thank you.</p>

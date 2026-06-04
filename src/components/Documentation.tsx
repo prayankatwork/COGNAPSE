@@ -5,6 +5,7 @@ import {
   Scale, AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
+import { Button } from './ui';
 import PlatformDocs from './archive/PlatformDocs';
 import TechnicalDocs from './archive/TechnicalDocs';
 import LegalDocs from './archive/LegalDocs';
@@ -176,18 +177,17 @@ export default function Documentation() {
               filteredArchiveMap.map((section) => (
                 <div key={section.key} className="space-y-3">
                   {/* Parent Category */}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setActiveTab(section.key)}
                     className={clsx(
-                      "w-full text-left flex items-center gap-3 transition-colors group",
-                      (activeTab === section.key || searchQuery) ? "text-my-ink" : "text-my-muted hover:text-my-ink"
+                      "w-full text-left !rounded-none p-2 text-xs font-bold uppercase tracking-widest",
+                      (activeTab === section.key || searchQuery) ? "text-my-ink !border-0" : "text-my-muted hover:text-my-ink !border-0"
                     )}
+                    icon={<span className={(activeTab === section.key || searchQuery) ? "text-my-accent" : "opacity-50"}>{section.icon}</span>}
                   >
-                    <span className={clsx("transition-transform", (activeTab === section.key || searchQuery) ? "text-my-accent" : "opacity-50")}>
-                      {section.icon}
-                    </span>
-                    <span className="text-xs font-bold uppercase tracking-widest">{section.title}</span>
-                  </button>
+                    {section.title}
+                  </Button>
 
                   {/* Subsections (Nested) */}
                   <AnimatePresence>

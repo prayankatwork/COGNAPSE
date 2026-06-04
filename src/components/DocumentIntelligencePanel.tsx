@@ -18,6 +18,8 @@ import { useStore } from '../store';
 import DocumentUploadZone from './DocumentUploadZone';
 import DocumentLibrary from './DocumentLibrary';
 import DocumentQueryPanel from './DocumentQueryPanel';
+import clsx from 'clsx';
+import { Button } from './ui';
 import {
   uploadDocument,
   listDocuments,
@@ -257,33 +259,37 @@ export default function DocumentIntelligencePanel() {
 
       {/* Tab navigation */}
       <div className="flex border-b border-my-border">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setActiveTab('upload')}
-          className={`flex items-center gap-1.5 px-4 py-2 text-[9px] font-bold uppercase tracking-wider transition-colors border-b-2 ${
+          className={clsx(
+            "!rounded-none px-4 py-2 text-[9px] font-bold uppercase tracking-wider border-b-2",
             activeTab === 'upload'
-              ? 'border-my-accent text-my-accent'
-              : 'border-transparent text-my-muted hover:text-my-ink hover:border-my-muted/30'
-          }`}
+              ? '!border-my-accent !text-my-accent'
+              : '!border-transparent !text-my-muted hover:!text-my-ink hover:!border-my-muted/30'
+          )}
+          icon={<Upload size={12} />}
         >
-          <Upload size={12} />
           Upload & Manage
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => setActiveTab('query')}
-          className={`flex items-center gap-1.5 px-4 py-2 text-[9px] font-bold uppercase tracking-wider transition-colors border-b-2 ${
+          className={clsx(
+            "!rounded-none px-4 py-2 text-[9px] font-bold uppercase tracking-wider border-b-2",
             activeTab === 'query'
-              ? 'border-my-accent text-my-accent'
-              : 'border-transparent text-my-muted hover:text-my-ink hover:border-my-muted/30'
-          }`}
+              ? '!border-my-accent !text-my-accent'
+              : '!border-transparent !text-my-muted hover:!text-my-ink hover:!border-my-muted/30'
+          )}
+          icon={<MessageSquare size={12} />}
         >
-          <MessageSquare size={12} />
           Intelligence Query
           {indexedCount > 0 && (
             <span className="ml-1 text-[7px] px-1 py-0.5 bg-emerald-500/10 ds-text-success rounded-sm">
               {indexedCount}
             </span>
           )}
-        </button>
+        </Button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -306,18 +312,17 @@ export default function DocumentIntelligencePanel() {
 
             {/* Document library with toggle */}
             <div className="border border-my-border">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                className="w-full flex items-center gap-2 p-3 bg-my-callout hover:bg-my-callout/80 transition-colors"
+                className="w-full !rounded-none p-3 text-[10px] font-bold uppercase tracking-wider !justify-start"
+                icon={isLibraryOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               >
-                {isLibraryOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                <span className="text-[10px] font-bold text-my-ink uppercase tracking-wider">
-                  Document Vault
-                </span>
+                Document Vault
                 <span className="text-[8px] text-my-muted ml-auto">
                   {documents.length} file{documents.length !== 1 ? 's' : ''}
                 </span>
-              </button>
+              </Button>
 
               <AnimatePresence>
                 {isLibraryOpen && (
@@ -387,15 +392,14 @@ export default function DocumentIntelligencePanel() {
 
                     {/* Process button for ready text files */}
                     {selectedDoc.status === 'ready' && selectedDoc.documentType === 'txt' && (
-                      <button
-                        onClick={() => {
-                          setActiveTab('query');
-                        }}
-                        className="flex items-center gap-1 px-2 py-1 text-[8px] font-bold text-my-accent uppercase tracking-widest border border-my-accent/20 hover:bg-my-accent/10 transition-colors rounded-sm"
-                      >
-                        <BrainCircuit size={10} />
-                        Process for Query
-                      </button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setActiveTab('query')}
+                      className="px-2 py-1 text-[8px] font-bold !rounded-sm"
+                      icon={<BrainCircuit size={10} />}
+                    >
+                      Process for Query
+                    </Button>
                     )}
                   </div>
                 </motion.div>
@@ -422,13 +426,14 @@ export default function DocumentIntelligencePanel() {
                 <p className="text-[8px] text-my-muted/90">
                   Upload documents in the Upload tab first, then process text files to enable intelligence querying.
                 </p>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setActiveTab('upload')}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-[9px] font-bold text-my-accent uppercase tracking-wider border border-my-accent/20 hover:bg-my-accent/10 transition-colors rounded-sm"
+                  className="px-3 py-1.5 text-[9px] font-bold !rounded-sm"
+                  icon={<Upload size={10} />}
                 >
-                  <Upload size={10} />
                   Go to Upload
-                </button>
+                </Button>
               </div>
             ) : (
               <DocumentQueryPanel

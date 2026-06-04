@@ -284,19 +284,20 @@ export default function ReportView({
               >
                 Share
               </Button>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowAllTools(!showAllTools)}
                 className={clsx(
-                  "px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-all border flex items-center gap-1.5",
+                  "px-3 py-2.5 text-[9px] rounded-none",
                   showAllTools
                     ? "border-my-accent bg-my-accent/10 text-my-accent"
-                    : "border-my-border bg-my-callout text-my-muted hover:text-my-ink hover:border-my-accent"
+                    : "text-my-muted hover:text-my-ink hover:border-my-accent"
                 )}
+                icon={<FileText size={11} />}
               >
-                <FileText size={11} />
                 Tools
                 <span className={`text-[7px] transition-transform ${showAllTools ? 'rotate-180' : ''}`}>▼</span>
-              </button>
+              </Button>
             </div>
           )}
 
@@ -373,30 +374,18 @@ export default function ReportView({
 
           <div className="flex-1" />
 
-          <button
+          <Button
+            variant="primary"
             onClick={handleDownloadPDF}
             disabled={generatingPDF}
             className={clsx(
-              "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2",
-              isUnlocked 
-                ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
-                : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
+              "px-5 py-2.5 text-[9px] font-black shadow-lg hover:scale-105",
+              isUnlocked && "bg-green-600 hover:bg-green-700 text-white"
             )}
+            icon={generatingPDF ? <Loader2 size={12} className="animate-spin" /> : isUnlocked ? <Download size={12} /> : <Lock size={12} />}
           >
-            {generatingPDF ? (
-              <>
-                <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
-              </>
-            ) : isUnlocked ? (
-              <>
-                <Download size={12} /> Premium Report
-              </>
-            ) : (
-              <>
-                <Lock size={12} /> Unlock Full Report
-              </>
-            )}
-          </button>
+            {generatingPDF ? "Compiling Dossier..." : isUnlocked ? "Premium Report" : "Unlock Full Report"}
+          </Button>
         </div>
 
         {/* Share link — appears right after the action bar when generated */}
@@ -406,13 +395,14 @@ export default function ReportView({
               <Eye size={14} className="text-my-accent shrink-0" />
               <span className="text-[10px] font-bold text-my-muted uppercase tracking-widest shrink-0">Read-only link copied</span>
               <span className="text-[11px] text-my-ink truncate">{shareLink}</span>
-            </div>
-            <button
-              onClick={() => navigator.clipboard?.writeText(shareLink)}
-              className="text-[9px] font-black uppercase tracking-widest text-my-accent flex items-center gap-1.5"
-            >
-              <Copy size={11} /> Copy
-            </button>
+            </div>              <Button
+                variant="ghost"
+                onClick={() => navigator.clipboard?.writeText(shareLink)}
+                className="p-0 !border-0 !gap-1.5 !rounded-none text-[9px] font-black uppercase tracking-widest text-my-accent"
+                icon={<Copy size={11} />}
+              >
+                Copy
+              </Button>
           </div>
         )}
 
@@ -881,14 +871,15 @@ export default function ReportView({
           <SectionLabel>Investigate Further</SectionLabel>
           <div className="flex flex-wrap gap-2 mt-3">
             {normalizedSuggestions.map((f: string, i: number) => (
-              <button 
-                key={i} 
+              <Button
+                key={i}
+                variant="ghost"
                 onClick={() => !readOnly && (onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f))}
                 disabled={readOnly}
-                className="bg-my-bg border border-my-border hover:border-my-accent text-[12px] text-my-ink py-2.5 md:py-1.5 px-3 transition-colors flex items-center gap-2"
+                className="bg-my-bg py-2.5 md:py-1.5 px-3 text-[12px] text-my-ink hover:border-my-accent"
               >
                 {safeText(f)} <ArrowRight size={12} className="opacity-50" />
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -977,12 +968,13 @@ export default function ReportView({
                 >
                   <ExternalLink size={10} /> Open in New Tab
                 </a>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setLiveSource(null)}
-                  className="px-3 py-2 border border-my-border text-[9px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors"
+                  className="px-3 py-2 text-[9px] uppercase tracking-widest"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>

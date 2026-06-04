@@ -6,6 +6,7 @@ import { stripCitationMarkers } from '../utils/citations';
 import ResearchScoreCard from './ResearchScoreCard';
 import PremiumExportModal from './PremiumExportModal';
 import { generatePremiumPDF } from '../utils/pdfGenerator';
+import { Button } from './ui';
 import clsx from 'clsx';
 
 export default function DeepResearchView() {
@@ -93,51 +94,40 @@ export default function DeepResearchView() {
         </div>
 
         <div className="flex flex-col gap-1 items-end shrink-0 self-stretch md:self-auto">
-          <button
+          <Button
+            variant="primary"
             onClick={handleDownloadPDF}
             disabled={generatingPDF}
             className={clsx(
-              "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2",
-              isUnlocked 
-                ? "bg-green-600 hover:bg-green-700 text-white dark:text-white hover:scale-105" 
-                : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
+              "px-5 py-2.5 text-[9px] font-black shadow-lg hover:scale-105",
+              isUnlocked && "bg-green-600 hover:bg-green-700 text-white dark:text-white"
             )}
+            icon={generatingPDF ? <Loader2 size={12} className="animate-spin" /> : isUnlocked ? <Download size={12} /> : <Lock size={12} />}
           >
-            {generatingPDF ? (
-              <>
-                <Loader2 size={12} className="animate-spin" /> Compiling Dossier...
-              </>
-            ) : isUnlocked ? (
-              <>
-                <Download size={12} /> Generate Premium Intelligence Report
-              </>
-            ) : (
-              <>
-                <Lock size={12} /> Unlock Full Report
-              </>
-            )}
-          </button>
+            {generatingPDF ? "Compiling Dossier..." : isUnlocked ? "Generate Premium Intelligence Report" : "Unlock Full Report"}
+          </Button>
         </div>
       </div>
 
       <div className="space-y-4">
         {sections.map((section) => (
           <div key={section.id} className="border border-my-border bg-my-callout shadow-sm overflow-hidden">
-            <button 
+            <Button
+              variant="ghost"
               onClick={() => toggleSection(section.id)}
-              className="w-full px-4 py-3 md:px-6 md:py-4 flex items-center justify-between hover:bg-my-callout/80 transition-colors text-left"
+              className="w-full px-4 py-3 md:px-6 md:py-4 !justify-between !rounded-none !border-0 text-left"
             >
-              <h3 className="text-sm font-bold uppercase tracking-widest text-my-ink flex items-center gap-3">
+              <span className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-my-ink">
                 <span className="text-my-accent opacity-50 font-mono">
                   {expandedSections[section.id] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </span>
                 {section.title}
-              </h3>
+              </span>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-bold text-my-muted uppercase tracking-tighter">Verified</span>
                 <CheckCircle2 size={12} className="ds-text-success" />
               </div>
-            </button>
+            </Button>
             {expandedSections[section.id] && (
               <div className="px-4 pb-6 pt-2 md:px-10 md:pb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="text-[14px] leading-[1.7] text-my-syn whitespace-pre-wrap max-w-[65ch]">
@@ -160,18 +150,19 @@ export default function DeepResearchView() {
       </div>
 
       <div className="mt-12 flex justify-center">
-        <button 
+        <Button
+          variant="ghost"
           onClick={() => walkthroughCompleted && resetDeepResearch()}
           disabled={!walkthroughCompleted}
           className={clsx(
-            "px-6 py-3 border text-[11px] font-bold uppercase tracking-widest transition-all",
+            "px-6 py-3 text-[11px] rounded-none",
             walkthroughCompleted 
-              ? "border-my-border text-my-muted hover:text-my-ink hover:border-my-accent cursor-pointer" 
-              : "border-my-border/50 text-my-muted/50 cursor-not-allowed"
+              ? "hover:text-my-ink hover:border-my-accent" 
+              : ""
           )}
         >
           {walkthroughCompleted ? "Back to Main Dashboard" : "Lockout Active (Training)"}
-        </button>
+        </Button>
       </div>
 
       <PremiumExportModal 

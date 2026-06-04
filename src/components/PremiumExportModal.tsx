@@ -355,15 +355,16 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                       <AlertCircle size={14} />
                       <span className="text-[10px] font-bold uppercase tracking-wider">Authentication Required</span>
                     </div>
-                    <button 
+                    <Button
+                      variant="danger"
                       onClick={() => {
                         onClose();
                         setAuthOpen(true);
                       }}
-                      className="px-3 py-1 bg-red-500 text-white text-[9px] font-bold uppercase tracking-wider hover:bg-red-600 transition-colors"
+                      className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider !bg-red-500 !text-white hover:!bg-red-600 !border-red-500/30"
                     >
                       Login / Register
-                    </button>
+                    </Button>
                   </div>
                 )}
 

@@ -337,29 +337,31 @@ function ClearAllButton() {
   if (archive.length === 0) return null;
 
   return (
-    <button 
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!walkthroughCompleted) return;
-        if (confirming) {
-          clearArchive();
-          setConfirming(false);
-        } else {
-          setConfirming(true);
-          setTimeout(() => setConfirming(false), 3000);
-        }
-      }}
-      disabled={!walkthroughCompleted}
-      className={clsx(
-        "px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] transition-all border",
-        !walkthroughCompleted && "opacity-30 cursor-not-allowed",
-        confirming 
-          ? "bg-red-500 text-white border-red-500 animate-pulse" 
-          : "text-my-muted border-my-border hover:border-red-500/50 hover:ds-text-danger"
-      )}
-    >
-      {confirming ? "CONFIRM PURGE?" : "CLEAR ALL"}
-    </button>
+    <div onClick={(e) => e.stopPropagation()}>
+      <Button
+        variant="ghost"
+        onClick={() => {
+          if (!walkthroughCompleted) return;
+          if (confirming) {
+            clearArchive();
+            setConfirming(false);
+          } else {
+            setConfirming(true);
+            setTimeout(() => setConfirming(false), 3000);
+          }
+        }}
+        disabled={!walkthroughCompleted}
+        className={clsx(
+          "px-2 py-1 text-[8px] !rounded-none",
+          !walkthroughCompleted && "opacity-30",
+          confirming 
+            ? "bg-red-500 text-white border-red-500 animate-pulse" 
+            : "text-my-muted border-my-border hover:border-red-500/50 hover:!ds-text-danger"
+        )}
+      >
+        {confirming ? "CONFIRM PURGE?" : "CLEAR ALL"}
+      </Button>
+    </div>
   );
 }
 

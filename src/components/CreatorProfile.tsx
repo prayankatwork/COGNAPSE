@@ -1,5 +1,5 @@
 import React from 'react';
-import { SectionLabel } from './ui';
+import { SectionLabel, Panel } from './ui';
 import {
   Fingerprint, Shield, Cpu, Zap,
   Terminal, Globe, Github, Linkedin,
@@ -66,7 +66,7 @@ export default function CreatorProfile() {
             </p>
           </section>
 
-          <section className="bg-my-callout/40 backdrop-blur-md border border-my-border p-8 relative overflow-hidden">
+          <Panel className="!rounded-none bg-my-callout/40 p-8 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-my-accent/50 to-transparent" />
              <div className="flex items-center gap-3 mb-8">
                 <Award size={18} className="text-my-accent" />
@@ -87,7 +87,7 @@ export default function CreatorProfile() {
                   </div>
                 ))}
              </div>
-          </section>
+          </Panel>
         </div>
 
         {/* Tactical Info Sidebar */}

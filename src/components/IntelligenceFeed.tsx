@@ -223,40 +223,40 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
         status={<StatusDot state={syncStatus.state} label={syncStatus.label} />}
         actions={
           <>
-            <button
+            <Button
+              variant="ghost"
               onClick={handleManualRefresh}
               disabled={loading}
-              className="p-3 border border-my-border rounded-[4px] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
-              title="Refresh Signals"
-              type="button"
-            >
-              <RefreshCw size={16} className={clsx(loading && 'animate-spin')} />
-            </button>
+              className="p-3 !rounded-[4px]"
+              icon={<RefreshCw size={16} className={clsx(loading && 'animate-spin')} />}
+            ><></></Button>
             <div className="flex items-center gap-2 p-1 bg-my-border/30 rounded-[4px]">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={() => setActiveTab('feed')}
                 className={clsx(
-                  'px-6 py-2 text-xs font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  'px-6 py-2 text-xs font-black !rounded-[2px]',
                   activeTab === 'feed'
-                    ? 'bg-my-accent text-white dark:text-black shadow-accent'
-                    : 'text-my-muted hover:text-my-ink'
+                    ? '!bg-my-accent !text-white dark:!text-black shadow-accent'
+                    : '!text-my-muted hover:!text-my-ink !bg-transparent'
                 )}
+                icon={<ListIcon size={14} />}
               >
-                <ListIcon size={14} /> Live Feed
-              </button>
-              <button
-                type="button"
+                Live Feed
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => setActiveTab('subscriptions')}
                 className={clsx(
-                  'px-6 py-2 text-xs font-black uppercase tracking-widest transition-all rounded-[2px] flex items-center gap-2',
+                  'px-6 py-2 text-xs font-black !rounded-[2px]',
                   activeTab === 'subscriptions'
-                    ? 'bg-my-accent text-white dark:text-black shadow-accent'
-                    : 'text-my-muted hover:text-my-ink'
+                    ? '!bg-my-accent !text-white dark:!text-black shadow-accent'
+                    : '!text-my-muted hover:!text-my-ink !bg-transparent'
                 )}
+                icon={<LayoutGrid size={14} />}
               >
-                <LayoutGrid size={14} /> Subscriptions
-              </button>
+                Subscriptions
+              </Button>
             </div>
           </>
         }

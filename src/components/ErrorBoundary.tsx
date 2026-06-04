@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { trackOperationalEvent } from '../services/opsTelemetry';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from './ui';
 import clsx from 'clsx';
 
 interface Props {
@@ -53,15 +54,14 @@ export default class ErrorBoundary extends Component<Props, State> {
             {this.props.name ? `"${this.props.name}" encountered an error.` : 'This section encountered an unexpected error.'}
             {' '}The rest of the app is unaffected.
           </p>
-          <button
+          <Button
+            variant="primary"
             onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
-            className="flex items-center gap-2 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em]
-                       bg-my-ink text-my-bg dark:bg-my-accent dark:text-black
-                       hover:scale-105 transition-all rounded-sm"
+            className="hover:scale-105 rounded-sm"
+            icon={<RefreshCw size={12} />}
           >
-            <RefreshCw size={12} />
             Reload Section
-          </button>
+          </Button>
         </div>
       );
     }

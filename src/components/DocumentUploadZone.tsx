@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, AlertCircle, Loader2, X, Image, File } from 'lucide-react';
+import { Button } from './ui';
 import { formatFileSize } from '../services/documentService';
 
 interface DocumentUploadZoneProps {
@@ -145,15 +146,16 @@ export default function DocumentUploadZone({
                 <p className="text-[11px] font-bold text-my-ink">{previewFile.name}</p>
                 <p className="text-[9px] text-my-muted">{formatFileSize(previewFile.size)}</p>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPreviewFile(null);
-                }}
-                className="text-[9px] text-my-muted hover:ds-text-danger transition-colors flex items-center gap-1"
-              >
-                <X size={10} /> Clear
-              </button>
+              <div onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setPreviewFile(null)}
+                  className="text-[9px] hover:ds-text-danger"
+                  icon={<X size={10} />}
+                >
+                  Clear
+                </Button>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -206,9 +208,7 @@ export default function DocumentUploadZone({
           >
             <AlertCircle size={12} className="ds-text-danger shrink-0 mt-0.5" />
             <p className="text-[10px] ds-text-danger flex-1 leading-relaxed">{error ? String(error) : ''}</p>
-            <button onClick={onDismissError} className="ds-text-danger/50 hover:ds-text-danger">
-              <X size={12} />
-            </button>
+            <Button variant="ghost" onClick={() => onDismissError()} className="ds-text-danger/50 hover:ds-text-danger p-1" icon={<X size={12} />}><></></Button>
           </motion.div>
         )}
       </AnimatePresence>

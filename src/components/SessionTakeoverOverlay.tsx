@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ban } from 'lucide-react';
+import { Button } from './ui';
 
 interface SessionTakeoverOverlayProps {
   visible: boolean;
@@ -35,12 +36,13 @@ export default function SessionTakeoverOverlay({ visible }: SessionTakeoverOverl
             <p className="text-xs text-my-muted/80 leading-relaxed mb-10">
               This session is now inactive. The new tab has control of your active session.
             </p>
-            <button
+            <Button
+              variant="primary"
               onClick={() => window.location.href = '/'}
-              className="px-12 py-4 bg-my-ink text-my-bg dark:bg-my-accent dark:text-black text-xs font-black uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl"
+              className="px-12 py-4 text-xs hover:scale-105 shadow-2xl"
             >
               Return to Home
-            </button>
+            </Button>
           </motion.div>
         </motion.div>
       )}

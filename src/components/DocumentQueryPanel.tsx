@@ -17,6 +17,7 @@ import {
 import type { DocumentRecord, RagAnswer } from '../types';
 import { getRagAnswer, processDocument } from '../services/documentRagService';
 import { extractDocumentText } from '../services/documentService';
+import { Button } from './ui';
 import { useStore } from '../store';
 
 /** Safely convert an unknown error to a displayable string */
@@ -283,21 +284,17 @@ export default function DocumentQueryPanel({
                   ) : doc.status === 'error' ? (
                     <span className="text-[7px] ds-text-danger uppercase tracking-widest">Error</span>
                   ) : canProcess ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProcessDocument(doc);
-                      }}
-                      disabled={isProcessingThis}
-                      className="flex items-center gap-1 px-1.5 py-0.5 text-[7px] font-bold text-my-accent uppercase tracking-widest border border-my-accent/20 hover:bg-my-accent/10 transition-colors rounded-sm"
-                    >
-                      {isProcessingThis ? (
-                        <Loader2 size={7} className="animate-spin" />
-                      ) : (
-                        <BrainCircuit size={7} />
-                      )}
-                      Process
-                    </button>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleProcessDocument(doc)}
+                        disabled={isProcessingThis}
+                        className="px-1.5 py-0.5 text-[7px] font-bold !rounded-sm"
+                        icon={isProcessingThis ? <Loader2 size={7} className="animate-spin" /> : <BrainCircuit size={7} />}
+                      >
+                        Process
+                      </Button>
+                    </div>
                   ) : (
                     <span className="text-[7px] text-my-muted/70 uppercase tracking-widest">
                       {doc.documentType.toUpperCase()}
@@ -481,17 +478,13 @@ export default function DocumentQueryPanel({
                 </button>
               )}
             </div>
-            <button
+            <Button
+              variant="primary"
               onClick={handleSubmitQuery}
               disabled={!query.trim() || selectedDocIds.size === 0 || isAnswering}
-              className="p-2 bg-my-accent text-white dark:text-black rounded-sm hover:bg-my-accent/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {isAnswering ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
-            </button>
+              className="p-2 !rounded-sm"
+              icon={isAnswering ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            ><></></Button>
           </div>
 
           {/* Bottom metadata */}
@@ -500,12 +493,13 @@ export default function DocumentQueryPanel({
               {indexedDocs.length} indexed &middot; {selectedDocIds.size} selected
             </span>
             {chatHistory.length > 0 && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={clearChat}
-                className="text-[7px] text-my-muted hover:text-my-ink uppercase tracking-widest transition-colors"
+                className="!rounded-none !border-0 text-[7px] font-bold uppercase tracking-widest p-0 h-auto"
               >
                 Clear chat
-              </button>
+              </Button>
             )}
           </div>
         </div>
