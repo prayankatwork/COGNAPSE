@@ -26,7 +26,7 @@ export function StatusDot({
         <span
           className={clsx(
             'text-[9px] font-bold uppercase tracking-widest',
-            state === 'error' ? 'text-red-500/80' : 'text-my-muted'
+            state === 'error' ? 'ds-text-danger/80' : 'text-my-muted'
           )}
         >
           {label}

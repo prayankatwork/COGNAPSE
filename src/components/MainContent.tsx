@@ -918,8 +918,8 @@ export default function MainContent() {
                   !currentReport
                     ? "text-my-accent border-my-accent/30 bg-my-accent/5"
                     : !walkthroughCompleted
-                    ? "text-amber-500 border-amber-500/30 bg-amber-500/5"
-                    : "text-green-600 border-green-600/30 bg-green-600/5"
+                    ? "ds-text-warning border-amber-500/30 bg-amber-500/5"
+                    : "ds-text-success border-green-600/30 bg-green-600/5"
                 )}>
                   {!currentReport ? 'New Research' : !walkthroughCompleted ? 'Locked' : 'Follow-up Chat'}
                 </span>

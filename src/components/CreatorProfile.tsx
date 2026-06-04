@@ -1,4 +1,5 @@
 import React from 'react';
+import { SectionLabel } from './ui';
 import {
   Fingerprint, Shield, Cpu, Zap,
   Terminal, Globe, Github, Linkedin,
@@ -24,7 +25,7 @@ export default function CreatorProfile() {
 
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-[1px] bg-my-accent" />
-          <span className="text-xs font-black uppercase tracking-[0.3em] text-my-accent">System Architect Profile</span>
+          <SectionLabel className="!text-xs !text-my-accent">System Architect Profile</SectionLabel>
         </div>
 
         <h1 className="text-6xl md:text-8xl font-serif font-bold tracking-tighter leading-none italic mb-8">
@@ -56,7 +57,7 @@ export default function CreatorProfile() {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <Terminal size={18} className="text-my-accent" />
-              <h2 className="text-xs font-black uppercase tracking-[0.3em]">Mission Dossier</h2>
+              <SectionLabel>Mission Dossier</SectionLabel>
             </div>
             <p className="text-xl md:text-2xl font-light text-my-ink leading-relaxed font-serif italic">
               "A passionate and innovation-driven developer focused on building intelligent, user-centric digital solutions. 
@@ -69,7 +70,7 @@ export default function CreatorProfile() {
              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-my-accent/50 to-transparent" />
              <div className="flex items-center gap-3 mb-8">
                 <Award size={18} className="text-my-accent" />
-                <h2 className="text-xs font-black uppercase tracking-[0.3em]">Core Philosophy</h2>
+                <SectionLabel>Core Philosophy</SectionLabel>
              </div>
              <p className="text-sm text-my-muted leading-relaxed mb-8">
                Strong foundation in computer applications with hands-on experience in developing both web and desktop-based 
@@ -94,7 +95,7 @@ export default function CreatorProfile() {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <Users size={18} className="text-my-accent" />
-              <h2 className="text-xs font-black uppercase tracking-[0.3em]">Leadership & Context</h2>
+              <SectionLabel>Leadership & Context</SectionLabel>
             </div>
             <div className="space-y-6">
                <div className="border-l-2 border-my-border pl-6 py-2">
@@ -115,7 +116,7 @@ export default function CreatorProfile() {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <Globe size={18} className="text-my-accent" />
-              <h2 className="text-xs font-black uppercase tracking-[0.3em]">Network Links</h2>
+              <SectionLabel>Network Links</SectionLabel>
             </div>
             <div className="flex flex-col gap-4">
                <a href="https://www.linkedin.com/in/prayank-patnaik-b20243383/" target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-my-bg border border-my-border hover:border-my-accent transition-all group">

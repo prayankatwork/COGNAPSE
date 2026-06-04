@@ -185,7 +185,7 @@ export default function AuthPortal({ onClose }: { onClose: () => void }) {
              )}
 
              {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest">
+                <div className="p-4 bg-red-500/10 border border-red-500/20 ds-text-danger text-[10px] font-bold uppercase tracking-widest">
                    {error}
                 </div>
              )}

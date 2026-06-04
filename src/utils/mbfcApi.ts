@@ -189,6 +189,60 @@ async function fetchFromMbfcApi(domain: string): Promise<MbfcResult | null> {
 }
 
 /**
+ * Check whether a domain is likely to have an entry in the MBFC database.
+ * MBFC primarily covers well-known news, political, and media outlets.
+ * Niche domains (small orgs, personal blogs, academic repositories, etc.)
+ * almost never have entries, so we skip the API call to avoid 404 noise.
+ */
+function isLikelyInMbfcDatabase(domain: string): boolean {
+  // .gov, .mil, .edu domains are never in MBFC (they use inference)
+  if (domain.endsWith('.gov') || domain.endsWith('.mil') || domain.endsWith('.edu')) return false;
+  
+  // Check if the domain contains known MBFC-tracked keywords
+  const knownMbfcKeywords = [
+    'news', 'times', 'post', 'tribune', 'herald', 'chronicle', 'mirror',
+    'sun', 'daily', 'weekly', 'observer', 'reporter', 'journal', 'gazette',
+    'telegraph', 'express', 'mail', 'star', 'watch', 'bee', 'bugle',
+    'crier', 'dispatch', 'globe', 'monitor', 'sentinel', 'times', 'world',
+    'press', 'radio', 'tv', 'channel', 'broadcast', 'pbs', 'npr', 'bbc',
+    'cnn', 'fox', 'abc', 'cbs', 'nbc', 'msnbc', 'c-span', 'aljazeera',
+  ];
+  const domainLower = domain.toLowerCase();
+  for (const kw of knownMbfcKeywords) {
+    if (domainLower.includes(kw)) return true;
+  }
+  
+  // Also check parent domain (last 2 parts)
+  const parts = domain.split('.');
+  if (parts.length >= 2) {
+    const parent = parts.slice(-2).join('.');
+    for (const kw of knownMbfcKeywords) {
+      if (parent.includes(kw)) return true;
+    }
+  }
+  
+  // Known news publisher domains that are tracked
+  const knownPublishers = [
+    'reuters.com', 'ap.org', 'apnews.com', 'bloomberg.com', 'ft.com',
+    'wsj.com', 'economist.com', 'nytimes.com', 'washingtonpost.com',
+    'theguardian.com', 'usatoday.com', 'wsj.com', 'latimes.com',
+    'chicagotribune.com', 'bostonglobe.com', 'sfchronicle.com',
+    'politico.com', 'huffpost.com', 'buzzfeednews.com', 'vox.com',
+    'vice.com', 'motherjones.com', 'newyorker.com', 'theatlantic.com',
+    'slate.com', 'thedailybeast.com', 'theintercept.com', 'reason.com',
+    'nationalreview.com', 'washingtonexaminer.com', 'dailymail.co.uk',
+    'thehill.com', 'townhall.com', 'dailycaller.com', 'newsmax.com',
+    'breitbart.com', 'theblaze.com', 'infowars.com', 'oann.com',
+    'zerohedge.com', 'nypost.com', 'washingtontimes.com',
+  ];
+  if (knownPublishers.includes(domainLower) || knownPublishers.some(p => domainLower.endsWith('.' + p))) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Infer bias/factual from domain TLD and common patterns.
  */
 function inferFromDomain(domain: string): MbfcResult {
@@ -278,7 +332,9 @@ export async function batchLookupDomains(
         results.set(domain, result);
       } else {
         // Not in cache or hardcoded map — try API or inference
-        if (RAPIDAPI_KEY && !rateLimited) {
+        // Only call API if the domain is likely to be in MBFC's database
+        // (prevents browser 404 console noise for niche domains)
+        if (RAPIDAPI_KEY && !rateLimited && isLikelyInMbfcDatabase(domain)) {
           toFetch.push(domain);
         } else {
           const inferred = inferFromDomain(domain);

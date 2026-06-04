@@ -113,7 +113,7 @@ export default function PlatformDocs() {
            <div className="group border border-my-border bg-my-sidebar/10 hover:bg-my-sidebar/30 transition-colors rounded-sm overflow-hidden">
               <div className="p-6 md:p-8 flex items-start gap-6">
                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                    <Share size={20} className="text-emerald-500" />
+                    <Share size={20} className="ds-text-success" />
                  </div>
                  <div>
                     <h5 className="font-bold text-my-ink mb-2">Interactive Knowledge Graphs & Sharing</h5>
@@ -148,7 +148,7 @@ export default function PlatformDocs() {
            <div className="group border border-my-border bg-my-sidebar/10 hover:bg-my-sidebar/30 transition-colors rounded-sm overflow-hidden">
               <div className="p-6 md:p-8 flex items-start gap-6">
                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20">
-                    <Trophy size={20} className="text-amber-500" />
+                    <Trophy size={20} className="ds-text-warning" />
                  </div>
                  <div>
                     <h5 className="font-bold text-my-ink mb-2">Analyst Progression System</h5>

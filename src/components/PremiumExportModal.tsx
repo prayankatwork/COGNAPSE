@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from './ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { X, Shield, Download, CheckCircle2, AlertCircle, FileText, Zap, Award, Chrome, Check } from 'lucide-react';
@@ -350,7 +351,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                 {/* Authentication Banner */}
                 {!user && (
                   <div className="p-3 bg-red-500/10 border border-red-500/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-red-500">
+                    <div className="flex items-center gap-2 ds-text-danger">
                       <AlertCircle size={14} />
                       <span className="text-[10px] font-bold uppercase tracking-wider">Authentication Required</span>
                     </div>
@@ -420,13 +421,14 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                       {user ? planDetails[selectedPlan].priceStr : 'INR 99.00'}
                     </span>
                   </div>
-                  <button 
+                  <Button
+                    variant="primary"
                     onClick={handleStartPayment}
                     disabled={loading}
-                    className="w-full md:w-auto px-6 py-2.5 bg-my-accent text-white dark:text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
+                    className="w-full md:w-auto px-6 py-2.5 text-[10px] hover:scale-105 shadow-lg"
                   >
                     {loading ? "Connecting..." : user ? "Activate Premium" : "Authenticate to Unlock"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -434,12 +436,12 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
             {step === 'success' && (
               <div className="space-y-6 py-2">
                 <div className="text-center">
-                  <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-3 border border-green-500/20 animate-pulse">
+                  <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center ds-text-success mb-3 border border-green-500/20 animate-pulse">
                     <CheckCircle2 size={28} />
                   </div>
                   <div>
                     <h3 className="text-lg font-serif font-bold text-my-ink italic">COGNAPSE Premium Activated</h3>
-                    <p className="text-[8px] text-green-500 uppercase tracking-widest font-black mt-0.5">All Core Utility Features Unlocked</p>
+                    <p className="text-[8px] ds-text-success uppercase tracking-widest font-black mt-0.5">All Core Utility Features Unlocked</p>
                   </div>
                 </div>
 
@@ -450,7 +452,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                       <Chrome size={16} />
                       <h4 className="text-[11px] font-black uppercase tracking-wider">Chrome Research Extension</h4>
                     </div>
-                    <span className="text-[8px] px-1.5 py-0.5 bg-green-500/15 text-green-500 border border-green-500/30 font-black uppercase tracking-widest">
+                    <span className="text-[8px] px-1.5 py-0.5 bg-green-500/15 ds-text-success border border-green-500/30 font-black uppercase tracking-widest">
                       100% Free Setup
                     </span>
                   </div>
@@ -498,21 +500,22 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                   >
                     <Download size={12} /> Download Extension Package (ZIP)
                   </a>
-                </div>
-
-                <div className="flex gap-3">
-                  <button 
+                </div>                  <div className="flex gap-3">
+                  <Button
+                    variant="primary"
                     onClick={handleDownloadAndClose}
-                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[102%] transition-all shadow-lg flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white dark:text-white text-[10px] hover:scale-[102%] shadow-lg border-0"
+                    icon={<Download size={14} />}
                   >
-                    <Download size={14} /> Download PDF Dossier
-                  </button>
-                  <button 
+                    Download PDF Dossier
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={onClose}
-                    className="px-4 py-3 bg-my-border hover:bg-my-border/80 text-my-ink text-[10px] font-bold uppercase tracking-wider transition-all"
+                    className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider"
                   >
                     Close Setup
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

@@ -13,11 +13,11 @@ interface EvidencePreviewProps {
 }
 
 function getCredibilityColor(score: number): string {
-  if (score >= 81) return 'border-green-500/30 bg-green-500/5';
-  if (score >= 61) return 'border-emerald-500/30 bg-emerald-500/5';
-  if (score >= 41) return 'border-amber-500/30 bg-amber-500/5';
-  if (score >= 21) return 'border-orange-500/30 bg-orange-500/5';
-  return 'border-red-500/30 bg-red-500/5';
+  if (score >= 81) return 'border-green-500/30 bg-green-500/5 dark:border-green-400/20 dark:bg-green-400/5';
+  if (score >= 61) return 'border-emerald-500/30 bg-emerald-500/5 dark:border-emerald-400/20 dark:bg-emerald-400/5';
+  if (score >= 41) return 'border-amber-500/30 bg-amber-500/5 dark:border-amber-400/20 dark:bg-amber-400/5';
+  if (score >= 21) return 'border-orange-500/30 bg-orange-500/5 dark:border-orange-400/20 dark:bg-orange-400/5';
+  return 'border-red-500/30 bg-red-500/5 dark:border-red-400/20 dark:bg-red-400/5';
 }
 
 function getCredibilityLabel(score: number): string {
@@ -33,20 +33,20 @@ function VerdictBadge({ verdict }: { verdict: string }) {
   switch (verdict) {
     case 'supported':
       return (
-        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-500/10 px-1 py-0.5">
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider ds-text-success bg-green-500/10 px-1 py-0.5">
           <CheckCircle2 size={8} /> Verified
         </span>
       );
     case 'partial':
       return (
-        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1 py-0.5">
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider ds-text-warning bg-amber-500/10 px-1 py-0.5">
           <AlertTriangle size={8} /> Partial
         </span>
       );
     case 'contradicted':
     case 'unrelated':
       return (
-        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/10 px-1 py-0.5">
+        <span className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider ds-text-danger bg-red-500/10 px-1 py-0.5">
           <XCircle size={8} /> Unsupported
         </span>
       );
@@ -78,9 +78,8 @@ export default function EvidencePreview({ source, isVisible, position = 'bottom'
             <div className="flex items-start gap-2 mb-2">
               <ShieldCheck size={12} className={clsx(
                 'shrink-0 mt-0.5',
-                source.credibility_score >= 81 ? 'text-green-500' :
-                source.credibility_score >= 61 ? 'text-emerald-500' :
-                source.credibility_score >= 41 ? 'text-amber-500' : 'text-red-500'
+                source.credibility_score >= 81 ? 'ds-text-success' :                  source.credibility_score >= 61 ? 'ds-text-success' :
+                source.credibility_score >= 41 ? 'ds-text-warning' : 'ds-text-danger'
               )} />
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-my-ink leading-tight line-clamp-2">
@@ -112,10 +111,10 @@ export default function EvidencePreview({ source, isVisible, position = 'bottom'
               <div className="flex items-center gap-2 text-[8px] text-my-muted">
                 <span className={clsx(
                   'px-1 py-0.5 font-bold uppercase tracking-wider',
-                  source.credibility_score >= 81 ? 'text-green-600 dark:text-green-400 bg-green-500/10' :
-                  source.credibility_score >= 61 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' :
-                  source.credibility_score >= 41 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10' :
-                  'text-red-600 dark:text-red-400 bg-red-500/10'
+                  source.credibility_score >= 81 ? 'ds-text-success bg-green-500/10' :
+                  source.credibility_score >= 61 ? 'ds-text-success bg-emerald-500/10' :
+                  source.credibility_score >= 41 ? 'ds-text-warning bg-amber-500/10' :
+                  'ds-text-danger bg-red-500/10'
                 )}>
                   {getCredibilityLabel(source.credibility_score)}
                 </span>

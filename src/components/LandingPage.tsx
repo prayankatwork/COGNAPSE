@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from './ui';
 import clsx from 'clsx';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
@@ -167,9 +168,13 @@ export default function LandingPage() {
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--accent) 2px, transparent 2px)', backgroundSize: '100px 100px' }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl md:text-9xl font-serif font-bold mb-12 md:mb-20 leading-none tracking-tighter italic">Ready for <br /> clarity?</h2>
-          <button onClick={() => setView('research')} className="px-10 py-6 md:px-20 md:py-10 bg-my-accent text-white dark:text-black font-bold uppercase tracking-[0.3em] hover:bg-my-ink transition-all shadow-2xl transform hover:-translate-y-4 w-full md:w-auto text-sm md:text-base">
+          <Button
+            variant="primary"
+            onClick={() => setView('research')}
+            className="px-10 py-6 md:px-20 md:py-10 font-bold tracking-[0.3em] hover:bg-my-ink hover:scale-105 shadow-2xl w-full md:w-auto text-sm md:text-base"
+          >
             ENTER COGNAPSE
-          </button>
+          </Button>
           <div className="mt-14 flex items-center justify-center gap-10">
             <button
               onClick={() => setView('documentation')}
@@ -219,12 +224,13 @@ function FeatureGrid() {
         ))}
       </div>
       <div className="mt-8 text-center">
-        <button
+        <Button
+          variant="secondary"
           onClick={() => setShowAll(!showAll)}
-          className="px-8 py-3 border border-my-border text-xs font-black uppercase tracking-[0.3em] text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
+          className="px-8 py-3 text-xs font-black uppercase tracking-[0.3em]"
         >
           {showAll ? 'Show Less' : `Show All Features (${features.length})`}
-        </button>
+        </Button>
       </div>
     </div>
   );

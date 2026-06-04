@@ -95,9 +95,9 @@ export default function SessionMemoryPanel() {
                   transition={{ delay: i * 0.03 }}
                   className={clsx(
                     "p-2 border-l-2 text-[9px] leading-relaxed",
-                    link.type === 'reinforcement' && "border-l-green-500 bg-green-500/5",
-                    link.type === 'conflict' && "border-l-red-500 bg-red-500/5",
-                    link.type === 'expansion' && "border-l-blue-500 bg-blue-500/5",
+                    link.type === 'reinforcement' && "border-l-current ds-text-success bg-green-500/5 dark:bg-green-400/5",
+                    link.type === 'conflict' && "border-l-current ds-text-danger bg-red-500/5 dark:bg-red-400/5",
+                    link.type === 'expansion' && "border-l-blue-600 dark:border-l-blue-400 bg-blue-500/5 dark:bg-blue-400/5",
                   )}
                 >
                   <span className="font-bold text-my-ink block">
@@ -118,11 +118,11 @@ export default function SessionMemoryPanel() {
           <div className="flex items-center gap-1.5">
             <div className={clsx(
               "w-1.5 h-1.5 rounded-full",
-              sessionMemory.synthesisReady ? "bg-green-500 animate-pulse" : "bg-my-border"
+              sessionMemory.synthesisReady ? "bg-current ds-text-success animate-pulse" : "bg-my-border"
             )} />
             <span className={clsx(
               "text-[9px] font-bold uppercase tracking-wider",
-              sessionMemory.synthesisReady ? "text-green-500" : "text-my-muted"
+              sessionMemory.synthesisReady ? "ds-text-success" : "text-my-muted"
             )}>
               {sessionMemory.synthesisReady ? 'Ready' : 'Accumulating'}
             </span>

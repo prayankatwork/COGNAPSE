@@ -24,12 +24,12 @@ export default function LegalDocs() {
             <p className="text-xs text-my-muted leading-relaxed">Legally binding terms governing access, usage, payments, and platform conduct.</p>
           </div>
           <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-            <ShieldAlert className="text-emerald-500 mb-4" size={24} />
+            <ShieldAlert className="ds-text-success mb-4" size={24} />
             <h4 className="font-bold text-sm text-my-ink mb-2">Data Governance</h4>
             <p className="text-xs text-my-muted leading-relaxed">Privacy-first data handling, local storage defaults, and transparent data practices.</p>
           </div>
           <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-            <Gavel className="text-amber-500 mb-4" size={24} />
+            <Gavel className="ds-text-warning mb-4" size={24} />
             <h4 className="font-bold text-sm text-my-ink mb-2">Compliance Framework</h4>
             <p className="text-xs text-my-muted leading-relaxed">AI transparency, copyright governance, collaboration rules, and abuse prevention.</p>
           </div>
@@ -88,7 +88,7 @@ export default function LegalDocs() {
             {/* 1.3 Acceptable Use */}
             <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
                <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest flex items-center gap-2">
-                  <Ban size={16} className="text-red-500" /> 1.3 Acceptable Use Policy
+                  <Ban size={16} className="ds-text-danger" /> 1.3 Acceptable Use Policy
                </h4>
                <p className="text-xs text-my-muted leading-relaxed mb-3">
                  You agree not to use the Service to:
@@ -110,7 +110,7 @@ export default function LegalDocs() {
             {/* 1.4 Payments & Subscriptions */}
             <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
                <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest flex items-center gap-2">
-                  <Lock size={16} className="text-emerald-500" /> 1.4 Payments, Subscriptions &amp; Refunds
+                  <Lock size={16} className="ds-text-success" /> 1.4 Payments, Subscriptions &amp; Refunds
                </h4>
                <p className="text-xs text-my-muted leading-relaxed mb-3">
                  All financial transactions for Premium access (Monthly or Annual passes) are processed securely 
@@ -134,7 +134,7 @@ export default function LegalDocs() {
             {/* 1.5 Account Suspension & Termination */}
             <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
                <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest flex items-center gap-2">
-                  <UserX size={16} className="text-amber-500" /> 1.5 Account Suspension &amp; Termination
+                  <UserX size={16} className="ds-text-warning" /> 1.5 Account Suspension &amp; Termination
                </h4>
                <p className="text-xs text-my-muted leading-relaxed mb-3">
                  COGNAPSE reserves the right to suspend or terminate any account at our sole discretion, without 
@@ -158,7 +158,7 @@ export default function LegalDocs() {
             {/* 1.6 Limitation of Liability */}
             <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
                <h4 className="text-sm font-bold text-my-ink mb-3 uppercase tracking-widest flex items-center gap-2">
-                  <AlertTriangle size={16} className="text-red-500" /> 1.6 Limitation of Liability
+                  <AlertTriangle size={16} className="ds-text-danger" /> 1.6 Limitation of Liability
                </h4>
                <p className="text-xs text-my-muted leading-relaxed mb-3">
                  To the maximum extent permitted by applicable law, COGNAPSE and its operators, affiliates, and 
@@ -208,7 +208,7 @@ export default function LegalDocs() {
       {/* ─── 2. PRIVACY POLICY ─── */}
       <section id="privacy" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
          <div className="flex items-center gap-3">
-           <ShieldAlert className="text-emerald-500" size={28} />
+           <ShieldAlert className="ds-text-success" size={28} />
            <h3 className="text-2xl font-bold text-my-ink border-b border-my-border pb-2 flex-1">Privacy Policy</h3>
          </div>
          <p className="text-sm text-my-muted leading-relaxed max-w-3xl">
@@ -293,7 +293,7 @@ export default function LegalDocs() {
       {/* ─── 3. COOKIE POLICY ─── */}
       <section id="cookie-policy" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
          <div className="flex items-center gap-3">
-           <Cookie className="text-amber-500" size={28} />
+           <Cookie className="ds-text-warning" size={28} />
            <h3 className="text-2xl font-bold text-my-ink border-b border-my-border pb-2 flex-1">Cookie Policy</h3>
          </div>
 
@@ -326,7 +326,7 @@ export default function LegalDocs() {
       {/* ─── 4. AI LIABILITY DISCLAIMER ─── */}
       <section id="ai-disclaimer" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
          <div className="flex items-center gap-3">
-           <AlertTriangle className="text-red-500" size={28} />
+           <AlertTriangle className="ds-text-danger" size={28} />
            <h3 className="text-2xl font-bold text-my-ink border-b border-my-border pb-2 flex-1">AI-Generated Content &amp; Liability</h3>
          </div>
 
@@ -479,7 +479,7 @@ export default function LegalDocs() {
       {/* ─── 6. COLLABORATION GOVERNANCE & COMMUNITY GUIDELINES ─── */}
       <section id="collaboration" className="scroll-mt-32 space-y-8 border-t border-my-border pt-16">
          <div className="flex items-center gap-3">
-           <Users className="text-emerald-500" size={28} />
+           <Users className="ds-text-success" size={28} />
            <h3 className="text-2xl font-bold text-my-ink border-b border-my-border pb-2 flex-1">Collaboration Governance &amp; Community Guidelines</h3>
          </div>
 

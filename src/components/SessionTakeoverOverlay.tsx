@@ -23,7 +23,7 @@ export default function SessionTakeoverOverlay({ visible }: SessionTakeoverOverl
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ delay: 0.15, duration: 0.3 }}
           >
-            <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8">
+            <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center ds-text-danger mx-auto mb-8">
               <Ban size={32} />
             </div>
             <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">

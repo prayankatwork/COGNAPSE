@@ -127,7 +127,7 @@ export default function ResearchScoreCard({ scores }: Props) {
           </span>
         )}
         {es?.usingEmbeddings && isPremium && !neuralLoading && (
-          <span className="text-[7px] text-green-500 uppercase tracking-wider flex items-center gap-1">
+          <span className="text-[7px] ds-text-success uppercase tracking-wider flex items-center gap-1">
             <BrainCircuit size={8} /> neural
           </span>
         )}
@@ -150,7 +150,7 @@ export default function ResearchScoreCard({ scores }: Props) {
               Expanded Scoring Depth
             </span>
             {es?.usingEmbeddings && (
-              <span className="text-[7px] text-green-500 uppercase tracking-wider">— neural consensus active</span>
+              <span className="text-[7px] ds-text-success uppercase tracking-wider">— neural consensus active</span>
             )}
           </div>
 
@@ -164,7 +164,7 @@ export default function ResearchScoreCard({ scores }: Props) {
                   <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Semantic Consensus</span>
                   <span className={clsx(
                     'text-[10px] font-black font-mono',
-                    premiumData.consensusScore! >= 0.7 ? 'text-green-500' : premiumData.consensusScore! >= 0.4 ? 'text-yellow-500' : 'text-red-500'
+                    premiumData.consensusScore! >= 0.7 ? 'ds-text-success' : premiumData.consensusScore! >= 0.4 ? 'ds-text-warning' : 'ds-text-danger'
                   )}>
                     {premiumData.consensusScore! >= 0.7 ? 'High' : premiumData.consensusScore! >= 0.4 ? 'Medium' : 'Low'}
                   </span>
@@ -175,7 +175,7 @@ export default function ResearchScoreCard({ scores }: Props) {
                   <span className="text-[8px] font-bold uppercase tracking-wider text-my-muted">Semantic Relevance</span>
                   <span className={clsx(
                     'text-[10px] font-black font-mono',
-                    premiumData.relevanceScore! >= 0.7 ? 'text-green-500' : premiumData.relevanceScore! >= 0.4 ? 'text-yellow-500' : 'text-red-500'
+                    premiumData.relevanceScore! >= 0.7 ? 'ds-text-success' : premiumData.relevanceScore! >= 0.4 ? 'ds-text-warning' : 'ds-text-danger'
                   )}>
                     {premiumData.relevanceScore! >= 0.7 ? 'High' : premiumData.relevanceScore! >= 0.4 ? 'Medium' : 'Low'}
                   </span>

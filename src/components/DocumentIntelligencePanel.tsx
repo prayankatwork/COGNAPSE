@@ -250,7 +250,7 @@ export default function DocumentIntelligencePanel() {
         <h2 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">
           Document Intelligence
         </h2>
-        <span className="ml-auto text-[8px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest font-black flex items-center gap-1">
+        <span className="ml-auto text-[8px] px-1.5 py-0.5 bg-emerald-500/10 ds-text-success border border-emerald-500/20 uppercase tracking-widest font-black flex items-center gap-1">
           <Shield size={8} /> Active
         </span>
       </div>
@@ -279,7 +279,7 @@ export default function DocumentIntelligencePanel() {
           <MessageSquare size={12} />
           Intelligence Query
           {indexedCount > 0 && (
-            <span className="ml-1 text-[7px] px-1 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-sm">
+            <span className="ml-1 text-[7px] px-1 py-0.5 bg-emerald-500/10 ds-text-success rounded-sm">
               {indexedCount}
             </span>
           )}

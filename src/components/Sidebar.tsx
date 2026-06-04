@@ -9,7 +9,7 @@ import {
   Library, Box, Fingerprint, Lock, Shield,
 } from 'lucide-react';
 import { useStore } from '../store';
-import { Button } from './ui';
+import { Button, SectionLabel } from './ui';
 import clsx from 'clsx';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -114,7 +114,7 @@ export default function Sidebar() {
               <div className="flex items-center justify-between gap-4 mb-8">
                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-1.5 h-1.5 bg-my-signal rounded-full animate-pulse shrink-0" />
-                    <h2 className="text-[10px] font-bold text-my-accent uppercase tracking-[0.3em] truncate">Archive</h2>
+                    <SectionLabel className="!text-my-accent truncate">Archive</SectionLabel>
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
                     <ClearAllButton />
@@ -355,7 +355,7 @@ function ClearAllButton() {
         !walkthroughCompleted && "opacity-30 cursor-not-allowed",
         confirming 
           ? "bg-red-500 text-white border-red-500 animate-pulse" 
-          : "text-my-muted border-my-border hover:border-red-500/50 hover:text-red-500"
+          : "text-my-muted border-my-border hover:border-red-500/50 hover:ds-text-danger"
       )}
     >
       {confirming ? "CONFIRM PURGE?" : "CLEAR ALL"}
@@ -436,7 +436,7 @@ function ArchiveItem({ item }: { item: any }) {
               }}
               disabled={!walkthroughCompleted}
               className={clsx(
-                "opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-1 hover:text-red-500",
+                "opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity p-1 hover:ds-text-danger",
                 !walkthroughCompleted && "hidden"
               )}
             >

@@ -45,17 +45,52 @@ describe('ensureIntelligenceMap', () => {
     expect(report.intelligence_map).toBeDefined();
     expect(report.intelligence_map!.central_node.label).toBe('Smartphone bans in schools');
     expect(report.intelligence_map!.central_node.type).toBe('CONCEPT');
-    expect(report.intelligence_map!.nodes).toHaveLength(2);
-    expect(report.intelligence_map!.edges).toHaveLength(2);
+    // Function enforces minimum 4 nodes: 2 source + 2 keyword nodes
+    expect(report.intelligence_map!.nodes.length).toBeGreaterThanOrEqual(4);
+    expect(report.intelligence_map!.edges.length).toBeGreaterThanOrEqual(4);
     // Source nodes are ENTITY type
-    expect(report.intelligence_map!.nodes[0].type).toBe('ENTITY');
-    expect(report.intelligence_map!.nodes[0].relationship).toBe('source');
+    const entityNodes = report.intelligence_map!.nodes.filter(n => n.type === 'ENTITY');
+    expect(entityNodes.length).toBe(2);
+    expect(entityNodes[0].relationship).toBe('source');
     // Edges connect sources to center
-    expect(report.intelligence_map!.edges[0].from).toBe('topic');
-    expect(report.intelligence_map!.edges[0].label).toBe('evidence');
+    const evidenceEdges = report.intelligence_map!.edges.filter(e => e.label === 'evidence');
+    expect(evidenceEdges.length).toBe(2);
+    expect(evidenceEdges[0].from).toBe('topic');
   });
 
-  it('does nothing when intelligence_map is already populated', () => {
+  it('does nothing when intelligence_map is already populated (4+ nodes)', () => {
+    const existingMap = {
+      central_node: { id: 'root', label: 'Existing', type: 'CONCEPT' },
+      nodes: [
+        { id: 'n1', label: 'Existing Node A', type: 'ENTITY', relationship: 'related', sub_query: 'q', importance: 3 },
+        { id: 'n2', label: 'Existing Node B', type: 'ENTITY', relationship: 'related', sub_query: 'q', importance: 3 },
+        { id: 'n3', label: 'Existing Node C', type: 'ENTITY', relationship: 'related', sub_query: 'q', importance: 3 },
+        { id: 'n4', label: 'Existing Node D', type: 'ENTITY', relationship: 'related', sub_query: 'q', importance: 3 },
+      ],
+      edges: [
+        { from: 'root', to: 'n1', label: 'link' },
+        { from: 'root', to: 'n2', label: 'link' },
+        { from: 'root', to: 'n3', label: 'link' },
+        { from: 'root', to: 'n4', label: 'link' },
+      ],
+    };
+
+    const report = createReport({
+      intelligence_map: existingMap,
+      sources: [
+        { id: 1, title: 'New Source', url: '', domain: 'x.com', type: 'industry', credibility_score: 70, relevance_score: 60, key_finding: 'New data', published_date: '2024', bias_flag: null },
+      ],
+    });
+
+    ensureIntelligenceMap(report);
+
+    // Should NOT be overwritten with new sources — 4+ nodes means the guard returns early
+    expect(report.intelligence_map).toBe(existingMap);
+    expect(report.intelligence_map!.nodes).toHaveLength(4);
+    expect(report.intelligence_map!.nodes[0].label).toBe('Existing Node A');
+  });
+
+  it('rebuilds when intelligence_map has fewer than 4 nodes', () => {
     const existingMap = {
       central_node: { id: 'root', label: 'Existing', type: 'CONCEPT' },
       nodes: [{ id: 'n1', label: 'Existing Node', type: 'ENTITY', relationship: 'related', sub_query: 'q', importance: 3 }],
@@ -71,10 +106,13 @@ describe('ensureIntelligenceMap', () => {
 
     ensureIntelligenceMap(report);
 
-    // Should NOT be overwritten with new sources
-    expect(report.intelligence_map).toBe(existingMap);
-    expect(report.intelligence_map!.nodes).toHaveLength(1);
-    expect(report.intelligence_map!.nodes[0].label).toBe('Existing Node');
+    // Map gets rebuilt with source + keyword nodes + preserved existing node
+    expect(report.intelligence_map).not.toBe(existingMap);
+    expect(report.intelligence_map!.nodes.length).toBeGreaterThanOrEqual(3);
+    // Existing node should still be in the final map
+    const labels = report.intelligence_map!.nodes.map(n => n.label);
+    expect(labels).toContain('Existing Node');
+    expect(labels).toContain('New Source');
   });
 
   it('uses query_understood for central node label', () => {
@@ -137,8 +175,8 @@ describe('ensureIntelligenceMap', () => {
 
     ensureIntelligenceMap(report);
 
-    // 2 unique labels (first two are the same title, only one kept)
-    expect(report.intelligence_map!.nodes).toHaveLength(2);
+    // 2 source + 2 keyword nodes to meet minimum of 4
+    expect(report.intelligence_map!.nodes.length).toBeGreaterThanOrEqual(4);
   });
 
   it('skips sources with very short titles (< 3 chars)', () => {
@@ -151,8 +189,8 @@ describe('ensureIntelligenceMap', () => {
 
     ensureIntelligenceMap(report);
 
-    // Only the valid title should be a node
-    expect(report.intelligence_map!.nodes).toHaveLength(1);
+    // 1 source + 3 keyword nodes to meet minimum of 4
+    expect(report.intelligence_map!.nodes.length).toBeGreaterThanOrEqual(4);
     expect(report.intelligence_map!.nodes[0].label).toBe('Valid Study Title');
   });
 

@@ -9,6 +9,7 @@ import {
 import { useIsMobile } from '../hooks/useIsMobile';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SectionLabel } from './ui';
 import BrandLogo from './BrandLogo';
 import CommandPalette from './CommandPalette';
 import PremiumExportModal from './PremiumExportModal';
@@ -125,9 +126,7 @@ export default function Navbar() {
                 transition={{ duration: 0.15 }}
                 className="absolute top-full left-0 mt-3 bg-my-bg/95 backdrop-blur-xl border border-my-border rounded-[4px] shadow-2xl p-2 min-w-[180px] flex flex-col gap-1 origin-top z-50"
               >
-                <div className="px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.3em] text-my-muted opacity-60">
-                  System Modules
-                </div>
+                <SectionLabel className="!text-[8px] !text-my-muted opacity-60 px-2 py-1.5">System Modules</SectionLabel>
                 {modules.map((mod) => (
                   <button
                     key={mod.id}
@@ -235,7 +234,7 @@ export default function Navbar() {
                  disabled={!walkthroughCompleted}
                  className={clsx(
                    "w-8 h-8 flex items-center justify-center rounded-full border border-my-border text-my-muted transition-all bg-my-bg",
-                   walkthroughCompleted ? "hover:text-red-500 hover:border-red-500/50 cursor-pointer" : "opacity-30 cursor-not-allowed"
+                   walkthroughCompleted ? "hover:ds-text-danger hover:border-red-500/50 cursor-pointer" : "opacity-30 cursor-not-allowed"
                  )}
                  title="Terminate Session"
                >
@@ -312,7 +311,7 @@ export default function Navbar() {
               className="fixed bottom-0 left-0 right-0 z-[301] bg-my-bg border-t border-my-border rounded-t-2xl shadow-2xl safe-area-bottom max-h-[70vh] overflow-y-auto"
             >
               <div className="px-6 pt-4 pb-2 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-my-muted">Navigate</span>
+                <SectionLabel>Navigate</SectionLabel>
                 <button onClick={() => setMobileMenuOpen(false)} className="min-touch p-2 text-my-muted hover:text-my-ink">
                   <X size={18} />
                 </button>

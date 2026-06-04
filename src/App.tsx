@@ -610,7 +610,7 @@ export default function App() {
           return (
             <div className="flex flex-col items-center justify-center text-center p-8 h-full">
               <div className="relative z-10 max-w-md">
-                <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+                <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center ds-text-danger mx-auto mb-8 animate-pulse">
                   <LockIcon size={32} />
                 </div>
                 <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">Access Restricted</h1>
@@ -750,7 +750,7 @@ export default function App() {
       {suspendedUser && (
         <div className="fixed inset-0 z-[100] bg-my-bg flex items-center justify-center p-8">
           <div className="max-w-md text-center">
-            <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center text-red-500 mx-auto mb-8 animate-pulse">
+            <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-[4px] flex items-center justify-center ds-text-danger mx-auto mb-8 animate-pulse">
               <Ban size={32} />
             </div>
             <h1 className="text-2xl font-black text-my-ink uppercase tracking-[0.3em] mb-4">Account Terminated</h1>

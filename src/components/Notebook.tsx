@@ -40,7 +40,7 @@ export default function Notebook({ onClose }: { onClose: () => void }) {
                   clearNotebook();
                 }
               }}
-              className="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:opacity-70 transition-opacity flex items-center gap-2"
+              className="text-[10px] font-bold uppercase tracking-widest ds-text-danger hover:opacity-70 transition-opacity flex items-center gap-2"
             >
               <Trash2 size={12} /> Clear Notebook
             </button>
@@ -65,7 +65,7 @@ export default function Notebook({ onClose }: { onClose: () => void }) {
                 >
                   <button 
                     onClick={() => removeNote(note.id)}
-                    className="absolute top-4 right-4 p-1.5 text-my-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-4 right-4 p-1.5 text-my-muted hover:ds-text-danger opacity-0 group-hover:opacity-100 transition-all"
                     title="Remove Note"
                   >
                     <Trash2 size={14} />

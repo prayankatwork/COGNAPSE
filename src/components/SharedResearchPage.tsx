@@ -1,3 +1,4 @@
+import { SectionLabel } from './ui';
 import { useEffect, useState } from 'react';
 import { AlertCircle, AlertTriangle, Calendar, FlaskConical, Loader2, ShieldCheck, Flag, X } from 'lucide-react';
 import { useStore } from '../store';
@@ -81,7 +82,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
     return (
       <div className="h-full flex items-center justify-center bg-my-bg p-8">
         <div className="max-w-md border border-my-border bg-my-callout p-8 text-center">
-          <AlertCircle size={28} className="text-red-500 mx-auto mb-4" />
+          <AlertCircle size={28} className="ds-text-danger mx-auto mb-4" />
           <h1 className="text-xl font-serif text-my-ink mb-3">Research unavailable</h1>
           <p className="text-sm text-my-muted">{error}</p>
         </div>
@@ -103,9 +104,9 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
 
         {/* AI Limitation Notice on Shared Content */}
         <div className="mb-4 flex items-start gap-3 p-3 border border-amber-500/20 bg-amber-500/5 text-my-muted">
-          <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+          <AlertTriangle size={14} className="ds-text-warning mt-0.5 shrink-0" />
           <p className="text-[10px] leading-relaxed">
-            <strong className="uppercase tracking-widest text-amber-500">AI-Generated Content:</strong> This research was produced by AI systems. 
+            <strong className="uppercase tracking-widest ds-text-warning">AI-Generated Content:</strong> This research was produced by AI systems. 
             Confidence scores are model self-assessments. Independently verify all critical claims before relying on this content. 
             See the full <a href="/policies" onClick={(e) => { e.preventDefault(); window.location.hash = 'ai-disclaimer'; }} className="underline hover:text-my-accent">AI Liability Disclaimer</a>.
           </p>
@@ -115,7 +116,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
           <div>
             <div className="flex items-center gap-2 mb-2 text-my-accent">
               <ShieldCheck size={14} />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Shared Research</span>
+              <SectionLabel className="!text-my-accent">Shared Research</SectionLabel>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-[10px] text-my-muted uppercase tracking-widest font-bold">
               <span>{shared.visibility}</span>
@@ -130,7 +131,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
 
         {thesis && (
           <div className="mt-8 border-t border-my-border pt-8">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-my-muted mb-4">Detailed Report View</h2>
+            <SectionLabel className="mb-4">Detailed Report View</SectionLabel>
             {[
               ['Abstract', thesis.abstract],
               ['Findings', thesis.findings],
@@ -154,7 +155,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
         <div className="border-t border-my-border pt-6 mt-2">
           <button
             onClick={() => setShowAbuseDialog(true)}
-            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted hover:text-red-500 transition-colors"
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-my-muted hover:ds-text-danger transition-colors"
           >
             <Flag size={12} /> Report This Content
           </button>
@@ -196,7 +197,7 @@ export default function SharedResearchPage({ shareId }: { shareId: string }) {
               </button>
             </div>
             {abuseSubmitted && (
-              <p className="mt-3 text-[11px] text-emerald-600 font-medium">Report submitted. Thank you.</p>
+              <p className="mt-3 text-[11px] ds-text-success font-medium">Report submitted. Thank you.</p>
             )}
           </div>
         </div>

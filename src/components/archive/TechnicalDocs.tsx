@@ -26,7 +26,7 @@ export default function TechnicalDocs() {
               <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Vite + React 18</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
-              <Database className="text-emerald-500" size={24} />
+              <Database className="ds-text-success" size={24} />
               <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Zustand + IndexedDB</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
@@ -34,7 +34,7 @@ export default function TechnicalDocs() {
               <div className="text-xs font-bold uppercase tracking-widest text-my-ink">WASM (Transformers.js)</div>
            </div>
            <div className="p-4 border border-my-border bg-my-sidebar/10 flex flex-col items-center justify-center text-center gap-3">
-              <Zap className="text-yellow-500" size={24} />
+              <Zap className="ds-text-warning" size={24} />
               <div className="text-xs font-bold uppercase tracking-widest text-my-ink">Firebase Auth / Firestore</div>
            </div>
         </div>
@@ -56,7 +56,7 @@ export default function TechnicalDocs() {
                ├── Inference Engine: ONNX Runtime (WASM) via Transformers.js<br/>
                └── Audio: Web Audio API for completion sounds & visualizer<br/>
                <br/>
-               <span className="text-emerald-500">AI Provider Swarm</span><br/>
+               <span className="ds-text-success">AI Provider Swarm</span><br/>
                ├── Primary Cloud: Groq API (8B model — standard research)<br/>
                ├── Secondary Cloud: Google Gemini API (1.5 Flash — fallback & feed)<br/>
                ├── Deep Research: Groq 70B model (academic-grade analysis)<br/>
@@ -134,7 +134,7 @@ export default function TechnicalDocs() {
                </div>
                <div>
                   <h5 className="font-bold text-sm text-my-ink flex items-center gap-2">
-                    <GitBranch size={14} className="text-emerald-500" /> 2. Smart Model Routing
+                    <GitBranch size={14} className="ds-text-success" /> 2. Smart Model Routing
                   </h5>
                   <p className="text-xs text-my-muted">
                     Standard research queries are routed through an 8-billion-parameter model (Groq) for 
@@ -144,7 +144,7 @@ export default function TechnicalDocs() {
                </div>
                <div>
                   <h5 className="font-bold text-sm text-my-ink flex items-center gap-2">
-                    <ShieldCheck size={14} className="text-amber-500" /> 3. Health Registry & Failover
+                    <ShieldCheck size={14} className="ds-text-warning" /> 3. Health Registry & Failover
                   </h5>
                   <p className="text-xs text-my-muted">
                     A master health registry tracks each node's status (stable/unstable) and timestamps of 
@@ -204,7 +204,7 @@ export default function TechnicalDocs() {
          <div className="grid md:grid-cols-2 gap-6">
             <div className="p-6 border border-my-border bg-my-sidebar/10">
                <h4 className="font-bold text-sm text-my-ink mb-3 flex items-center gap-2">
-                  <Database size={14} className="text-emerald-500" /> Zustand Store
+                  <Database size={14} className="ds-text-success" /> Zustand Store
                </h4>
                <p className="text-xs text-my-muted leading-relaxed">
                  All application state is managed centrally through Zustand with the persist middleware configured 
@@ -259,7 +259,7 @@ export default function TechnicalDocs() {
          <div className="grid md:grid-cols-2 gap-6">
             <div className="p-6 border border-my-border bg-my-sidebar/10">
                <h4 className="font-bold text-sm text-my-ink mb-3 flex items-center gap-2">
-                  <Terminal size={14} className="text-emerald-500" /> Authentication Layer
+                  <Terminal size={14} className="ds-text-success" /> Authentication Layer
                </h4>
                <p className="text-xs text-my-muted leading-relaxed">
                  Firebase Auth with email/password authentication. JWT-based session tokens with automatic 
@@ -281,7 +281,7 @@ export default function TechnicalDocs() {
 
          <div className="p-6 border border-my-border bg-my-sidebar/10 mt-4">
             <h4 className="font-bold text-sm text-my-ink mb-3 flex items-center gap-2">
-               <Lock size={14} className="text-amber-500" /> API Key Protection &amp; Secrets Management
+               <Lock size={14} className="ds-text-warning" /> API Key Protection &amp; Secrets Management
             </h4>
             <p className="text-xs text-my-muted leading-relaxed">
               All third-party API keys (Groq, Gemini, Razorpay secret) are stored exclusively as 
@@ -290,7 +290,7 @@ export default function TechnicalDocs() {
               This prevents credential leakage through browser DevTools, network inspection, or source map 
               exposure.
             </p>
-            <p className="text-xs text-amber-600 leading-relaxed mt-2">
+            <p className="text-xs ds-text-warning leading-relaxed mt-2">
               <strong>Note:</strong> The Groq and Gemini API keys used for client-side research queries are 
               compiled into the JavaScript bundle via Vite environment variables (<code>VITE_GROQ_API_KEY</code>, 
               <code>VITE_GEMINI_API_KEY</code>). This is standard for browser-based AI applications where the 
@@ -328,7 +328,7 @@ export default function TechnicalDocs() {
          <div className="space-y-4">
             <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/10">
                <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <ShieldCheck size={14} className="text-emerald-500" />
+                  <ShieldCheck size={14} className="ds-text-success" />
                </div>
                <div>
                   <h5 className="font-bold text-sm text-my-ink mb-1">Privacy-Preserving by Design</h5>
@@ -355,7 +355,7 @@ export default function TechnicalDocs() {
             </div>
             <div className="flex gap-4 p-6 border border-my-border bg-my-sidebar/10">
                <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-                  <Activity size={14} className="text-amber-500" />
+                  <Activity size={14} className="ds-text-warning" />
                </div>
                <div>
                   <h5 className="font-bold text-sm text-my-ink mb-1">Operational Purpose Only</h5>

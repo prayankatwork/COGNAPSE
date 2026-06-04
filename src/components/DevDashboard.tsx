@@ -7,6 +7,7 @@ import {
   AlertCircle, BarChart3, Gauge, Zap, Clock,
   Layers, TrendingUp, Hash
 } from 'lucide-react';
+import { Button } from './ui';
 import { getSwarmHealth, resetSwarmHealth } from '../services/aiService';
 import { benchmarkTracker } from '../services/benchmarkTracker';
 import type { BenchmarkStats, BenchmarkPoint } from '../services/benchmarkTracker';
@@ -59,23 +60,25 @@ export default function DevDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-               <button
+               <Button
+                 variant="danger"
                  onClick={() => {
                    if (confirm("FORCE RESET PROTOCOL? This will clear all rate limits and reset token capacities across the global node network.")) {
                      resetSwarmHealth();
                      setHealth(getSwarmHealth());
                    }
                  }}
-                 className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all rounded-full"
+                 className="text-[9px] px-4 py-2 rounded-full"
+                 icon={<RefreshCw size={12} />}
                >
-                 <RefreshCw size={12} /> Force Reset Swarm
-               </button>
-               <button
+                 Force Reset Swarm
+               </Button>
+               <Button
+                 variant="ghost"
                  onClick={() => setDevOpen(false)}
-                 className="p-2 text-white/40 hover:text-white transition-colors"
-               >
-                 <X size={20} />
-               </button>
+                 className="p-2 text-white/40 hover:text-white"
+                 icon={<X size={20} />}
+               ><></></Button>
             </div>
           </div>
 
@@ -110,9 +113,9 @@ export default function DevDashboard() {
 
           <div className="p-6 bg-my-accent/5 border-t border-my-accent/10 flex items-center justify-between">
             <div className="text-[9px] text-white/40 uppercase tracking-widest flex items-center gap-3">
-              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Operational</span>
+              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-current ds-text-success" /> Operational</span>
               <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-my-signal" /> Degraded</span>
-              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> Locked Out</span>
+              <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-current ds-text-danger animate-pulse" /> Locked Out</span>
             </div>
             <div className="text-[9px] text-white/40 uppercase tracking-widest font-mono">
               SYSTEM TIME: {new Date().toLocaleTimeString()}
@@ -344,7 +347,7 @@ function BenchmarksTab({ stats, researchStats, deepStats, recentEvents }: {
                 </span>
                 <span className="text-white/80 truncate">{event.queryPreview}...</span>
                 {event.isRetry && (
-                  <span className="text-yellow-500/80 text-[8px] uppercase tracking-wider">retry</span>
+                  <span className="ds-text-warning/80 text-[8px] uppercase tracking-wider">retry</span>
                 )}
               </div>
               <div className="flex items-center gap-4 shrink-0 ml-4">

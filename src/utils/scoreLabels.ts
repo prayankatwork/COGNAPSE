@@ -16,11 +16,11 @@ export function getCredibilityLabel(score: number): string {
 }
 
 export function getCredibilityColor(score: number): string {
-  if (score >= 81) return 'text-green-600 dark:text-green-400';
-  if (score >= 61) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 41) return 'text-amber-600 dark:text-amber-400';
-  if (score >= 21) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (score >= 81) return 'ds-text-success';
+  if (score >= 61) return 'ds-text-success';
+  if (score >= 41) return 'ds-text-warning';
+  if (score >= 21) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 export function getCredibilityBg(score: number): string {
@@ -51,10 +51,10 @@ export function getConsensusLabel(consensus: string): string {
 
 export function getConsensusColor(consensus: string): string {
   const score = CONSENSUS_SCORE_MAP[consensus] ?? 0;
-  if (score >= 81) return 'text-green-600 dark:text-green-400';
-  if (score >= 61) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 41) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
+  if (score >= 81) return 'ds-text-success';
+  if (score >= 61) return 'ds-text-success';
+  if (score >= 41) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 /* ─── Confidence (0–1 → mapped to 0–100) ─── */
@@ -69,10 +69,10 @@ export function getConfidenceLabel(score: number): string {
 
 export function getConfidenceColor(score: number): string {
   const pct = score * 100;
-  if (pct >= 76) return 'text-green-600 dark:text-green-400';
-  if (pct >= 51) return 'text-amber-600 dark:text-amber-400';
-  if (pct >= 26) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (pct >= 76) return 'ds-text-success';
+  if (pct >= 51) return 'ds-text-warning';
+  if (pct >= 26) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 /* ─── Source Diversity (0–1 → mapped to 0–100) ─── */
@@ -87,10 +87,10 @@ export function getDiversityLabel(score: number): string {
 
 export function getDiversityColor(score: number): string {
   const pct = score * 100;
-  if (pct >= 76) return 'text-green-600 dark:text-green-400';
-  if (pct >= 51) return 'text-amber-600 dark:text-amber-400';
-  if (pct >= 26) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (pct >= 76) return 'ds-text-success';
+  if (pct >= 51) return 'ds-text-warning';
+  if (pct >= 26) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 /* ─── Bias Risk (0–1 → bias RISK, where higher = worse) ─── */
@@ -106,11 +106,11 @@ export function getBiasLabel(biasScore: number): string {
 
 export function getBiasColor(biasScore: number): string {
   const pct = biasScore * 100;
-  if (pct <= 20) return 'text-green-600 dark:text-green-400';
-  if (pct <= 40) return 'text-emerald-600 dark:text-emerald-400';
-  if (pct <= 60) return 'text-amber-600 dark:text-amber-400';
-  if (pct <= 80) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (pct <= 20) return 'ds-text-success';
+  if (pct <= 40) return 'ds-text-success';
+  if (pct <= 60) return 'ds-text-warning';
+  if (pct <= 80) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 /* ─── Research / Overall Quality (0–100 derived score → letter + label) ─── */
@@ -132,11 +132,11 @@ export function getQualityLabel(score: number): string {
 }
 
 export function getQualityColor(score: number): string {
-  if (score >= 90) return 'text-green-600 dark:text-green-400';
-  if (score >= 70) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 50) return 'text-amber-600 dark:text-amber-400';
-  if (score >= 30) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (score >= 90) return 'ds-text-success';
+  if (score >= 70) return 'ds-text-success';
+  if (score >= 50) return 'ds-text-warning';
+  if (score >= 30) return 'ds-text-warning';
+  return 'ds-text-danger';
 }
 
 /* ─── Overall Credibility (0–100 from report.scores.overall_credibility) ─── */
@@ -179,9 +179,9 @@ export function getModelAgreementLabel(level: string): string {
 
 export function getModelAgreementColor(level: string): string {
   switch (level) {
-    case 'low': return 'text-green-600 dark:text-green-400';
-    case 'moderate': return 'text-amber-600 dark:text-amber-400';
-    case 'high': return 'text-red-600 dark:text-red-400';
+    case 'low': return 'ds-text-success';
+    case 'moderate': return 'ds-text-warning';
+    case 'high': return 'ds-text-danger';
     default: return 'text-my-muted';
   }
 }

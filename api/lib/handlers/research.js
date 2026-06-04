@@ -291,6 +291,8 @@ async function searchBrave(query, count = 10) {
 }
 
 async function searchTavily(query, count = 10) {
+  // Tavily has a 400-char max query length — truncate if needed
+  const tavilyQuery = query.length > 400 ? query.slice(0, 400) : query;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   try {
@@ -298,7 +300,7 @@ async function searchTavily(query, count = 10) {
       signal: controller.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query, search_depth: 'basic', max_results: count }),
+      body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query: tavilyQuery, search_depth: 'basic', max_results: count }),
     });
     if (!response.ok) throw new Error(`Tavily API error (${response.status}): ${await response.text().catch(() => 'Unknown error')}`);
     const data = await response.json();
@@ -336,7 +338,7 @@ export async function handleSearch(req, res) {
   const rl = rateLimit(req, { key: 'search', limit: 20, windowMs: 60_000 });
   if (!rl.allowed) return res.status(429).json({ error: 'Search rate limit exceeded. Please wait before searching again.' });
 
-  const { query, count = 8 } = req.body || {};
+  const { query, count = 5 } = req.body || {};
   if (!query || typeof query !== 'string' || query.trim().length === 0) return res.status(400).json({ error: 'Missing or empty query parameter' });
   if (query.length > 500) return res.status(400).json({ error: 'Query exceeds maximum length of 500 characters' });
 

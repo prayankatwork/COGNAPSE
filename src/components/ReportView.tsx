@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { COGNAPSE_Output, ResearchVisibility } from '../types';
 import { ShieldAlert, Info, AlertTriangle, ArrowRight, CheckCircle2, Link2, Clock, Download, Search, Lock, Loader2, Share2, Copy, Eye, Globe2, FileText, Code2, ExternalLink, X, BookOpen, GraduationCap, Building2, Shield, CalendarDays, Hash, Layers } from 'lucide-react';
 import { toast } from '../utils/toast';
-import { ErrorBoundary } from './ui';
+import { ErrorBoundary, SectionLabel, Button } from './ui';
 import clsx from 'clsx';
 import { formatAllCitations, getDomainBadge, getDaysSincePublished, getDaysLabel, stripCitationMarkers, type CitationFormat } from '../utils/citations';
 
@@ -275,14 +275,15 @@ export default function ReportView({
         <div className="flex flex-wrap items-center gap-3 mb-6 pb-4 border-b border-my-border">
           {!readOnly && (
             <div className="flex items-center gap-2">
-              <button
+  <Button
+                variant="primary"
                 onClick={handleCreateShare}
                 disabled={sharing}
-                className="px-4 py-2.5 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                className="text-[9px] py-2.5"
+                icon={sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
               >
-                {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
                 Share
-              </button>
+              </Button>
               <button
                 onClick={() => setShowAllTools(!showAllTools)}
                 className={clsx(
@@ -323,30 +324,33 @@ export default function ReportView({
                 </div>
               )}
               {isUnlocked && (
-                <>
-                  <button
-                    onClick={() => {
-                      const md = generateMarkdown(report) + '\n\n---\n\n## References (' + citationFormat.toUpperCase() + ')\n\n' + (report.sources ? formatAllCitations(report.sources, citationFormat) : 'No sources available.');
+                <><Button
+                  variant="secondary"
+                  onClick={() => {
+                    const md = generateMarkdown(report) + '\n\n---\n\n## References (' + citationFormat.toUpperCase() + ')\n\n' + (report.sources ? formatAllCitations(report.sources, citationFormat) : 'No sources available.');
                     downloadAsFile(md, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.md`, 'text/markdown');
                     toast.success('Markdown report downloaded.');
                   }}
-                  className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
-                  title="Export as Markdown"
+                  className="text-[8px] py-2.5 px-3"
+
+                  icon={<FileText size={11} />}
                 >
-                  <FileText size={11} /> .md
-                </button>
-                <button
+                  .md
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     const citations = report.sources ? formatAllCitations(report.sources, citationFormat) : '';
                     const json = generateJSON(report, citations);
                     downloadAsFile(json, `${report.query_understood?.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '_') || 'report'}.json`, 'application/json');
                     toast.success('JSON export downloaded.');
                   }}
-                  className="px-3 py-2.5 text-[8px] font-black uppercase tracking-widest transition-all border border-my-border hover:border-my-accent bg-my-callout text-my-ink flex items-center gap-1.5"
-                  title="Export as JSON"
+                  className="text-[8px] py-2.5 px-3"
+
+                  icon={<Code2 size={11} />}
                 >
-                  <Code2 size={11} /> .json
-                </button>
+                  .json
+                </Button>
                 {/* Citation format selector */}
                 <div className="flex items-center gap-1 px-2 py-2 border border-my-border bg-my-callout">
                   <BookOpen size={10} className="text-my-muted" />
@@ -442,7 +446,7 @@ export default function ReportView({
           variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
           className="flex flex-col gap-6 min-w-0"
         >
-          <SectionTitle>Intelligence Synthesis</SectionTitle>
+          <SectionLabel>Intelligence Synthesis</SectionLabel>
           
           {(report.summary?.full_synthesis || report.summary?.eli5_version) && (
             <div className="bg-my-bg/70 backdrop-blur-md p-6 border border-my-border rounded-[4px] text-[13px] leading-[1.6] text-my-syn flex flex-col gap-4 shadow-sm">
@@ -526,32 +530,32 @@ export default function ReportView({
                   <span className="text-[9px] font-bold text-my-muted uppercase tracking-widest mb-1">Evidence Breakdown</span>
                   {report.summary.evidence_breakdown.established_findings && (
                     <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0 mt-[5px]" />
-                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.established_findings)}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current ds-text-success shrink-0 mt-[5px]" />
+                      <span className="text-my-syn">{safeText(report.summary.evidence_breakdown.established_findings)}</span>
                     </div>
                   )}
                   {report.summary.evidence_breakdown.supported_evidence && (
                     <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-[5px]" />
-                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.supported_evidence)}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current text-sky-600 dark:text-sky-400 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn">{safeText(report.summary.evidence_breakdown.supported_evidence)}</span>
                     </div>
                   )}
                   {report.summary.evidence_breakdown.competing_interpretations && (
                     <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-[5px]" />
-                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.competing_interpretations)}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current ds-text-warning shrink-0 mt-[5px]" />
+                      <span className="text-my-syn">{safeText(report.summary.evidence_breakdown.competing_interpretations)}</span>
                     </div>
                   )}
                   {report.summary.evidence_breakdown.remaining_uncertainty && (
                     <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0 mt-[5px]" />
-                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.remaining_uncertainty)}</span>
+                      <span className="text-my-syn">{safeText(report.summary.evidence_breakdown.remaining_uncertainty)}</span>
                     </div>
                   )}
                   {report.summary.evidence_breakdown.research_gaps && (
                     <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-[5px]" />
-                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.research_gaps)}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current ds-text-danger shrink-0 mt-[5px]" />
+                      <span className="text-my-syn">{safeText(report.summary.evidence_breakdown.research_gaps)}</span>
                     </div>
                   )}
                 </div>
@@ -585,7 +589,7 @@ export default function ReportView({
               {/* Summary bar */}
               <div className="flex flex-wrap items-center gap-3 px-3 py-2">
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 size={11} className="text-green-500" />
+                  <CheckCircle2 size={11} className="ds-text-success" />
                   <span className="text-[9px] font-bold uppercase tracking-widest text-my-ink">Citations Verified</span>
                 </div>
                 <span className="text-[8px] font-mono text-my-muted">
@@ -612,7 +616,7 @@ export default function ReportView({
               {report.citation_verifications && report.citation_verifications.some(v => v.verdict !== 'supported') && (
                 <details className="group border-t border-my-border/50">
                   <summary className="cursor-pointer list-none px-3 py-1.5 flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-my-muted hover:text-my-ink transition-colors">
-                    <AlertTriangle size={9} className="text-amber-500" />
+                    <AlertTriangle size={9} className="ds-text-warning" />
                     <span>Flagged citation details</span>
                     <span className="ml-auto text-[6px] transition-transform group-open:rotate-180">▼</span>
                   </summary>
@@ -622,8 +626,8 @@ export default function ReportView({
                       .map((v, i) => {
                         const source = report.sources?.find(s => s.id === v.source_id);
                         const verdictColor = v.verdict === 'partial'
-                          ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40'
-                          : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40';
+                          ? 'ds-text-warning bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40'
+                          : 'ds-text-danger bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40';
                         const verdictLabel = v.verdict === 'partial' ? 'Partial' : v.verdict === 'contradicted' ? 'Contradicted' : 'Unrelated';
                         return (
                           <div key={i} className={`flex flex-col gap-1 p-2 border ${verdictColor}`}>
@@ -652,7 +656,7 @@ export default function ReportView({
           {/* Actionable Takeaways */}
           {report.actionable_takeaways && (
             <div className="border border-my-border bg-my-callout/50">
-              <SectionTitle>Key Takeaways</SectionTitle>
+              <SectionLabel>Key Takeaways</SectionLabel>
               <div className="divide-y divide-my-border">
                 <TakeawayCard title="Key Insight" content={report.actionable_takeaways.key_insight} />
                 <TakeawayCard title="Watch Out For" content={report.actionable_takeaways.watch_out_for} />
@@ -681,7 +685,7 @@ export default function ReportView({
         >
           
           {/* Metrics */}
-          <SectionTitle>Metrics</SectionTitle>
+          <SectionLabel>Metrics</SectionLabel>
           {report.scores && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-my-border border border-my-border">
                <ScoreCard
@@ -736,11 +740,11 @@ export default function ReportView({
           {hasBias && (
             <div className="border border-amber-400/30 bg-amber-50/40 dark:bg-amber-950/20">
               <div className="w-full px-4 py-3 flex items-center gap-3 border-b border-amber-400/20">
-                <ShieldAlert size={14} className="text-amber-600 dark:text-amber-400" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-300">
+                <ShieldAlert size={14} className="ds-text-warning" />
+                <span className="text-[10px] font-bold uppercase tracking-widest ds-text-warning">
                   Bias Alert
                 </span>
-                <span className="text-[8px] font-mono text-amber-600/60 dark:text-amber-400/60 ml-auto">
+                <span className="text-[8px] font-mono ds-text-warning/60 ml-auto">
                   {report.bias_alert?.direction || 'Potential bias detected'}
                 </span>
               </div>
@@ -757,7 +761,7 @@ export default function ReportView({
             <details className="group border border-my-border bg-my-callout/50">
               <summary className="cursor-pointer list-none w-full px-4 py-3 flex items-center justify-between border-b border-my-border/50 hover:bg-my-callout/80 transition-colors">
                 <div className="flex items-center gap-3">
-                  <AlertTriangle size={14} className="text-red-500" />
+                  <AlertTriangle size={14} className="ds-text-danger" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-my-ink">
                     Contradictions ({report.conflicts!.length})
                   </span>
@@ -770,23 +774,23 @@ export default function ReportView({
                     <div className="grid grid-cols-2 divide-x divide-red-200 dark:divide-red-900/40">
                       <div className="p-3">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                          <span className="text-[8px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Claim A</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current ds-text-danger shrink-0" />
+                          <span className="ds-micro font-black uppercase tracking-widest ds-text-danger">Claim A</span>
                         </div>
                         <p className="text-[11px] leading-relaxed text-my-ink">{c.claim_a}</p>
                         <span className="text-[9px] font-mono text-my-muted mt-1.5 block">Source: {c.source_a}</span>
                       </div>
                       <div className="p-3">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                          <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Claim B</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current ds-text-warning shrink-0" />
+                          <span className="ds-micro font-black uppercase tracking-widest ds-text-warning">Claim B</span>
                         </div>
                         <p className="text-[11px] leading-relaxed text-my-ink">{c.claim_b}</p>
                         <span className="text-[9px] font-mono text-my-muted mt-1.5 block">Source: {c.source_b}</span>
                       </div>
                     </div>
                     <div className="px-3 py-2.5 bg-red-50/50 dark:bg-red-950/20 border-t border-red-200 dark:border-red-900/40">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-my-muted block mb-1">Analysis</span>
+                      <span className="ds-micro font-black uppercase tracking-widest text-my-muted block mb-1">Analysis</span>
                       <p className="text-[11px] leading-relaxed text-my-syn">{c.explanation}</p>
                     </div>
                   </div>
@@ -796,41 +800,26 @@ export default function ReportView({
                   <>
                     {report.structured_contradictions.areas_of_agreement.length > 0 && (
                       <div className="pt-2 border-t border-my-border">
-                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-2 px-1">Areas of Agreement</h4>
+                        <h4 className="ds-micro font-bold uppercase tracking-widest ds-text-success mb-2 px-1">Areas of Agreement</h4>
                         <div className="flex flex-col gap-1.5">
                           {report.structured_contradictions.areas_of_agreement.map((a, i) => (
                             <div key={i} className="flex items-start gap-2 px-1">
-                              <span className="w-1 h-1 rounded-full bg-green-500 shrink-0 mt-[6px]" />
-                              <span className="text-[10px] text-my-syn leading-relaxed truncate">{a}</span>
+                              <span className="w-1 h-1 rounded-full bg-current ds-text-success shrink-0 mt-[6px]" />
+                              <span className="text-[10px] text-my-syn leading-relaxed">{a}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-                    {report.structured_contradictions.evidence_conflicts.length > 0 && (
-                      <div className="pt-2 border-t border-my-border">
-                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 px-1">Evidence Conflicts</h4>
-                        <div className="flex flex-col gap-2">
-                          {report.structured_contradictions.evidence_conflicts.map((ec, i) => (
-                            <div key={i} className="border border-amber-200 dark:border-amber-900/40 bg-my-bg/50 p-2.5">
-                              <span className="text-[8px] font-black text-my-muted uppercase tracking-widest block mb-1">{ec.topic}</span>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[9px] leading-relaxed text-my-syn"><span className="text-red-500 font-bold">A:</span> {ec.source_a_view}</span>
-                                <span className="text-[9px] leading-relaxed text-my-syn"><span className="text-amber-500 font-bold">B:</span> {ec.source_b_view}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+
                     {report.structured_contradictions.open_questions.length > 0 && (
                       <div className="pt-2 border-t border-my-border">
-                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 mb-2 px-1">Open Questions</h4>
+                        <h4 className="ds-micro font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 mb-2 px-1">Open Questions</h4>
                         <div className="flex flex-col gap-1.5">
                           {report.structured_contradictions.open_questions.map((q, i) => (
                             <div key={i} className="flex items-start gap-2 px-1">
                               <span className="text-purple-500 text-[9px] shrink-0 mt-[2px]">?</span>
-                              <span className="text-[10px] text-my-syn leading-relaxed truncate">{q}</span>
+                              <span className="text-[10px] text-my-syn leading-relaxed">{q}</span>
                             </div>
                           ))}
                         </div>
@@ -845,7 +834,7 @@ export default function ReportView({
           {/* Intelligence Map */}
           {report.intelligence_map && report.intelligence_map.central_node && Array.isArray(report.intelligence_map.nodes) && report.intelligence_map.nodes.length > 0 && (
             <div className="mt-6 lg:mt-0">
-              <SectionTitle>Intelligence Map</SectionTitle>
+              <SectionLabel>Intelligence Map</SectionLabel>
               <div className="mt-3">                  <ErrorBoundary fallback={<div className="h-48 flex items-center justify-center text-my-muted text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Semantic graph unavailable</div>}>
                  <Suspense fallback={<div className="h-48 flex items-center justify-center text-my-muted animate-pulse text-[10px] uppercase tracking-widest bg-my-callout/50 rounded-[4px] border border-my-border">Loading semantic graph...</div>}>
                    <PhysicsMap mapData={report.intelligence_map} onSubSearch={readOnly ? () => {} : onSubSearch} readOnly={readOnly} />
@@ -889,7 +878,7 @@ export default function ReportView({
       {/* Follow-ups */}
       {!readOnly && normalizedSuggestions && normalizedSuggestions.length > 0 && (
         <div className="pt-6 mt-8 border-t border-my-border">
-          <SectionTitle>Investigate Further</SectionTitle>
+          <SectionLabel>Investigate Further</SectionLabel>
           <div className="flex flex-wrap gap-2 mt-3">
             {normalizedSuggestions.map((f: string, i: number) => (
               <button 
@@ -927,7 +916,7 @@ export default function ReportView({
       {/* AI Limitation Disclaimer */}
       <div className="mt-12 pt-6 border-t border-my-border">
         <div className="flex items-start gap-2 text-[10px] text-my-muted leading-[1.6]">
-          <AlertTriangle size={10} className="text-amber-500 mt-0.5 shrink-0" />
+          <AlertTriangle size={10} className="ds-text-warning mt-0.5 shrink-0" />
           <p>
             <strong className="uppercase tracking-widest">AI-Generated Content:</strong> This report was produced by artificial intelligence systems. 
             Confidence scores, credibility ratings, and consensus metrics are derived from model self-assessment, not ground-truth validation. 
@@ -970,7 +959,7 @@ export default function ReportView({
             </div>
             <div className="flex-1 flex flex-col">
               <div className="px-4 py-2 bg-my-callout border-b border-my-border flex items-center gap-2 text-[9px] text-my-muted font-mono">
-                <AlertTriangle size={9} className="text-amber-500 shrink-0" />
+                <AlertTriangle size={9} className="ds-text-warning shrink-0" />
                 <span>If the page doesn't load, many sites block iframe embedding. Use the button below.</span>
               </div>
               <iframe
@@ -999,14 +988,6 @@ export default function ReportView({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[10px] uppercase tracking-[0.1em] font-bold text-my-muted border-b border-my-border pb-1">
-      {children}
     </div>
   );
 }
@@ -1040,7 +1021,7 @@ function TakeawayCard({ title, content }: { title: string, content: string }) {
         {title}
       </h4>
       {content?.trim() ? (
-        <p className="text-[12px] leading-[1.5] text-my-ink font-medium truncate" title={content}>{content}</p>
+        <p className="text-[12px] leading-[1.5] text-my-ink font-medium" title={content}>{content}</p>
       ) : (
         <p className="text-[10px] text-my-border italic">N/A</p>
       )}

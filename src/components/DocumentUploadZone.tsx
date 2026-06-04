@@ -150,7 +150,7 @@ export default function DocumentUploadZone({
                   e.stopPropagation();
                   setPreviewFile(null);
                 }}
-                className="text-[9px] text-my-muted hover:text-red-500 transition-colors flex items-center gap-1"
+                className="text-[9px] text-my-muted hover:ds-text-danger transition-colors flex items-center gap-1"
               >
                 <X size={10} /> Clear
               </button>
@@ -204,9 +204,9 @@ export default function DocumentUploadZone({
             exit={{ opacity: 0, y: -5 }}
             className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-sm"
           >
-            <AlertCircle size={12} className="text-red-500 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-red-500 flex-1 leading-relaxed">{error ? String(error) : ''}</p>
-            <button onClick={onDismissError} className="text-red-500/50 hover:text-red-500">
+            <AlertCircle size={12} className="ds-text-danger shrink-0 mt-0.5" />
+            <p className="text-[10px] ds-text-danger flex-1 leading-relaxed">{error ? String(error) : ''}</p>
+            <button onClick={onDismissError} className="ds-text-danger/50 hover:ds-text-danger">
               <X size={12} />
             </button>
           </motion.div>

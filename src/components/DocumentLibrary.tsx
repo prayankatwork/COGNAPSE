@@ -35,19 +35,19 @@ export default function DocumentLibrary({
     switch (status) {
       case 'processing':
         return (
-          <span className="flex items-center gap-1 text-[8px] text-yellow-500 uppercase tracking-wider">
+          <span className="flex items-center gap-1 text-[8px] ds-text-warning uppercase tracking-wider">
             <Loader2 size={8} className="animate-spin" /> Processing
           </span>
         );
       case 'ready':
         return (
-          <span className="text-[8px] text-emerald-500 uppercase tracking-wider">
+          <span className="text-[8px] ds-text-success uppercase tracking-wider">
             Ready
           </span>
         );
       case 'error':
         return (
-          <span className="flex items-center gap-1 text-[8px] text-red-500 uppercase tracking-wider">
+          <span className="flex items-center gap-1 text-[8px] ds-text-danger uppercase tracking-wider">
             <AlertCircle size={8} /> Error
           </span>
         );
@@ -154,7 +154,7 @@ export default function DocumentLibrary({
               <button
                 onClick={(e) => handleDelete(doc.id, e)}
                 disabled={deletingId === doc.id}
-                className="p-1.5 text-my-muted hover:text-red-500 hover:bg-red-500/10 transition-colors rounded-sm"
+                className="p-1.5 text-my-muted hover:ds-text-danger hover:bg-red-500/10 dark:hover:bg-red-400/10 transition-colors rounded-sm"
                 title="Delete document"
               >
                 {deletingId === doc.id ? (

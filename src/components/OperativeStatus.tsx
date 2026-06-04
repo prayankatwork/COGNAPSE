@@ -379,7 +379,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                          <div className="absolute inset-0 bg-gradient-to-tr from-my-accent/40 to-transparent opacity-60" />
                          <Fingerprint size={48} className="text-white dark:text-black relative z-10" strokeWidth={1.5} />
                       </div>
-                      <div className="absolute bottom-2 right-2 w-4 h-4 bg-emerald-500 rounded-full border-4 border-my-bg shadow-lg animate-pulse" />
+                      <div className="absolute bottom-2 right-2 w-4 h-4 rounded-full border-4 border-my-bg shadow-lg animate-pulse bg-current ds-text-success" />
                    </div>
 
                    <div className="mb-8">
@@ -392,17 +392,17 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                    <div className="w-full space-y-3">
                       <StatRow label="Research Reports" value={searchCount} icon={<Target size={14} />} />
                       <StatRow label="Activity Streak" value={`${streak || 0} Days`} icon={<Flame size={14} className="text-my-signal" />} />
-                      <StatRow label="Account Standing" value={xp} icon={<Star size={14} className="text-yellow-500" />} />
+                      <StatRow label="Account Standing" value={xp} icon={<Star size={14} className="ds-text-warning" />} />
                    </div>
                 </div>
 
                 {/* Progression Panel */}
                 <div className="flex-1 w-full space-y-6">
-                   <div className="p-8 bg-my-callout/50 border border-my-border backdrop-blur-sm relative overflow-hidden shadow-inner">
+                   <Panel className="!rounded-none p-8 bg-my-callout/50 backdrop-blur-sm shadow-inner relative overflow-hidden">
                       <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-my-muted flex items-center gap-2">
+                         <SectionLabel className="flex items-center gap-2 !text-my-muted">
                             <Cpu size={12} /> System Clearance
-                         </h3>
+                         </SectionLabel>
                          <span className="text-[10px] font-mono text-my-accent font-bold tracking-tighter">{xp} / {nextRankXp} Score</span>
                       </div>
                       <div className="h-2 w-full bg-my-border rounded-full overflow-hidden">
@@ -418,7 +418,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                          Acquire {nextRankXp - xp} additional points to unlock Tier {Math.floor(xp/100) + 2} analysis tools. 
                          Data quota utilized: {progress}%.
                       </p>
-                   </div>
+                   </Panel>
                    
                    <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 border border-my-border bg-my-bg">
@@ -462,7 +462,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                         <span className="text-[7px] text-my-muted uppercase font-bold tracking-widest">Total Activity Score</span>
                       </div>
                       <div className="flex flex-col text-right">
-                        <span className="text-xl font-bold text-emerald-500 flex items-center gap-1 justify-end"><TrendingUp size={14} /> 12%</span>
+                        <span className="text-xl font-bold ds-text-success flex items-center gap-1 justify-end"><TrendingUp size={14} /> 12%</span>
                         <span className="text-[7px] text-my-muted uppercase font-bold tracking-widest">Session Productivity</span>
                       </div>
                     </div>
@@ -562,7 +562,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                           clearExports().finally(() => setClearingExports(false));
                         }}
                         disabled={clearingExports}
-                        className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-red-500/70 hover:text-red-500 transition-colors px-2 py-1 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 disabled:opacity-40"
+                        className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ds-text-danger/70 hover:ds-text-danger transition-colors px-2 py-1 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 disabled:opacity-40"
                       >
                         <Trash2 size={10} />
                         {clearingExports ? 'Clearing…' : 'Delete All'}
@@ -603,7 +603,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                               removeExport(exp.id).finally(() => setDeletingId(null));
                             }}
                             disabled={deletingId === exp.id}
-                            className="px-2 py-2 border border-my-border hover:border-red-500/40 text-my-muted hover:text-red-500 transition-all disabled:opacity-40 bg-my-bg"
+                            className="px-2 py-2 border border-my-border hover:border-red-500/40 text-my-muted hover:ds-text-danger transition-all disabled:opacity-40 bg-my-bg"
                             title="Delete export"
                           >
                             {deletingId === exp.id ? (
@@ -675,7 +675,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
 
                     {/* Premium Features Checklist */}
                     <div className="space-y-3">
-                      <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-my-muted">Unlocked Features</h4>
+                      <SectionLabel className="!text-[9px] !text-my-muted">Unlocked Features</SectionLabel>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <FeatureCheck label="Unlimited PDF Exports" />
                         <FeatureCheck label="Markdown & JSON Export" />
@@ -709,19 +709,19 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                       </p>
                       <div className="space-y-2 max-w-xs mx-auto">
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Unlimited PDF Exports
+                          <CheckCircle2 size={10} className="ds-text-success shrink-0" /> Unlimited PDF Exports
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Session Memory Synthesis
+                          <CheckCircle2 size={10} className="ds-text-success shrink-0" /> Session Memory Synthesis
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Priority Processing
+                          <CheckCircle2 size={10} className="ds-text-success shrink-0" /> Priority Processing
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Expanded Scoring Depth
+                          <CheckCircle2 size={10} className="ds-text-success shrink-0" /> Expanded Scoring Depth
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-left text-my-muted">
-                          <CheckCircle2 size={10} className="text-green-500 shrink-0" /> Persistent Chat History
+                          <CheckCircle2 size={10} className="ds-text-success shrink-0" /> Persistent Chat History
                         </div>
                       </div>
                     </div>
@@ -768,7 +768,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                  setPurging(false);
                }
              }}
-             className="text-[8px] font-black uppercase tracking-[0.3em] text-red-500/60 hover:text-red-500 transition-colors disabled:opacity-40"
+             className="text-[8px] font-black uppercase tracking-[0.3em] ds-text-danger/60 hover:ds-text-danger transition-colors disabled:opacity-40"
            >
               {purging ? 'Purging…' : 'Purge Personal Data'}
            </button>
@@ -781,7 +781,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
 function FeatureCheck({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 p-2 bg-my-bg border border-my-border">
-      <CheckCircle2 size={12} className="text-green-500 shrink-0" />
+      <CheckCircle2 size={12} className="ds-text-success shrink-0" />
       <span className="text-[10px] font-bold text-my-ink tracking-wide">{label}</span>
     </div>
   );

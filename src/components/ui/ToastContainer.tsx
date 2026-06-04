@@ -9,8 +9,8 @@ interface ToastItem {
 }
 
 const icons = {
-  success: <CheckCircle size={14} className="text-emerald-500 shrink-0" />,
-  error: <AlertCircle size={14} className="text-red-500 shrink-0" />,
+  success: <CheckCircle size={14} className="ds-text-success shrink-0" />,
+  error: <AlertCircle size={14} className="ds-text-danger shrink-0" />,
   info: <Info size={14} className="text-blue-500 shrink-0" />,
 };
 

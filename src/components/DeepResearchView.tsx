@@ -99,7 +99,7 @@ export default function DeepResearchView() {
             className={clsx(
               "px-5 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2",
               isUnlocked 
-                ? "bg-green-600 hover:bg-green-700 text-white hover:scale-105" 
+                ? "bg-green-600 hover:bg-green-700 text-white dark:text-white hover:scale-105" 
                 : "bg-my-accent hover:bg-my-accent/90 text-white dark:text-black hover:scale-105"
             )}
           >
@@ -135,7 +135,7 @@ export default function DeepResearchView() {
               </h3>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-bold text-my-muted uppercase tracking-tighter">Verified</span>
-                <CheckCircle2 size={12} className="text-green-500" />
+                <CheckCircle2 size={12} className="ds-text-success" />
               </div>
             </button>
             {expandedSections[section.id] && (

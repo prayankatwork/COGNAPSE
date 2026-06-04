@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { audioSystem } from '../services/audioService';
+import { Button } from './ui';
 
 interface WalkthroughStep {
   title: string;
@@ -396,14 +397,15 @@ export default function NeuralWalkthrough() {
                   )}
                   
                   {!currentStep?.isActionGated ? (
-                    <button 
+                    <Button
+                      variant="primary"
                       onClick={handleNext}
                       disabled={currentStep?.id === 'categories' && subscribedCategories.length < 2}
-                      className="group px-8 py-3 bg-my-ink text-white dark:bg-my-accent dark:text-black text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:pointer-events-none"
+                      className="px-8 py-3 text-[10px] uppercase tracking-[0.3em] hover:scale-105 active:scale-95 shadow-xl"
+                      icon={<ChevronRight size={14} />}
                     >
                        {currentStep?.actionLabel || (currentStepIdx === steps.length - 1 ? "Initialize" : "Proceed")}
-                       <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </Button>
                   ) : (
                     <div className="px-8 py-3 bg-my-accent/10 border border-my-accent/30 text-my-accent text-[8px] font-black uppercase tracking-[0.2em] animate-pulse">
                        Awaiting Analyst Action...

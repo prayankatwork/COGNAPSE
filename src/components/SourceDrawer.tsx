@@ -27,9 +27,9 @@ function getSourceIcon(type: string) {
 function getSourceColor(type: string): string {
   // Use theme-aware CSS variable colors via Tailwind arbitrary values
   switch (type) {
-    case 'academic': return 'text-emerald-600 dark:text-emerald-400';
+    case 'academic': return 'ds-text-success';
     case 'government': return 'text-sky-600 dark:text-sky-400';
-    case 'journalism': return 'text-amber-600 dark:text-amber-400';
+    case 'journalism': return 'ds-text-warning';
     case 'industry': return 'text-violet-600 dark:text-violet-400';
     default: return 'text-my-muted';
   }
@@ -58,7 +58,7 @@ function getSourceLabel(type: string): string {
 
 function CredibilityBar({ score, showRaw }: { score: number; showRaw?: boolean }) {
   const barColor = score >= 81 ? 'bg-green-500' : score >= 61 ? 'bg-emerald-500' : score >= 41 ? 'bg-amber-500' : 'bg-red-500';
-  const textColor = score >= 81 ? 'text-green-600 dark:text-green-400' : score >= 61 ? 'text-emerald-600 dark:text-emerald-400' : score >= 41 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+  const textColor = score >= 81 ? 'ds-text-success' : score >= 61 ? 'ds-text-success' : score >= 41 ? 'ds-text-warning' : 'ds-text-danger';
   const label = getCredibilityLabel(score);
   return (
     <div className="flex items-center gap-2 min-w-0">

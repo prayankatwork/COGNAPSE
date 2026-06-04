@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store';
 import { callCloudAI } from '../services/aiService';
-import { PageHeader, StatusDot, Card } from './ui';
+import { PageHeader, StatusDot, Card, Button } from './ui';
 import clsx from 'clsx';
 
 interface NewsItem {
@@ -286,12 +286,13 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                           <Globe className="mx-auto text-my-muted opacity-20 mb-6" size={48} />
                           <h2 className="text-xl font-bold text-my-ink mb-2 uppercase tracking-widest">No Intelligence Vectors Active</h2>
                           <p className="text-sm text-my-muted mb-8">Subscribe to intelligence categories to begin global monitoring.</p>
-                          <button 
+                          <Button
+                            variant="primary"
                             onClick={() => setActiveTab('subscriptions')}
-                            className="px-8 py-3 bg-my-accent text-white dark:text-black text-xs font-black uppercase tracking-widest rounded-[2px] hover:scale-105 transition-all shadow-accent"
+                            className="px-8 py-3 rounded-[2px] hover:scale-105 shadow-accent"
                           >
                             Set Subscriptions
-                          </button>
+                          </Button>
                        </div>
                     ) : (
                        Object.entries(groupedNews).map(([category, items], sectionIdx) => (
@@ -398,11 +399,11 @@ function NewsCard({ item, idx, onResearch }: { item: NewsItem, idx: number, onRe
     >
        <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-2 text-[9px] text-my-muted font-bold uppercase tracking-widest">
-             <Activity size={10} className={clsx(item.impact === 'high' ? "text-red-500 animate-pulse" : "text-my-muted")} />
+             <Activity size={10} className={clsx(item.impact === 'high' ? "ds-text-danger animate-pulse" : "text-my-muted")} />
              {item.timestamp}
           </div>
           {item.impact === 'high' && (
-             <span className="text-[8px] font-black text-red-500 uppercase tracking-widest border border-red-500/30 px-2 py-0.5 rounded">High Impact</span>
+             <span className="text-[8px] font-black ds-text-danger uppercase tracking-widest border border-red-500/30 px-2 py-0.5 rounded">High Impact</span>
           )}
        </div>
 

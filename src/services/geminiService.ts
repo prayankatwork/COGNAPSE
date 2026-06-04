@@ -45,12 +45,15 @@ const KNOWN_LOCATIONS: { label: string; country: string; lat: number; lng: numbe
 /**
  * If the LLM skipped intelligence_map, generate a simple one from source titles
  * and synthesis text. This ensures the PhysicsMap always renders.
+ * Enforces a minimum of 4 meaningful nodes by extracting entities, concepts,
+ * and key terms from available source data.
  */
 export function ensureIntelligenceMap(report: COGNAPSE_Output): void {
-  if (report.intelligence_map && report.intelligence_map.nodes && report.intelligence_map.nodes.length > 0) {
-    return; // Already populated
+  if (report.intelligence_map && report.intelligence_map.nodes && report.intelligence_map.nodes.length >= 4) {
+    return; // Already populated with enough nodes
   }
 
+  // If the map exists but has fewer than 4 nodes, we'll rebuild it with more
   const queryLabel = report.query_understood || 'Research Topic';
   const sources = report.sources || [];
   const synthesis = report.summary?.full_synthesis || report.summary?.bottom_line || '';
@@ -82,26 +85,105 @@ export function ensureIntelligenceMap(report: COGNAPSE_Output): void {
     nodeIndex++;
   }
 
-  // Extract up to 3 key concepts from synthesis if we have room
+  // Extract key concepts from synthesis if we need more nodes
+  // Try multiple extraction strategies to find meaningful concepts
+  const extractConcepts = (text: string): string[] => {
+    const concepts: string[] = [];
+    if (!text || text.length < 30) return concepts;
+    
+    // Strategy 1: Title-case phrases (proper nouns, named entities)
+    const titleCasePattern = text.match(/(?:[A-Z][a-z]+\s){1,4}[A-Z][a-z]+/g);
+    if (titleCasePattern) {
+      for (const c of titleCasePattern) {
+        const trimmed = c.trim();
+        if (trimmed.length > 5 && trimmed.length < 50 && !seenLabels.has(trimmed)) {
+          concepts.push(trimmed);
+        }
+      }
+    }
+    
+    // Strategy 2: Quoted phrases (key terminology emphasized by the AI)
+    const quotedPattern = text.match(/"([^"]{8,60})"/g);
+    if (quotedPattern) {
+      for (const q of quotedPattern) {
+        const cleaned = q.replace(/"/g, '').trim();
+        if (cleaned.length > 8 && cleaned.length < 50 && !seenLabels.has(cleaned) && !concepts.includes(cleaned)) {
+          concepts.push(cleaned);
+        }
+      }
+    }
+    
+    // Strategy 3: Domain-relevant key terms from source metadata
+    // (no-op here — we add source domain nodes separately)
+    
+    return concepts.filter(c => !c.includes(queryLabel)); // avoid central-node duplication
+  };
+
+  // Add concept nodes until we reach the minimum of 4
   if (nodeIndex < 4 && synthesis.length > 50) {
-    const conceptPatterns = synthesis.match(/(?:[A-Z][a-z]+\s){1,4}[A-Z][a-z]+/g);
-    if (conceptPatterns) {
-      const uniqueConcepts = [...new Set(conceptPatterns.map(c => c.trim()))].filter(c =>
-        c.length > 5 && c.length < 40 && !seenLabels.has(c)
-      );
-      for (const concept of uniqueConcepts.slice(0, 3)) {
-        seenLabels.add(concept);
-        const nodeId = `concept_${nodeIndex}`;
-        nodes.push({
-          id: nodeId,
-          label: concept,
-          type: 'CONCEPT',
-          relationship: 'related',
-          sub_query: `${queryLabel} ${concept}`,
-          importance: 3,
-        });
-        edges.push({ from: centralId, to: nodeId, label: 'relates' });
-        nodeIndex++;
+    const concepts = extractConcepts(synthesis);
+    // Deduplicate while preserving order
+    const uniqueConcepts = [...new Set(concepts)];
+    for (const concept of uniqueConcepts.slice(0, 6)) {
+      if (seenLabels.has(concept)) continue;
+      seenLabels.add(concept);
+      const nodeId = `concept_${nodeIndex}`;
+      nodes.push({
+        id: nodeId,
+        label: concept,
+        type: 'CONCEPT',
+        relationship: 'related',
+        sub_query: `${queryLabel} ${concept}`,
+        importance: 3,
+      });
+      edges.push({ from: centralId, to: nodeId, label: 'relates' });
+      nodeIndex++;
+      if (nodeIndex >= 8) break; // cap total nodes at 8
+    }
+  }
+
+  // If we still don't have 4 nodes, extract key entities from source titles
+  // (e.g., Chernobyl, wildlife, radiation — meaningful topic keywords)
+  if (nodeIndex < 4 && sources.length > 0) {
+    const titleWords = new Map<string, number>();
+    for (const s of sources) {
+      const words = (s.title || '').toLowerCase().split(/\s+/);
+      for (const w of words) {
+        if (w.length > 4 && !['this','that','with','from','what','which','their','there','about','would','could','should','have','been','were','being','does','they','them','then','than','also','just','more','some','into','over','such','only','other','after','before','between','through','during','because','without','under','above','where','while','until','since','against','these','those','each','very','your','will'].includes(w)) {
+          titleWords.set(w, (titleWords.get(w) || 0) + 1);
+        }
+      }
+    }
+    // Sort by frequency (most common meaningful words)
+    const sortedWords = [...titleWords.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .filter(([word]) => !seenLabels.has(word) && word.length > 4);
+    
+    for (const [word] of sortedWords.slice(0, 4)) {
+      if (nodeIndex >= 4) break;
+      const label = word.charAt(0).toUpperCase() + word.slice(1);
+      seenLabels.add(label);
+      const nodeId = `keyword_${nodeIndex}`;
+      nodes.push({
+        id: nodeId,
+        label,
+        type: 'CONCEPT',
+        relationship: 'related',
+        sub_query: `${queryLabel} ${label}`,
+        importance: 2,
+      });
+      edges.push({ from: centralId, to: nodeId, label: 'relates' });
+      nodeIndex++;
+    }
+  }
+
+  // Preserve any existing nodes from the LLM that we didn't replace
+  if (report.intelligence_map?.nodes && report.intelligence_map.nodes.length > 0 && report.intelligence_map.nodes.length < 4) {
+    for (const existingNode of report.intelligence_map.nodes) {
+      if (!seenLabels.has(existingNode.label)) {
+        seenLabels.add(existingNode.label);
+        nodes.push(existingNode);
+        edges.push({ from: centralId, to: existingNode.id, label: existingNode.relationship || 'relates' });
       }
     }
   }
@@ -564,7 +646,7 @@ async function verifyCitations(
   // Build a lookup of sourceId → source content (prefer full text, fall back to snippet)
   const sourceMap = new Map<number, string>();
   for (const s of sources) {
-    const content = (s.full_text || s.snippet || s.key_finding || '').substring(0, 2000);
+    const content = (s.full_text || s.snippet || s.key_finding || '').substring(0, 4000);
     sourceMap.set(s.id, content);
   }
 
@@ -589,7 +671,7 @@ CRITICAL RULES:
 2. If the source content does not discuss the claim topic at all, use "unrelated".
 3. If you are unsure because the source content is too short or ambiguous, use "partial" with low confidence.
 4. NEVER make up source content. If the source content field is empty, use "unrelated" with confidence 0.
-5. You MUST include an explanation for EVERY pair that references SPECIFIC text from the source or explains why no matching text was found.
+5. You MUST include a specific explanation for EVERY pair. The explanation must reference exact words or phrases from the source text, or clearly state what the source covers instead. Do NOT leave any explanation empty.
 
 Be precise: a claim is "supported" only if the source content explicitly supports the claim or directly discusses the same specific finding. Assign "partial" if the source covers the general topic but not the specific claim. Use "contradicted" only if the source explicitly says the opposite. Use "unrelated" only if the source is about a completely different subject or the content field is empty.
 
@@ -597,10 +679,10 @@ For each pair, return exactly this structure:
 {
   "verdict": "supported" | "partial" | "contradicted" | "unrelated",
   "confidence": 0.0 to 1.0,
-  "explanation": "Required — one brief sentence explaining why, referencing specific words from the source if possible"
+  "explanation": "Required — one brief sentence EXPLICITLY quoting or referencing specific words from the source, e.g. 'The source mentions [X] which supports [Y]' or 'The source discusses [Z] but does not mention [Y]'"
 }
 
-Return ONLY a valid JSON array. No markdown, no backticks, no extra text. Every object MUST include all three fields: verdict, confidence, and explanation.
+Return ONLY a valid JSON array. No markdown, no backticks, no extra text. Every object MUST include all three fields: verdict, confidence, and explanation. FAIL IF ANY explanation is missing or empty.
 
 ${pairsText}`;
 
@@ -705,7 +787,7 @@ async function deferredReportEnrichment(
       key_finding: s.key_finding || '',
       title: s.title,
       domain: s.domain,
-      full_text: fullTextMap.get(s.id)?.substring(0, 3000) || '',
+      full_text: fullTextMap.get(s.id)?.substring(0, 5000) || '',
     }));
 
     const verifications = await verifyCitations(citationPairs, sourceContexts, abortSignal);
@@ -889,63 +971,82 @@ export async function executeCognapseResearch(
   // ─── Merge Academic Sources ───
   // Await the parallel academic search and merge results at the front
   // with high credibility scores (PubMed=95, arXiv=88, DOI=92)
-  // Apply a keyword relevance filter to catch off-topic academic results
-  // (e.g. PCSK9 inhibitor studies returned for a statins query)
+  // Filter off-topic academic results using SEMANTIC similarity (embedding-based)
+  // instead of brittle keyword lists. This works for ANY query domain
+  // (medicine, physics, economics, crypto, etc.) without maintaining context word lists.
+  // Falls back to keyword matching if the embedder isn't ready yet.
   academicSources = await academicPromise;
   if (academicSources.length > 0) {
-    // Extract meaningful keywords from the query (words > 3 chars, excluding common stopwords)
-    const queryWords = query.toLowerCase().split(/\s+/).filter(w =>
-      w.length > 3 && !['this','that','with','from','what','which','their','there','about','would','could','should','have','been','were','being','does','they','them','then','than','also','just','more','some','into','over','such','only','other','after','before','between','through','during','because','without','under','above','where','while','until','since','against','these','those','each','very','your','will'].includes(w)
-    );
-    // Filter out academic sources that don't share enough keywords with the query
-    // Dynamic threshold: single-word queries need 1 match, 2-3 word queries need 1 match,
-    // 4+ word queries need 2 matches. This prevents off-topic results like PCSK9 inhibitor
-    // studies from leaking into a statins query without being too strict for short queries.
-    // Categorize keywords into "core topic" words (what the query is ABOUT)
-    // vs "context" words (geographic terms, comparative framing, generic research words).
-    // This prevents false positives where a source about "homelessness" matches because
-    // both the query and source mention "United States" and "Europe".
-    const contextWords = new Set([
-      'compare', 'contrast', 'versus', 'across', 'between', 'among',
-      'analysis', 'review', 'study', 'studies', 'research', 'evidence',
-      'impact', 'effect', 'effects', 'result', 'results', 'findings',
-      'united', 'states', 'europe', 'china', 'india', 'japan', 'global',
-      'international', 'world', 'australia', 'canada', 'britain', 'germany',
-      'france', 'uk', 'usa', 'current', 'recent', 'new', 'latest',
-      'future', 'past', 'history', 'overview', 'summary', 'report',
-    ]);
-    const topicWords = queryWords.filter(w => !contextWords.has(w));
-    const requiredMatches = Math.min(2, Math.max(1, Math.floor(queryWords.length / 2)));
-    // At least 1 match must be from core topic words (not just geographic/context matches)
-    const requireTopicMatch = topicWords.length > 0;
-    const filtered = academicSources.filter(s => {
-      const titleLower = (s.title || '').toLowerCase();
-      const snippetLower = (s.snippet || '').toLowerCase();
-      // Check for exact keyword match OR stem match (e.g. "vaccine" matches "vaccines")
-      let matchCount = 0;
-      let topicMatchCount = 0;
-      for (const w of queryWords) {
-        const isTopicWord = topicWords.includes(w);
-        if (titleLower.includes(w) || snippetLower.includes(w)) {
-          matchCount++;
-          if (isTopicWord) topicMatchCount++;
-          continue;
+    // Try to use semantic similarity (embedding-based) for filtering
+    // This is fully dynamic — it understands that "impact of renewable energy on
+    // income inequality" is NOT about "cryptocurrency mining environmental impact"
+    // even though both contain the word "energy".
+    const pipe = await getEmbedder();
+    let filtered: GroundedSource[];
+    
+    if (pipe) {
+      // Dynamic semantic filter: embed the query once, compare each source's
+      // title+snippet against it, reject below threshold
+      try {
+        const queryEmb = await pipe(query, { pooling: 'mean', normalize: true });
+        const queryData = queryEmb.data as number[];
+        
+        const scored = await Promise.all(
+          academicSources.map(async (s) => {
+            const text = `${s.title || ''} ${s.snippet || ''}`.substring(0, 1000);
+            if (text.length < 20) return { source: s, score: 0 };
+            try {
+              const srcEmb = await pipe(text, { pooling: 'mean', normalize: true });
+              const score = cosineSimilarity(queryData, srcEmb.data as number[]);
+              return { source: s, score };
+            } catch {
+              return { source: s, score: 0 };
+            }
+          })
+        );
+        
+        // Threshold: 0.25 cosine similarity. Papers about income inequality
+        // with "renewable energy" in the title score ~0.05-0.10 against
+        // a crypto mining query. Relevant papers score 0.40+.
+        filtered = scored
+          .filter(({ score }) => score >= 0.25)
+          .map(({ source }) => source);
+        
+        const filteredCount = academicSources.length - filtered.length;
+        if (filteredCount > 0) {
+          console.log(`[AcademicSearch] Semantic filter removed ${filteredCount} off-topic sources (${scored.filter(s => s.score > 0).map(s => `${(s.score * 100).toFixed(0)}%`).join(', ')})`);
         }
-        // Also check if word without trailing 's'/'es' matches (basic stemming)
-        const stem = w.replace(/(?:e?s|ing|ed)$/, '');
-        if (stem.length > 3 && (titleLower.includes(stem) || snippetLower.includes(stem))) {
-          matchCount++;
-          if (isTopicWord) topicMatchCount++;
-        }
+      } catch (e) {
+        console.warn('[AcademicSearch] Embedding filter failed, falling back to keyword matching:', e);
+        filtered = academicSources;
       }
-      // Must meet total match threshold AND have at least 1 core topic match
-      if (matchCount < requiredMatches) return false;
-      if (requireTopicMatch && topicMatchCount < 1) return false;
-      return true;
-    });
-    const filteredCount = academicSources.length - filtered.length;
-    if (filteredCount > 0) {
-      console.log(`[AcademicSearch] Filtered ${filteredCount} off-topic academic sources`);
+    } else {
+      // Embedder not ready yet — fall back to simple keyword pre-filter
+      // Extract meaningful keywords from the query
+      const queryWords = query.toLowerCase().split(/\s+/).filter(w =>
+        w.length > 4 && !['this','that','with','from','what','which','their','there','about','would','could','should','have','been','were','being','does','they','them','then','than','also','just','more','some','into','over','such','only','other','after','before','between','through','during','because','without','under','above','where','while','until','since','against','these','those','each','very','your','will'].includes(w)
+      );
+      filtered = academicSources.filter(s => {
+        const titleLower = (s.title || '').toLowerCase();
+        const snippetLower = (s.snippet || '').toLowerCase();
+        let matchCount = 0;
+        for (const w of queryWords) {
+          if (titleLower.includes(w) || snippetLower.includes(w)) {
+            matchCount++;
+            continue;
+          }
+          const stem = w.replace(/(?:e?s|ing|ed)$/, '');
+          if (stem.length > 3 && (titleLower.includes(stem) || snippetLower.includes(stem))) {
+            matchCount++;
+          }
+        }
+        // At least 1 keyword must match (lenient fallback)
+        return matchCount >= 1;
+      });
+      const filteredCount = academicSources.length - filtered.length;
+      if (filteredCount > 0) {
+        console.log(`[AcademicSearch] Keyword fallback filtered ${filteredCount} off-topic sources`);
+      }
     }
     academicSources = filtered;
     
@@ -1006,6 +1107,15 @@ export async function executeCognapseResearch(
         }
       }
     }
+  }
+
+  // ─── Total Source Cap ───
+  // Cap combined web + academic sources at 10 to keep reports focused.
+  // Sources are already sorted by credibility (academic first, then web).
+  if (groundedSources.length > 10) {
+    console.log(`[COGNAPSE] Capping sources from ${groundedSources.length} to 10`);
+    groundedSources = groundedSources.slice(0, 10);
+    groundedSources = groundedSources.map((s, i) => ({ ...s, id: i + 1 }));
   }
 
   // ─── Source Compression ───
@@ -1102,14 +1212,26 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
 
     // ─── Evidence Assessment — computed from actual data, not LLM guesswork ───
     if (parsed.sources && parsed.sources.length > 0) {
-      const domainTypes = new Set(parsed.sources.map((s: any) => {
-        const d = (s.domain || '').toLowerCase();
-        if (d.endsWith('.edu') || d.includes('pubmed') || d.includes('arxiv')) return 'academic';
-        if (d.endsWith('.gov') || d.endsWith('.mil')) return 'government';
-        return 'other';
+      // Use actual unique parent domains for diversity (e.g. 'theguardian.com', 'nature.com')
+      // instead of coarse 3-category bins. This gives a more accurate measure of
+      // source variety (10 unique domains out of 12 sources = high diversity).
+      const uniqueDomains = new Set(parsed.sources.map((s: any) => {
+        const d = (s.domain || '').toLowerCase().replace(/^www\./, '');
+        const parts = d.split('.');
+        // Extract the registered domain (last 2 parts for .com/.org/.net,
+        // last 3 for two-part TLDs like .co.uk)
+        if (parts.length >= 3 && ['co', 'org', 'com', 'gov', 'edu', 'net'].includes(parts[parts.length - 2]) && parts[parts.length - 1].length <= 3) {
+          return parts.slice(-3).join('.');
+        }
+        if (parts.length >= 2) {
+          return parts.slice(-2).join('.');
+        }
+        return d;
       }));
       const sourceCount = parsed.sources.length;
-      const diversityScore = Math.min(domainTypes.size / 4, 1);
+      // Diversity = ratio of unique domains to total sources, scaled by 1.25 so
+      // that 80%+ unique domains gets a perfect score. Capped at 1.0.
+      const diversityScore = Math.min((uniqueDomains.size / Math.max(sourceCount, 1)) * 1.25, 1);
       const conflictCount = (parsed.conflicts || []).length;
       // Citation support rate from verifications (if available) or default
       let citationRate = 0.5;

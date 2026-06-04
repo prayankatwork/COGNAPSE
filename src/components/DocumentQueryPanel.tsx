@@ -273,15 +273,15 @@ export default function DocumentQueryPanel({
                 {/* Status badge + action */}
                 <div className="flex items-center gap-1 shrink-0">
                   {isIndexed ? (
-                    <span className="flex items-center gap-1 text-[7px] text-emerald-500 uppercase tracking-widest">
+                    <span className="flex items-center gap-1 text-[7px] ds-text-success uppercase tracking-widest">
                       <CheckCircle2 size={8} /> Indexed
                     </span>
                   ) : doc.status === 'processing' ? (
-                    <span className="flex items-center gap-1 text-[7px] text-yellow-500 uppercase tracking-widest">
+                    <span className="flex items-center gap-1 text-[7px] ds-text-warning uppercase tracking-widest">
                       <Loader2 size={8} className="animate-spin" /> Processing
                     </span>
                   ) : doc.status === 'error' ? (
-                    <span className="text-[7px] text-red-500 uppercase tracking-widest">Error</span>
+                    <span className="text-[7px] ds-text-danger uppercase tracking-widest">Error</span>
                   ) : canProcess ? (
                     <button
                       onClick={(e) => {
@@ -367,7 +367,7 @@ export default function DocumentQueryPanel({
 
                 {entry.type === 'answer' && entry.answer && (
                   <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-emerald-500/20 rounded-full text-emerald-500 shrink-0 mt-1">
+                    <div className="p-1.5 bg-emerald-500/20 rounded-full ds-text-success shrink-0 mt-1">
                       <Sparkles size={10} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -415,11 +415,11 @@ export default function DocumentQueryPanel({
 
                 {entry.type === 'error' && (
                   <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-red-500/20 rounded-full text-red-500 shrink-0 mt-0.5">
+                    <div className="p-1.5 bg-red-500/20 rounded-full ds-text-danger shrink-0 mt-0.5">
                       <AlertCircle size={10} />
                     </div>
-                    <div className="bg-red-500/5 border border-red-500/20 px-3 py-2 rounded-sm flex-1">
-                      <p className="text-[9px] text-red-500 leading-relaxed">
+                    <div className="bg-red-500/5 dark:bg-red-400/5 border border-red-500/20 dark:border-red-400/20 px-3 py-2 rounded-sm flex-1">
+                      <p className="text-[9px] ds-text-danger leading-relaxed">
                         {entry.error || 'An error occurred.'}
                       </p>
                     </div>

@@ -25,7 +25,7 @@ export default function TrustDocs() {
             <p className="text-xs text-my-muted leading-relaxed">Defense-in-depth approach with Firebase Auth, Firestore security rules, and API key isolation.</p>
           </div>
           <div className="p-6 border border-my-border bg-my-sidebar/10 rounded-sm">
-            <EyeOff className="text-emerald-500 mb-4" size={24} />
+            <EyeOff className="ds-text-success mb-4" size={24} />
             <h4 className="font-bold text-sm text-my-ink mb-2">Data Privacy</h4>
             <p className="text-xs text-my-muted leading-relaxed">Local-first storage with optional encrypted cloud sync. No data sale, no third-party training on user data.</p>
           </div>
@@ -51,9 +51,9 @@ export default function TrustDocs() {
                  encryption and security practices.
                </p>
                <ul className="space-y-2 text-xs text-my-muted">
-                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="text-emerald-500 mt-0.5 shrink-0" /> Password hashing with bcrypt-equivalent strength (handled by Firebase)</li>
-                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="text-emerald-500 mt-0.5 shrink-0" /> Session tokens with automatic expiration and refresh</li>
-                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="text-emerald-500 mt-0.5 shrink-0" /> Optional session invalidation on security events</li>
+                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="ds-text-success mt-0.5 shrink-0" /> Password hashing with bcrypt-equivalent strength (handled by Firebase)</li>
+                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="ds-text-success mt-0.5 shrink-0" /> Session tokens with automatic expiration and refresh</li>
+                 <li className="flex items-start gap-2"><CheckCircle2 size={12} className="ds-text-success mt-0.5 shrink-0" /> Optional session invalidation on security events</li>
                </ul>
             </div>
             <div className="p-8 border border-my-border bg-my-sidebar/10 rounded-sm">
@@ -100,7 +100,7 @@ export default function TrustDocs() {
          
          <div className="space-y-4">
             <div className="flex gap-4 p-6 border border-my-border bg-my-callout/20">
-               <EyeOff className="text-emerald-500 shrink-0 mt-1" size={20} />
+               <EyeOff className="ds-text-success shrink-0 mt-1" size={20} />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Local-First Architecture</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -245,7 +245,7 @@ export default function TrustDocs() {
 
             <div className="p-6 border border-my-border bg-my-callout/20">
                <h4 className="font-bold text-my-ink mb-3 flex items-center gap-2">
-                  <Gavel size={18} className="text-amber-500" /> Bias Detection &amp; Mitigation
+                  <Gavel size={18} className="ds-text-warning" /> Bias Detection &amp; Mitigation
                </h4>
                <p className="text-sm text-my-muted leading-relaxed">
                  The platform includes automated bias alerts that flag potential directional skew in research 
@@ -263,7 +263,7 @@ export default function TrustDocs() {
 
          <div className="space-y-4">
             <div className="p-6 border border-my-border bg-my-callout/20 flex gap-4">
-               <CheckCircle2 size={20} className="text-emerald-500 shrink-0 mt-1" />
+               <CheckCircle2 size={20} className="ds-text-success shrink-0 mt-1" />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Do: Verify Critical Information</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -274,7 +274,7 @@ export default function TrustDocs() {
                </div>
             </div>
             <div className="p-6 border border-my-border bg-my-callout/20 flex gap-4">
-               <CheckCircle2 size={20} className="text-emerald-500 shrink-0 mt-1" />
+               <CheckCircle2 size={20} className="ds-text-success shrink-0 mt-1" />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Do: Disclose AI Assistance</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -285,7 +285,7 @@ export default function TrustDocs() {
                </div>
             </div>
             <div className="p-6 border border-my-border bg-my-callout/20 flex gap-4">
-               <CheckCircle2 size={20} className="text-emerald-500 shrink-0 mt-1" />
+               <CheckCircle2 size={20} className="ds-text-success shrink-0 mt-1" />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Do: Apply Critical Thinking</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -295,7 +295,7 @@ export default function TrustDocs() {
                </div>
             </div>
             <div className="p-6 border border-my-border bg-my-callout/20 flex gap-4">
-               <AlertCircle size={20} className="text-amber-500 shrink-0 mt-1" />
+               <AlertCircle size={20} className="ds-text-warning shrink-0 mt-1" />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Don&rsquo;t: Use for High-Stakes Decisions Without Human Review</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -306,7 +306,7 @@ export default function TrustDocs() {
                </div>
             </div>
             <div className="p-6 border border-my-border bg-my-callout/20 flex gap-4">
-               <AlertCircle size={20} className="text-amber-500 shrink-0 mt-1" />
+               <AlertCircle size={20} className="ds-text-warning shrink-0 mt-1" />
                <div>
                   <h5 className="font-bold text-my-ink mb-2">Don&rsquo;t: Misrepresent AI Outputs</h5>
                   <p className="text-sm text-my-muted leading-relaxed">
@@ -324,7 +324,7 @@ export default function TrustDocs() {
          
          <div className="grid md:grid-cols-2 gap-4">
             <div className="p-6 border border-my-border bg-my-callout/20">
-               <Share2 className="text-emerald-500 mb-4" size={24} />
+               <Share2 className="ds-text-success mb-4" size={24} />
                <h4 className="font-bold text-my-ink mb-2">Visibility Controls</h4>
                <p className="text-sm text-my-muted leading-relaxed">
                  Shared research content is governed by granular visibility tiers (Private, Unlisted, Public). 
@@ -333,7 +333,7 @@ export default function TrustDocs() {
                </p>
             </div>
             <div className="p-6 border border-my-border bg-my-callout/20">
-               <Siren className="text-amber-500 mb-4" size={24} />
+               <Siren className="ds-text-warning mb-4" size={24} />
                <h4 className="font-bold text-my-ink mb-2">Abuse Prevention</h4>
                <p className="text-sm text-my-muted leading-relaxed">
                  COGNAPSE monitors shared content for violations of our Community Guidelines. Reported content 
@@ -359,9 +359,9 @@ export default function TrustDocs() {
               access attempts to premium features are blocked at both the client and server level.
             </p>
             <div className="space-y-3 text-xs text-my-muted">
-               <div className="flex items-start gap-2"><Lock size={14} className="text-emerald-500 mt-0.5 shrink-0" /> Payment instrument data never touches COGNAPSE servers.</div>
-               <div className="flex items-start gap-2"><Lock size={14} className="text-emerald-500 mt-0.5 shrink-0" /> Premium status is verified via a secure serverless API endpoint.</div>
-               <div className="flex items-start gap-2"><Lock size={14} className="text-emerald-500 mt-0.5 shrink-0" /> Payment verification employs cryptographic signature validation.</div>
+               <div className="flex items-start gap-2"><Lock size={14} className="ds-text-success mt-0.5 shrink-0" /> Payment instrument data never touches COGNAPSE servers.</div>
+               <div className="flex items-start gap-2"><Lock size={14} className="ds-text-success mt-0.5 shrink-0" /> Premium status is verified via a secure serverless API endpoint.</div>
+               <div className="flex items-start gap-2"><Lock size={14} className="ds-text-success mt-0.5 shrink-0" /> Payment verification employs cryptographic signature validation.</div>
             </div>
          </div>
       </section>
@@ -442,11 +442,11 @@ export default function TrustDocs() {
               detect errors, and improve service reliability. Our telemetry governance framework ensures:
             </p>
             <ul className="space-y-3 text-xs text-my-muted">
-               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" /> <strong>Minimal Collection:</strong> Telemetry is limited to anonymized event types (research completions, export generation, login events, error signatures).</li>
-               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" /> <strong>No Content Collection:</strong> Telemetry payloads do not include search query text, research output content, or personal identifying information.</li>
-               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" /> <strong>Access Control:</strong> Telemetry data is stored in a dedicated Firestore collection with restricted access governance.</li>
-               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" /> <strong>No Third-Party Sharing:</strong> Telemetry data is used exclusively for operational improvement and is never shared with third parties or used for advertising.</li>
-               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" /> <strong>Operational Purpose:</strong> Telemetry enables error detection, performance monitoring, and capacity planning — not user profiling or behavioral tracking.</li>
+               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="ds-text-success mt-0.5 shrink-0" /> <strong>Minimal Collection:</strong> Telemetry is limited to anonymized event types (research completions, export generation, login events, error signatures).</li>
+               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="ds-text-success mt-0.5 shrink-0" /> <strong>No Content Collection:</strong> Telemetry payloads do not include search query text, research output content, or personal identifying information.</li>
+               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="ds-text-success mt-0.5 shrink-0" /> <strong>Access Control:</strong> Telemetry data is stored in a dedicated Firestore collection with restricted access governance.</li>
+               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="ds-text-success mt-0.5 shrink-0" /> <strong>No Third-Party Sharing:</strong> Telemetry data is used exclusively for operational improvement and is never shared with third parties or used for advertising.</li>
+               <li className="flex items-start gap-2"><CheckCircle2 size={14} className="ds-text-success mt-0.5 shrink-0" /> <strong>Operational Purpose:</strong> Telemetry enables error detection, performance monitoring, and capacity planning — not user profiling or behavioral tracking.</li>
             </ul>
          </div>
       </section>

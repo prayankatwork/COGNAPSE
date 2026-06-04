@@ -82,8 +82,8 @@ export default function ThoughtReplayEngine() {
             <div className="flex flex-col items-center gap-1 mt-1">
               <div className={clsx(
                 "w-2 h-2 rounded-full",
-                step.status === 'confirmed' ? "bg-green-500 shadow-[0_0_4px_#22c55e]" :
-                step.status === 'discarded' ? "bg-red-500 shadow-[0_0_4px_#ef4444]" :
+                step.status === 'confirmed' ? "bg-green-500 shadow-[0_0_4px_rgb(34,197,94)]" :
+                step.status === 'discarded' ? "bg-red-500 shadow-[0_0_4px_rgb(239,68,68)]" :
                 "bg-my-conflict-text shadow-[0_0_4px_var(--conflict-text)]"
               )} />
               {idx < currentSteps.length - 1 && <div className="w-[1px] h-full bg-my-border" />}
@@ -105,8 +105,8 @@ export default function ThoughtReplayEngine() {
                 "{step.insight}"
               </div>
               <div className="mt-2 flex items-center gap-2">
-                {step.status === 'confirmed' && <CheckCircle2 size={10} className="text-green-500" />}
-                {step.status === 'discarded' && <XCircle size={10} className="text-red-500" />}
+                {step.status === 'confirmed' && <CheckCircle2 size={10} className="ds-text-success" />}
+                {step.status === 'discarded' && <XCircle size={10} className="ds-text-danger" />}
                 {step.status === 'pivoted' && <AlertCircle size={10} className="text-my-conflict-text" />}
                 <span className="text-[8px] uppercase tracking-tighter font-black opacity-50">
                   Status: {step.status}
