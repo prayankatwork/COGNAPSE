@@ -73,9 +73,9 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   if (modelOverride) {
     let finalPrompt = prompt;
     // Prune very long prompts for 8b model context limits
-    // Conservative threshold: 14000 chars ≈ 4500-5000 tokens (well under 6000 TPM limit)
-    if (modelOverride.includes('8b') && estTokens > 4500) {
-      finalPrompt = `${prompt.substring(0, 14000)}\n[System: Content Pruned for Stability]`;
+    // Groq free tier limit: 6000 TPM for 8b. Threshold: 3500 estTokens (conservative buffer).
+    if (modelOverride.includes('8b') && estTokens > 3500) {
+      finalPrompt = `${prompt.substring(0, 11000)}\n[System: Content Pruned for Stability]`;
     }
 
     const temperature = modelOverride.includes('8b') ? 0.4 : 0.1;
@@ -112,7 +112,8 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
   }
 
   // Model selection based on context size and research depth
-  const isDeepResearch = requestedModel === 'ollama';
+  // Recognizes: 'ollama' (local) and '70b'/'versatile' (Groq 70b) as deep research
+  const isDeepResearch = requestedModel === 'ollama' || requestedModel.includes('70b') || requestedModel.includes('versatile');
 
   const swarmNodes = isDeepResearch
     ? [
@@ -134,9 +135,9 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
     try {
       let finalPrompt = prompt;
       // Prune very long prompts for 8b model context limits
-      // Conservative threshold: 14000 chars ≈ 4500-5000 tokens (well under 6000 TPM limit)
-      if (node.model.includes('8b') && estTokens > 4500) {
-        finalPrompt = `${prompt.substring(0, 14000)}\n[System: Content Pruned for Stability]`;
+      // Groq free tier limit: 6000 TPM for 8b. Threshold: 3500 estTokens (conservative buffer).
+      if (node.model.includes('8b') && estTokens > 3500) {
+        finalPrompt = `${prompt.substring(0, 11000)}\n[System: Content Pruned for Stability]`;
       }
 
       // Higher temperature for 8b model encourages more detailed output
