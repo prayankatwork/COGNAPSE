@@ -142,7 +142,14 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
     "bottom_line": "1–2 sentence plain-English conclusion. Lead with the answer.",
     "full_synthesis": "A focused 400-500 word narrative. Connect the dots across sources concisely. Tell the story of what the evidence shows. Flowing prose — never a bullet dump. CRITICAL INSTRUCTION: You MUST cite your sources inline using [1], [2] format for EVERY SINGLE FACTUAL CLAIM. If a sentence contains a fact, it MUST end with a citation chip.",
     "eli5_version": "Same conclusion explained as if to a curious 12-year-old. Pure analogies, zero data.",
-    "confidence_narrative": "One sentence explaining WHY confidence is at this level."
+    "confidence_narrative": "One sentence explaining WHY confidence is at this level.",
+    "evidence_breakdown": {
+      "established_findings": "One sentence: what the evidence firmly supports.",
+      "supported_evidence": "One sentence: what corroborates the main claims.",
+      "competing_interpretations": "One sentence: alternative explanations or framings.",
+      "remaining_uncertainty": "One sentence: what still cannot be confidently stated.",
+      "research_gaps": "One sentence: what key evidence is missing."
+    }
   },
   "scores": {
     "overall_credibility": 87.4, // Provide a precise decimal, not an integer
@@ -173,7 +180,29 @@ the JSON. No preamble. No explanation before or after. Pure JSON only.
       "explanation": "Why they likely disagree"
     }
   ],
-  // ALWAYS include this field — empty array [] if no conflicts found
+  "evidence_assessment": {
+    "source_count": 8,
+    "source_diversity_score": 0.75,
+    "contradiction_count": 2,
+    "citation_support_rate": 0.88
+  },
+  "evidence_insights": {
+    "most_important_finding": "One sentence.",
+    "most_important_limitation": "One sentence.",
+    "most_contested_question": "One sentence.",
+    "most_actionable_insight": "One sentence."
+  },
+  "structured_contradictions": {
+    "areas_of_agreement": ["One sentence per area."],
+    "evidence_conflicts": [
+      {
+        "topic": "What the conflict is about",
+        "source_a_view": "Source A's position",
+        "source_b_view": "Source B's position"
+      }
+    ],
+    "open_questions": ["One question per item."]
+  },
   "bias_alert": null,
   "intelligence_map": {
     "central_node": { "id": "root", "label": "Main topic", "type": "CONCEPT" },

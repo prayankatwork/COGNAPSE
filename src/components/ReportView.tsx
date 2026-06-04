@@ -131,7 +131,7 @@ export default function ReportView({
     if (val === null || val === undefined) return "";
     return JSON.stringify(val);
   };
-  const hasConflicts = report.conflicts && report.conflicts.length > 0;
+  const hasConflicts = (report.conflicts && report.conflicts.length > 0) || !!report.structured_contradictions;
   const hasBias = !!report.bias_alert;
   const [rated, setRated] = useState(false);
   // Use a unique citation instance key (paragraphIdx-partIdx) instead of just source ID
@@ -520,6 +520,43 @@ export default function ReportView({
                 </div>
               )              }
 
+              {/* Evidence Breakdown — structured sub-section */}
+              {report.summary?.evidence_breakdown && (
+                <div className="grid grid-cols-1 gap-1.5 p-3 bg-my-callout border border-my-border rounded mt-2">
+                  <span className="text-[9px] font-bold text-my-muted uppercase tracking-widest mb-1">Evidence Breakdown</span>
+                  {report.summary.evidence_breakdown.established_findings && (
+                    <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.established_findings)}</span>
+                    </div>
+                  )}
+                  {report.summary.evidence_breakdown.supported_evidence && (
+                    <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.supported_evidence)}</span>
+                    </div>
+                  )}
+                  {report.summary.evidence_breakdown.competing_interpretations && (
+                    <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.competing_interpretations)}</span>
+                    </div>
+                  )}
+                  {report.summary.evidence_breakdown.remaining_uncertainty && (
+                    <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.remaining_uncertainty)}</span>
+                    </div>
+                  )}
+                  {report.summary.evidence_breakdown.research_gaps && (
+                    <div className="flex items-start gap-2 text-[11px] leading-[1.4]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-[5px]" />
+                      <span className="text-my-syn truncate">{safeText(report.summary.evidence_breakdown.research_gaps)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {report.summary?.confidence_narrative && (
                  <div className="flex items-start gap-2 p-3 bg-my-callout border border-my-border rounded mt-2">
                    <span className="text-[10px] font-bold text-my-accent uppercase tracking-widest shrink-0 mt-0.5">Confidence</span>
@@ -620,6 +657,19 @@ export default function ReportView({
                 <TakeawayCard title="Key Insight" content={report.actionable_takeaways.key_insight} />
                 <TakeawayCard title="Watch Out For" content={report.actionable_takeaways.watch_out_for} />
                 <TakeawayCard title="Next Step" content={report.actionable_takeaways.next_step} />
+                {/* Evidence Insights — compact cards integrated into Key Takeaways */}
+                {report.evidence_insights?.most_important_finding && (
+                  <TakeawayCard title="Top Finding" content={report.evidence_insights.most_important_finding} />
+                )}
+                {report.evidence_insights?.most_important_limitation && (
+                  <TakeawayCard title="Key Limitation" content={report.evidence_insights.most_important_limitation} />
+                )}
+                {report.evidence_insights?.most_contested_question && (
+                  <TakeawayCard title="Contested Question" content={report.evidence_insights.most_contested_question} />
+                )}
+                {report.evidence_insights?.most_actionable_insight && (
+                  <TakeawayCard title="Actionable Insight" content={report.evidence_insights.most_actionable_insight} />
+                )}
               </div>
             </div>
           )}
@@ -657,6 +707,28 @@ export default function ReportView({
                    </span>
                  )}
                </div>
+            </div>
+          )}
+
+          {/* Evidence Assessment — compact metrics inside Metrics panel */}
+          {report.evidence_assessment && (
+            <div className="grid grid-cols-2 gap-[1px] bg-my-border border border-my-border">
+              <div className="bg-my-callout p-2.5 flex flex-col">
+                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Sources</span>
+                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.source_count}</span>
+              </div>
+              <div className="bg-my-callout p-2.5 flex flex-col">
+                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Diversity</span>
+                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{(report.evidence_assessment.source_diversity_score * 100).toFixed(0)}%</span>
+              </div>
+              <div className="bg-my-callout p-2.5 flex flex-col">
+                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Contradictions</span>
+                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.contradiction_count}</span>
+              </div>
+              <div className="bg-my-callout p-2.5 flex flex-col">
+                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Citation Support</span>
+                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{(report.evidence_assessment.citation_support_rate * 100).toFixed(0)}%</span>
+              </div>
             </div>
           )}
 
@@ -719,6 +791,53 @@ export default function ReportView({
                     </div>
                   </div>
                 ))}
+                {/* Contradiction Analysis — structured sections inside same panel */}
+                {report.structured_contradictions && (
+                  <>
+                    {report.structured_contradictions.areas_of_agreement.length > 0 && (
+                      <div className="pt-2 border-t border-my-border">
+                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-2 px-1">Areas of Agreement</h4>
+                        <div className="flex flex-col gap-1.5">
+                          {report.structured_contradictions.areas_of_agreement.map((a, i) => (
+                            <div key={i} className="flex items-start gap-2 px-1">
+                              <span className="w-1 h-1 rounded-full bg-green-500 shrink-0 mt-[6px]" />
+                              <span className="text-[10px] text-my-syn leading-relaxed truncate">{a}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {report.structured_contradictions.evidence_conflicts.length > 0 && (
+                      <div className="pt-2 border-t border-my-border">
+                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 px-1">Evidence Conflicts</h4>
+                        <div className="flex flex-col gap-2">
+                          {report.structured_contradictions.evidence_conflicts.map((ec, i) => (
+                            <div key={i} className="border border-amber-200 dark:border-amber-900/40 bg-my-bg/50 p-2.5">
+                              <span className="text-[8px] font-black text-my-muted uppercase tracking-widest block mb-1">{ec.topic}</span>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[9px] leading-relaxed text-my-syn"><span className="text-red-500 font-bold">A:</span> {ec.source_a_view}</span>
+                                <span className="text-[9px] leading-relaxed text-my-syn"><span className="text-amber-500 font-bold">B:</span> {ec.source_b_view}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {report.structured_contradictions.open_questions.length > 0 && (
+                      <div className="pt-2 border-t border-my-border">
+                        <h4 className="text-[8px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 mb-2 px-1">Open Questions</h4>
+                        <div className="flex flex-col gap-1.5">
+                          {report.structured_contradictions.open_questions.map((q, i) => (
+                            <div key={i} className="flex items-start gap-2 px-1">
+                              <span className="text-purple-500 text-[9px] shrink-0 mt-[2px]">?</span>
+                              <span className="text-[10px] text-my-syn leading-relaxed truncate">{q}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </details>
           )}
@@ -921,7 +1040,7 @@ function TakeawayCard({ title, content }: { title: string, content: string }) {
         {title}
       </h4>
       {content?.trim() ? (
-        <p className="text-[12px] leading-[1.5] text-my-ink font-medium">{content}</p>
+        <p className="text-[12px] leading-[1.5] text-my-ink font-medium truncate" title={content}>{content}</p>
       ) : (
         <p className="text-[10px] text-my-border italic">N/A</p>
       )}

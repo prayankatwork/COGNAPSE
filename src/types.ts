@@ -29,6 +29,13 @@ export interface COGNAPSE_Output {
     full_synthesis?: string;
     eli5_version?: string;
     confidence_narrative?: string;
+    evidence_breakdown?: {
+      established_findings: string;
+      supported_evidence: string;
+      competing_interpretations: string;
+      remaining_uncertainty: string;
+      research_gaps: string;
+    };
   };
   scores?: {
     overall_credibility: number;
@@ -143,6 +150,26 @@ export interface COGNAPSE_Output {
     applied: boolean;
     model: string;
     original_count: number;
+  };
+
+  evidence_assessment?: {
+    source_count: number;
+    source_diversity_score: number;
+    contradiction_count: number;
+    citation_support_rate: number;
+  };
+
+  evidence_insights?: {
+    most_important_finding: string;
+    most_important_limitation: string;
+    most_contested_question: string;
+    most_actionable_insight: string;
+  };
+
+  structured_contradictions?: {
+    areas_of_agreement: string[];
+    evidence_conflicts: { topic: string; source_a_view: string; source_b_view: string }[];
+    open_questions: string[];
   };
 
   // Variance signal: derived from multi-model score disagreement
