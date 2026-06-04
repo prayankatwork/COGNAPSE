@@ -46,7 +46,7 @@ const KNOWN_LOCATIONS: { label: string; country: string; lat: number; lng: numbe
  * If the LLM skipped intelligence_map, generate a simple one from source titles
  * and synthesis text. This ensures the PhysicsMap always renders.
  */
-function ensureIntelligenceMap(report: COGNAPSE_Output): void {
+export function ensureIntelligenceMap(report: COGNAPSE_Output): void {
   if (report.intelligence_map && report.intelligence_map.nodes && report.intelligence_map.nodes.length > 0) {
     return; // Already populated
   }
@@ -117,7 +117,7 @@ function ensureIntelligenceMap(report: COGNAPSE_Output): void {
  * If geo_triggered is true but geo_points is empty/missing, extract
  * location mentions from source titles, snippets, and domains.
  */
-function ensureGeoPoints(report: COGNAPSE_Output): void {
+export function ensureGeoPoints(report: COGNAPSE_Output): void {
   if (!report.geo_triggered) return;
   if (report.geo_points && report.geo_points.length > 0) return; // Already populated
 
@@ -155,7 +155,7 @@ function ensureGeoPoints(report: COGNAPSE_Output): void {
  * construct a basic timeline from source publication dates + key dates
  * mentioned in the synthesis.
  */
-function ensureTimelineEvents(report: COGNAPSE_Output): void {
+export function ensureTimelineEvents(report: COGNAPSE_Output): void {
   if (!report.timeline_triggered) return;
   if (report.timeline_events && report.timeline_events.length > 0) return; // Already populated
 

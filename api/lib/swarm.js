@@ -41,7 +41,7 @@ export function getGroqClient2() {
  * runSwarm — Groq-only intelligence swarm.
  *
  * Free-tier routing:
- * - Deep research (requestedModel === 'ollama'): Mixtral 8x7b for balanced quality & speed
+ * - Deep research (requestedModel === 'ollama'): Llama 3.3 70b for balanced quality & speed
  * - Everything else: 8b model for speed & capacity
  * - Token-heavy prompts (>15K): fall back to 8b to stay within context limits
  *
@@ -85,7 +85,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
     // Select the active client and active model with fallback
     const activeClient = provider === 'cerebras' ? (cerebras || groq) : groq;
     const activeModel = (provider === 'cerebras' && !cerebras)
-      ? (modelOverride.includes('70b') ? 'mixtral-8x7b-32768' : 'llama-3.1-8b-instant')
+      ? (modelOverride.includes('70b') ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant')
       : modelOverride;
 
     const response = await activeClient.chat.completions.create({
@@ -116,7 +116,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
 
   const swarmNodes = isDeepResearch
     ? [
-        { name: 'groq-mixtral', model: 'mixtral-8x7b-32768', provider: 'groq' },
+        { name: 'groq-llama-70b', model: 'llama-3.3-70b-versatile', provider: 'groq' },
         { name: 'cerebras-llama-3.1', model: 'llama3.1-70b', provider: 'cerebras' },
         { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant', provider: 'groq' },
       ]
@@ -125,7 +125,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
       : [
           { name: 'groq-llama-3.1', model: 'llama-3.1-8b-instant', provider: 'groq' },
           { name: 'cerebras-llama-3.1', model: 'llama3.1-8b', provider: 'cerebras' },
-          { name: 'groq-mixtral', model: 'mixtral-8x7b-32768', provider: 'groq' },
+          { name: 'groq-llama-70b', model: 'llama-3.3-70b-versatile', provider: 'groq' },
         ];
 
   let lastError = null;
@@ -140,8 +140,8 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
       }
 
       // Higher temperature for 8b model encourages more detailed output
-      // Mixtral uses lower temperature (0.1) for reliable JSON generation
-      const temperature = (node.model.includes('8b') && !node.model.includes('mixtral')) ? 0.4 : 0.1;
+      // 70b models use lower temperature (0.1) for reliable JSON generation
+      const temperature = (node.model.includes('8b') && !node.model.includes('70b')) ? 0.4 : 0.1;
 
       // Select client and model with graceful fallback
       const useCerebras = node.provider === 'cerebras' && cerebras;
@@ -149,7 +149,7 @@ export async function runSwarm({ prompt, isJson, estTokens = 0, requestedModel =
       const activeModel = useCerebras
         ? node.model
         : (node.provider === 'cerebras'
-            ? (node.model.includes('70b') ? 'mixtral-8x7b-32768' : 'llama-3.1-8b-instant')
+            ? (node.model.includes('70b') ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant')
             : node.model);
 
       const response = await activeClient.chat.completions.create({
