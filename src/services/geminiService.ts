@@ -12,9 +12,187 @@ import { detectUncertaintyQuery, detectAdversarialQuery, computeBiasFromSentimen
 import { redistributeBatchCitations } from '../utils/citations';
 import { apiFetch } from './apiClient';
 import { batchLookupDomains, isMbfcConfigured } from '../utils/mbfcApi';
-const RESEARCH_MODEL = "groq-mixtral-8x7b"; // Deep research — Mixtral 8x7b for speed (~8-12s vs 70b's ~57s)
+const RESEARCH_MODEL = "groq-llama-3.3-70b-versatile"; // Deep research — Llama 3.3 70b for speed + depth
 const UTILITY_MODEL = "groq-llama-3.1-8b-instant";    // Standard ops — 8b for speed
 const CONSENSUS_MODEL = "llama-3.1-8b-instant";          // Second model for consensus — 8B vs 70B gives different perspective
+
+/* ─── Visual Fields Fallback (intelligence_map, geo_points, timeline_events) ─── */
+
+/**
+ * Known geo-locations for fast lookup — countries + major cities.
+ * Used to extract location mentions from source content when
+ * geo_triggered is true but the model didn't populate geo_points.
+ * This is a fallback only; the model's own extraction is preferred.
+ */
+const KNOWN_LOCATIONS: { label: string; country: string; lat: number; lng: number; keywords: string[] }[] = [
+  { label: 'United States', country: 'US', lat: 37.09, lng: -95.71, keywords: ['united states', 'usa', 'u.s.', 'america', 'american'] },
+  { label: 'United Kingdom', country: 'UK', lat: 55.38, lng: -3.44, keywords: ['united kingdom', 'uk', 'britain', 'british', 'england', 'london'] },
+  { label: 'Germany', country: 'DE', lat: 51.17, lng: 10.45, keywords: ['germany', 'german', 'berlin', 'munich'] },
+  { label: 'France', country: 'FR', lat: 46.60, lng: 1.89, keywords: ['france', 'french', 'paris'] },
+  { label: 'China', country: 'CN', lat: 35.86, lng: 104.20, keywords: ['china', 'chinese', 'beijing', 'shanghai'] },
+  { label: 'India', country: 'IN', lat: 20.59, lng: 78.96, keywords: ['india', 'indian', 'mumbai', 'delhi', 'bangalore'] },
+  { label: 'Japan', country: 'JP', lat: 36.20, lng: 138.25, keywords: ['japan', 'japanese', 'tokyo'] },
+  { label: 'Australia', country: 'AU', lat: -25.27, lng: 133.78, keywords: ['australia', 'australian', 'sydney', 'melbourne'] },
+  { label: 'Canada', country: 'CA', lat: 56.13, lng: -106.35, keywords: ['canada', 'canadian', 'toronto', 'vancouver'] },
+  { label: 'Brazil', country: 'BR', lat: -14.24, lng: -51.93, keywords: ['brazil', 'brazilian', 'rio', 'sao paulo'] },
+  { label: 'Russia', country: 'RU', lat: 61.52, lng: 105.32, keywords: ['russia', 'russian', 'moscow'] },
+  { label: 'South Africa', country: 'ZA', lat: -30.56, lng: 22.94, keywords: ['south africa', 'african', 'cape town'] },
+  { label: 'European Union', country: 'EU', lat: 50.85, lng: 4.35, keywords: ['europe', 'european', 'eu'] },
+  { label: 'Ethiopia', country: 'ET', lat: 9.15, lng: 40.49, keywords: ['ethiopia', 'ethiopian', 'addis ababa'] },
+  { label: 'Middle East', country: 'region', lat: 26.0, lng: 45.0, keywords: ['middle east', 'gulf', 'saudi', 'iran', 'iraq', 'israel', 'palestine'] },
+];
+
+/**
+ * If the LLM skipped intelligence_map, generate a simple one from source titles
+ * and synthesis text. This ensures the PhysicsMap always renders.
+ */
+function ensureIntelligenceMap(report: COGNAPSE_Output): void {
+  if (report.intelligence_map && report.intelligence_map.nodes && report.intelligence_map.nodes.length > 0) {
+    return; // Already populated
+  }
+
+  const queryLabel = report.query_understood || 'Research Topic';
+  const sources = report.sources || [];
+  const synthesis = report.summary?.full_synthesis || report.summary?.bottom_line || '';
+
+  // Build nodes from unique source domains (as entity nodes)
+  const nodes: { id: string; label: string; type: string; relationship: string; sub_query: string; importance: number }[] = [];
+  const edges: { from: string; to: string; label: string }[] = [];
+  const seenLabels = new Set<string>();
+
+  // Add central node
+  const centralId = 'topic';
+
+  // Add source-based nodes (up to 8)
+  let nodeIndex = 0;
+  for (const s of sources.slice(0, 8)) {
+    const label = s.title?.substring(0, 60) || `Source #${s.id}`;
+    if (seenLabels.has(label) || label.length < 3) continue;
+    seenLabels.add(label);
+    const nodeId = `src_${nodeIndex}`;
+    nodes.push({
+      id: nodeId,
+      label,
+      type: 'ENTITY',
+      relationship: 'source',
+      sub_query: `${queryLabel} ${s.title?.substring(0, 30) || ''}`.trim(),
+      importance: Math.min(5, Math.max(1, Math.ceil((s.credibility_score || 50) / 20))),
+    });
+    edges.push({ from: centralId, to: nodeId, label: 'evidence' });
+    nodeIndex++;
+  }
+
+  // Extract up to 3 key concepts from synthesis if we have room
+  if (nodeIndex < 4 && synthesis.length > 50) {
+    const conceptPatterns = synthesis.match(/(?:[A-Z][a-z]+\s){1,4}[A-Z][a-z]+/g);
+    if (conceptPatterns) {
+      const uniqueConcepts = [...new Set(conceptPatterns.map(c => c.trim()))].filter(c =>
+        c.length > 5 && c.length < 40 && !seenLabels.has(c)
+      );
+      for (const concept of uniqueConcepts.slice(0, 3)) {
+        seenLabels.add(concept);
+        const nodeId = `concept_${nodeIndex}`;
+        nodes.push({
+          id: nodeId,
+          label: concept,
+          type: 'CONCEPT',
+          relationship: 'related',
+          sub_query: `${queryLabel} ${concept}`,
+          importance: 3,
+        });
+        edges.push({ from: centralId, to: nodeId, label: 'relates' });
+        nodeIndex++;
+      }
+    }
+  }
+
+  report.intelligence_map = {
+    central_node: { id: centralId, label: queryLabel, type: 'CONCEPT' },
+    nodes,
+    edges,
+  };
+}
+
+/**
+ * If geo_triggered is true but geo_points is empty/missing, extract
+ * location mentions from source titles, snippets, and domains.
+ */
+function ensureGeoPoints(report: COGNAPSE_Output): void {
+  if (!report.geo_triggered) return;
+  if (report.geo_points && report.geo_points.length > 0) return; // Already populated
+
+  const sources = report.sources || [];
+  const textsToCheck = sources.flatMap(s => [
+    s.title || '',
+    s.key_finding || '',
+    s.domain || '',
+  ]);
+  const fullText = textsToCheck.join(' ').toLowerCase();
+
+  const found: typeof report.geo_points = [];
+  const seenCountries = new Set<string>();
+
+  for (const loc of KNOWN_LOCATIONS) {
+    if (seenCountries.has(loc.country)) continue;
+    if (loc.keywords.some(kw => fullText.includes(kw))) {
+      found.push({
+        label: loc.label,
+        country: loc.country,
+        lat: loc.lat,
+        lng: loc.lng,
+        relevance_note: `Mentioned in source coverage`,
+        zoom_level: loc.country === 'region' ? 3 : 4,
+      });
+      seenCountries.add(loc.country);
+    }
+  }
+
+  report.geo_points = found.length > 0 ? found : [];
+}
+
+/**
+ * If timeline_triggered is true but timeline_events is empty/missing,
+ * construct a basic timeline from source publication dates + key dates
+ * mentioned in the synthesis.
+ */
+function ensureTimelineEvents(report: COGNAPSE_Output): void {
+  if (!report.timeline_triggered) return;
+  if (report.timeline_events && report.timeline_events.length > 0) return; // Already populated
+
+  const sources = report.sources || [];
+  const timeline: { date: string; title: string; description: string; significance: number }[] = [];
+
+  // Extract dates from source published_date fields
+  for (const s of sources) {
+    if (!s.published_date || s.published_date === 'unknown') continue;
+    // Try to extract a year
+    const yearMatch = s.published_date.match(/(\d{4})/);
+    if (!yearMatch) continue;
+    const year = yearMatch[1];
+    const title = (s.title || '').substring(0, 60);
+    if (title.length < 5) continue;
+    timeline.push({
+      date: year,
+      title,
+      description: (s.key_finding || '').substring(0, 100),
+      significance: Math.min(5, Math.max(1, Math.ceil((s.credibility_score || 50) / 20))),
+    });
+  }
+
+  // Deduplicate by date+title
+  const seen = new Set<string>();
+  const deduped = timeline.filter(t => {
+    const key = `${t.date}_${t.title.substring(0, 20)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Sort chronologically
+  deduped.sort((a, b) => a.date.localeCompare(b.date));
+
+  report.timeline_events = deduped.length > 0 ? deduped.slice(0, 10) : [];
+}
 
 /* ─── Strategic Fields Fallback ─── */
 
@@ -319,7 +497,7 @@ async function diffReports(
 
   return {
     overall_agreement: Math.min(100, Math.max(0, agreementPercent)),
-    model_a: { provider: 'Groq', model: 'mixtral-8x7b-32768' },
+    model_a: { provider: 'Groq', model: 'llama-3.3-70b-versatile' },
     model_b: { provider: 'Groq', model: CONSENSUS_MODEL },
     agreement_points: agreementPoints.slice(0, 8), // cap at 8 for readability
     divergent_points: divergentPoints.slice(0, 10), // cap at 10
@@ -1123,6 +1301,26 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
       generateMissingConflicts(parsed);
     } catch (e) {
       // Non-critical — conflicts are optional
+    }
+
+    // ─── Visual Fields Fallback ───
+    // If the LLM skipped intelligence_map, geo_points, or timeline_events,
+    // generate them from the available source data. This ensures the UI always
+    // renders the PhysicsMap, geo-globe, and timeline when the flags are triggered.
+    try {
+      ensureIntelligenceMap(parsed);
+    } catch (e) {
+      console.warn('[COGNAPSE] Intelligence map fallback failed:', e);
+    }
+    try {
+      ensureGeoPoints(parsed);
+    } catch (e) {
+      console.warn('[COGNAPSE] Geo points fallback failed:', e);
+    }
+    try {
+      ensureTimelineEvents(parsed);
+    } catch (e) {
+      console.warn('[COGNAPSE] Timeline events fallback failed:', e);
     }
 
     // ─── PHASE 3: SECOND MODEL SYNTHESIS (Multi-Model Consensus) ───
