@@ -10,7 +10,7 @@ interface CognapseLoaderProps {
 
 export default function CognapseLoader({ variant = 'normal', stage, progress }: CognapseLoaderProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 mt-8 animate-in fade-in duration-500">
+    <div className="flex flex-col items-center justify-center py-10 mt-4 animate-in fade-in duration-500">
       {/* Brand logo + text */}
       <div className="cognapse-loader__brand">
         <BrandLogo size={36} />
