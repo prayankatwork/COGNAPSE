@@ -63,6 +63,7 @@ export default function MainContent() {
   const isPremium = !!user?.premium;
   const loadingPhaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const subSearchGenRef = useRef(0);
 
   const clearLoadingPhaseTimers = () => {
     loadingPhaseTimers.current.forEach(clearTimeout);
@@ -199,15 +200,24 @@ export default function MainContent() {
     setQuery("");
     setLoadingPhase(retryCount > 0 ? `Retrying synthesis (Attempt ${retryCount + 1})...` : "Expanding investigation umbrella...");
 
+    // Generation counter: each new top-level sub-search call increments this.
+    // Used in finally to prevent a stale (aborted) call from racing with a newer one.
+    const genAtStart = ++subSearchGenRef.current;
     let subReport: any = null;
+    let shouldClearLoading = true;
 
     try {
       const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank }, abortControllerRef.current?.signal);
+
+      // Abort race guard: if a newer sub-search has started since this call
+      // began, bail out silently — the new call owns loading state now.
+      if (genAtStart !== subSearchGenRef.current) return;
 
       // Strict Validation Layer
       if (!report || !report.summary || !report.summary.full_synthesis) {
         if (retryCount < 2) {
           console.warn("Sub-report validation failed. Retrying...");
+          shouldClearLoading = false; // recursive call will handle loading state
           return handleSubSearch(targetQuery, retryCount + 1);
         }
         throw new Error("Local LLM failed to generate a structured sub-report. Try a more specific node.");
@@ -223,15 +233,22 @@ export default function MainContent() {
       if (err.name === 'AbortError') return;
       setError(err.message || "Failed to expand investigation.");
     } finally {
-      // Push to stack AND clear loading in the same tick to avoid flicker
+      // Stale call guard: if a newer sub-search has started, skip cleanup.
+      // The new call's setLoading(true) is in flight — we must not race it.
+      if (genAtStart !== subSearchGenRef.current) return;
+
       if (subReport) {
         pushToStack(subReport);
       }
-      if (retryCount === 0) {
-        const benchmarkEnd = performance.now();
-        console.log(`[Benchmark] Sub-search completed in ${((benchmarkEnd - benchmarkStart) / 1000).toFixed(3)} seconds.`);
+      if (shouldClearLoading) {
+        setLoading(false);
+        // Benchmark end — only log on the original call (retryCount === 0)
+        if (retryCount === 0) {
+          const elapsed = ((performance.now() - benchmarkStart) / 1000).toFixed(3);
+          const status = subReport ? 'completed' : 'failed after all retries';
+          console.log(`[Benchmark] Sub-search ${status} in ${elapsed} seconds.`);
+        }
       }
-      setLoading(false);
     }
   };
 
