@@ -703,15 +703,17 @@ ${pairsText}`;
     const results = JSON.parse(rawStr);
     const arr = Array.isArray(results) ? results : (results.verifications || results.results || []);
 
-    return arr.map((r: any, i: number) => ({
-      source_id: verifiable[i]?.sourceId ?? 0,
-      claim: verifiable[i]?.claimText ?? '',
-      verdict: ['supported', 'partial', 'contradicted', 'unrelated'].includes(r.verdict)
-        ? r.verdict
-        : 'unrelated',
-      confidence: typeof r.confidence === 'number' ? Math.max(0, Math.min(1, r.confidence)) : 0,
-      explanation: r.explanation || 'Verifier did not provide a detailed explanation for this verdict — source content may be insufficient or ambiguous',
-    }));
+    return arr
+      .filter((_: any, i: number) => i < verifiable.length)
+      .map((r: any, i: number) => ({
+        source_id: verifiable[i]?.sourceId ?? 0,
+        claim: verifiable[i]?.claimText ?? '',
+        verdict: ['supported', 'partial', 'contradicted', 'unrelated'].includes(r.verdict)
+          ? r.verdict
+          : 'unrelated',
+        confidence: typeof r.confidence === 'number' ? Math.max(0, Math.min(1, r.confidence)) : 0,
+        explanation: r.explanation || 'Verifier did not provide a detailed explanation for this verdict — source content may be insufficient or ambiguous',
+      }));
   } catch (e) {
     console.warn('Citation verification failed:', e);
     return [];

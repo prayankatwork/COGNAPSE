@@ -65,6 +65,10 @@ export default function PhysicsMap({
   const [layoutMode, setLayoutMode] = useState<'radial' | 'force'>('force');
   const [showScrollMessage, setShowScrollMessage] = useState(false);
   const [isFirstView, setIsFirstView] = useState(true);
+  const placedLabelsRef = useRef<{ x: number; y: number; w: number; h: number }[]>([]);
+  const handleEngineTick = useCallback(() => {
+    placedLabelsRef.current = [];
+  }, []);
 
   useEffect(() => {
     let frameId: number | null = null;
@@ -288,62 +292,88 @@ export default function PhysicsMap({
             onNodeHover={isMobile ? undefined : setHoverNode}
             d3VelocityDecay={isMobile ? 0.35 : 0.25}
             cooldownTicks={isMobile ? 50 : 100}
-            nodeCanvasObject={(node: any, ctx, globalScale) => {
-              const label = node.name;
-              const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
-              const nodeRadius = Math.sqrt(node.val) * (isMobile ? 1 : 1.2);
-              const isHovered = hoverNode === node;
-              const isRoot = node.id === 'root' || node.val > 15;
+onEngineTick={handleEngineTick}
+            nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
+                const label = node.name;
+                const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
+                const nodeRadius = Math.sqrt(node.val) * (isMobile ? 1 : 1.2);
+                const isHovered = hoverNode === node;
+                const isRoot = node.id === 'root' || node.val > 15;
 
-              // Smart Glow — reduced on mobile
-              if (isRoot) {
-                ctx.shadowBlur = 15 / globalScale;
-                ctx.shadowColor = node.color;
-              } else if (!isMobile && isHovered) {
-                ctx.shadowBlur = 20 / globalScale;
-                ctx.shadowColor = node.color;
-              }
-
-              // Node Body
-              ctx.beginPath();
-              ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
-              ctx.fillStyle = isHovered || isRoot ? signalColor : node.color;
-              ctx.fill();
-              
-              ctx.shadowBlur = 0;
-
-              // Type Ring — skip on mobile for perf
-              if (!isMobile && node.type) {
-                ctx.lineWidth = 1.5 / globalScale;
-                ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
-                ctx.stroke();
-              }
-
-              // Smart Labeling — only show root nodes on mobile
-              if (isMobile) {
+                // Smart Glow
                 if (isRoot) {
-                  ctx.font = `bold ${fontSize}px "Outfit", sans-serif`;
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'top';
-                  ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#1A1A1A';
-                  ctx.fillText(label, node.x, node.y + nodeRadius + 5);
+                  ctx.shadowBlur = 15 / globalScale;
+                  ctx.shadowColor = node.color;
+                } else if (!isMobile && isHovered) {
+                  ctx.shadowBlur = 20 / globalScale;
+                  ctx.shadowColor = node.color;
                 }
-              } else if (isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8) {
-                const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
-                ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                
-                const textWidth = ctx.measureText(label).width;
-                const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.6);
-                
-                ctx.fillStyle = theme === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
-                ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + nodeRadius + 5, bckgDimensions[0], bckgDimensions[1]);
-                
-                ctx.fillStyle = labelColor;
-                ctx.fillText(label, node.x, node.y + nodeRadius + 8);
-              }
-            }}
+
+                // Node Body
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
+                ctx.fillStyle = isHovered || isRoot ? signalColor : node.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Type Ring
+                if (!isMobile && node.type) {
+                  ctx.lineWidth = 1.5 / globalScale;
+                  ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+                  ctx.stroke();
+                }
+
+                // Determine if this node should show a label
+                const shouldShowLabel = isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8;
+
+                if (isMobile) {
+                  if (isRoot) {
+                    ctx.font = `bold ${fontSize}px "Outfit", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#1A1A1A';
+                    ctx.fillText(label, node.x, node.y + nodeRadius + 5);
+                  }
+                } else if (shouldShowLabel) {
+                  ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
+                  const textWidth = ctx.measureText(label).width;
+                  const labelW = textWidth + fontSize * 0.6;
+                  const labelH = fontSize + fontSize * 0.6;
+                  const labelX = node.x - labelW / 2;
+                  const labelY = node.y + nodeRadius + 5;
+
+                  // Collision check: skip this label if it overlaps any already-placed label
+                  const padding = 4;
+                  const placed = placedLabelsRef.current;
+                  let collides = false;
+                  for (const p of placed) {
+                    if (
+                      labelX < p.x + p.w + padding &&
+                      labelX + labelW + padding > p.x &&
+                      labelY < p.y + p.h + padding &&
+                      labelY + labelH + padding > p.y
+                    ) {
+                      collides = true;
+                      break;
+                    }
+                  }
+
+                  if (!collides) {
+                    placed.push({ x: labelX, y: labelY, w: labelW, h: labelH });
+
+                    const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+
+                    // Background box
+                    ctx.fillStyle = theme === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+                    ctx.fillRect(labelX, labelY, labelW, labelH);
+
+                    ctx.fillStyle = labelColor;
+                    ctx.fillText(label, node.x, node.y + nodeRadius + 8);
+                  }
+                }
+              }}
           />
         )}
 

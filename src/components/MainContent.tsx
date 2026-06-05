@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { useShallow } from 'zustand/react/shallow';
-import { Search, Menu, Send, AlertCircle, Compass, Hexagon, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight, Upload, FileText } from 'lucide-react';
+import { Search, Menu, Send, AlertCircle, Compass, Cpu, Database, Fingerprint, Terminal, ChevronRight, Zap, ArrowRight, Upload, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCognapseResearch, executeCognapseChat } from '../services/geminiService';
 import ReportView from './ReportView';
@@ -13,7 +13,7 @@ import { executeDeepResearch } from '../services/deepResearchService';
 import { analyzeDocument } from '../services/documentRagService';
 import { dbService } from '../services/dbService';
 import DeepResearchView from './DeepResearchView';
-import DeepResearchLoader from './DeepResearchLoader';
+import CognapseLoader from './CognapseLoader';
 import BrandLogo from './BrandLogo';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -488,7 +488,7 @@ export default function MainContent() {
         <div ref={contentAreaRef} className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
           {/* Deep Analysis Progress Banner */}
           {deepResearch.status === 'running' && (
-            <DeepResearchLoader stage={deepResearch.stage} progress={deepResearch.progress} />
+            <CognapseLoader variant="deep" stage={deepResearch.stage} progress={deepResearch.progress} />
           )}
 
           {deepResearch.status === 'error' && (
@@ -751,156 +751,7 @@ export default function MainContent() {
             )}
 
             {loading && loadingPhase !== "Analyzing context..." && (
-              <div className="flex flex-col items-center justify-center py-12 mt-16 animate-in fade-in duration-500">
-                {/* Neural Orbital Scanner */}
-                <div className="relative flex items-center justify-center w-28 h-28 mb-8">
-                  {/* Outer glow pulse */}
-                  <motion.div
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.08, 0.15] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute inset-0 bg-my-accent rounded-full blur-3xl"
-                  />
-
-                  {/* Orbit ring 1 — outer, slow clockwise */}
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    className="absolute inset-0 border border-my-accent/20 rounded-full"
-                  >
-                    {/* Orbital particle */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2">
-                      <div className="w-full h-full rounded-full bg-my-accent" style={{ boxShadow: '0 0 10px color-mix(in srgb, var(--accent) 90%, transparent)' }} />
-                      <div className="w-4 h-4 -top-1 -left-1 absolute rounded-full bg-my-accent/20 animate-ping" />
-                    </div>
-                  </motion.div>
-
-                  {/* Orbit ring 2 — middle, dashed, counter-clockwise */}
-                  <motion.div
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                    className="absolute inset-3 border border-dashed border-my-accent/15 rounded-full"
-                  >
-                    {/* Orbital particle */}
-                    <div className="absolute top-1/2 -right-1.5 w-1.5 h-1.5">
-                      <div className="w-full h-full rounded-full bg-my-signal" style={{ boxShadow: '0 0 8px color-mix(in srgb, var(--signal) 80%, transparent)' }} />
-                    </div>
-                  </motion.div>
-
-                  {/* Orbit ring 3 — inner, faster */}
-                  <motion.div
-                    animate={{ rotate: 480 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    className="absolute inset-6 border border-my-accent/10 rounded-full"
-                  >
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1 h-1">
-                      <div className="w-full h-full rounded-full bg-my-success" style={{ boxShadow: '0 0 6px color-mix(in srgb, var(--success) 80%, transparent)' }} />
-                    </div>
-                  </motion.div>
-
-                  {/* Scanning line sweep */}
-                  <div className="absolute inset-0 overflow-hidden rounded-full">
-                    <motion.div
-                      initial={{ y: '-100%' }}
-                      animate={{ y: '100%' }}
-                      transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
-                      className="w-full h-[3px] bg-gradient-to-r from-transparent via-my-accent/80 to-transparent blur-[2px]"
-                    />
-                  </div>
-
-                  {/* Core hexagon */}
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="relative z-10"
-                  >
-                    <Hexagon className="w-10 h-10 text-my-accent" strokeWidth={1.5} />
-                  </motion.div>
-                </div>
-
-                {/* Neural pulse dots — wave effect */}
-                <div className="flex items-center gap-2 mb-6 h-4">
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        backgroundColor: 'var(--accent)',
-                      }}
-                      animate={{
-                        scale: [0.4, 1.2, 0.4],
-                        opacity: [0.2, 0.9, 0.2],
-                        backgroundColor: [
-                          'color-mix(in srgb, var(--accent) 40%, transparent)',
-                          'var(--accent)',
-                          'color-mix(in srgb, var(--accent) 40%, transparent)'
-                        ]
-                      }}
-                      transition={{
-                        duration: 1.4,
-                        repeat: Infinity,
-                        delay: i * 0.15,
-                        ease: 'easeInOut'
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* Loading phase text with cursor */}
-                <div className="w-64">
-                  <div className="flex items-center justify-center mb-3">
-                    <p className="text-sm font-bold tracking-[0.2em] uppercase text-my-ink text-center">
-                      {loadingPhase}
-                    </p>
-                    <motion.span
-                      animate={{ opacity: [1, 0, 1] }}
-                      transition={{ duration: 0.8, repeat: Infinity }}
-                      className="inline-block w-[2px] h-3 bg-my-accent ml-1"
-                    />
-                  </div>
-
-                  {/* Enhanced gradient progress bar */}
-                  <div className="relative h-1.5 w-full bg-my-border/50 rounded-full overflow-hidden">
-                    <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{
-                        background: 'linear-gradient(90deg, var(--accent), var(--signal))'
-                      }}
-                      animate={{
-                        width: loadingPhase === "Analyzing research query..." ? "20%" :
-                          loadingPhase === "Reviewing available data..." ? "40%" :
-                            loadingPhase === "Synthesizing primary sources..." ? "60%" :
-                              loadingPhase === "Identifying data conflicts..." ? "80%" : ["90%", "100%"],
-                      }}
-                      transition={{ duration: 0.6, ease: 'easeOut' }}
-                    />
-                    {/* Glow overlay */}
-                    <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full blur-sm"
-                      style={{
-                        background: 'linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 30%, transparent), transparent)',
-                        width: loadingPhase === "Analyzing research query..." ? "20%" :
-                          loadingPhase === "Reviewing available data..." ? "40%" :
-                            loadingPhase === "Synthesizing primary sources..." ? "60%" :
-                              loadingPhase === "Identifying data conflicts..." ? "80%" : "100%"
-                      }}
-                    />
-                  </div>
-
-                  {/* Subtle status hint */}
-                  <motion.p
-                    animate={{ opacity: [0.3, 0.5, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="text-[8px] font-mono text-my-muted/40 text-center mt-2 tracking-[0.3em] uppercase"
-                  >
-                    {loadingPhase === "Analyzing research query..." && "▸ vectorizing query"}
-                    {loadingPhase === "Reviewing available data..." && "▸ aggregating sources"}
-                    {loadingPhase === "Synthesizing primary sources..." && "▸ processing corpus"}
-                    {loadingPhase === "Identifying data conflicts..." && "▸ cross-referencing"}
-                    {loadingPhase === "Structuring report..." && "▸ compiling dossier"}
-                    {loadingPhase === "Finalizing report..." && "▸ encrypting payload"}
-                  </motion.p>
-                </div>
-              </div>
+              <CognapseLoader />
             )}
 
             <div ref={bottomRef} />

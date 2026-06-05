@@ -706,22 +706,33 @@ export default function ReportView({
 
           {/* Evidence Assessment — compact metrics inside Metrics panel */}
           {report.evidence_assessment && (
-            <div className="grid grid-cols-2 gap-[1px] bg-my-border border border-my-border">
-              <div className="bg-my-callout p-2.5 flex flex-col">
-                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Sources</span>
-                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.source_count}</span>
+            <div className="bg-my-border border border-my-border">
+              <div className="bg-my-callout px-3 py-2 border-b border-my-border/50">
+                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Evidence Assessment</span>
               </div>
-              <div className="bg-my-callout p-2.5 flex flex-col">
-                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Diversity</span>
-                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{(report.evidence_assessment.source_diversity_score * 100).toFixed(0)}%</span>
-              </div>
-              <div className="bg-my-callout p-2.5 flex flex-col">
-                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Contradictions</span>
-                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.contradiction_count}</span>
-              </div>
-              <div className="bg-my-callout p-2.5 flex flex-col">
-                <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Citation Support</span>
-                <span className="text-[12px] font-semibold text-my-ink mt-0.5">{(report.evidence_assessment.citation_support_rate * 100).toFixed(0)}%</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-my-border">
+                <div className="bg-my-callout p-2.5 flex flex-col">
+                  <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Sources</span>
+                  <span className="text-[13px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.source_count}</span>
+                  <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">total indexed</span>
+                </div>
+                <div className="bg-my-callout p-2.5 flex flex-col">
+                  <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Diversity</span>
+                  <span className="text-[13px] font-semibold text-my-ink mt-0.5">{(report.evidence_assessment.source_diversity_score * 100).toFixed(0)}<span className="text-[9px] text-my-muted">%</span></span>
+                  <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">domain variety</span>
+                </div>
+                <div className="bg-my-callout p-2.5 flex flex-col">
+                  <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Contradictions</span>
+                  <span className="text-[13px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.contradiction_count}</span>
+                  <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">conflicting claims</span>
+                </div>
+                <div className="bg-my-callout p-2.5 flex flex-col">
+                  <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Citation Support</span>
+                  <span className={clsx('text-[13px] font-semibold mt-0.5', (report.evidence_assessment.citation_support_rate || 0) >= 0.6 ? 'ds-text-success' : (report.evidence_assessment.citation_support_rate || 0) >= 0.3 ? 'ds-text-warning' : 'ds-text-danger')}>
+                    {((report.evidence_assessment.citation_support_rate || 0) * 100).toFixed(0)}<span className="text-[9px] text-my-muted">%</span>
+                  </span>
+                  <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">verification rate</span>
+                </div>
               </div>
             </div>
           )}
@@ -876,7 +887,7 @@ export default function ReportView({
                 variant="ghost"
                 onClick={() => !readOnly && (onChatFollowUp ? onChatFollowUp(f) : onSubSearch(f))}
                 disabled={readOnly}
-                className="bg-my-bg py-2.5 md:py-1.5 px-3 text-[12px] text-my-ink hover:border-my-accent"
+                className="bg-my-bg py-2.5 md:py-1.5 px-3 text-[12px] font-normal text-my-ink hover:border-my-accent"
               >
                 {safeText(f)} <ArrowRight size={12} className="opacity-50" />
               </Button>
