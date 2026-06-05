@@ -268,19 +268,27 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
-            warmupTicks={100}
+            warmupTicks={150}
             nodeRelSize={isMobile ? 5 : 7}
-            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.3)'}
+            linkColor={(link: any) => {
+              const base = theme === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)';
+              const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+              const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+              if (sourceId === 'root' || targetId === 'root') {
+                return signalColor + '66'; // ~40% opacity orange for root-connected links
+              }
+              return base;
+            }}
             linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2.5)}
-            linkDirectionalParticles={isMobile ? 0 : 4}
-            linkDirectionalParticleSpeed={0.025}
-            linkDirectionalParticleWidth={3}
+            linkDirectionalParticles={isMobile ? 0 : 25}
+            linkDirectionalParticleSpeed={0.005}
+            linkDirectionalParticleWidth={isMobile ? 1.5 : 2}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.4 : 0.3}
-            cooldownTicks={isMobile ? 80 : 200}
+            d3VelocityDecay={isMobile ? 0.35 : 0.15}
+            cooldownTicks={isMobile ? 300 : 1000}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
               const label = node.name;
               const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
