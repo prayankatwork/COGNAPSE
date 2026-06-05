@@ -127,7 +127,7 @@ export default function PhysicsMap({
       });
     }
 
-    if (mapData?.edges && Array.isArray(mapData.edges)) {
+    if (mapData?.edges && Array.isArray(mapData.edges) && mapData.edges.length > 0) {
       mapData.edges.forEach((e: any) => {
         if (nodes.find(n => n.id === e.from) && nodes.find(n => n.id === e.to)) {
           links.push({
