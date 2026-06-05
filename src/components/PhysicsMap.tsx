@@ -85,6 +85,16 @@ export default function PhysicsMap({
     };
   }, []);
 
+  // Keep the simulation engine warm so directional particles keep moving/blinking
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (fgRef.current && typeof fgRef.current.d3ReheatSimulation === 'function') {
+        fgRef.current.d3ReheatSimulation();
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   const graphData = useMemo(() => {
     const nodes: NodeData[] = [];
     const links: LinkData[] = [];
