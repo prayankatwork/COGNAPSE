@@ -268,27 +268,90 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
-            warmupTicks={150}
+            warmupTicks={100}
             nodeRelSize={isMobile ? 5 : 7}
             linkColor={(link: any) => {
-              const base = theme === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)';
+              const base = theme === 'dark' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.25)';
               const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
               const targetId = typeof link.target === 'object' ? link.target.id : link.target;
               if (sourceId === 'root' || targetId === 'root') {
-                return signalColor + '66'; // ~40% opacity orange for root-connected links
+                return signalColor + '88'; // ~53% opacity orange for root-connected links
               }
               return base;
             }}
             linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2.5)}
-            linkDirectionalParticles={isMobile ? 0 : 25}
-            linkDirectionalParticleSpeed={0.005}
+            linkDirectionalParticles={isMobile ? 0 : 4}
+            linkDirectionalParticleSpeed={0.008}
             linkDirectionalParticleWidth={isMobile ? 1.5 : 2}
             linkDirectionalParticleColor={() => signalColor}
+            linkCanvasObjectMode="replace"
+            linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+              const source = typeof link.source === 'object' ? link.source : null;
+              const target = typeof link.target === 'object' ? link.target : null;
+              if (!source || !target || source.x === undefined || target.x === undefined) return;
+
+              const dx = target.x - source.x;
+              const dy = target.y - source.y;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              if (length < 1) return;
+
+              const ux = dx / length;
+              const uy = dy / length;
+              const strength = link.strength || 1;
+              const lineWidth = Math.max(1, strength * 1.5 / globalScale);
+
+              // Draw base link line (semi-transparent)
+              ctx.beginPath();
+              ctx.moveTo(source.x, source.y);
+              ctx.lineTo(target.x, target.y);
+              ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+              ctx.lineWidth = lineWidth;
+              ctx.stroke();
+
+              // Draw traveling orange pulse (blinking line effect)
+              const speed = 0.3; // fraction of link per second
+              const pulsePos = (Date.now() * 0.001 * speed) % 1;
+              const pulseLen = 0.08; // 8% of link length
+
+              const startT = Math.max(0, pulsePos - pulseLen);
+              const endT = Math.min(1, pulsePos);
+
+              if (endT > startT) {
+                ctx.beginPath();
+                ctx.moveTo(
+                  source.x + ux * length * startT,
+                  source.y + uy * length * startT
+                );
+                ctx.lineTo(
+                  source.x + ux * length * endT,
+                  source.y + uy * length * endT
+                );
+
+                // Glow effect on the pulse
+                const gradient = ctx.createLinearGradient(
+                  source.x + ux * length * startT,
+                  source.y + uy * length * startT,
+                  source.x + ux * length * endT,
+                  source.y + uy * length * endT
+                );
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.3, signalColor);
+                gradient.addColorStop(0.7, signalColor);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = Math.max(2, strength * 3 / globalScale);
+                ctx.shadowBlur = 8 / globalScale;
+                ctx.shadowColor = signalColor;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+              }
+            }}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.35 : 0.15}
-            cooldownTicks={isMobile ? 300 : 1000}
+            d3VelocityDecay={isMobile ? 0.3 : 0.2}
+            cooldownTicks={isMobile ? 500 : 10000}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
               const label = node.name;
               const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
