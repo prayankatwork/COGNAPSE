@@ -118,11 +118,13 @@ export default function ReportView({
   report,
   onSubSearch,
   onChatFollowUp,
+  onBack,
   readOnly = false
 }: {
   report: COGNAPSE_Output,
   onSubSearch: (q: string) => void,
   onChatFollowUp?: (q: string) => void,
+  onBack?: () => void,
   readOnly?: boolean
 }) {
   
@@ -256,9 +258,20 @@ export default function ReportView({
       {/* Query Title & Brand */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-8 mb-6">
-          <h1 className="font-serif text-[32px] leading-[1.1] text-my-ink flex-1">
-            {safeText(report.query_understood)}
-          </h1>
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="shrink-0 p-1.5 border border-my-border text-my-muted hover:text-my-accent hover:border-my-accent transition-all"
+                title="Back to parent research"
+              >
+                <ArrowRight size={16} className="rotate-180" />
+              </button>
+            )}
+            <h1 className="font-serif text-[32px] leading-[1.1] text-my-ink truncate">
+              {safeText(report.query_understood)}
+            </h1>
+          </div>
           <BrandLogo size={44} />
         </div>
         {(() => {

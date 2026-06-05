@@ -199,6 +199,8 @@ export default function MainContent() {
     setQuery("");
     setLoadingPhase(retryCount > 0 ? `Retrying synthesis (Attempt ${retryCount + 1})...` : "Expanding investigation umbrella...");
 
+    let subReport: any = null;
+
     try {
       const report = await executeCognapseResearch(targetQuery, { xp, count: searchCount, rank }, abortControllerRef.current?.signal);
 
@@ -211,8 +213,8 @@ export default function MainContent() {
         throw new Error("Local LLM failed to generate a structured sub-report. Try a more specific node.");
       }
 
+      subReport = report;
       setLoadingPhase("Finalizing sub-report...");
-      pushToStack(report);
 
       updateGamification({ xpAcquired: 5, searchCountIncrease: 1 });
       contentAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -221,6 +223,10 @@ export default function MainContent() {
       if (err.name === 'AbortError') return;
       setError(err.message || "Failed to expand investigation.");
     } finally {
+      // Push to stack AND clear loading in the same tick to avoid flicker
+      if (subReport) {
+        pushToStack(subReport);
+      }
       if (retryCount === 0) {
         const benchmarkEnd = performance.now();
         console.log(`[Benchmark] Sub-search completed in ${((benchmarkEnd - benchmarkStart) / 1000).toFixed(3)} seconds.`);
@@ -678,7 +684,17 @@ export default function MainContent() {
               </div>
             )}
 
-            {error && (
+            {error && currentReport && (
+              <div className="bg-my-conflict-bg border border-my-conflict-border p-4 mx-8 rounded-[6px] flex items-start gap-3 text-my-conflict-text mt-8 mb-4">
+                <AlertCircle className="shrink-0 mt-0.5" size={14} />
+                <div>
+                  <h4 className="font-bold mb-1 tracking-wide text-[10px] uppercase">SUB-REPORT ERROR</h4>
+                  <p className="opacity-80 text-[12px]">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {!currentReport && error && (
               <div className="bg-my-conflict-bg border border-my-conflict-border p-6 mx-8 rounded-[6px] flex items-start gap-4 text-my-conflict-text mt-8">
                 <AlertCircle className="shrink-0 mt-0.5" />
                 <div>
@@ -704,9 +720,9 @@ export default function MainContent() {
               </div>
             )}
 
-            {currentReport && !error && (
+            {currentReport && (
               <>
-                <ReportView report={currentReport} onSubSearch={handleSubSearch} onChatFollowUp={handleChatFollowUp} />
+                <ReportView report={currentReport} onSubSearch={handleSubSearch} onChatFollowUp={handleChatFollowUp} onBack={investigationStack.length > 1 ? () => popFromStack() : undefined} />
 
                 {/* Follow-up Chat UI */}
                 <div className="mt-8 border-t border-my-border pt-8 pb-16">
