@@ -268,18 +268,19 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
+            warmupTicks={100}
             nodeRelSize={isMobile ? 5 : 7}
-            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)'}
+            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.3)'}
             linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2.5)}
             linkDirectionalParticles={isMobile ? 0 : 4}
-            linkDirectionalParticleSpeed={0.018}
+            linkDirectionalParticleSpeed={0.025}
             linkDirectionalParticleWidth={3}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.5 : 0.45}
-            cooldownTicks={isMobile ? 30 : 50}
+            d3VelocityDecay={isMobile ? 0.4 : 0.3}
+            cooldownTicks={isMobile ? 80 : 200}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
               const label = node.name;
               const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
