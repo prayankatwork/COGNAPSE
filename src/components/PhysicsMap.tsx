@@ -316,10 +316,10 @@ onEngineTick={handleEngineTick}
                 ctx.fill();
                 ctx.shadowBlur = 0;
 
-                // Type Ring
+                // Type Ring — colored by node type for at-a-glance categorization
                 if (!isMobile && node.type) {
                   ctx.lineWidth = 1.5 / globalScale;
-                  ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+                  ctx.strokeStyle = node.color + '80'; // 50% opacity
                   ctx.stroke();
                 }
 
@@ -404,7 +404,7 @@ onEngineTick={handleEngineTick}
                   <div>
                     <h3 className="font-bold text-my-ink leading-tight uppercase tracking-widest text-[11px]">Knowledge Synthesis</h3>
                     <div className="flex gap-2 mt-1">
-                      <span className="text-[9px] bg-my-accent/10 text-my-accent px-1.5 py-0.5 font-bold uppercase">{selectedNode.type || 'CONCEPT'}</span>
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5" style={{ backgroundColor: (selectedNode.color || '#64748B') + '20', color: selectedNode.color || '#64748B' }}>{selectedNode.type || 'CONCEPT'}</span>
                       <span className="text-[9px] text-my-muted font-mono opacity-60">ID: {selectedNode.id.substring(0, 8)}</span>
                     </div>
                   </div>
@@ -452,11 +452,13 @@ onEngineTick={handleEngineTick}
       {/* Cluster Footer Info */}
       <div className="h-8 bg-my-sidebar/30 border-t border-my-border hidden md:flex items-center px-4 shrink-0">
         {!isMobile && (
-          <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
-             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
-             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
-             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#EF4444] rounded-full" /> Conflict</div>
-             <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>
+          <div className="flex items-center gap-2 text-[9px] font-bold text-my-muted uppercase tracking-widest">
+             <div className="w-2 h-2 bg-my-signal rounded-full" title="Root" />
+             <div className="w-2 h-2 bg-[#38BDF8] rounded-full" title="Concept" />
+             <div className="w-2 h-2 bg-[#A78BFA] rounded-full" title="Entity" />
+             <div className="w-2 h-2 bg-[#EF4444] rounded-full" title="Conflict" />
+             <div className="w-2 h-2 bg-[#10B981] rounded-full" title="Discovery" />
+             <span className="ml-auto opacity-30">{graphData.nodes.length} nodes</span>
           </div>
         )}
       </div>
