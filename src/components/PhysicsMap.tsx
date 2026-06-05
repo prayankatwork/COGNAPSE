@@ -270,83 +270,12 @@ export default function PhysicsMap({
             graphData={graphData}
             warmupTicks={100}
             nodeRelSize={isMobile ? 5 : 7}
-            linkColor={(link: any) => {
-              const base = theme === 'dark' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.25)';
-              const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-              const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-              if (sourceId === 'root' || targetId === 'root') {
-                return signalColor + '88'; // ~53% opacity orange for root-connected links
-              }
-              return base;
-            }}
-            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2.5)}
-            linkDirectionalParticles={isMobile ? 0 : 4}
-            linkDirectionalParticleSpeed={0.008}
-            linkDirectionalParticleWidth={isMobile ? 1.5 : 2}
+            linkColor={signalColor}
+            linkWidth={(link: any) => (link.strength || 1) * 3}
+            linkDirectionalParticles={isMobile ? 0 : 30}
+            linkDirectionalParticleSpeed={0.005}
+            linkDirectionalParticleWidth={isMobile ? 2 : 4}
             linkDirectionalParticleColor={() => signalColor}
-            linkCanvasObjectMode="replace"
-            linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-              const source = typeof link.source === 'object' ? link.source : null;
-              const target = typeof link.target === 'object' ? link.target : null;
-              if (!source || !target || source.x === undefined || target.x === undefined) return;
-
-              const dx = target.x - source.x;
-              const dy = target.y - source.y;
-              const length = Math.sqrt(dx * dx + dy * dy);
-              if (length < 1) return;
-
-              const ux = dx / length;
-              const uy = dy / length;
-              const strength = link.strength || 1;
-              const lineWidth = Math.max(1, strength * 1.5 / globalScale);
-
-              // Draw base link line (semi-transparent)
-              ctx.beginPath();
-              ctx.moveTo(source.x, source.y);
-              ctx.lineTo(target.x, target.y);
-              ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
-              ctx.lineWidth = lineWidth;
-              ctx.stroke();
-
-              // Draw traveling orange pulse (blinking line effect)
-              const speed = 0.3; // fraction of link per second
-              const pulsePos = (Date.now() * 0.001 * speed) % 1;
-              const pulseLen = 0.08; // 8% of link length
-
-              const startT = Math.max(0, pulsePos - pulseLen);
-              const endT = Math.min(1, pulsePos);
-
-              if (endT > startT) {
-                ctx.beginPath();
-                ctx.moveTo(
-                  source.x + ux * length * startT,
-                  source.y + uy * length * startT
-                );
-                ctx.lineTo(
-                  source.x + ux * length * endT,
-                  source.y + uy * length * endT
-                );
-
-                // Glow effect on the pulse
-                const gradient = ctx.createLinearGradient(
-                  source.x + ux * length * startT,
-                  source.y + uy * length * startT,
-                  source.x + ux * length * endT,
-                  source.y + uy * length * endT
-                );
-                gradient.addColorStop(0, 'transparent');
-                gradient.addColorStop(0.3, signalColor);
-                gradient.addColorStop(0.7, signalColor);
-                gradient.addColorStop(1, 'transparent');
-
-                ctx.strokeStyle = gradient;
-                ctx.lineWidth = Math.max(2, strength * 3 / globalScale);
-                ctx.shadowBlur = 8 / globalScale;
-                ctx.shadowColor = signalColor;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-              }
-            }}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
