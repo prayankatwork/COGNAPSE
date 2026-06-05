@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import ForceGraph2D from 'react-force-graph-2d';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2, Cpu, Zap, Maximize2, Minimize2, Anchor, Filter, Target, Share2, Layers } from 'lucide-react';
-import { Button } from './ui';
 import { executeQuickInfo } from '../services/geminiService';
 import { useStore } from '../store';
 import { getSignalColor } from '../utils/brandColors';
@@ -65,10 +64,6 @@ export default function PhysicsMap({
   const [layoutMode, setLayoutMode] = useState<'radial' | 'force'>('force');
   const [showScrollMessage, setShowScrollMessage] = useState(false);
   const [isFirstView, setIsFirstView] = useState(true);
-  const placedLabelsRef = useRef<{ x: number; y: number; w: number; h: number }[]>([]);
-  const handleEngineTick = useCallback(() => {
-    placedLabelsRef.current = [];
-  }, []);
 
   useEffect(() => {
     let frameId: number | null = null;
@@ -213,30 +208,29 @@ export default function PhysicsMap({
         
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <Button
-              variant="ghost"
+            <button 
               onClick={() => setFilterMode(f => f === 'all' ? 'high' : 'all')}
-              className={`px-2 py-1 text-[9px] font-bold !rounded-none ${
-                filterMode === 'high' ? '!bg-my-accent !text-white dark:!text-black !border-my-accent' : '!text-my-muted !border-my-border hover:!border-my-accent'
+              className={`flex items-center gap-1.5 px-2 py-1 text-[9px] font-bold uppercase transition-all border ${
+                filterMode === 'high' ? 'bg-my-accent text-white dark:text-black border-my-accent' : 'text-my-muted border-my-border hover:border-my-accent'
               }`}
-              icon={<Filter size={10} />}
             >
-              {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
-            </Button>
+              <Filter size={10} /> {filterMode === 'all' ? 'Filter: All' : 'Filter: Critical'}
+            </button>
           )}
           <div className="w-px h-4 bg-my-border mx-1" />
-          <Button
-            variant="ghost"
+          <button 
             onClick={() => fgRef.current?.zoomToFit(500)}
-            className="p-1.5 !rounded-none"
-            icon={<Target size={14} />}
-          ><></></Button>
-          <Button
-            variant="ghost"
+            className="p-1.5 text-my-muted hover:text-my-accent transition-colors"
+            title="Auto-Fit"
+          >
+            <Target size={14} />
+          </button>
+          <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 !rounded-none"
-            icon={isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          ><></></Button>
+            className="p-1.5 text-my-muted hover:text-my-accent transition-colors"
+          >
+            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
         </div>
       </div>
 
@@ -280,100 +274,74 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
-            nodeRelSize={isMobile ? 5 : 8}
-            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)'}
-            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 3)}
-            linkDirectionalParticles={isMobile ? 0 : 4}
-            linkDirectionalParticleSpeed={0.025}
-            linkDirectionalParticleWidth={3}
+            nodeRelSize={isMobile ? 3 : 4}
+            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
+            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1 : 1.5)}
+            linkDirectionalParticles={isMobile ? 0 : 2}
+            linkDirectionalParticleSpeed={0.012}
+            linkDirectionalParticleWidth={1.5}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.5 : 0.42}
-            cooldownTicks={isMobile ? 25 : 60}
-onEngineTick={handleEngineTick}
+            d3VelocityDecay={isMobile ? 0.35 : 0.25}
+            cooldownTicks={isMobile ? 50 : 100}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
-                const label = node.name;
-                const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
-                const nodeRadius = Math.sqrt(node.val) * (isMobile ? 1 : 1.2);
-                const isHovered = hoverNode === node;
-                const isRoot = node.id === 'root' || node.val > 15;
+              const label = node.name;
+              const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
+              const nodeRadius = Math.sqrt(node.val) * (isMobile ? 1 : 1.2);
+              const isHovered = hoverNode === node;
+              const isRoot = node.id === 'root' || node.val > 15;
 
-                // Smart Glow
+              // Smart Glow — reduced on mobile
+              if (isRoot) {
+                ctx.shadowBlur = 15 / globalScale;
+                ctx.shadowColor = node.color;
+              } else if (!isMobile && isHovered) {
+                ctx.shadowBlur = 20 / globalScale;
+                ctx.shadowColor = node.color;
+              }
+
+              // Node Body
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
+              ctx.fillStyle = isHovered || isRoot ? signalColor : node.color;
+              ctx.fill();
+              
+              ctx.shadowBlur = 0;
+
+              // Type Ring — skip on mobile for perf
+              if (!isMobile && node.type) {
+                ctx.lineWidth = 1.5 / globalScale;
+                ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+                ctx.stroke();
+              }
+
+              // Smart Labeling — only show root nodes on mobile
+              if (isMobile) {
                 if (isRoot) {
-                  ctx.shadowBlur = 15 / globalScale;
-                  ctx.shadowColor = node.color;
-                } else if (!isMobile && isHovered) {
-                  ctx.shadowBlur = 20 / globalScale;
-                  ctx.shadowColor = node.color;
+                  ctx.font = `bold ${fontSize}px "Outfit", sans-serif`;
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'top';
+                  ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#1A1A1A';
+                  ctx.fillText(label, node.x, node.y + nodeRadius + 5);
                 }
-
-                // Node Body
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
-                ctx.fillStyle = isHovered || isRoot ? signalColor : node.color;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-
-                // Type Ring — colored by node type for at-a-glance categorization
-                if (!isMobile && node.type) {
-                  ctx.lineWidth = 1.5 / globalScale;
-                  ctx.strokeStyle = node.color + '80'; // 50% opacity
-                  ctx.stroke();
-                }
-
-                // Determine if this node should show a label
-                const shouldShowLabel = isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8;
-
-                if (isMobile) {
-                  if (isRoot) {
-                    ctx.font = `bold ${fontSize}px "Outfit", sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
-                    ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#1A1A1A';
-                    ctx.fillText(label, node.x, node.y + nodeRadius + 5);
-                  }
-                } else if (shouldShowLabel) {
-                  ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
-                  const textWidth = ctx.measureText(label).width;
-                  const labelW = textWidth + fontSize * 0.6;
-                  const labelH = fontSize + fontSize * 0.6;
-                  const labelX = node.x - labelW / 2;
-                  const labelY = node.y + nodeRadius + 5;
-
-                  // Collision check: skip this label if it overlaps any already-placed label
-                  const padding = 4;
-                  const placed = placedLabelsRef.current;
-                  let collides = false;
-                  for (const p of placed) {
-                    if (
-                      labelX < p.x + p.w + padding &&
-                      labelX + labelW + padding > p.x &&
-                      labelY < p.y + p.h + padding &&
-                      labelY + labelH + padding > p.y
-                    ) {
-                      collides = true;
-                      break;
-                    }
-                  }
-
-                  if (!collides) {
-                    placed.push({ x: labelX, y: labelY, w: labelW, h: labelH });
-
-                    const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
-
-                    // Background box
-                    ctx.fillStyle = theme === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
-                    ctx.fillRect(labelX, labelY, labelW, labelH);
-
-                    ctx.fillStyle = labelColor;
-                    ctx.fillText(label, node.x, node.y + nodeRadius + 8);
-                  }
-                }
-              }}
+              } else if (isHovered || isRoot || globalScale > 1.2 || node.importance > 0.8) {
+                const labelColor = isHovered ? signalColor : (theme === 'dark' ? '#F1F5F9' : '#1A1A1A');
+                ctx.font = `${(isHovered || isRoot) ? 'bold' : 'normal'} ${fontSize}px "Outfit", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                const textWidth = ctx.measureText(label).width;
+                const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.6);
+                
+                ctx.fillStyle = theme === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+                ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + nodeRadius + 5, bckgDimensions[0], bckgDimensions[1]);
+                
+                ctx.fillStyle = labelColor;
+                ctx.fillText(label, node.x, node.y + nodeRadius + 8);
+              }
+            }}
           />
         )}
 
@@ -404,7 +372,7 @@ onEngineTick={handleEngineTick}
                   <div>
                     <h3 className="font-bold text-my-ink leading-tight uppercase tracking-widest text-[11px]">Knowledge Synthesis</h3>
                     <div className="flex gap-2 mt-1">
-                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5" style={{ backgroundColor: (selectedNode.color || '#64748B') + '20', color: selectedNode.color || '#64748B' }}>{selectedNode.type || 'CONCEPT'}</span>
+                      <span className="text-[9px] bg-my-accent/10 text-my-accent px-1.5 py-0.5 font-bold uppercase">{selectedNode.type || 'CONCEPT'}</span>
                       <span className="text-[9px] text-my-muted font-mono opacity-60">ID: {selectedNode.id.substring(0, 8)}</span>
                     </div>
                   </div>
@@ -426,8 +394,7 @@ onEngineTick={handleEngineTick}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="primary"
+                  <button 
                     onClick={() => {
                       if (readOnly) return;
                       onSubSearch(selectedNode.sub_query || selectedNode.name);
@@ -436,11 +403,10 @@ onEngineTick={handleEngineTick}
                       setTimeout(() => setShowScrollMessage(false), 5000);
                     }}
                     disabled={readOnly}
-                    className="col-span-2 py-4 px-4 text-[10px] font-bold !rounded-none hover:!bg-my-ink"
-                    icon={<Target size={16} />}
+                    className="col-span-2 bg-my-accent text-white dark:text-black py-4 px-4 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-my-ink transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {readOnly ? "Read Only Snapshot" : "Execute Research"}
-                  </Button>
+                    <Target size={16} /> {readOnly ? "Read Only Snapshot" : "Execute Research"}
+                  </button>
 
                 </div>
               </div>
@@ -452,13 +418,11 @@ onEngineTick={handleEngineTick}
       {/* Cluster Footer Info */}
       <div className="h-8 bg-my-sidebar/30 border-t border-my-border hidden md:flex items-center px-4 shrink-0">
         {!isMobile && (
-          <div className="flex items-center gap-2 text-[9px] font-bold text-my-muted uppercase tracking-widest">
-             <div className="w-2 h-2 bg-my-signal rounded-full" title="Root" />
-             <div className="w-2 h-2 bg-[#38BDF8] rounded-full" title="Concept" />
-             <div className="w-2 h-2 bg-[#A78BFA] rounded-full" title="Entity" />
-             <div className="w-2 h-2 bg-[#EF4444] rounded-full" title="Conflict" />
-             <div className="w-2 h-2 bg-[#10B981] rounded-full" title="Discovery" />
-             <span className="ml-auto opacity-30">{graphData.nodes.length} nodes</span>
+          <div className="flex items-center gap-4 text-[9px] font-bold text-my-muted uppercase tracking-widest">
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-my-signal rounded-full" /> Root</div>
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#38BDF8] rounded-full" /> Concept</div>
+             <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#EF4444] rounded-full" /> Conflict</div>
+             <span className="ml-auto opacity-30">Nodes: {graphData.nodes.length} | Links: {graphData.links.length}</span>
           </div>
         )}
       </div>
