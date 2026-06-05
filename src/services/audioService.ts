@@ -59,7 +59,6 @@ class AudioSystem {
     if (this._initialised) return;
     try {
       this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      if (this.ctx.state === 'suspended') this.ctx.resume();
 
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.value = 0.6;
@@ -74,6 +73,19 @@ class AudioSystem {
       this.sfxGain.connect(this.masterGain);
 
       this._initialised = true;
+
+      // Resume context on first real user interaction
+      const resume = () => {
+        if (this.ctx?.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        document.removeEventListener('click', resume);
+        document.removeEventListener('keydown', resume);
+        document.removeEventListener('touchstart', resume);
+      };
+      document.addEventListener('click', resume, { once: true });
+      document.addEventListener('keydown', resume, { once: true });
+      document.addEventListener('touchstart', resume, { once: true });
     } catch {
       // Web Audio unavailable — all methods become no-ops
     }
@@ -107,6 +119,10 @@ class AudioSystem {
 
   play(event: SoundEvent) {
     if (!this.ctx || this._muted) return;
+    // Resume context if still suspended (browser may have blocked init's resume call)
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
     switch (event) {
       case 'research-start':
         this.playResearchStart();

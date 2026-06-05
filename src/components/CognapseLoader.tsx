@@ -1,5 +1,6 @@
 import './CognapseLoader.css';
 import clsx from 'clsx';
+import BrandLogo from './BrandLogo';
 
 interface CognapseLoaderProps {
   variant?: 'normal' | 'deep';
@@ -8,40 +9,39 @@ interface CognapseLoaderProps {
 }
 
 export default function CognapseLoader({ variant = 'normal', stage, progress }: CognapseLoaderProps) {
-  const slices = Array.from({ length: 9 }, (_, i) => i + 1);
-
   return (
-    <div className="flex flex-col items-center justify-center py-12 mt-16 animate-in fade-in duration-500">
-      <div className={clsx('cognapse-loader', variant === 'deep' && 'mb-4')}>
-        <div className="cognapse-loader__inner">
-          {slices.map((i) => (
-            <div key={i} className="cognapse-loader__text">
-              <span>COGNAPSE</span>
-            </div>
-          ))}
-          <div className="cognapse-loader__line" />
+    <div className="flex flex-col items-center justify-center py-16 mt-8 animate-in fade-in duration-500">
+      {/* Brand logo + text */}
+      <div className="cognapse-loader__brand">
+        <BrandLogo size={36} />
+        <div className="cognapse-loader__brand-text">
+          COGNAPSE
+          <span className="cognapse-loader__cursor" />
         </div>
+        <div className="cognapse-loader__scan" />
       </div>
 
+      {/* Progress bar */}
+      <div className="cognapse-loader__bar">
+        <div className="cognapse-loader__bar-fill" />
+      </div>
+
+      {/* Deep research stages */}
       {variant === 'deep' && stage && (
-        <div className="flex flex-col items-center gap-1 mt-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center">
+          <div className="cognapse-loader__stages">
             {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={clsx(
-                  'w-1.5 h-1.5 rounded-full transition-all duration-500',
-                  s <= stage
-                    ? 'bg-my-accent shadow-[0_0_6px_rgba(var(--accent-rgb),0.3)]'
-                    : 'bg-my-border',
+                  'cognapse-loader__stage-dot',
+                  s <= stage && 'cognapse-loader__stage-dot--active',
                 )}
               />
             ))}
           </div>
           {progress && (
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-my-muted mt-1 animate-pulse">
-              {progress}
-            </p>
+            <p className="cognapse-loader__stage-label">{progress}</p>
           )}
         </div>
       )}

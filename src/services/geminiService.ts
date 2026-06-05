@@ -1411,6 +1411,34 @@ If you cannot find supporting evidence in the provided sources, state uncertaint
         published_date: s.published_date,
         bias_flag: null,
       }));
+
+      // Recompute evidence_assessment with real source data so source_count,
+      // diversity, and contradictions reflect actual sources (not AI-hallucinated ones)
+      const uniqueDomains = new Set(groundedSources.map(s => {
+        const d = (s.domain || '').toLowerCase().replace(/^www\./, '');
+        const parts = d.split('.');
+        if (parts.length >= 3 && ['co', 'org', 'com', 'gov', 'edu', 'net'].includes(parts[parts.length - 2]) && parts[parts.length - 1].length <= 3) {
+          return parts.slice(-3).join('.');
+        }
+        if (parts.length >= 2) {
+          return parts.slice(-2).join('.');
+        }
+        return d;
+      }));
+      const realSourceCount = groundedSources.length;
+      const realDiversityScore = Math.min((uniqueDomains.size / Math.max(realSourceCount, 1)) * 1.25, 1);
+      const realConflictCount = (parsed.conflicts || []).length;
+      let realCitationRate = 0.5;
+      if (parsed.citation_verifications && parsed.citation_verifications.length > 0) {
+        const supported = parsed.citation_verifications.filter((v: any) => v.verdict === 'supported').length;
+        realCitationRate = supported / parsed.citation_verifications.length;
+      }
+      parsed.evidence_assessment = {
+        source_count: realSourceCount,
+        source_diversity_score: realDiversityScore,
+        contradiction_count: realConflictCount,
+        citation_support_rate: Math.round(realCitationRate * 100) / 100,
+      };
     }
 
     // Attach retrieval metadata
