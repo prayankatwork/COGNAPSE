@@ -738,7 +738,7 @@ export default function ReportView({
 
           {/* Bias Alert Panel */}
           {hasBias && (
-            <div className="border border-amber-400/30 bg-amber-50/40 dark:bg-amber-950/20">
+            <div className="border border-amber-400/40 bg-amber-100/70 dark:bg-amber-950/30">
               <div className="w-full px-4 py-3 flex items-center gap-3 border-b border-amber-400/20">
                 <ShieldAlert size={14} className="ds-text-warning" />
                 <span className="text-[10px] font-bold uppercase tracking-widest ds-text-warning">
@@ -749,7 +749,7 @@ export default function ReportView({
                 </span>
               </div>
               <div className="px-4 py-3">
-                <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-200/90">
+                <p className="text-[11px] leading-relaxed text-amber-900 dark:text-amber-200/90">
                   {report.bias_alert?.recommendation || 'Review sources carefully for potential bias.'}
                 </p>
               </div>
