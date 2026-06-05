@@ -270,11 +270,19 @@ export default function PhysicsMap({
             graphData={graphData}
             warmupTicks={100}
             nodeRelSize={isMobile ? 5 : 7}
-            linkColor={signalColor}
-            linkWidth={(link: any) => (link.strength || 1) * 3}
-            linkDirectionalParticles={isMobile ? 0 : 30}
-            linkDirectionalParticleSpeed={0.005}
-            linkDirectionalParticleWidth={isMobile ? 2 : 4}
+            linkColor={(link: any) => {
+              const sourceId = typeof link.source === 'object' ? link.source?.id : link.source;
+              const targetId = typeof link.target === 'object' ? link.target?.id : link.target;
+              const isRootLink = sourceId === 'root' || sourceId === 'topic' || targetId === 'root' || targetId === 'topic';
+              if (isRootLink) {
+                return theme === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)';
+              }
+              return theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)';
+            }}
+            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2)}
+            linkDirectionalParticles={isMobile ? 0 : 20}
+            linkDirectionalParticleSpeed={0.015}
+            linkDirectionalParticleWidth={isMobile ? 3 : 5}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
