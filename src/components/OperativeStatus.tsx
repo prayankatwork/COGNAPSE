@@ -418,10 +418,7 @@ export default function OperativeStatus({ onClose }: OperativeStatusProps) {
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite]" />
                          </motion.div>
                       </div>
-                      <p className="mt-4 text-[9px] text-my-muted italic leading-relaxed text-left opacity-70">
-                         Acquire {nextRankXp - xp} additional points to unlock Tier {Math.floor(xp/100) + 2} analysis tools. 
-                         Data quota utilized: {progress}%.
-                      </p>
+
                    </Panel>
                    
                    <div className="grid grid-cols-2 gap-4">
