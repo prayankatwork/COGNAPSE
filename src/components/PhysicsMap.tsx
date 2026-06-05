@@ -66,16 +66,8 @@ export default function PhysicsMap({
   const [showScrollMessage, setShowScrollMessage] = useState(false);
   const [isFirstView, setIsFirstView] = useState(true);
   const placedLabelsRef = useRef<{ x: number; y: number; w: number; h: number }[]>([]);
-  const hasAutoFitted = useRef(false);
   const handleEngineTick = useCallback(() => {
     placedLabelsRef.current = [];
-  }, []);
-  const handleEngineStop = useCallback(() => {
-    if (!hasAutoFitted.current && fgRef.current) {
-      hasAutoFitted.current = true;
-      // Slight delay to let the canvas settle after cooldown
-      setTimeout(() => fgRef.current?.zoomToFit(400, 40), 100);
-    }
   }, []);
 
   useEffect(() => {
@@ -288,20 +280,19 @@ export default function PhysicsMap({
             width={dimensions.width}
             height={dimensions.height - 40}
             graphData={graphData}
-            nodeRelSize={isMobile ? 3 : 4}
-            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
-            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1 : 1.5)}
-            linkDirectionalParticles={isMobile ? 0 : 2}
-            linkDirectionalParticleSpeed={0.012}
-            linkDirectionalParticleWidth={1.5}
+            nodeRelSize={isMobile ? 5 : 8}
+            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)'}
+            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 3)}
+            linkDirectionalParticles={isMobile ? 0 : 4}
+            linkDirectionalParticleSpeed={0.025}
+            linkDirectionalParticleWidth={3}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.35 : 0.3}
-            cooldownTicks={isMobile ? 50 : 100}
+            d3VelocityDecay={isMobile ? 0.5 : 0.42}
+            cooldownTicks={isMobile ? 25 : 60}
 onEngineTick={handleEngineTick}
-            onEngineStop={handleEngineStop}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
                 const label = node.name;
                 const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
