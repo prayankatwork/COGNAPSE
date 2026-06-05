@@ -298,8 +298,9 @@ export default function PhysicsMap({
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
-            d3VelocityDecay={isMobile ? 0.35 : 0.25}
-            cooldownTicks={isMobile ? 50 : 100}
+            d3VelocityDecay={isMobile ? 0.45 : 0.4}
+            d3AlphaDecay={0.035}
+            cooldownTicks={isMobile ? 30 : 60}
 onEngineTick={handleEngineTick}
             onEngineStop={handleEngineStop}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {

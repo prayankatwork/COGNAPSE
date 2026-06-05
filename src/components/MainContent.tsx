@@ -170,7 +170,13 @@ export default function MainContent() {
 
     } catch (err: any) {
       if (err.name === 'AbortError') return;
-      setError(err.message || "An unexpected error occurred during research.");
+      // Auto-open auth portal when guest tries to search
+      if (err.message?.includes('SIGN_IN_REQUIRED')) {
+        useStore.getState().setAuthOpen(true);
+        setError("Sign in required. Create a free account or sign in to use cloud research.");
+      } else {
+        setError(err.message || "An unexpected error occurred during research.");
+      }
     } finally {
       clearLoadingPhaseTimers();
       setLoading(false);
@@ -231,7 +237,12 @@ export default function MainContent() {
 
     } catch (err: any) {
       if (err.name === 'AbortError') return;
-      setError(err.message || "Failed to expand investigation.");
+      if (err.message?.includes('SIGN_IN_REQUIRED')) {
+        useStore.getState().setAuthOpen(true);
+        setError("Sign in required to expand investigation. Create a free account or sign in.");
+      } else {
+        setError(err.message || "Failed to expand investigation.");
+      }
     } finally {
       // Stale call guard: if a newer sub-search has started, skip cleanup.
       // The new call's setLoading(true) is in flight — we must not race it.

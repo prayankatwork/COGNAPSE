@@ -99,7 +99,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
       try {
         if (import.meta.env.PROD && !auth.currentUser) {
           throw new Error(
-            'Sign in required to use cloud intelligence. Create a free account, or run COGNAPSE locally with Ollama for private offline research.'
+            'SIGN_IN_REQUIRED: Sign in to use cloud intelligence, or create a free account.'
           );
         }
 
@@ -167,7 +167,7 @@ export const callCloudAI = async (prompt: string, isJson = false, requestedModel
   }
 
   throw new Error(
-    'INTELLIGENCE OVERLOAD: No AI providers are available. Sign in to use cloud research, or run COGNAPSE locally with Ollama for private offline research.'
+    'INTELLIGENCE_OVERLOAD: No AI providers available. Sign in to use cloud research.'
   );
 };
 

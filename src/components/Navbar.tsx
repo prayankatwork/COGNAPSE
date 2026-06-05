@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useShallow } from 'zustand/react/shallow';
 import { 
-  User, X, Moon, Sun, Search,
+  User, X, LogOut, Moon, Sun, Search,
   BookOpen, Command, ShieldCheck, ChevronDown, Activity, Globe as GlobeIcon, Zap, Crown,
   Menu
 } from 'lucide-react';
@@ -233,11 +233,14 @@ export default function Navbar() {
                    onClick={() => walkthroughCompleted && logout()}
                    disabled={!walkthroughCompleted}
                    className={clsx(
-                     "w-8 h-8 !rounded-full p-0",
-                     walkthroughCompleted && "hover:!ds-text-danger hover:!border-red-500/50"
+                     "flex items-center gap-1.5 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-widest !rounded-[2px] border border-my-border/40",
+                     walkthroughCompleted
+                       ? "text-my-muted hover:!text-red-500 hover:!border-red-500/40 hover:bg-red-500/5"
+                       : "opacity-40"
                    )}
+                   icon={<LogOut size={12} />}
                  >
-                   <X size={14} />
+                   Exit
                  </Button>
                </span>
             </div>
