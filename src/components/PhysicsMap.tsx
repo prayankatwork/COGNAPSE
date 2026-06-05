@@ -289,11 +289,11 @@ export default function PhysicsMap({
             height={dimensions.height - 40}
             graphData={graphData}
             nodeRelSize={isMobile ? 3 : 4}
-            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.18)'}
-            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1.5 : 2.5)}
-            linkDirectionalParticles={isMobile ? 0 : 3}
-            linkDirectionalParticleSpeed={0.035}
-            linkDirectionalParticleWidth={2}
+            linkColor={theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}
+            linkWidth={(link: any) => (link.strength || 1) * (isMobile ? 1 : 1.5)}
+            linkDirectionalParticles={isMobile ? 0 : 2}
+            linkDirectionalParticleSpeed={0.012}
+            linkDirectionalParticleWidth={1.5}
             linkDirectionalParticleColor={() => signalColor}
             onNodeClick={handleNodeClick}
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
