@@ -288,7 +288,7 @@ export default function PhysicsMap({
             onNodeDragEnd={(node) => { node.fx = node.x; node.fy = node.y; }}
             onNodeHover={isMobile ? undefined : setHoverNode}
             d3VelocityDecay={isMobile ? 0.3 : 0.2}
-            cooldownTicks={isMobile ? 500 : 10000}
+            cooldownTicks={isMobile ? 1000 : 100000}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale) => {
               const label = node.name;
               const fontSize = isMobile ? 10 / globalScale : 12 / globalScale;
