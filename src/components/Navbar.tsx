@@ -260,9 +260,10 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 onClick={toggleTheme}
-                className="w-8 h-8 p-0 !rounded-[2px] text-white dark:text-my-accent hover:brightness-125 drop-shadow-[0_0_1px_rgba(0,0,0,0.5)] dark:drop-shadow-none"
+                className="w-8 h-8 p-0 !rounded-[2px] !text-my-ink dark:!text-my-accent"
+                icon={<span className="block w-[14px] h-[14px] shrink-0">{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}</span>}
               >
-                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                <></>
               </Button>
             </span>
 
@@ -274,10 +275,11 @@ export default function Navbar() {
                   "w-8 h-8 p-0 !rounded-[2px]",
                   isNotebookOpen
                     ? "shadow-[0_0_15px_var(--my-accent)]"
-                    : "text-white dark:text-my-accent hover:brightness-125 drop-shadow-[0_0_1px_rgba(0,0,0,0.5)] dark:drop-shadow-none"
+                    : "!text-my-ink dark:!text-my-accent"
                 )}
+                icon={<span className="block w-[14px] h-[14px] shrink-0"><BookOpen size={14} /></span>}
               >
-                <BookOpen size={14} />
+                <></>
               </Button>
             </span>
           </div>
