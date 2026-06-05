@@ -751,7 +751,9 @@ export default function MainContent() {
             )}
 
             {loading && loadingPhase !== "Analyzing context..." && (
-              <CognapseLoader />
+              <div className={clsx("flex items-center justify-center", !currentReport && "min-h-[calc(100vh-12rem)]")}>
+                <CognapseLoader />
+              </div>
             )}
 
             <div ref={bottomRef} />
