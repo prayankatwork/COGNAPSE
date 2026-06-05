@@ -49,8 +49,15 @@ const KNOWN_LOCATIONS: { label: string; country: string; lat: number; lng: numbe
  * and key terms from available source data.
  */
 export function ensureIntelligenceMap(report: COGNAPSE_Output): void {
+  // If already populated with enough nodes, clamp to max 5 and return
   if (report.intelligence_map && report.intelligence_map.nodes && report.intelligence_map.nodes.length >= 4) {
-    return; // Already populated with enough nodes
+    const maxNodes = 5;
+    const clampedNodes = report.intelligence_map.nodes.slice(0, maxNodes);
+    const clampedNodeIds = new Set(clampedNodes.map(n => n.id));
+    const clampedEdges = (report.intelligence_map.edges || []).filter((e: any) => clampedNodeIds.has(e.from) && clampedNodeIds.has(e.to));
+    report.intelligence_map.nodes = clampedNodes;
+    report.intelligence_map.edges = clampedEdges;
+    return;
   }
 
   // If the map exists but has fewer than 4 nodes, we'll rebuild it with more
@@ -188,10 +195,17 @@ export function ensureIntelligenceMap(report: COGNAPSE_Output): void {
     }
   }
 
+  // Clamp nodes to a max of 5 (excluding central node), min of 4
+  // This keeps the Intelligence Map focused and prevents clutter
+  const maxNodes = 5;
+  const clampedNodes = nodes.slice(0, maxNodes);
+  const clampedNodeIds = new Set(clampedNodes.map(n => n.id));
+  const clampedEdges = edges.filter(e => clampedNodeIds.has(e.from) && clampedNodeIds.has(e.to));
+
   report.intelligence_map = {
     central_node: { id: centralId, label: queryLabel, type: 'CONCEPT' },
-    nodes,
-    edges,
+    nodes: clampedNodes,
+    edges: clampedEdges,
   };
 }
 

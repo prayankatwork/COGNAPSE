@@ -710,7 +710,7 @@ export default function ReportView({
               <div className="bg-my-callout px-3 py-2 border-b border-my-border/50">
                 <span className="text-[8px] font-bold text-my-muted uppercase tracking-widest">Evidence Assessment</span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-my-border">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-my-border">
                 <div className="bg-my-callout p-2.5 flex flex-col">
                   <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Sources</span>
                   <span className="text-[13px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.source_count}</span>
@@ -726,13 +726,7 @@ export default function ReportView({
                   <span className="text-[13px] font-semibold text-my-ink mt-0.5">{report.evidence_assessment.contradiction_count}</span>
                   <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">conflicting claims</span>
                 </div>
-                <div className="bg-my-callout p-2.5 flex flex-col">
-                  <span className="text-[7px] font-bold text-my-muted uppercase tracking-widest">Citation Support</span>
-                  <span className={clsx('text-[13px] font-semibold mt-0.5', (report.evidence_assessment.citation_support_rate || 0) >= 0.6 ? 'ds-text-success' : (report.evidence_assessment.citation_support_rate || 0) >= 0.3 ? 'ds-text-warning' : 'ds-text-danger')}>
-                    {((report.evidence_assessment.citation_support_rate || 0) * 100).toFixed(0)}<span className="text-[9px] text-my-muted">%</span>
-                  </span>
-                  <span className="text-[7px] text-my-muted/50 font-mono mt-0.5">verification rate</span>
-                </div>
+
               </div>
             </div>
           )}
