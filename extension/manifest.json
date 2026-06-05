@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "COGNAPSE Strategic Analyst",
   "version": "1.0.0",
-  "description": "Premium real-time AI webpage highlight summarization and research insights powered by COGNAPSE.",
+  "description": "AI-powered webpage highlight analysis and research insights, powered by COGNAPSE.",
   "permissions": [
     "contextMenus",
     "activeTab",

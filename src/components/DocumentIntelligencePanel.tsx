@@ -194,8 +194,8 @@ export default function DocumentIntelligencePanel() {
               Premium Feature Locked
             </p>
             <p className="text-[9px] text-my-muted/90 mt-2 leading-relaxed max-w-xs mx-auto">
-              Upload and analyze PDFs, documents, and images with AI-powered intelligence extraction.
-              Activate COGNAPSE Premium to unlock enterprise-grade document processing.
+              Upload and analyze PDFs, documents, and images with AI-powered content extraction.
+              Activate COGNAPSE Premium to unlock document analysis capabilities.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-my-accent/5 border border-my-accent/20 text-[9px] text-my-accent font-bold uppercase tracking-wider">

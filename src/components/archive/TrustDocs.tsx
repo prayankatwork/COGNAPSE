@@ -80,7 +80,7 @@ export default function TrustDocs() {
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">SOC 2</div>
-                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">Firebase Compliance</div>
+                  <div className="text-xs text-my-muted font-bold uppercase tracking-widest mt-1">(Firebase Infra)</div>
                </div>
                <div>
                   <div className="text-2xl font-bold text-my-ink">RBAC</div>

@@ -299,7 +299,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     <Award size={24} />
                   </div>
                   <h2 className="text-xl font-serif font-bold text-my-ink italic">COGNAPSE Premium Required</h2>
-                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Unlock Advanced Research Tools</p>
+                  <p className="text-xs text-my-muted uppercase tracking-widest mt-1">Access Expanded Research Tools</p>
                 </div>
 
                 {isPreviewDeploy && (
@@ -325,7 +325,7 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Unlimited PDF Exports</h4>
-                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Download unlimited beautifully formatted, academically rigorous reports ready for archiving or sharing.</p>
+                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Download unlimited beautifully formatted, professionally structured reports ready for archiving or sharing.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -342,8 +342,8 @@ export default function PremiumExportModal({ isOpen, onClose, researchId, query:
                       <Shield size={16} />
                     </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Priority Computing & Model Routing</h4>
-                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Experience faster research speeds with prioritized server queues and premium AI processing.</p>
+                      <h4 className="text-[11px] font-bold text-my-ink uppercase tracking-wider">Faster Research Speeds</h4>
+                      <p className="text-[10px] text-my-ink/80 leading-relaxed">Premium users receive priority in processing queues for reduced wait times.</p>
                     </div>
                   </div>
                 </div>

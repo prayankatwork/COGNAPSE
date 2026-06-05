@@ -40,8 +40,8 @@ export default function LandingPage() {
             transition={{ duration: 1, type: 'spring', bounce: 0.4 }}
             className="text-7xl md:text-[12rem] font-serif font-bold tracking-tighter mb-12 leading-[0.8] italic"
           >
-            Total <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-tr from-my-accent via-my-ink dark:via-white to-my-accent">Awareness.</span>
+            Structured <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-tr from-my-accent via-my-ink dark:via-white to-my-accent">Intelligence.</span>
           </motion.h1>
 
           <motion.div
@@ -96,7 +96,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-end justify-between mb-32 gap-10">
             <div className="max-w-2xl">
               <h2 className="text-4xl md:text-8xl font-serif font-bold mb-8 leading-none">The Research <br /> Ecosystem.</h2>
-              <p className="text-xl text-my-muted font-light leading-relaxed">Every tool you need to extract objective insights from the noise of the digital age.</p>
+              <p className="text-xl text-my-muted font-light leading-relaxed">Every tool you need to surface evidence-based insights from across the information landscape.</p>
             </div>
             <div className="text-my-accent font-bold uppercase tracking-[0.3em] text-xs flex items-center gap-4">
               <div className="w-16 h-px bg-my-accent" /> Full Feature Matrix
@@ -149,7 +149,7 @@ export default function LandingPage() {
             />
             <FlowStep
               title="Synthesize"
-              desc="Cross-platform Synthetic Intelligence. COGNAPSE crawls, cross-references, and eliminates noise."
+              desc="Aggregates and cross-references sources across the web for a multidimensional view."
               icon={<Brain size={48} />}
               accent="text-blue-400"
             />
@@ -202,11 +202,11 @@ export default function LandingPage() {
 function FeatureGrid() {
   const [showAll, setShowAll] = useState(false);
   const features = [
-    { icon: <Search />, title: "Autonomous Discovery", desc: "Parallel crawling of global knowledge indexes with semantic clustering." },
-    { icon: <Sparkles />, title: "Comprehensive Reports", desc: "Autonomous generation of 5,000+ word professional analytical reports." },
+    { icon: <Search />, title: "Source Discovery", desc: "Multi-source search aggregation with semantic clustering." },
+    { icon: <Sparkles />, title: "Comprehensive Reports", desc: "AI-assisted generation of in-depth research syntheses." },
     { icon: <History />, title: "Thought Replay", desc: "Deconstruct and replay the step-by-step logic used to reach conclusions." },
     { icon: <Layers />, title: "Research Hub", desc: "Hierarchical investigation stacks and cross-reference layers." },
-    { icon: <HardDrive />, title: "Native Desktop Client", desc: "Zero-configuration local AI acceleration via Ollama. 100% private and offline." },
+    { icon: <HardDrive />, title: "Local AI Acceleration", desc: "On-device AI via Ollama (separate installation required). 100% private and offline." },
     { icon: <BarChart3 />, title: "Visual Research Map", desc: "Interactive semantic node-branching logic and evidence mapping." },
     { icon: <FileText />, title: "Cognitive Notebook", desc: "Instantly capture snippets and insights into a persistent research journal." },
     { icon: <Database />, title: "Secure Archive", desc: "Persistent SQLite-backed research reports with analyst isolation." },

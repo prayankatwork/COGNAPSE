@@ -361,7 +361,7 @@ export default function IntelligenceFeed({ onTriggerResearch }: { onTriggerResea
                                         "text-sm font-black uppercase tracking-widest",
                                         isSubscribed ? "text-my-accent" : "text-my-muted"
                                       )}>{cat.label}</h3>
-                                      <p className="text-[11px] text-my-muted mt-1">Real-time forensic monitoring for {cat.label.toLowerCase()} events.</p>
+                                      <p className="text-[11px] text-my-muted mt-1">AI-curated intelligence briefs for {cat.label.toLowerCase()} events.</p>
                                    </div>
                                 </div>
                                 <div className={clsx(
