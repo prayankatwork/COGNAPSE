@@ -655,15 +655,7 @@ export default function ReportView({
                 {report.evidence_insights?.most_important_finding && (
                   <TakeawayCard title="Top Finding" content={report.evidence_insights.most_important_finding} />
                 )}
-                {report.evidence_insights?.most_important_limitation && (
-                  <TakeawayCard title="Key Limitation" content={report.evidence_insights.most_important_limitation} />
-                )}
-                {report.evidence_insights?.most_contested_question && (
-                  <TakeawayCard title="Contested Question" content={report.evidence_insights.most_contested_question} />
-                )}
-                {report.evidence_insights?.most_actionable_insight && (
-                  <TakeawayCard title="Actionable Insight" content={report.evidence_insights.most_actionable_insight} />
-                )}
+
               </div>
             </div>
           )}
