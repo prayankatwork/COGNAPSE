@@ -131,9 +131,33 @@ export default function DeepResearchView() {
             {expandedSections[section.id] && (
               <div className="px-4 pb-5 pt-2 md:px-4 md:pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="text-[14px] leading-[1.7] text-my-syn w-full text-justify hyphens-auto space-y-[1.7em]" lang="en">
-                  {section.content.replace(/\r/g, '').split(/\n{2,}/).filter(Boolean).map((para, i) => (
-                    <p key={i}>{para.replace(/\n+/g, ' ').trim()}</p>
-                  ))}
+                  {(() => {
+                    const paragraphs = section.content.replace(/\r/g, '').split(/\n{2,}/).filter(Boolean);
+                    return paragraphs.map((para, i) => {
+                      const lines = para.split('\n').filter(Boolean);
+                      if (lines.length <= 1) {
+                        return <p key={i}>{lines.join(' ').trim()}</p>;
+                      }
+                      // Detect list content: lines starting with -, *, •, or digits+.)
+                      const listMarker = /^\s*(?:[-*•]\s|\d+[.)]\s)/;
+                      const listLineCount = lines.filter(l => listMarker.test(l)).length;
+                      // Require at least half the lines to be list items to avoid false positives
+                      const isList = listLineCount / lines.length >= 0.5;
+                      if (isList) {
+                        const isOrdered = lines.some(l => /^\s*\d+[.)]\s/.test(l));
+                        const ListTag = isOrdered ? 'ol' : 'ul';
+                        const listClass = isOrdered ? 'list-decimal' : 'list-disc';
+                        return (
+                          <ListTag key={i} className={`${listClass} pl-5 space-y-1.5`}>
+                            {lines.map((line, j) => (
+                              <li key={j} className="text-justify">{line.replace(listMarker, '').trim()}</li>
+                            ))}
+                          </ListTag>
+                        );
+                      }
+                      return <p key={i}>{lines.join(' ').trim()}</p>;
+                    });
+                  })()}
                 </div>
               </div>
             )}
