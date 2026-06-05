@@ -129,9 +129,11 @@ export default function DeepResearchView() {
               </div>
             </Button>
             {expandedSections[section.id] && (
-              <div className="px-4 pb-6 pt-2 md:px-10 md:pb-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="text-[14px] leading-[1.7] text-my-syn whitespace-pre-wrap w-full text-justify">
-                  {section.content}
+              <div className="px-4 pb-5 pt-2 md:px-4 md:pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="text-[14px] leading-[1.7] text-my-syn w-full text-justify hyphens-auto space-y-[1.7em]" lang="en">
+                  {section.content.replace(/\r/g, '').split(/\n{2,}/).filter(Boolean).map((para, i) => (
+                    <p key={i}>{para.replace(/\n+/g, ' ').trim()}</p>
+                  ))}
                 </div>
               </div>
             )}
