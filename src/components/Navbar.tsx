@@ -260,7 +260,7 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 onClick={toggleTheme}
-                className="w-8 h-8 p-0 !rounded-[2px] !text-my-ink hover:!text-my-accent"
+                className="w-8 h-8 p-0 !rounded-[2px] text-white dark:text-my-accent hover:brightness-125 drop-shadow-[0_0_1px_rgba(0,0,0,0.5)] dark:drop-shadow-none"
               >
                 {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
               </Button>
@@ -274,7 +274,7 @@ export default function Navbar() {
                   "w-8 h-8 p-0 !rounded-[2px]",
                   isNotebookOpen
                     ? "shadow-[0_0_15px_var(--my-accent)]"
-                    : "!text-my-ink hover:!text-my-accent"
+                    : "text-white dark:text-my-accent hover:brightness-125 drop-shadow-[0_0_1px_rgba(0,0,0,0.5)] dark:drop-shadow-none"
                 )}
               >
                 <BookOpen size={14} />
