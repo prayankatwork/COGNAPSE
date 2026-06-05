@@ -130,7 +130,7 @@ export default function DeepResearchView() {
             </Button>
             {expandedSections[section.id] && (
               <div className="px-4 pb-6 pt-2 md:px-10 md:pb-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="text-[14px] leading-[1.7] text-my-syn whitespace-pre-wrap max-w-[65ch]">
+                <div className="text-[14px] leading-[1.7] text-my-syn whitespace-pre-wrap w-full text-justify">
                   {section.content}
                 </div>
               </div>
